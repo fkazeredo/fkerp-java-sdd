@@ -1,0 +1,118 @@
+<section class="page">
+  <h1 class="page__title">{{ 'quoting.title' | translate }}</h1>
+
+  <form class="card form" (ngSubmit)="compose()" #f="ngForm">
+    <h2 class="card__title">{{ 'quoting.compose' | translate }}</h2>
+    <label>
+      {{ 'quoting.accountId' | translate }}
+      <input name="accountId" [(ngModel)]="accountId" required />
+    </label>
+    <div class="form__row">
+      <label>
+        {{ 'quoting.basePrice' | translate }}
+        <input type="number" step="0.01" name="baseAmount" [(ngModel)]="baseAmount" required />
+      </label>
+      <label>
+        {{ 'quoting.currency' | translate }}
+        <input name="baseCurrency" [(ngModel)]="baseCurrency" required />
+      </label>
+      <label>
+        {{ 'quoting.pair' | translate }}
+        <input name="currencyPair" [(ngModel)]="currencyPair" required />
+      </label>
+    </div>
+    <div class="form__row">
+      <label>
+        {{ 'quoting.supplierPct' | translate }}
+        <input type="number" step="0.01" name="supplierPct" [(ngModel)]="supplierPct" required />
+      </label>
+      <label>
+        {{ 'quoting.agentPct' | translate }}
+        <input type="number" step="0.01" name="agentPct" [(ngModel)]="agentPct" required />
+      </label>
+    </div>
+    @if (composeError()) {
+      <p class="form__error" data-testid="quoting-compose-error">{{ composeError() | translate }}</p>
+    }
+    <button type="submit" [disabled]="busy() || f.invalid">
+      {{ 'quoting.composeAction' | translate }}
+    </button>
+  </form>
+
+  @if (quote(); as q) {
+    <div class="card" data-testid="quoting-result">
+      <h2 class="card__title">{{ 'quoting.result' | translate }}</h2>
+      <dl class="kv">
+        <dt>{{ 'quoting.fxRate' | translate }}</dt>
+        <dd>{{ q.fxRate }}</dd>
+        <dt>{{ 'quoting.baseConverted' | translate }}</dt>
+        <dd>{{ format(q.baseConverted) }}</dd>
+        <dt>{{ 'quoting.suggested' | translate }}</dt>
+        <dd>{{ format(q.suggestedAmount) }}</dd>
+        <dt>{{ 'quoting.applied' | translate }}</dt>
+        <dd>{{ format(q.appliedAmount) }}</dd>
+        <dt>{{ 'quoting.commissionSupplier' | translate }}</dt>
+        <dd>{{ format(q.commission.supplier) }}</dd>
+        <dt>{{ 'quoting.commissionAgent' | translate }}</dt>
+        <dd>{{ format(q.commission.agent) }}</dd>
+        <dt>{{ 'quoting.spread' | translate }}</dt>
+        <dd>
+          {{ format(q.commission.spread) }}
+          <span class="badge" [class.badge--danger]="q.commission.spreadNegative">
+            {{ (q.commission.spreadNegative ? 'quoting.negative' : 'quoting.positive') | translate }}
+          </span>
+        </dd>
+        <dt>{{ 'quoting.markup' | translate }}</dt>
+        <dd>{{ format(q.markup.amount) }} ({{ q.markup.source }})</dd>
+        <dt>{{ 'quoting.provenance' | translate }}</dt>
+        <dd>{{ q.provenance.rateId }} · {{ q.provenance.policySource }}</dd>
+      </dl>
+
+      @if (q.overrides.length > 0) {
+        <h3 class="card__title">{{ 'quoting.overrides' | translate }}</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>{{ 'quoting.from' | translate }}</th>
+              <th>{{ 'quoting.to' | translate }}</th>
+              <th>{{ 'quoting.reason' | translate }}</th>
+              <th>{{ 'quoting.by' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (o of q.overrides; track o.performedAt) {
+              <tr>
+                <td>{{ format(o.fromAmount) }}</td>
+                <td>{{ format(o.toAmount) }}</td>
+                <td>{{ o.reason }}</td>
+                <td>{{ o.performedBy }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+
+      <h3 class="card__title">{{ 'quoting.override' | translate }}</h3>
+      <form class="form" (ngSubmit)="applyOverride()" #ov="ngForm">
+        <div class="form__row">
+          <label>
+            {{ 'quoting.appliedAmount' | translate }}
+            <input type="number" step="0.01" name="appliedAmount" [(ngModel)]="appliedAmount" required />
+          </label>
+          <label>
+            {{ 'quoting.reason' | translate }}
+            <input name="reason" [(ngModel)]="reason" required />
+          </label>
+        </div>
+        @if (overrideError()) {
+          <p class="form__error" data-testid="quoting-override-error">
+            {{ overrideError() | translate }}
+          </p>
+        }
+        <button type="submit" [disabled]="busy() || ov.invalid">
+          {{ 'quoting.overrideAction' | translate }}
+        </button>
+      </form>
+    </div>
+  }
+</section>
