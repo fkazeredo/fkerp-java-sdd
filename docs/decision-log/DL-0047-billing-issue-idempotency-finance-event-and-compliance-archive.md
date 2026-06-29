@@ -43,9 +43,14 @@ acontece de dois jeitos, ambos **sem** criar ciclo:
 2. **Arquivamento no Compliance (BR5) pelo orquestrador `infra`** (`BillingIssuanceService`), via a
    **fachada pública** `ComplianceService.upload(...)` (a mesma que o `AfdIngestionService` usa) —
    `infra.nfse → compliance` por fachada, **sem** tocar o repositório do Compliance e **sem** acoplar
-   o módulo `billing` ao `compliance`. O documento é gravado como `DocumentType.NFSE` (retenção fiscal
-   já modelada no `RetentionPolicy`), `signedFormat = XADES` (NFS-e é XML assinado), `hasPersonalData
-   = true` (a nota traz CNPJ/identificação do tomador → dado tributário/pessoal; acesso auditado pelo
+   o módulo `billing` ao `compliance`. O documento é gravado como **`DocumentType.COMMISSION_INVOICE`**
+   (retenção fiscal já modelada no `RetentionPolicy`) — **não** `NFSE`: o catálogo de requisitos
+   (V8/DL-0012) satisfaz `COMMISSION_RECEIVABLE` com `COMMISSION_INVOICE`, e a **NFS-e de comissão É a
+   "NF de comissão"** que esse requisito espera; gravar com esse tipo faz a nota **satisfazer o
+   `DocumentRequirement`** sem editar o seed nem duplicar requisitos (gravar como `NFSE` exigiria um
+   requisito extra que — pela regra do close-check, que exige **todos** os tipos requeridos — passaria
+   a **bloquear** o fechamento até ter as duas notas). `signedFormat = XADES` (NFS-e é XML assinado),
+   `hasPersonalData = true` (a nota traz CNPJ/identificação do tomador → dado tributário/pessoal; acesso auditado pelo
    cofre), e **anexado ao lançamento de comissão** (`entryId = commissionEntryId`, `entryType =
    COMMISSION_RECEIVABLE`). O `documentId` retornado é guardado na nota (valor) pelo orquestrador
    (`BillingService.markIssued(...)`). Assim a NF **satisfaz o `DocumentRequirement`** daquele

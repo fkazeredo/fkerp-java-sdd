@@ -20,6 +20,14 @@
  * EXPOSED event types and never calls back into Booking, so the dependency {@code finance →
  * booking} stays acyclic (Booking depends on neither Finance nor Compliance; Compliance depends on
  * Finance).
+ *
+ * <p>Tax posting from Billing (SPEC-0016 BR5, DL-0047): Finance is also a <strong>leaf
+ * consumer</strong> of the Billing module's {@code CommissionInvoiceIssued} event, posting the ISS
+ * (and any withholdings) of an issued commission invoice as {@code TAX_PAYABLE} entries
+ * idempotently (state-check + UNIQUE on {@code (invoiceId, chargeKind)}). It reads only that
+ * EXPOSED event and never calls back into Billing (Billing is a leaf that depends on neither
+ * Finance nor Compliance), so {@code finance → billing} stays acyclic — the same shape as {@code
+ * finance → booking}.
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Finance")
 package com.fksoft.domain.finance;
