@@ -50,6 +50,13 @@ BR4  Lançamento em período CLOSED MUST ser rejeitado (finance.period.closed); 
 BR5  Eventos de negócio viram lançamentos: ExpectedCommissionAccrued → RECEIVABLE/PAYABLE de comissão;
      CancellationCharged → PENALTY/REFUND; SupplierSettlement → SUPPLIER_SETTLEMENT (consumo idempotente).
 BR6  Finance MUST NOT impor a regra de documento — apenas **consultar** o Compliance e respeitar o veto.
+BR7  ASSUMIDO (ver DL-0014): entrega-se agora o **seam mínimo** (AP/AR + período). Contabilidade plena
+     (partidas dobradas, DRE, SPED/ECD) NÃO é construída; se exigida, integra-se/compra-se um ERP
+     contábil e este módulo vira adaptador (as portas `CloseGuard`/`LedgerDirectory` isolam isso).
+BR8  ASSUMIDO (ver DL-0013): o razão guarda cada lançamento em **moeda original** (Money), sem
+     conversão; o total do período agrega **por moeda** (nunca soma moedas diferentes).
+BR9  ASSUMIDO (ver DL-0012): o mapa `entryType × DocumentRequirement` é compartilhado com o Compliance
+     (seed da tabela 7.7); o veto de fechamento usa os requisitos de fase AT_REGISTRATION.
 ```
 
 ## Input/Output Examples
@@ -132,10 +139,13 @@ módulo vira **adaptador** que sincroniza lançamentos/fechamento.
 
 ## Open Questions
 
-- **Comprar vs. construir:** se o cliente exige contabilidade plena (partidas dobradas, SPED/ECD), a
-  recomendação é **integrar um ERP contábil** e usar este módulo como adaptador — **decisão do dono**.
-- Mapa final `entryType × DocumentRequirement` é compartilhado com o Compliance (SPEC-0008 Open Question).
-- Tratamento de **multimoeda** no razão (manter em moeda original × converter) — confirmar.
+- ~~**Comprar vs. construir**~~ → **ASSUMIDO (ver DL-0014)**: construir o seam mínimo agora; comprar a
+  contabilidade plena depois (ver BR7). Continua sendo **decisão do dono** quando a contabilidade
+  plena for exigida.
+- ~~Mapa final `entryType × DocumentRequirement`~~ → **ASSUMIDO (ver DL-0012)**: seed compartilhado
+  com o Compliance (ver BR9).
+- ~~Tratamento de **multimoeda** no razão~~ → **ASSUMIDO (ver DL-0013)**: moeda original, sem
+  conversão (ver BR8).
 
 ## Out of Scope
 

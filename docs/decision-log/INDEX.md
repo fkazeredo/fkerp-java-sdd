@@ -27,3 +27,7 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0009](DL-0009-quoting-formula-de-preco.md) | 1 | Quoting: preço = base BRL + markup (default 0); base comissionável em BRL | Média | **Cara** |
 | [DL-0010](DL-0010-booking-quote-multiplicidade.md) | 1 | Booking: Quote→Booking não 1:1 no v1 (localizador é a trava) | Média | Moderada |
 | [DL-0011](DL-0011-reconciliation-tolerancia-discrepancia.md) | 1 | Reconciliation: tolerância = max(R$1,00; 0,5% do spread esperado) | Média | Barata |
+| [DL-0012](DL-0012-compliance-requirements-catalog.md) | 2 | Compliance: catálogo `entryType × DocumentRequirement` (seed da tabela 7.7, com fase) | Média | Barata |
+| [DL-0013](DL-0013-finance-multimoeda-no-razao.md) | 2 | Finance: razão em moeda original (sem conversão); período agrega por moeda | Média | Moderada |
+| [DL-0014](DL-0014-finance-comprar-vs-construir.md) | 2 | Finance: construir o seam mínimo (AP/AR+período) agora; contabilidade plena = comprar depois | Alta | Moderada |
+| [DL-0015](DL-0015-compliance-filestorage-port.md) | 2 | Compliance: porta `FileStorage` + adaptador filesystem; hash SHA-256 | Alta | Barata |
