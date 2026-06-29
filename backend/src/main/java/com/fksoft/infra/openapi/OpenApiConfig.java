@@ -19,9 +19,11 @@ public class OpenApiConfig {
             new Info()
                 .title("Acme Travel ERP API")
                 .description(
-                    "ERP Acme Travel — modular monolith. Phase 3 adds Sourcing (offer provenance)"
-                        + " and the first real ACL: the quotation-site inbound webhook (signed,"
-                        + " idempotent) that creates an INTEGRATED quote (trusted external price).")
-                .version("0.4.0"));
+                    "ERP Acme Travel — modular monolith. Phase 4 graduates booking cancellation"
+                        + " into a rich cancellation policy (STANDARD | ALL_SALES_FINAL | CUSTOM,"
+                        + " penalty windows, cost bearer) frozen at confirmation, the merchant trap"
+                        + " (ALL_SALES_FINAL charges the supplier even when the customer is"
+                        + " refunded — two obligations that do not net out) and a no-show policy.")
+                .version("0.5.0"));
   }
 }
