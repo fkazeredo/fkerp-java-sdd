@@ -17,18 +17,25 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0044](DL-0044-billing-tax-regime-simples-and-swappable-strategy.md) | Billing: regime **Simples Nacional** (default) + estratégia trocável de ISS/retenções (Q7) | **Baixa** | **Cara** | **Q7 — regime tributário/quem emite é incógnita de negócio (só o contador fecha)**; move a tese tributária e o impacto fiscal de notas já emitidas é externo e caro |
 | [DL-0048](DL-0048-payout-payment-gateway-acl-async-webhook.md) | Payout: gateway de pagamento como porta + **mock rastreável com webhook assíncrono** (ADR 0006) | **Baixa** | Moderada | Meio de pagamento real é Open Question da SPEC-0017; só o dono fecha (o mock prova o contrato) |
 | [DL-0049](DL-0049-payout-foreign-settlement-rate-and-brl-baixa.md) | Payout: liquidação do fornecedor com `settlementRate` (USD) + baixa em **BRL** | **Baixa** | **Cara** | Fluxo de câmbio real (remessa vs BRL) é Open Question; a tese de câmbio é compartilhada por Payout/Reconciliation/Exchange |
+| [DL-0058](DL-0058-marketing-lgpd-erasure-preserves-revocation-and-metrics-as-logs.md) | Marketing: exclusão LGPD apaga PII mas preserva tombstone de revogação (anonimizado) | **Baixa** | **Cara** | **Alcance do apagamento × dever de prova/supressão só o DPO/jurídico fecha**; expurgo é destrutivo (PII não volta) |
 
 > _Nota Fase 8e:_ DL-0052/0053/0054 são **Confiança=Média / Reversibilidade=Barata–Moderada** —
 > não entram neste destaque. O "quais custos contam" do custo de servir (DL-0053) e os prazos de
 > SLA (DL-0052) seguem confirmáveis com o dono, mas a reversão é barata (parâmetro governado em
 > runtime / value object local).
 
-> DL-0017 (Fase 3), **DL-0029/DL-0033** (Fase 6), **DL-0044** (Fase 8c) e **DL-0048/DL-0049** (Fase 8d)
-> são as de **Confiança=Baixa** (Open Questions de negócio em aberto). **DL-0029 (Q6), DL-0044 (Q7) e
-> DL-0049** são as mais sensíveis: Confiança=Baixa **e** Reversibilidade=Cara — incógnitas de negócio que
-> só o cliente/contador fecha (tipo de REP; regime tributário; fluxo de câmbio da liquidação).
-> DL-0009/DL-0017, DL-0018, **DL-0024**, **DL-0029**, **DL-0044** e **DL-0049** são as de reversão
-> não-barata.
+> DL-0017 (Fase 3), **DL-0029/DL-0033** (Fase 6), **DL-0044** (Fase 8c), **DL-0048/DL-0049** (Fase 8d)
+> e **DL-0058** (Fase 8f) são as de **Confiança=Baixa** (Open Questions de negócio em aberto).
+> **DL-0029 (Q6), DL-0044 (Q7), DL-0049 e DL-0058** são as mais sensíveis: Confiança=Baixa **e**
+> Reversibilidade=Cara — incógnitas de negócio que só o cliente/contador/DPO fecha (tipo de REP;
+> regime tributário; fluxo de câmbio da liquidação; alcance do apagamento LGPD).
+> DL-0009/DL-0017, DL-0018, **DL-0024**, **DL-0029**, **DL-0044**, **DL-0049** e **DL-0058** são as de
+> reversão não-barata.
+
+> _Nota Fase 8f (Marketing — SPEC-0019):_ DL-0055/0056/0057/0059 são **Confiança=Média–Alta /
+> Reversibilidade=Moderada** (porta de newsletter trocável; consent log; intake de atribuição;
+> critério jsonb validado) — reversões localizadas. **DL-0058** é a única do destaque (Baixa/Cara):
+> o apagamento LGPD é destrutivo e seu alcance exato é decisão de DPO/jurídico.
 
 ## Todas as decisões
 
@@ -88,3 +95,8 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0052](DL-0052-aftersales-sla-from-commercial-policy.md) | 8e | AfterSales: SLA = parâmetro governado resolvido pela CommercialPolicy (chaves `AFTERSALES_SLA_FIRST_RESPONSE`=24h/`_RESOLUTION`=72h/`_REFUND`=48h, NUMBER horas; seed SYSTEM_DEFAULT V23); Diretiva pode sobrepor sem deploy | Média | Barata |
 | [DL-0053](DL-0053-aftersales-sla-breach-job-and-cost-to-serve.md) | 8e | AfterSales: breach por job de **relógio controlado** (`markBreaches(now)`, instante como parâmetro, padrão do Booking); breach é **flag/alerta** (não bloqueia, idempotente); custo de servir = `CostToServe` (Money BRL acumulável: handling+refund+reaberturas) | Média | Barata |
 | [DL-0054](DL-0054-aftersales-orchestrates-cancel-and-refund-via-facades.md) | 8e | AfterSales orquestra via **fachadas** (`PayoutService.create` REFUND com `originRef`=caseId; `BookingService.cancel`), **idempotente** por `linkedPayoutId` (não cria 2 Payouts); BR6 — não muda reserva nem lança financeiro; armadilha do merchant intacta; grafo **acíclico** | Média | Moderada |
+| [DL-0055](DL-0055-marketing-newsletter-acl-and-single-opt-in.md) | 8f | Marketing: porta `NewsletterSender` (ACL) + **mock rastreável**; consentimento **single opt-in** no v1 (modelo já comporta double opt-in sem refator) | Média | Moderada |
+| [DL-0056](DL-0056-marketing-consent-append-history-current-state.md) | 8f | Marketing: `Consent` **append-only**; estado atual = última linha por `(titular, finalidade)`; revogação é nova linha; índice por `(subject, purpose, created_at DESC)` | Alta | Moderada |
+| [DL-0057](DL-0057-marketing-attribution-intake-and-campaign-converted.md) | 8f | Marketing: atribuição por **intake próprio** (`code→booking`, UNIQUE) + confirmação na `BookingConfirmed` → publica `CampaignConverted`; **não** altera o evento do Booking; grafo acíclico | Média | Moderada |
+| [DL-0058](DL-0058-marketing-lgpd-erasure-preserves-revocation-and-metrics-as-logs.md) | 8f | Marketing: exclusão LGPD remove PII de marketing mas **preserva tombstone de revogação** (anonimizado) p/ supressão futura; `attributions`/métricas sem PII permanecem | **Baixa** | **Cara** |
+| [DL-0059](DL-0059-marketing-segment-criteria-json-and-crm-buy-vs-build.md) | 8f | Marketing: `Segment` com `criteria_json` **validado** (catálogo fechado, minimização BR3); fronteira **"não é CRM"** (CRM pleno = comprar, este módulo = consentimento/atribuição) | Média | Moderada |
