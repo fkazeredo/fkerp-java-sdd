@@ -24,6 +24,7 @@
 | 3 — First real integration (ACL) | 2026-06-29 09:17 (-03:00) | 2026-06-29 10:05 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=3); supervisor **reverificou**: `./mvnw verify` **135 tests** verde, 0 Checkstyle, V9–V11. Sourcing + ramo INTEGRATED + webhook ACL (HMAC, DTO externo não cruza p/ domínio). Released **`0.4.0`**. DL-0016…0019 (**DL-0017 Conf. Baixa**). |
 | 4 — Cancellation + merchant trap | 2026-06-29 10:17 (-03:00) | 2026-06-29 11:00 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=4); supervisor **reverificou**: `./mvnw verify` **157 tests** verde, 0 Checkstyle, V12–V13. CancellationPolicy + armadilha do merchant (cobranças nunca se anulam) + no-show. Released **`0.5.0`**. DL-0020…0024 (**DL-0024 Rev. Cara**). |
 | 5 — Exchange exposure + reports | 2026-06-29 11:17 (-03:00) | 2026-06-29 12:00 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=5); supervisor **reverificou**: `./mvnw verify` **179 tests** verde, 0 Checkstyle, V14–V15. Taxa de mercado + subsídio×drift (`FxPosition`) + relatórios (`LiveExposure`/`PromoFxResult`, alerta de drift 2%). Released **`0.6.0`**. DL-0025…0028. Ciclo Modulith pego pelo gate e corrigido (reconciliation→exchange). |
+| 6 — Point-clock crawler | 2026-06-29 12:17 (-03:00) | _in progress_ | Supervisor loop (8b1087fe): sem 🟡 → próxima ⬜ = Fase 6; marcada 🟡; `RUN-PHASE` (FASE-ALVO=6) delegado a um subagente em background. |
 
 A phase is **Complete** only when every slice's acceptance criteria are tested and
 passing, the architecture gates (ArchUnit + Spring Modulith + Spotless/Checkstyle)
@@ -39,7 +40,7 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 | **3** | First real integration (ACL) | SPEC-0009 | ✅ Complete | Released `0.4.0` (tag). Sourcing + ramo `INTEGRATED` (confia no preço externo, sem recompor) + **webhook ACL de entrada** (HMAC, idempotente, DTO externo só em `infra.integration`). `./mvnw verify` 135 tests (10 Modulith modules). |
 | **4** | Cancellation + merchant trap | SPEC-0010 | ✅ Complete | Released `0.5.0` (tag). `CancellationPolicy` (STANDARD/ALL_SALES_FINAL/CUSTOM, janelas, costBearer) + `NoShowPolicy` + **armadilha do merchant** (reembolso ao cliente e cobrança do portal não se anulam). Vive no módulo `booking`. `./mvnw verify` 157 tests. |
 | **5** | Exchange exposure + reports | SPEC-0011 | ✅ Complete | Released `0.6.0` (tag). Taxa de mercado + decomposição **subsídio × drift** (`FxPosition`), **posição agregada do livro** (`LiveExposure`) com alerta de drift (2%) e relatório `PromoFxResult`. Estende `exchange`. `./mvnw verify` 179 tests. |
-| **6** | Point-clock crawler | SPEC-0012 | ⬜ Not started | Operational snapshot for People + signed AFD/AEJ for Compliance. |
+| **6** | Point-clock crawler | SPEC-0012 | 🟡 In progress | Supervisor loop (8b1087fe) started 2026-06-29 12:17 (-03:00); RUN-PHASE delegated to a subagent. Operational snapshot for People + signed AFD/AEJ for Compliance. |
 | **7** | Intelligence (DSS) | SPEC-0013 | ⬜ Not started | OverrideNudge + PromoFxAdvisor. |
 | **8+** | Support & generic contexts | SPEC-0014…0025 | ⬜ Not started | CommercialPolicy, Finance, Billing, Payout, AfterSales, Marketing, Portfolio, Assets, People, Platform, Identity, Admin. |
 
