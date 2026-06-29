@@ -94,13 +94,13 @@ public class BookingService {
   }
 
   /**
-   * Applies a lifecycle transition (BR2) and publishes the matching event for CONFIRMED/NO_SHOW
-   * (BR5). On CONFIRMED it also freezes the cancellation/no-show policy snapshot (SPEC-0010 BR1).
-   * Cancellation goes through {@link #cancel} (it produces charges); this method rejects a
-   * CANCELLED target so the rich path is always used.
+   * Applies a lifecycle transition (BR2). On CONFIRMED it freezes the cancellation/no-show policy
+   * snapshot (SPEC-0010 BR1) and publishes {@code BookingConfirmed}. Cancellation and no-show go
+   * through {@link #cancel}/{@link #noShow} (they produce charges); this method is for the other
+   * transitions (PENDING/CHANGED/COMPLETED/CONFIRMED).
    *
    * @param bookingId the booking id
-   * @param target the target status (not CANCELLED — use {@link #cancel})
+   * @param target the target status (not CANCELLED/NO_SHOW — use {@link #cancel}/{@link #noShow})
    * @param reason the reason
    * @param actor who performs the transition (audit)
    * @return the updated booking view
@@ -117,11 +117,52 @@ public class BookingService {
       freezeSnapshot(booking, now);
       events.publishEvent(
           new BookingConfirmed(booking.id(), booking.quoteId(), booking.accountId(), now));
-    } else if (target == BookingStatus.NO_SHOW) {
-      events.publishEvent(new BookingNoShow(booking.id(), now));
     }
     log.info("BookingTransition bookingId={} to={} performedBy={}", booking.id(), target, actor);
     return booking.toView();
+  }
+
+  /**
+   * Records a no-show using the booking's frozen no-show policy (SPEC-0010 BR6): charges the fee
+   * unless it is waived by proof of a cancelled flight (when {@code waivedIfFlightCancelled} is
+   * set). Persists a {@link ChargeKind#NO_SHOW} charge when the fee applies (BR7) and publishes
+   * {@code BookingNoShow} and {@code NoShowCharged}. The proof's compliance verification is out of
+   * scope (DL-0023): {@code flightCancelledProof} is taken as the fact that proof was provided.
+   *
+   * @param bookingId the booking id
+   * @param flightCancelledProof whether proof of a cancelled flight was provided
+   * @param actor who records it (audit)
+   * @return the no-show result (fee and whether it was waived)
+   * @throws BookingNotFoundException when the booking does not exist
+   * @throws BookingTransitionInvalidException when the booking cannot transition to NO_SHOW (BR2)
+   */
+  @Transactional
+  public NoShowResult noShow(UUID bookingId, boolean flightCancelledProof, String actor) {
+    Booking booking = repository.findById(bookingId).orElseThrow(BookingNotFoundException::new);
+    Instant now = clock.instant();
+    booking.transitionTo(BookingStatus.NO_SHOW, null, now, actor);
+    repository.save(booking);
+
+    BookingCancellationSnapshot snapshot = snapshotFor(booking, now);
+    NoShowPolicy noShow = snapshot.noShowPolicy();
+    Money fee = noShow.chargeFor(flightCancelledProof);
+    boolean waived = noShow.isWaived(flightCancelledProof);
+
+    Charge charge = null;
+    if (fee != null) {
+      charge = new Charge(ChargeKind.NO_SHOW, fee, snapshot.policy().costBearer());
+      chargeRepository.save(CancellationCharge.of(booking.id(), charge, now, actor));
+    }
+
+    events.publishEvent(new BookingNoShow(booking.id(), now));
+    events.publishEvent(new NoShowCharged(booking.id(), fee, waived, now));
+    log.info(
+        "BookingNoShow bookingId={} fee={} waived={} performedBy={}",
+        booking.id(),
+        fee,
+        waived,
+        actor);
+    return new NoShowResult(booking.id(), booking.status(), charge, waived);
   }
 
   /**

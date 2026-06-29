@@ -93,6 +93,50 @@ apenas registra a cotação com aquele preço. O que o operador precisa saber:
 > Para quem é de TI: o site chama `POST /api/integration/quotation-site/inbound` com o cabeçalho
 > `X-Signature`. A saúde do conector está em `GET /api/integration/quotation-site/health`.
 
+### Fase 4 — Política de cancelamento, multas e a "armadilha do merchant"
+
+A partir desta fase o cancelamento deixa de ser "desfaz tudo, sem multa" e passa a seguir uma
+**política de cancelamento** configurável por produto/fornecedor. A política diz: que tipo é
+(Padrão, Venda final, ou Personalizado), quais são as **janelas de multa** (quanto se cobra conforme
+a proximidade do serviço), se é reembolsável, **quem paga** a multa, e se a venda é "merchant"
+(o portal assume a cobrança/reembolso) ou afiliada.
+
+**Configurar a política de um produto.** Um usuário administrativo informa, para um produto/fornecedor:
+
+- **Tipo:** *Padrão* (multa pela janela), *Venda final* (`ALL_SALES_FINAL` — não reembolsável do
+  ponto de vista do fornecedor) ou *Personalizado*.
+- **Janelas de multa:** pares "até quantas horas antes do serviço" → "percentual da multa" (por
+  exemplo: até 24h antes, 50%; até 72h antes, 25%). Cancelou com mais antecedência que todas as
+  janelas? Sem multa.
+- **Quem paga** a multa: a agência, a Acme ou o fornecedor.
+- **Venda merchant?** Se sim, a Acme assume a obrigação com o fornecedor e o eventual reembolso ao
+  cliente. Se não (afiliada — o padrão), quem assume é o fornecedor.
+- **Multa de no-show** (carro) e se ela é **dispensada com prova de voo cancelado**.
+
+> Para quem é de TI: `PUT /api/products/{ref}/cancellation-policy` grava e
+> `GET /api/products/{ref}/cancellation-policy` consulta. Produto sem política configurada usa um
+> **padrão seguro** (Padrão, afiliado, sem janelas, sem multa).
+
+**Cancelar uma reserva.** Ao cancelar, o operador informa o **motivo**, **quando o serviço começa** e,
+se houver, **um reembolso ao cliente**. O sistema usa a política **congelada na confirmação da
+reserva** (não a política atual — assim, mudar a política depois não altera reservas já confirmadas) e
+devolve a lista de **encargos** gerados:
+
+- **Multa** (na venda Padrão/Personalizado), conforme a janela e com quem paga.
+- Na **Venda final**: o **custo com o fornecedor** continua **devido por inteiro**, mesmo que se
+  decida **reembolsar o cliente**. São **duas obrigações separadas que não se anulam** — é a
+  **"armadilha do merchant"**: tratá-las como uma só (descontar uma da outra) esconderia dinheiro
+  perdido. O sistema mantém as duas visíveis.
+
+**Registrar um no-show (carro).** Se o cliente não comparece, o sistema cobra a **multa de no-show**
+da política. Se a política permite **dispensa com prova de voo cancelado** e o operador informa a
+prova, a multa é **dispensada**.
+
+> Para quem é de TI: `POST /api/bookings/{id}/cancel` agora aceita `{reason, serviceStartsAt,
+> refundAmount}` e devolve os encargos; `POST /api/bookings/{id}/no-show` aceita
+> `{flightCancelledProof}`. A verificação formal do documento de prova é responsabilidade do cofre de
+> documentos (Compliance), em fase posterior.
+
 ## 4. Glossário
 
 - **Backend / servidor:** a parte do sistema que processa as regras e fala com o banco de dados.
@@ -104,6 +148,19 @@ apenas registra a cotação com aquele preço. O que o operador precisa saber:
   sistema externo; o ERP não recalcula o preço (sem sugestão, sem ajuste manual).
 - **Webhook:** uma mensagem que um sistema externo envia automaticamente para o ERP (aqui, a cotação
   vinda do site de cotação), sempre **assinada** para garantir que é legítima.
+- **Política de cancelamento:** as regras de cancelamento de um produto — tipo, janelas de multa,
+  quem paga, reembolsável, e se a venda é merchant ou afiliada.
+- **Janela de multa:** "até X horas antes do serviço, cobra Y% de multa". Cancelar com mais
+  antecedência que todas as janelas não gera multa.
+- **Venda final (`ALL_SALES_FINAL`):** venda não reembolsável do ponto de vista do fornecedor: o
+  custo com ele continua devido mesmo que se reembolse o cliente.
+- **Merchant of record:** quando a Acme/portal **assume** a cobrança e o reembolso de uma marca; o
+  contrário é **afiliada** (quem assume é o fornecedor).
+- **Armadilha do merchant:** numa venda final merchant, o custo com o fornecedor **e** o reembolso ao
+  cliente são **duas obrigações que não se anulam** — o sistema mantém as duas visíveis para não
+  perder dinheiro de forma invisível.
+- **No-show:** o cliente não comparece; gera uma multa, dispensável com prova de voo cancelado quando
+  a política permite.
 
 ## 5. Histórico de versões do manual
 
@@ -111,5 +168,6 @@ apenas registra a cotação com aquele preço. O que o operador precisa saber:
 |---|---|---|
 | 0.1.0 | 0 — Fundação | Primeira versão: visão geral, como acessar e a tela "Saúde do sistema". |
 | 0.4.0 | 3 — Integração | Procedência da oferta (*Sourcing*): registro manual de oferta e cotação automática vinda do site de cotação (ramo INTEGRADO). |
+| 0.5.0 | 4 — Cancelamento | Política de cancelamento por produto, multas por janela, no-show com dispensa por prova de voo, e a "armadilha do merchant" (duas obrigações que não se anulam na venda final). |
 
 > **Próxima fase (4):** política de cancelamento como objeto e a armadilha do *merchant of record*.
