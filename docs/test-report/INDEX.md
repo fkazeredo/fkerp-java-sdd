@@ -33,6 +33,7 @@ resultado, cobertura e como reproduzir.
 | Slice 8a — CommercialPolicy (parâmetros governados + precedência) | SPEC-0014 | [slice-8a-commercial-policy.md](slice-8a-commercial-policy.md) | ✅ verde (backend 239 testes; motor de precedência Diretiva>Promoção>Contrato>Política>Padrão com proveniência + V18 seed; gradua o stub de markup sem quebrar o Quoting; diretiva auditada vence imediatamente) |
 | Slice 8b-1 — Finance: lançamento automático de AP/AR por evento | SPEC-0015 (full) | [slice-8b1-finance-event-posting.md](slice-8b1-finance-event-posting.md) | ✅ verde (backend 243 testes; consome eventos do Booking → AP/AR idempotente UNIQUE(source_ref,charge_kind) + V19; merchant trap preservado; regra de ouro intacta; Modulith acíclico finance→booking) |
 | Slice 8b-2 — Finance: balancete do período por moeda/status | SPEC-0015 (full) | [slice-8b2-finance-trial-balance.md](slice-8b2-finance-trial-balance.md) | ✅ verde (backend 245 testes; `GET /periods/{yyyymm}/trial-balance` por moeda com net=AR−AP + contagens por status; aditivo, sem migração; sem plano de contas — DL-0043) |
+| Slice 8c-1 — Billing: cálculo de tributos + agregado | SPEC-0016 | [slice-8c1-billing-tax.md](slice-8c1-billing-tax.md) | ✅ verde (backend 255 testes; 13º módulo `billing` folha; ISS=alíquota×comissão HALF_UP + estratégia de regime trocável (Simples default, DL-0044); base=comissão nunca o pacote (BR1); V20 commission_invoices UNIQUE parcial + municipal_iss_rates seed) |
 
 ## Resumo por nível (Fase 0)
 
