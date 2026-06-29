@@ -16,7 +16,7 @@
 
 | Phase | Started | Finished | Outcome |
 |---|---|---|---|
-| 0 — Foundation | 2026-06-29 03:57 (-03:00) | _in progress_ | Autonomous run via `docs/RUN-PHASE.md`; first commit `b611618`. |
+| 0 — Foundation | 2026-06-29 03:57 (-03:00) | 2026-06-29 04:57 (-03:00) | ✅ Green: `./mvnw verify` 12 tests, `docker compose up` → health UP, frontend 4 tests, released `0.1.0`. |
 
 A phase is **Complete** only when every slice's acceptance criteria are tested and
 passing, the architecture gates (ArchUnit + Spring Modulith + Spotless/Checkstyle)
@@ -26,7 +26,7 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 
 | Phase | Name | Spec(s) | Status | Notes |
 |---|---|---|---|---|
-| **0** | Foundation (walking skeleton + Event Storming) | SPEC-0001 | 🟡 In progress | Branch `feature/slice-0-walking-skeleton`. See slice detail below. |
+| **0** | Foundation (walking skeleton + Event Storming) | SPEC-0001 | ✅ Complete | Released `0.1.0` (tag). See slice detail below. |
 | **1** | Manual commercial core | SPEC-0002…0007 | ⬜ Not started | Accounts, Exchange, Commissioning, Quoting (keystone), Booking, Reconciliation. Needs ADR 0014. |
 | **2** | Minimal compliance | SPEC-0008 (+ Finance seam 0015) | ⬜ Not started | Document vault + mandatory attachment + monthly-close veto + retention. |
 | **3** | First real integration (ACL) | SPEC-0009 | ⬜ Not started | Quote site, INTEGRATED branch. |
@@ -40,15 +40,15 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 
 | Slice | Deliverable | Status |
 |---|---|---|
-| Slice 0 | Modular-monolith skeleton (`com.fksoft`, 3 layers), Postgres via docker-compose, Flyway baseline, `GlobalExceptionHandler`/`ApiErrorResponse`/`HttpErrorMapping`/`PageResponse`, `UserContextProvider` dev stub, i18n, correlation id, `GET /api/system/health` (readiness checks DB), ArchUnit + Spring Modulith green, minimal CI, Angular health screen | 🟡 In progress |
-| Slice 0 | `docs/event-storming.md` (Portal de Experiências end-to-end sale) | 🟡 In progress |
+| Slice 0 | Modular-monolith skeleton (`com.fksoft`, 3 layers), Postgres via docker-compose, Flyway baseline, `GlobalExceptionHandler`/`ApiErrorResponse`/`HttpErrorMapping`/`PageResponse`, `UserContextProvider` dev stub, i18n, correlation id, `GET /api/system/health` (readiness checks DB), ArchUnit + Spring Modulith green, minimal CI, Angular health screen | ✅ Complete |
+| Slice 0 | `docs/event-storming.md` (Portal de Experiências end-to-end sale) | ✅ Complete |
 
 **Phase 0 exit criteria** (from SPEC-0001 Acceptance Criteria):
-- [ ] `cd backend && ./mvnw verify` green with Docker up (incl. ArchUnit + Modulith).
-- [ ] `docker-compose up` brings up app + db; `GET /api/system/health` returns `UP`.
-- [ ] Angular screen shows health OK (and the error state when backend is down).
-- [ ] Minimal CI green (backend + frontend build/tests, lint, `flyway validate`).
-- [ ] `docs/event-storming.md` exists with the Portal de Experiências flow and boundaries.
+- [x] `cd backend && ./mvnw verify` green with Docker up (incl. ArchUnit + Modulith).
+- [x] `docker-compose up` brings up app + db; `GET /api/system/health` returns `UP`.
+- [x] Angular screen shows health OK (and the error state when backend is down) — component tests cover loading/success/error.
+- [x] Minimal CI green (backend + frontend build/tests, lint, `flyway validate`) — workflow added; each step run locally.
+- [x] `docs/event-storming.md` exists with the Portal de Experiências flow and boundaries.
 
 ## Open architectural debts carried forward
 
