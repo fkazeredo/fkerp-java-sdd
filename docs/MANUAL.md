@@ -177,6 +177,35 @@ liquidados. É uma visão de caixa do mês — não uma demonstração contábil
 > `payable`/`receivable`/`net` + contagens por status). Os lançamentos automáticos são criados ao
 > consumir os eventos de cancelamento/no-show das reservas, de forma idempotente.
 
+### Fase 8 — Pós-venda (chamados, SLA, reembolso e cancelamento)
+
+O **pós-venda** registra os **chamados** (reclamação, pedido de alteração, pedido de cancelamento,
+pedido de reembolso ou informação) ligados a uma reserva e acompanha o **prazo de atendimento (SLA)**.
+
+O que o operador faz:
+
+- **Abrir um chamado:** informa a reserva, o tipo e um resumo. O sistema calcula automaticamente os
+  prazos de SLA a partir das **regras de SLA governadas** (padrão: **1ª resposta em 24h**, resolução
+  em **72h**, e **48h** para cancelamento/reembolso). Esses prazos podem ser ajustados pela diretoria
+  via **diretiva** (sem precisar de nova versão do sistema).
+- **Conduzir o chamado:** assumir, pôr em andamento, colocar em espera e, ao fim, **resolver** e
+  **encerrar**. Reabrir um chamado já resolvido fica registrado (conta para o "custo de servir").
+- **Resolver com reembolso:** ao aprovar um reembolso, o sistema **encaminha o pagamento ao módulo de
+  Repasse/Reembolso (Payout)** referenciando o próprio chamado — **uma única vez** (não cria reembolso
+  duplicado). O reembolso ao cliente **não apaga** a obrigação com o fornecedor (armadilha do merchant
+  preservada).
+- **Resolver com cancelamento:** ao aprovar um cancelamento, o sistema **aciona o cancelamento da
+  reserva** (que aplica a política de multa); o pós-venda **não** mexe na reserva por conta própria.
+- **SLA estourado:** quando o prazo passa sem resolução, o chamado é **marcado como "em violação de
+  SLA" (alerta)** — isso **não trava** o atendimento; serve para priorizar e para medir o "custo de
+  servir" por produto/fornecedor.
+
+> Para quem é de TI: `POST /api/aftersales/cases` (abre — devolve `OPEN` com `dueAt`),
+> `POST /api/aftersales/cases/{id}/assign|progress|wait|resolve|close` (transições; `resolve` pode
+> acionar Booking e/ou Payout), `GET /api/aftersales/cases/{id}` e
+> `GET /api/aftersales/cases?type=&status=&bookingId=&breached=&page=&size=`. A varredura de SLA roda
+> por job com relógio controlável; o reembolso é idempotente por chamado.
+
 ## 4. Glossário
 
 - **Backend / servidor:** a parte do sistema que processa as regras e fala com o banco de dados.
@@ -218,6 +247,11 @@ liquidados. É uma visão de caixa do mês — não uma demonstração contábil
 | 0.4.0 | 3 — Integração | Procedência da oferta (*Sourcing*): registro manual de oferta e cotação automática vinda do site de cotação (ramo INTEGRADO). |
 | 0.5.0 | 4 — Cancelamento | Política de cancelamento por produto, multas por janela, no-show com dispensa por prova de voo, e a "armadilha do merchant" (duas obrigações que não se anulam na venda final). |
 | 0.10.0 | 8 — Finance (full) | Contas a Pagar/Receber e o fechamento mensal com a "regra de ouro" (não fecha sem a nota); **lançamentos automáticos** a partir de cancelamentos e no-show das reservas (uma vez só, sem duplicar); balancete do período por moeda. |
+| 0.13.0 | 8 — AfterSales | Pós-venda: chamados (reclamação/alteração/cancelamento/reembolso/informação) ligados à reserva; prazos de **SLA governados** (24h/72h/48h, ajustáveis por diretiva) com alerta de violação que **não trava**; resolução que **encaminha** reembolso ao Payout (uma vez, sem cancelar a obrigação do fornecedor) e cancelamento à reserva; "custo de servir" por chamado. |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.
+>
+> Fase 15 — Docs bilíngues (chore, sem mudança de versão): a cobertura bilíngue, antes só do manual,
+> passou a incluir o **README** (`README.en-US.md`) e o **changelog consolidado en-US**
+> (`docs/release-notes/CHANGELOG.en-US.md`). Relatórios técnicos seguem só em pt-BR (Regra Zero).

@@ -37,3 +37,10 @@ docker compose up --build
 ## Riscos e pendências
 
 - …
+
+---
+
+> **Documentação bilíngue (obrigatório).** Ao cortar a release, além deste arquivo pt-BR, **adicione a
+> versão ao [`CHANGELOG.en-US.md`](CHANGELOG.en-US.md)** (mirror consolidado em en-US, mais recente no
+> topo). As duas faces andam juntas na mesma fatia — ver `CLAUDE.md` (regra de docs bilíngues).
+> Relatórios técnicos (specs, ADRs, decision-log, relatórios de fase/teste) seguem **só pt-BR** (Regra Zero).

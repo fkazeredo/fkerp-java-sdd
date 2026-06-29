@@ -180,6 +180,34 @@ confirmed or settled. It is a cash view of the month — not an accounting state
 > with `payable`/`receivable`/`net` + counts by status). The automatic entries are created by
 > consuming the bookings' cancellation/no-show events, idempotently.
 
+### Phase 8 — After-sales (support cases, SLA, refund and cancellation)
+
+**After-sales** records the **support cases** (complaint, change request, cancellation request,
+refund request or information) tied to a booking and tracks the **service-level deadline (SLA)**.
+
+What the operator does:
+
+- **Open a case:** provide the booking, the type and a summary. The system computes the SLA deadlines
+  from the **governed SLA rules** (default: **first response in 24h**, resolution in **72h**, and
+  **48h** for cancellation/refund). Those deadlines can be tightened by a **director directive**
+  (no new system release needed).
+- **Drive the case:** assign, progress, put on hold, then **resolve** and **close**. Reopening a
+  resolved case is recorded (it counts towards the "cost to serve").
+- **Resolve with a refund:** approving a refund **forwards the payment to the Payout module**
+  referencing the case itself — **exactly once** (no duplicate refund). The customer refund does
+  **not** erase the supplier obligation (the merchant trap is preserved).
+- **Resolve with a cancellation:** approving a cancellation **drives the booking cancellation** (which
+  applies the penalty policy); after-sales never changes the booking on its own.
+- **SLA breached:** when the deadline passes without resolution, the case is **flagged as "SLA
+  breached" (an alert)** — it does **not** block the work; it helps prioritize and measure the "cost
+  to serve" per product/supplier.
+
+> For IT: `POST /api/aftersales/cases` (opens — returns `OPEN` with `dueAt`),
+> `POST /api/aftersales/cases/{id}/assign|progress|wait|resolve|close` (`resolve` may drive Booking
+> and/or Payout), `GET /api/aftersales/cases/{id}` and
+> `GET /api/aftersales/cases?type=&status=&bookingId=&breached=&page=&size=`. The SLA sweep runs as a
+> job with a controllable clock; the refund is idempotent per case.
+
 ## 4. Glossary
 
 - **Backend / server:** the part of the system that processes the rules and talks to the database.
@@ -221,7 +249,12 @@ confirmed or settled. It is a cash view of the month — not an accounting state
 | 0.4.0 | 3 — Integration | Offer provenance (*Sourcing*): manual offer recording and the automatic quote from the quotation site (INTEGRATED branch). |
 | 0.5.0 | 4 — Cancellation | Per-product cancellation policy, penalty windows, no-show with proof-of-cancelled-flight waiver, and the "merchant trap" (two obligations that do not net out on a final sale). |
 | 0.10.0 | 8 — Finance (full) | Accounts Payable/Receivable and the monthly close with the "golden rule" (no close without the invoice); **automatic entries** from booking cancellations and no-shows (exactly once, no duplication); per-currency trial balance for the period. |
+| 0.13.0 | 8 — AfterSales | After-sales: support cases (complaint/change/cancellation/refund/info) tied to a booking; **governed SLA deadlines** (24h/72h/48h, tightenable by directive) with a non-blocking breach alert; resolution that **forwards** a refund to Payout (once, without cancelling the supplier obligation) and a cancellation to the booking; per-case "cost to serve". |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of
 > `docs/MANUAL.md` (pt-BR) — keep both in sync on every slice.
+>
+> Phase 15 — Bilingual docs (chore, no version bump): bilingual coverage, previously the manual only,
+> now also includes the **README** (`README.en-US.md`) and the **consolidated en-US changelog**
+> (`docs/release-notes/CHANGELOG.en-US.md`). Technical reports stay pt-BR only (Rule Zero).

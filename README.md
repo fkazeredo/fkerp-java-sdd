@@ -1,5 +1,7 @@
 # ERP Acme Travel — Java + Spring Boot + Angular
 
+> 🌐 **Idioma / Language:** **Português (pt-BR)** · [English](README.en-US.md)
+
 Pacote **completo e autossuficiente** das especificações e regras de arquitetura do ERP da Acme Travel
 (um GSA — representante comercial de marcas de turismo). **Stack: Java 21 + Spring Boot no backend,
 Angular no front, Postgres, monólito modular.** Prosa em pt-BR; identificadores de código em inglês.
