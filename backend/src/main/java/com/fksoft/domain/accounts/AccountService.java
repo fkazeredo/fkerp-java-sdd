@@ -3,6 +3,7 @@ package com.fksoft.domain.accounts;
 import com.fksoft.domain.accounts.internal.Account;
 import com.fksoft.domain.accounts.internal.AccountRepository;
 import java.time.Clock;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -104,6 +105,16 @@ public class AccountService implements AccountDirectory {
   @Transactional(readOnly = true)
   public boolean exists(UUID accountId) {
     return accountId != null && repository.existsById(accountId);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Optional<UUID> findIdByDocument(String document) {
+    String digits = normalizeFilter(document);
+    if (digits == null) {
+      return Optional.empty();
+    }
+    return repository.findFirstByDocumentNumber(digits).map(Account::id);
   }
 
   private static AccountView toView(Account account) {

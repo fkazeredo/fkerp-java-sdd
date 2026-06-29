@@ -2,6 +2,7 @@ package com.fksoft.domain.accounts.internal;
 
 import com.fksoft.domain.accounts.AccountStatus;
 import com.fksoft.domain.accounts.LegalType;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +19,12 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
 
   /** Whether an account already exists for the given legal type and normalized document digits. */
   boolean existsByLegalTypeAndDocumentNumber(LegalType legalType, String documentNumber);
+
+  /**
+   * Resolves an account by its normalized document digits, irrespective of legal type (SPEC-0009,
+   * DL-0017). In the v1 cadastre there is no collision between legal types for the same number.
+   */
+  Optional<Account> findFirstByDocumentNumber(String documentNumber);
 
   /**
    * Paginated search with optional filters: both {@code status} and {@code document} (normalized

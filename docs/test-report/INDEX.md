@@ -18,6 +18,7 @@ resultado, cobertura e como reproduzir.
 | Slice 7c — Veto de fechamento | SPEC-0008/0015 | [slice-7c-close-veto.md](slice-7c-close-veto.md) | ✅ verde (backend 108 testes; regra de ouro + job de retenção) |
 | Slice 8a — Sourcing | SPEC-0009 | [slice-8a-sourcing.md](slice-8a-sourcing.md) | ✅ verde (backend 114 testes; SourcedOffer + offers API) |
 | Slice 8b — Quoting ramo INTEGRATED | SPEC-0009/0005 | [slice-8b-integrated-quote.md](slice-8b-integrated-quote.md) | ✅ verde (backend 118 testes; composeIntegrated + porta + V10) |
+| Slice 8c — ACL de entrada (webhook) | SPEC-0009 | [slice-8c-inbound-acl.md](slice-8c-inbound-acl.md) | ✅ verde (backend 135 testes; HMAC + tradução ACL + idempotência + INTEGRATED ponta a ponta) |
 
 ## Resumo por nível (Fase 0)
 

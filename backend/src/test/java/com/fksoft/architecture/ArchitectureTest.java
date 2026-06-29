@@ -98,6 +98,22 @@ class ArchitectureTest {
           .beAnnotatedWith(Autowired.class)
           .as("constructor injection only — no field @Autowired (backend.md)");
 
+  /**
+   * The external vendor DTO of the quotation-site ACL ({@code infra.integration.quotationsite})
+   * must never cross into the domain (SPEC-0009 BR6): only the translated domain command leaves the
+   * adapter. This proves the Anti-Corruption Layer keeps the external shape out of the model.
+   */
+  @ArchTest
+  static final ArchRule DOMAIN_MUST_NOT_DEPEND_ON_EXTERNAL_INTEGRATION_DTOS =
+      noClasses()
+          .that()
+          .resideInAPackage("..domain..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAPackage("..infra.integration.quotationsite..")
+          .as("the external quotation-site DTO must not cross into the domain (SPEC-0009 BR6, ACL)")
+          .allowEmptyShould(true);
+
   private static ArchCondition<JavaClass> notExposeLombokGeneratedMutators() {
     return new ArchCondition<>("not expose Lombok-generated mutators") {
       @Override
