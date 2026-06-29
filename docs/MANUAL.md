@@ -137,6 +137,40 @@ prova, a multa é **dispensada**.
 > `{flightCancelledProof}`. A verificação formal do documento de prova é responsabilidade do cofre de
 > documentos (Compliance), em fase posterior.
 
+### Finance — Contas a Pagar/Receber e o fechamento do mês
+
+O sistema mantém o **livro-caixa** da Acme: o registro do que a empresa **deve** (Contas a Pagar) e
+do que tem a **receber** (Contas a Receber), organizado por **mês contábil** (período `AAAA-MM`).
+
+**Lançar uma conta a pagar ou a receber.** O operador registra um lançamento informando a direção
+(a pagar ou a receber), a parte (fornecedor, agência/agente), o valor e a moeda, o tipo do lançamento
+e o mês. O lançamento nasce **provisório** (pode ainda faltar o documento). Ele pode depois ser
+**confirmado**.
+
+**Fechar o mês — e a "regra de ouro".** Ao fechar um período, o sistema **consulta o cofre de
+documentos (Compliance)**. Se houver lançamento sem o documento obrigatório, **o mês não fecha**: o
+sistema responde quais lançamentos estão pendentes e o que falta anexar. Com os documentos anexados,
+o mesmo período **fecha**. Esse é o ponto onde "não fecha sem a nota".
+
+**Lançamentos automáticos a partir das operações.** O operador não precisa lançar tudo à mão: quando
+uma reserva gera um encargo, o sistema **cria o lançamento sozinho**, no mês em que o fato aconteceu:
+
+- **Cancelamento com multa** → uma conta **a receber** (a multa da agência).
+- **Reembolso ao cliente** → uma conta **a pagar** (o reembolso).
+- **Custo do fornecedor na venda final (merchant)** → uma conta **a pagar** ao fornecedor — que
+  **convive** com o reembolso ao cliente, sem se anular (a "armadilha do merchant").
+- **No-show com multa** → uma conta **a receber** (a multa do não comparecimento).
+
+Cada operação vira lançamento **uma única vez**, mesmo que o aviso interno chegue repetido — não há
+duplicação.
+
+> Para quem é de TI: `POST /api/finance/entries` (cria, devolve `PROVISIONAL`),
+> `POST /api/finance/entries/{id}/confirm`, `GET /api/finance/entries?...` (lista paginada),
+> `POST /api/finance/periods/{aaaa-mm}/close` (fecha — `409 finance.period.cannot-close` com as
+> pendências quando o Compliance veta) e `GET /api/finance/periods/{aaaa-mm}` (status + totais
+> AP/AR por moeda). Os lançamentos automáticos são criados ao consumir os eventos de cancelamento/
+> no-show das reservas, de forma idempotente.
+
 ## 4. Glossário
 
 - **Backend / servidor:** a parte do sistema que processa as regras e fala com o banco de dados.
@@ -161,6 +195,14 @@ prova, a multa é **dispensada**.
   perder dinheiro de forma invisível.
 - **No-show:** o cliente não comparece; gera uma multa, dispensável com prova de voo cancelado quando
   a política permite.
+- **Lançamento (AP/AR):** o registro de uma conta **a pagar** (AP) ou **a receber** (AR), com valor,
+  moeda, parte, tipo e o mês a que pertence.
+- **Período / mês contábil (`AAAA-MM`):** o mês ao qual os lançamentos pertencem; é a unidade do
+  fechamento mensal.
+- **Fechamento do mês:** trava o período; só fecha se todos os lançamentos têm o documento obrigatório
+  (conferido pelo cofre de documentos / Compliance).
+- **Lançamento provisório:** lançamento já registrado, mas que ainda pode estar sem o documento
+  obrigatório; vira **confirmado** quando validado.
 
 ## 5. Histórico de versões do manual
 
@@ -169,5 +211,7 @@ prova, a multa é **dispensada**.
 | 0.1.0 | 0 — Fundação | Primeira versão: visão geral, como acessar e a tela "Saúde do sistema". |
 | 0.4.0 | 3 — Integração | Procedência da oferta (*Sourcing*): registro manual de oferta e cotação automática vinda do site de cotação (ramo INTEGRADO). |
 | 0.5.0 | 4 — Cancelamento | Política de cancelamento por produto, multas por janela, no-show com dispensa por prova de voo, e a "armadilha do merchant" (duas obrigações que não se anulam na venda final). |
+| 0.10.0 | 8 — Finance (full) | Contas a Pagar/Receber e o fechamento mensal com a "regra de ouro" (não fecha sem a nota); **lançamentos automáticos** a partir de cancelamentos e no-show das reservas (uma vez só, sem duplicar); balancete do período por moeda. |
 
-> **Próxima fase (4):** política de cancelamento como objeto e a armadilha do *merchant of record*.
+> Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
+> Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.

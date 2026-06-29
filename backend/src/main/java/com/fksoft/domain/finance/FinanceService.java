@@ -4,10 +4,14 @@ import com.fksoft.domain.finance.internal.AccountingPeriod;
 import com.fksoft.domain.finance.internal.AccountingPeriodRepository;
 import com.fksoft.domain.finance.internal.LedgerEntry;
 import com.fksoft.domain.finance.internal.LedgerEntryRepository;
+import com.fksoft.domain.finance.internal.PostedEventEntry;
+import com.fksoft.domain.finance.internal.PostedEventEntryRepository;
 import com.fksoft.domain.money.Money;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,6 +20,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,6 +40,7 @@ public class FinanceService implements LedgerDirectory {
 
   private final LedgerEntryRepository entries;
   private final AccountingPeriodRepository periods;
+  private final PostedEventEntryRepository postedEvents;
   private final CloseGuard closeGuard;
   private final Clock clock;
   private final ApplicationEventPublisher events;
@@ -79,6 +85,75 @@ public class FinanceService implements LedgerDirectory {
         entryType,
         period);
     return entry.toView();
+  }
+
+  /**
+   * Posts a ledger entry derived from a business fact (SPEC-0015 BR5, DL-0041), idempotently: the
+   * fact is identified by {@code (sourceRef, chargeKind)} and posted at most once. The entry is
+   * born PROVISIONAL in the period of the fact ({@code occurredAt} in UTC), created lazily OPEN. A
+   * re-delivered fact is a no-op (existence pre-check, and the UNIQUE constraint guards a
+   * concurrent double-post). A fact whose period is already CLOSED (BR4) is skipped (logged) — a
+   * manual adjustment goes to an open period.
+   *
+   * <p>Runs inside the producer's transaction (the listener is in-process and synchronous), so the
+   * entry and its idempotency row are written atomically with the originating fact.
+   *
+   * @param sourceRef the source fact reference (e.g. the booking id, as text)
+   * @param chargeKind the charge kind that produced this entry (value, idempotency key part)
+   * @param direction PAYABLE or RECEIVABLE
+   * @param party the counterparty
+   * @param amount the amount in its original currency (DL-0013)
+   * @param entryType the business type
+   * @param occurredAt when the fact happened (UTC) — determines the period
+   */
+  @Transactional
+  public void postFromCharge(
+      String sourceRef,
+      String chargeKind,
+      LedgerDirection direction,
+      Party party,
+      Money amount,
+      EntryType entryType,
+      Instant occurredAt) {
+    if (postedEvents.existsBySourceRefAndChargeKind(sourceRef, chargeKind)) {
+      return; // already posted — idempotent no-op (DL-0041)
+    }
+    String period = YearMonth.from(occurredAt.atZone(ZoneOffset.UTC)).toString();
+    AccountingPeriod accountingPeriod =
+        periods.findById(period).orElseGet(() -> periods.save(AccountingPeriod.open(period)));
+    if (accountingPeriod.isClosed()) {
+      log.info(
+          "LedgerPostingSkippedClosedPeriod sourceRef={} chargeKind={} period={}",
+          sourceRef,
+          chargeKind,
+          period);
+      return; // BR4 — never post into a sealed period; the manual adjustment goes to an open one
+    }
+    Instant now = clock.instant();
+    LedgerEntry entry =
+        LedgerEntry.register(direction, party, amount, entryType, period, now, "system");
+    entries.save(entry);
+    try {
+      postedEvents.saveAndFlush(PostedEventEntry.of(sourceRef, chargeKind, entry.id(), now));
+    } catch (DataIntegrityViolationException raced) {
+      // A concurrent delivery won the race and inserted the idempotency row first; the UNIQUE
+      // rejected ours. The transaction rolls back the just-saved entry — net effect: posted once.
+      log.info(
+          "LedgerPostingRaced sourceRef={} chargeKind={} (already posted concurrently)",
+          sourceRef,
+          chargeKind);
+      throw raced;
+    }
+    events.publishEvent(
+        new LedgerEntryRegistered(entry.id(), direction, entryType.name(), period, now));
+    log.info(
+        "LedgerEntryRegisteredFromEvent entryId={} sourceRef={} chargeKind={} direction={} type={} period={}",
+        entry.id(),
+        sourceRef,
+        chargeKind,
+        direction,
+        entryType,
+        period);
   }
 
   /**
