@@ -3,6 +3,8 @@ package com.fksoft.infra.web;
 import com.fksoft.domain.accounts.AccountDocumentDuplicateException;
 import com.fksoft.domain.accounts.AccountDocumentInvalidException;
 import com.fksoft.domain.accounts.AccountNotFoundException;
+import com.fksoft.domain.commissioning.CommissionBaseInvalidException;
+import com.fksoft.domain.commissioning.CommissionPctInvalidException;
 import com.fksoft.domain.error.DomainException;
 import com.fksoft.domain.exchange.ExchangeCurrencyPairInvalidException;
 import com.fksoft.domain.exchange.ExchangeRateInvalidException;
@@ -31,7 +33,9 @@ public class HttpErrorMapping {
           AccountNotFoundException.class, HttpStatus.NOT_FOUND,
           ExchangeCurrencyPairInvalidException.class, HttpStatus.BAD_REQUEST,
           ExchangeRateInvalidException.class, HttpStatus.BAD_REQUEST,
-          ExchangeRateNotFoundException.class, HttpStatus.NOT_FOUND);
+          ExchangeRateNotFoundException.class, HttpStatus.NOT_FOUND,
+          CommissionPctInvalidException.class, HttpStatus.BAD_REQUEST,
+          CommissionBaseInvalidException.class, HttpStatus.BAD_REQUEST);
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {
