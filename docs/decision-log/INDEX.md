@@ -45,3 +45,7 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0022](DL-0022-penalty-currency-no-conversion.md) | 4 | Multa/encargos na moeda original (sem conversão cambial nesta fase) | Média | Barata |
 | [DL-0023](DL-0023-no-show-waiver-proof-flag.md) | 4 | No-show: dispensa por voo cancelado via flag de prova rastreável (conformidade = Compliance) | Média | Barata |
 | [DL-0024](DL-0024-charges-are-distinct-facts-never-netted.md) | 4 | Encargos são fatos distintos que **nunca** se compensam (armadilha do merchant) | Alta | **Cara** |
+| [DL-0025](DL-0025-market-rate-source-port-and-manual.md) | 5 | Taxa de mercado: porta `MarketRateProvider` + registro manual de contingência (v1) | Média | Moderada |
+| [DL-0026](DL-0026-freeze-scope-global-per-pair.md) | 5 | Escopo do congelamento: global por par de moeda (v1) | Média | Moderada |
+| [DL-0027](DL-0027-drift-alert-threshold-2pct.md) | 5 | Limite de alerta de drift = \|drift\| > 2% da exposição estrangeira aberta do livro | Média | Barata |
+| [DL-0028](DL-0028-fxposition-open-on-booking-confirmed.md) | 5 | `FxPosition` abre em `BookingConfirmed`; fecha reusando a liquidação de Reconciliation (sem duplicar o per-case) | Alta | Moderada |
