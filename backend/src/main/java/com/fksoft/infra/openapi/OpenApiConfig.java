@@ -19,13 +19,16 @@ public class OpenApiConfig {
             new Info()
                 .title("Acme Travel ERP API")
                 .description(
-                    "ERP Acme Travel — modular monolith. Phase 8b extends Finance (SPEC-0015, the"
-                        + " full generic seam — a cash book, not a full general ledger): AP/AR ledger"
-                        + " entries are now posted automatically and idempotently from the Booking"
-                        + " charge events (cancellation penalties, refunds, the merchant-trap supplier"
-                        + " obligation, no-show fees), and a period trial-balance endpoint reports the"
-                        + " operational balance per currency (payable/receivable/net) and counts per"
-                        + " status. The Compliance close-veto stays intact.")
-                .version("0.10.0"));
+                    "ERP Acme Travel — modular monolith. Phase 8c adds Billing (SPEC-0016): it issues"
+                        + " the commission NFS-e (nota fiscal de serviço) over the commission — the real"
+                        + " revenue — computing ISS parametrized by tax regime (Simples Nacional default,"
+                        + " swappable) and municipality. The taxable base is the commission, never the"
+                        + " gross package. The municipal NFS-e webservice is an external integration"
+                        + " behind a domain port with a traceable mock (ACL); an issued invoice is"
+                        + " archived in the Compliance vault (satisfying the commission entry's document"
+                        + " requirement so the month can close) and its ISS is posted to Finance via an"
+                        + " idempotent event. Endpoints: POST /api/billing/invoices (draft),"
+                        + " /{id}/issue, /{id}/cancel, GET /{id}.")
+                .version("0.11.0"));
   }
 }
