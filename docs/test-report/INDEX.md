@@ -32,6 +32,7 @@ resultado, cobertura e como reproduzir.
 | Slice 12b — OverrideNudge (gated) + decisão + observabilidade | SPEC-0013 | [slice-12b-nudge-decision.md](slice-12b-nudge-decision.md) | ✅ verde (backend 219 testes; nudge off por flag sem dado falso + decisão humana sem ação + InsightDecided) |
 | Slice 8a — CommercialPolicy (parâmetros governados + precedência) | SPEC-0014 | [slice-8a-commercial-policy.md](slice-8a-commercial-policy.md) | ✅ verde (backend 239 testes; motor de precedência Diretiva>Promoção>Contrato>Política>Padrão com proveniência + V18 seed; gradua o stub de markup sem quebrar o Quoting; diretiva auditada vence imediatamente) |
 | Slice 8b-1 — Finance: lançamento automático de AP/AR por evento | SPEC-0015 (full) | [slice-8b1-finance-event-posting.md](slice-8b1-finance-event-posting.md) | ✅ verde (backend 243 testes; consome eventos do Booking → AP/AR idempotente UNIQUE(source_ref,charge_kind) + V19; merchant trap preservado; regra de ouro intacta; Modulith acíclico finance→booking) |
+| Slice 8b-2 — Finance: balancete do período por moeda/status | SPEC-0015 (full) | [slice-8b2-finance-trial-balance.md](slice-8b2-finance-trial-balance.md) | ✅ verde (backend 245 testes; `GET /periods/{yyyymm}/trial-balance` por moeda com net=AR−AP + contagens por status; aditivo, sem migração; sem plano de contas — DL-0043) |
 
 ## Resumo por nível (Fase 0)
 
