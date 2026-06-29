@@ -18,6 +18,7 @@
 |---|---|---|---|
 | 0 — Foundation | 2026-06-29 03:57 (-03:00) | 2026-06-29 04:57 (-03:00) | ✅ Green: `./mvnw verify` 12 tests, `docker compose up` → health UP, frontend 4 tests, released `0.1.0`. |
 | 1 — Manual commercial core | 2026-06-29 05:08 (-03:00) | 2026-06-29 05:20 (-03:00) | ⏹️ Preempted by direct owner request (ADR 0015 — versionamento/SemVer) before any business code. Phase reverted to ⬜ Not started; only the roadmap marker had been touched. |
+| 1 — Manual commercial core (restart) | 2026-06-29 05:35 (-03:00) | _in progress_ | Owner-directed in-session run via `docs/RUN-PHASE.md` (FASE-ALVO=1). 30-min supervisor loop kept armed; it idles while this phase is 🟡. |
 
 A phase is **Complete** only when every slice's acceptance criteria are tested and
 passing, the architecture gates (ArchUnit + Spring Modulith + Spotless/Checkstyle)
@@ -28,7 +29,7 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 | Phase | Name | Spec(s) | Status | Notes |
 |---|---|---|---|---|
 | **0** | Foundation (walking skeleton + Event Storming) | SPEC-0001 | ✅ Complete | Released `0.1.0` (tag). See slice detail below. |
-| **1** | Manual commercial core | SPEC-0002…0007 | ⬜ Not started | Accounts, Exchange, Commissioning, Quoting (keystone), Booking, Reconciliation. ADR 0014 written. Autonomous run preempted 2026-06-29 (see Execution log). |
+| **1** | Manual commercial core | SPEC-0002…0007 | 🟡 In progress | Owner-directed in-session run started 2026-06-29 05:35 (-03:00). Accounts → Reconciliation. ADR 0014/0015 written. |
 | **2** | Minimal compliance | SPEC-0008 (+ Finance seam 0015) | ⬜ Not started | Document vault + mandatory attachment + monthly-close veto + retention. |
 | **3** | First real integration (ACL) | SPEC-0009 | ⬜ Not started | Quote site, INTEGRATED branch. |
 | **4** | Cancellation + merchant trap | SPEC-0010 | ⬜ Not started | Policy as object + ALL_SALES_FINAL trap + no-show. |
