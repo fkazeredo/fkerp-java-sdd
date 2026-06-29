@@ -29,7 +29,14 @@ public class OpenApiConfig {
                         + " SupplierSettled event consumed once by Finance (AP posting); refunds archive a"
                         + " REFUND_PROOF and never cancel the supplier obligation (merchant trap). Endpoints:"
                         + " POST /api/payouts, /{id}/execute, GET /{id}, GET /api/payouts (list),"
-                        + " POST /api/webhooks/payouts/mock.")
-                .version("0.12.0"));
+                        + " POST /api/webhooks/payouts/mock. AfterSales (SPEC-0018) adds the post-sale"
+                        + " context: support cases with a lifecycle state machine and governed SLA"
+                        + " deadlines (resolved from CommercialPolicy; an SLA breach is a non-blocking"
+                        + " alert), resolving a case can forward a refund to Payout (idempotently, without"
+                        + " cancelling the supplier obligation — merchant trap) or a cancellation to"
+                        + " Booking, and it accrues the cost-to-serve. Endpoints: POST /api/aftersales/cases,"
+                        + " /{id}/assign|progress|wait|resolve|close, GET /{id}, GET /api/aftersales/cases"
+                        + " (list).")
+                .version("0.13.0"));
   }
 }
