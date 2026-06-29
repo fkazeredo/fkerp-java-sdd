@@ -58,6 +58,13 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 | **8j** | Platform (contexto) | SPEC-0023 | ⬜ Not started | Custódia e-CNPJ + governança de jobs + auditoria de sistema. |
 | **8k** | Identity | SPEC-0024 | ⬜ Not started | Auth real (OIDC) + papéis/permissões; gradua o stub de auth. |
 | **8l** | Admin | SPEC-0025 | ⬜ Not started | Fornecedores/contratos administrativos → Finance + Compliance. |
+| **9** | Limpeza estrutural — remover `internal` do domain | ADR + chore | ⬜ Not started | (do fkerp-poc) Achatar `com.fksoft.domain.<módulo>.internal.*` → `…<módulo>` (11 módulos, main+test; herança Go). Estrutural, sem mudar contrato; encapsulação via `@NamedInterface`/ArchUnit; gates verdes. |
+| **10** | UX & Frontend profissional | SPEC-0026 (nova) | ⬜ Not started | (do fkerp-poc) PrimeNG 21 (Aura) + Tailwind v4 + shell SaaS + command palette `Ctrl/Cmd+K` + tema claro/escuro + atalhos + a11y + `canDeactivate` + login/silent-refresh + dashboard KPIs. **Gradua DL-0003**. Repaginar TODAS as telas; estados loading/empty/error/permissão. |
+| **11** | Observabilidade & monitoramento | SPEC-0027 (nova) | ⬜ Not started | (do fkerp-poc) Micrometer + Actuator/Prometheus + logs JSON + Prometheus/Loki/Grafana-Alloy/Grafana via compose + `GET /api/version`. Espelhar `infra/` da POC. |
+| **12** | Qualidade & E2E | SPEC-0028 (nova) | ⬜ Not started | (do fkerp-poc) Playwright em stack isolada (`compose.e2e.yaml`, 4201, Postgres efêmero) + `@vitest/coverage-v8` + JaCoCo + sad paths; job de E2E no CI; nunca toca o banco de dev. |
+| **13** | Identity/AuthZ profissional | gradua SPEC-0024 | ⬜ Not started | (do fkerp-poc) Spring Security + OAuth2 Resource Server (JWT), escopos → perfis; backend única autoridade; substitui `DevStubUserContextProvider`. Consolida a 8k. |
+| **14** | Upgrade de stack (Spring Boot 4 / versões) | ADR (novo) | ⬜ Not started | (do fkerp-poc) Avaliar 3.5.16 → 4.x (Spring 7, Modulith 2.x); `ngx-graph` só se necessário. Só com gates verdes (DL-0002). |
+| **15** | Documentação bilíngue pt-BR + en-US | regra + chore | 🟡 In progress | (do fkerp-poc) Manual já bilíngue (`docs/MANUAL.md` + `docs/MANUAL.en-US.md` + regra no `CLAUDE.md`); estender a release notes/guias. Relatórios técnicos seguem só pt-BR (Regra Zero). |
 
 ## Phase 0 — slice detail
 
@@ -190,8 +197,8 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 |---|---|---|
 | ~~ADR 0014 (initial module set & order) not yet written~~ → **written by owner** | resolved | [ADR 0014](adr/0014-initial-modules-and-slice-order.md), [DL-0005](decision-log/DL-0005-adr-0014-ausente-adiar-fase-1.md) |
 | ~~**Telas Angular da Fase 1**~~ → **entregues** em `0.2.1` (5 telas + nav; 14 testes) | resolved | [release-notes/0.2.1.md](release-notes/0.2.1.md) |
-| PrimeNG + Tailwind not yet added (telas atuais em CSS puro) | Future (quando a UI exigir) | [DL-0003](decision-log/DL-0003-stack-frontend-fase-0.md) |
-| Spring Boot 3.5 → 4.x upgrade | Future (own ADR) | [DL-0002](decision-log/DL-0002-stack-versoes-backend.md) |
+| PrimeNG + Tailwind not yet added (telas atuais em CSS puro) | **Fase 10 (UX, SPEC-0026)** | [DL-0003](decision-log/DL-0003-stack-frontend-fase-0.md) |
+| Spring Boot 3.5 → 4.x upgrade | **Fase 14 (upgrade de stack, ADR)** | [DL-0002](decision-log/DL-0002-stack-versoes-backend.md) |
 
 ## How to update this file
 
@@ -200,27 +207,3 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 2. When all slices of a phase are ✅ and the release tag is cut, flip the phase to ✅.
 3. Keep the "Open architectural debts" table current — move items out when resolved.
 
-## Imported initiatives (from fkerp-poc) — backlog for the Loop
-
-> Cross-cutting work imported from the sibling **fkerp-poc** study (UX/design, observability,
-> quality, identity, refactor). Detailed in [ROADMAP.md](ROADMAP.md) → "Iniciativas importadas do
-> fkerp-poc". **Goal bar: professional, production-grade UX and engineering** — the POC is markedly
-> more polished, and this project's screens/features must reach that standard. Each item becomes
-> spec(s)/slice(s) via the `TUTORIAL.md` loop with **all gates green** (ArchUnit + Spring Modulith +
-> Spotless/Checkstyle + frontend lint/test/build).
-
-| ID | Initiative | Spec / ADR | Status | Notes |
-|---|---|---|---|---|
-| **REFAC-1** | Remover pacotes `internal` do `domain` (herança Go) → achatar em `com.fksoft.domain.<módulo>` | ADR + chore | ⬜ Not started | 11 módulos (main+test): accounts, booking, commercialpolicy, compliance, exchange, finance, intelligence, people, quoting, reconciliation, sourcing. Estrutural, sem mudar contrato; gates verdes; encapsulação via `@NamedInterface`/ArchUnit. |
-| **UX-1** | UX & Frontend **profissional** (PrimeNG 21 Aura + Tailwind v4 + shell SaaS + command palette `Ctrl/Cmd+K` + tema claro/escuro + atalhos + a11y + `canDeactivate` + login/silent-refresh + dashboard KPIs) | SPEC-0026 (nova) | ⬜ Not started | **Gradua DL-0003** (PrimeNG/Tailwind). Repaginar TODAS as telas ao padrão profissional; estados loading/empty/error/permissão. |
-| **OBS-1** | Observabilidade, logs & monitoramento (Micrometer + Actuator/Prometheus + logs JSON + Prometheus/Loki/Grafana-Alloy/Grafana via compose + `GET /api/version`) | SPEC-0027 (nova) | ⬜ Not started | Espelhar `infra/` da POC, adaptado a este backend. |
-| **QA-1** | Qualidade & E2E (Playwright em stack isolada `compose.e2e.yaml` 4201 + `@vitest/coverage-v8` + JaCoCo + sad paths) | SPEC-0028 (nova) | ⬜ Not started | E2E **nunca** toca o banco de dev; job de E2E no CI. |
-| **SEC-1** | Identity/AuthZ profissional (Spring Security + OAuth2 Resource Server JWT, escopos → perfis) | gradua SPEC-0024 | ⬜ Not started | Substitui o `DevStubUserContextProvider`; backend é a única autoridade. |
-| **TECH-1** | Estudo de versões/frameworks: upgrade **Spring Boot 3.5 → 4.x** (a POC usa Boot 4); `ngx-graph` só se necessário | ADR (novo) | ⬜ Not started | Cá em 3.5.16 por estabilidade (DL-0002); upgrade com gates verdes. |
-| **DOC-1** | Documentação bilíngue **pt-BR + en-US** (manual **já feito**; estender a release notes/guias; regra de sincronia no `CLAUDE.md`) | regra + chore | 🟡 Parcial | Manual bilíngue entregue (`docs/MANUAL.en-US.md` + regra no `CLAUDE.md`); falta estender release notes/guias ao cliente. Relatórios técnicos seguem só pt-BR (Regra Zero). |
-
-> **Ordem sugerida ao Loop:** REFAC-1 (rápido, limpa a estrutura) → UX-1 (maior impacto visível) →
-> OBS-1 → QA-1 → SEC-1 → TECH-1. DOC-1 é contínua (manual já bilíngue; aplicar a cada release/guia
-> voltado ao cliente). Intercalar com as fases 8c–8l conforme a prioridade do dono.
-> Estas iniciativas **resolvem** os débitos "PrimeNG + Tailwind" (UX-1) e "Boot 3.5 → 4.x" (TECH-1)
-> listados acima em *Open architectural debts*.
