@@ -19,12 +19,13 @@ public class OpenApiConfig {
             new Info()
                 .title("Acme Travel ERP API")
                 .description(
-                    "ERP Acme Travel — modular monolith. Phase 8a adds CommercialPolicy: the"
-                        + " governed-parameter precedence engine (DIRECTIVE > PROMOTION > CONTRACT >"
-                        + " POLICY > SYSTEM_DEFAULT) with provenance, runtime self-service for rules"
-                        + " and directives (audited; director role + justification for directives),"
-                        + " and graduates the markup seam so a Quote's markup flows from the engine"
-                        + " carrying the winning layer as its source.")
-                .version("0.9.0"));
+                    "ERP Acme Travel — modular monolith. Phase 8b extends Finance (SPEC-0015, the"
+                        + " full generic seam — a cash book, not a full general ledger): AP/AR ledger"
+                        + " entries are now posted automatically and idempotently from the Booking"
+                        + " charge events (cancellation penalties, refunds, the merchant-trap supplier"
+                        + " obligation, no-show fees), and a period trial-balance endpoint reports the"
+                        + " operational balance per currency (payable/receivable/net) and counts per"
+                        + " status. The Compliance close-veto stays intact.")
+                .version("0.10.0"));
   }
 }
