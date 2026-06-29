@@ -1,12 +1,15 @@
 package com.fksoft.application.api;
 
 import com.fksoft.application.api.dto.CreatePayoutRequest;
+import com.fksoft.application.api.dto.ExecutePayoutRequest;
 import com.fksoft.domain.payout.CreatePayoutCommand;
 import com.fksoft.domain.payout.Payee;
+import com.fksoft.domain.payout.PaymentOutcome;
 import com.fksoft.domain.payout.PayoutKind;
 import com.fksoft.domain.payout.PayoutService;
 import com.fksoft.domain.payout.PayoutStatus;
 import com.fksoft.domain.payout.PayoutView;
+import com.fksoft.infra.integration.payment.PayoutExecutionService;
 import com.fksoft.infra.security.UserContextProvider;
 import com.fksoft.infra.web.PageResponse;
 import jakarta.validation.Valid;
@@ -42,6 +45,7 @@ public class PayoutController {
   private static final int MAX_PAGE_SIZE = 100;
 
   private final PayoutService payoutService;
+  private final PayoutExecutionService executionService;
   private final UserContextProvider userContextProvider;
 
   @PostMapping
@@ -59,6 +63,13 @@ public class PayoutController {
             request.amounts());
     PayoutView view = payoutService.create(command, actor());
     return ResponseEntity.status(HttpStatus.CREATED).body(view);
+  }
+
+  @PostMapping("/{id}/execute")
+  public PayoutView execute(
+      @PathVariable UUID id, @RequestBody(required = false) ExecutePayoutRequest request) {
+    PaymentOutcome outcomeHint = request == null ? null : request.outcomeHint();
+    return executionService.execute(id, outcomeHint);
   }
 
   @GetMapping("/{id}")

@@ -48,6 +48,19 @@ point-clock:
     failure-threshold: ${POINT_CLOCK_BREAKER_THRESHOLD:3} # consecutive failures that open the breaker
     cooldown-ms: ${POINT_CLOCK_BREAKER_COOLDOWN_MS:60000}  # open → half-open cooldown
 
+# Payment gateway (SPEC-0017 / ADR 0006 / DL-0048). The real provider (PIX/TED/boleto/gateway) is an
+# Open Question: the default adapter is a traceable mock that confirms/fails via an async signed
+# webhook. The webhook secret is the shared HMAC key (the scheme a real provider uses). Sensitive
+# payment data is never logged or carried in config. Swapping in a real provider is a new adapter.
+integration:
+  payment:
+    webhook-secret: ${PAYMENT_WEBHOOK_SECRET:dev-payment-webhook-secret}
+    mock:
+      delay-ms: ${PAYMENT_MOCK_DELAY_MS:3000}            # async confirmation delay (ADR 0006)
+      dispatch:
+        initial-delay-ms: ${PAYMENT_MOCK_DISPATCH_INITIAL_DELAY_MS:5000}
+        interval-ms: ${PAYMENT_MOCK_DISPATCH_INTERVAL_MS:2000} # how often due webhooks are delivered
+
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{correlationId:-}] %logger{36} - %msg%n"
