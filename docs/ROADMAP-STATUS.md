@@ -217,8 +217,10 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 | **QA-1** | Qualidade & E2E (Playwright em stack isolada `compose.e2e.yaml` 4201 + `@vitest/coverage-v8` + JaCoCo + sad paths) | SPEC-0028 (nova) | ⬜ Not started | E2E **nunca** toca o banco de dev; job de E2E no CI. |
 | **SEC-1** | Identity/AuthZ profissional (Spring Security + OAuth2 Resource Server JWT, escopos → perfis) | gradua SPEC-0024 | ⬜ Not started | Substitui o `DevStubUserContextProvider`; backend é a única autoridade. |
 | **TECH-1** | Estudo de versões/frameworks: upgrade **Spring Boot 3.5 → 4.x** (a POC usa Boot 4); `ngx-graph` só se necessário | ADR (novo) | ⬜ Not started | Cá em 3.5.16 por estabilidade (DL-0002); upgrade com gates verdes. |
+| **DOC-1** | Documentação bilíngue **pt-BR + en-US** (manual **já feito**; estender a release notes/guias; regra de sincronia no `CLAUDE.md`) | regra + chore | 🟡 Parcial | Manual bilíngue entregue (`docs/MANUAL.en-US.md` + regra no `CLAUDE.md`); falta estender release notes/guias ao cliente. Relatórios técnicos seguem só pt-BR (Regra Zero). |
 
 > **Ordem sugerida ao Loop:** REFAC-1 (rápido, limpa a estrutura) → UX-1 (maior impacto visível) →
-> OBS-1 → QA-1 → SEC-1 → TECH-1. Intercalar com as fases 8c–8l conforme a prioridade do dono.
+> OBS-1 → QA-1 → SEC-1 → TECH-1. DOC-1 é contínua (manual já bilíngue; aplicar a cada release/guia
+> voltado ao cliente). Intercalar com as fases 8c–8l conforme a prioridade do dono.
 > Estas iniciativas **resolvem** os débitos "PrimeNG + Tailwind" (UX-1) e "Boot 3.5 → 4.x" (TECH-1)
 > listados acima em *Open architectural debts*.

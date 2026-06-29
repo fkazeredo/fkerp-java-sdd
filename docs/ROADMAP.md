@@ -420,6 +420,24 @@ exchange, finance, intelligence, people, quoting, reconciliation, sourcing`.
 
 **Aceite:** nenhum pacote `internal` sob `com.fksoft.domain`; gates verdes; nenhum contrato alterado.
 
+### DOC-1 — Documentação bilíngue (pt-BR + en-US) · regra + chore
+
+**Objetivo:** padronizar a documentação voltada ao **usuário/cliente** em **pt-BR + en-US**, mantidas
+em sincronia — como no fkerp-poc, que mantém o manual de usuário bilíngue.
+
+**Estado / trazer:**
+- **Manual já bilíngue (feito):** `docs/MANUAL.md` (pt-BR) + `docs/MANUAL.en-US.md` (en-US), com a
+  regra de sincronia registrada no `CLAUDE.md`. É a base desta iniciativa.
+- **Estender o bilíngue** às demais docs voltadas ao cliente: **release notes** (`docs/release-notes/`,
+  versão en-US além da pt-BR) e eventuais guias de usuário.
+- **Regra de sincronia:** a mesma fatia que toca uma dessas docs atualiza **as duas** línguas; nenhuma
+  fica para trás (expandir a regra do `CLAUDE.md` para além do manual).
+- **Fora de escopo:** relatórios técnicos de desenvolvimento permanecem **só pt-BR** (engenharia
+  interna, não voltada ao cliente) — Regra Zero: não traduzir o que não agrega ao usuário.
+
+**Aceite:** docs voltadas ao usuário/cliente em pt-BR **e** en-US; regra de sincronia no contrato;
+nenhuma versão defasada.
+
 > **Documentação por iniciativa (Definition of Done):** ao entregar cada iniciativa acima, atualize
 > também **`docs/MANUAL.md` (pt-BR)** e a documentação afetada — spec(s), ADR(s), release note e
 > `docs/ROADMAP-STATUS.md`. O manual é **artefato vivo**: nenhuma mudança visível ao usuário é
