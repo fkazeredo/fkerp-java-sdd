@@ -28,6 +28,7 @@ import com.fksoft.domain.finance.FinancePeriodInvalidException;
 import com.fksoft.domain.quoting.QuoteAccountNotFoundException;
 import com.fksoft.domain.quoting.QuoteNotFoundException;
 import com.fksoft.domain.quoting.QuoteOverrideCurrencyMismatchException;
+import com.fksoft.domain.quoting.QuoteOverrideNotApplicableException;
 import com.fksoft.domain.quoting.QuoteOverrideReasonRequiredException;
 import com.fksoft.domain.quoting.QuoteRateMissingException;
 import com.fksoft.domain.reconciliation.ReconciliationCaseNotFoundException;
@@ -66,6 +67,7 @@ public class HttpErrorMapping {
           entry(QuoteNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(QuoteOverrideReasonRequiredException.class, HttpStatus.BAD_REQUEST),
           entry(QuoteOverrideCurrencyMismatchException.class, HttpStatus.BAD_REQUEST),
+          entry(QuoteOverrideNotApplicableException.class, HttpStatus.CONFLICT),
           entry(BookingQuoteNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(BookingNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(BookingTransitionInvalidException.class, HttpStatus.CONFLICT),
