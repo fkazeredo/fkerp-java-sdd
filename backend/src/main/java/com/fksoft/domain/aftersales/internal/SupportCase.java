@@ -185,20 +185,44 @@ public class SupportCase {
 
   /**
    * Marks this case as having breached its SLA (BR4/DL-0053): sets the alert flag. Idempotent and
-   * non-blocking — it never changes the workflow status. Only a non-terminal, not-yet-breached case
-   * whose {@code dueAt} is before {@code now} is marked.
+   * non-blocking — it never changes the workflow status. A non-terminal, not-yet-breached case
+   * breaches when either of its SLA deadlines has passed:
+   *
+   * <ul>
+   *   <li>the <strong>first-response</strong> deadline, while the case is still {@link
+   *       SupportCaseStatus#OPEN} (no agent has picked it up — first response missed);
+   *   <li>the <strong>resolution</strong> deadline, for any non-terminal case.
+   * </ul>
    *
    * @param now the evaluation instant (UTC)
    * @return {@code true} when this call newly marked the breach (so the event should be published)
    */
   public boolean markBreachedIfDue(Instant now) {
-    if (breached || status.isTerminal() || dueAt == null || !now.isAfter(dueAt)) {
+    if (breached || status.isTerminal()) {
+      return false;
+    }
+    Instant effectiveDeadline = effectiveBreachDeadline();
+    if (effectiveDeadline == null || !now.isAfter(effectiveDeadline)) {
       return false;
     }
     this.breached = true;
     this.updatedAt = now;
     this.updatedBy = "system";
     return true;
+  }
+
+  /**
+   * The deadline whose breach matters now (BR4/DL-0053): while the case is still {@code OPEN} the
+   * earlier of the first-response and resolution deadlines; once it has been picked up, the
+   * resolution deadline. This is also the {@code dueAt} reported on the {@code SlaBreached} alert.
+   */
+  public Instant effectiveBreachDeadline() {
+    if (status == SupportCaseStatus.OPEN
+        && firstResponseDueAt != null
+        && (dueAt == null || firstResponseDueAt.isBefore(dueAt))) {
+      return firstResponseDueAt;
+    }
+    return dueAt;
   }
 
   /** Whether this case already has a linked Payout REFUND (idempotency guard, BR3). */

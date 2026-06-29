@@ -34,13 +34,17 @@ public interface SupportCaseRepository extends JpaRepository<SupportCase, UUID> 
 
   /**
    * The candidates for an SLA breach sweep (BR4/DL-0053): cases that are not yet flagged as
-   * breached, are still open (status is not RESOLVED/CLOSED) and whose resolution deadline is
-   * before {@code now}. The aggregate makes the final, idempotent decision.
+   * breached, are still open (status is not RESOLVED/CLOSED) and whose <em>earliest applicable</em>
+   * deadline is before {@code now} — the first-response deadline (only matters while still OPEN) or
+   * the resolution deadline. The aggregate makes the final, idempotent decision via {@link
+   * SupportCase#markBreachedIfDue}.
    */
   @Query(
       "select c from SupportCase c where c.breached = false "
           + "and c.status not in (com.fksoft.domain.aftersales.SupportCaseStatus.RESOLVED, "
           + "com.fksoft.domain.aftersales.SupportCaseStatus.CLOSED) "
-          + "and c.dueAt < :now")
+          + "and (c.dueAt < :now "
+          + "or (c.status = com.fksoft.domain.aftersales.SupportCaseStatus.OPEN "
+          + "and c.firstResponseDueAt < :now))")
   List<SupportCase> findBreachCandidates(@Param("now") Instant now);
 }

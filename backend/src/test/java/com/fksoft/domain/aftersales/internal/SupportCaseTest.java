@@ -106,6 +106,8 @@ class SupportCaseTest {
   @Test
   void marksBreachOnlyWhenDuePassedAndNotTerminalAndIdempotently() {
     SupportCase supportCase = newCase(SupportCaseType.REFUND_REQUEST);
+    // Pick it up so the governing deadline is resolution (DUE), not first response.
+    supportCase.transitionTo(SupportCaseStatus.IN_PROGRESS, OPENED.plusSeconds(1), "agent");
 
     // Within SLA: now before dueAt → not breached.
     assertThat(supportCase.markBreachedIfDue(DUE.minusSeconds(1))).isFalse();
@@ -117,6 +119,27 @@ class SupportCaseTest {
 
     // Idempotent: a second sweep does not re-mark.
     assertThat(supportCase.markBreachedIfDue(DUE.plusSeconds(2))).isFalse();
+  }
+
+  @Test
+  void breachesTheFirstResponseDeadlineWhileStillOpen() {
+    SupportCase supportCase = newCase(SupportCaseType.COMPLAINT);
+    // While OPEN, the effective deadline is the earlier first-response one (24h), not resolution.
+    assertThat(supportCase.effectiveBreachDeadline()).isEqualTo(FIRST_RESPONSE_DUE);
+
+    // Past the first-response deadline but before resolution → already a (first-response) breach.
+    assertThat(supportCase.markBreachedIfDue(FIRST_RESPONSE_DUE.plusSeconds(1))).isTrue();
+    assertThat(supportCase.isBreached()).isTrue();
+  }
+
+  @Test
+  void oncePickedUpTheEffectiveDeadlineIsResolution() {
+    SupportCase supportCase = newCase(SupportCaseType.COMPLAINT);
+    supportCase.transitionTo(SupportCaseStatus.IN_PROGRESS, OPENED.plusSeconds(60), "agent");
+    // No longer OPEN → first response was given; the effective deadline is resolution (72h).
+    assertThat(supportCase.effectiveBreachDeadline()).isEqualTo(DUE);
+    // Past first-response but before resolution → NOT breached anymore (it was picked up).
+    assertThat(supportCase.markBreachedIfDue(FIRST_RESPONSE_DUE.plusSeconds(1))).isFalse();
   }
 
   @Test

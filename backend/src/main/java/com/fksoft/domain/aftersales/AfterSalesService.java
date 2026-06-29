@@ -210,14 +210,11 @@ public class AfterSalesService {
     List<SupportCase> candidates = repository.findBreachCandidates(now);
     int marked = 0;
     for (SupportCase supportCase : candidates) {
+      java.time.Instant deadline = supportCase.effectiveBreachDeadline();
       if (supportCase.markBreachedIfDue(now)) {
         repository.save(supportCase);
-        events.publishEvent(new SlaBreached(supportCase.id(), supportCase.dueAt(), now));
-        log.info(
-            "SlaBreached caseId={} dueAt={} detectedAt={}",
-            supportCase.id(),
-            supportCase.dueAt(),
-            now);
+        events.publishEvent(new SlaBreached(supportCase.id(), deadline, now));
+        log.info("SlaBreached caseId={} dueAt={} detectedAt={}", supportCase.id(), deadline, now);
         marked++;
       }
     }
