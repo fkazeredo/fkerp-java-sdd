@@ -221,3 +221,7 @@ liquidados. É uma visão de caixa do mês — não uma demonstração contábil
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.
+>
+> Fase 15 — Docs bilíngues (chore, sem mudança de versão): a cobertura bilíngue, antes só do manual,
+> passou a incluir o **README** (`README.en-US.md`) e o **changelog consolidado en-US**
+> (`docs/release-notes/CHANGELOG.en-US.md`). Relatórios técnicos seguem só em pt-BR (Regra Zero).
