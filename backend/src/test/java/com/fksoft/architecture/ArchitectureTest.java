@@ -153,6 +153,25 @@ class ArchitectureTest {
           .allowEmptyShould(true);
 
   /**
+   * The external vendor shape of the payment provider ({@code infra.integration.payment} — the
+   * {@link com.fksoft.infra.integration.payment.PaymentWebhookPayload} and the rest of the adapter)
+   * must never cross into the domain (SPEC-0017 Scope, ACL/DL-0048): only the domain port types
+   * ({@code PaymentInstruction}/{@code PaymentRequestResult}) and outcomes leave the adapter. This
+   * proves the payment Anti-Corruption Layer keeps the provider's shape out of the model (ADR
+   * 0006).
+   */
+  @ArchTest
+  static final ArchRule DOMAIN_MUST_NOT_DEPEND_ON_PAYMENT_ADAPTER =
+      noClasses()
+          .that()
+          .resideInAPackage("..domain..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAPackage("..infra.integration.payment..")
+          .as("the external payment-provider shape must not cross into the domain (SPEC-0017, ACL)")
+          .allowEmptyShould(true);
+
+  /**
    * The point-clock crawler MUST NOT write into the core (SPEC-0012 BR6): it communicates only via
    * the People facade and in-process events. This rule proves it never touches any core business
    * module — directly or through their internals. It may use {@code people} (the operational
