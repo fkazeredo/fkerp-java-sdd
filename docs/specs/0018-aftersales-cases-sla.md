@@ -36,16 +36,31 @@ para renegociar SLA ou substituir (8.2-A/E).
 ```txt
 BR1  SupportCase MUST referenciar uma Booking (valor) e ter type, status e openedAt; prazos de SLA
      derivam do type/política (parâmetro governado — CommercialPolicy).
+     ASSUMIDO (ver DL-0052): SLA resolvido pela CommercialPolicy (SPEC-0014) nas chaves
+     AFTERSALES_SLA_FIRST_RESPONSE=24h, AFTERSALES_SLA_RESOLUTION=72h, AFTERSALES_SLA_REFUND=48h
+     (NUMBER horas; seed SYSTEM_DEFAULT na V23). Cancelamento/reembolso usam o prazo de 48h.
 BR2  CANCELLATION_REQUEST resolvido como "cancelar" MUST acionar a Booking.cancel (SPEC-0010); o
      AfterSales NÃO calcula multa nem muda estado da reserva diretamente.
 BR3  REFUND_REQUEST aprovado MUST criar um Payout REFUND (SPEC-0017) referenciando a obrigação de
      origem (CancellationCharge / este caso) — sem reembolso "solto".
 BR4  SLA: cada caso tem dueAt; quando now > dueAt e não resolvido, marca BREACHED e publica
      SlaBreached (alerta — não bloqueia).
+     ASSUMIDO (ver DL-0053): a marcação é feita por job de relógio controlado
+     (markBreaches(now), instante como parâmetro) e BREACHED é um flag/alerta ortogonal ao status
+     de workflow (não bloqueia; SlaBreached idempotente). first-response e resolução têm prazos.
 BR5  Ao fechar, o caso MUST registrar o **esforço/custo de servir** (tempo, reaberturas, reembolso
      associado) para a Intelligence atribuir margem real.
+     ASSUMIDO parcial (ver DL-0053): custo de servir = CostToServe (Money BRL scale 2 HALF_UP)
+     acumulando handling + refund associado + reopenCount. "Quais custos contam" segue a confirmar
+     com o dono — a estrutura é acumulável e não trava a evolução.
 BR6  AfterSales MUST NOT reverter comissões nem lançar financeiro por conta própria — isso decorre dos
      eventos dos donos (Cancellation/Payout/Finance).
+BR7  ASSUMIDO (ver DL-0054): a orquestração é por fachada pública síncrona — CANCELLATION_REQUEST
+     resolvido chama BookingService.cancel (SPEC-0010); REFUND_REQUEST aprovado chama
+     PayoutService.create(kind=REFUND, originRef=caseId) (SPEC-0017), idempotente por linkedPayoutId
+     (não cria 2 Payouts). A armadilha do merchant fica intacta (DL-0024): o reembolso ao cliente
+     nunca cancela a obrigação do fornecedor. aftersales depende de payout/booking/commercialpolicy
+     (grafo Modulith acíclico).
 ```
 
 ## Input/Output Examples
@@ -128,9 +143,13 @@ por **job** (idempotência/locking) que marca `BREACHED`.
 
 ## Open Questions
 
-- **Canais de atendimento** (e-mail/WhatsApp/portal) e se entram como ACL de entrada — em aberto.
-- **Política de SLA** por tipo de caso (prazos) — parâmetro governado a definir (CommercialPolicy).
-- Modelo de **atribuição de custo de servir** à margem real (quais custos contam) — confirmar com o dono.
+- **Canais de atendimento** (e-mail/WhatsApp/portal) e se entram como ACL de entrada — **em aberto**
+  (fora de escopo desta fase; entra como ACL depois).
+- ~~**Política de SLA** por tipo de caso (prazos)~~ — **RESOLVIDO** → BR1 (ASSUMIDO, DL-0052):
+  24h/72h/48h via CommercialPolicy.
+- Modelo de **atribuição de custo de servir** à margem real (quais custos contam) — **PARCIAL**
+  (DL-0053): estrutura `CostToServe` acumulável entregue; "quais custos contam" segue a confirmar
+  com o dono (Confiança=Média).
 
 ## Out of Scope
 

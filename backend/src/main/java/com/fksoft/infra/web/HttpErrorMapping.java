@@ -5,6 +5,10 @@ import static java.util.Map.entry;
 import com.fksoft.domain.accounts.AccountDocumentDuplicateException;
 import com.fksoft.domain.accounts.AccountDocumentInvalidException;
 import com.fksoft.domain.accounts.AccountNotFoundException;
+import com.fksoft.domain.aftersales.SupportCaseInvalidException;
+import com.fksoft.domain.aftersales.SupportCaseNotFoundException;
+import com.fksoft.domain.aftersales.SupportCaseRefundDuplicateException;
+import com.fksoft.domain.aftersales.SupportCaseTransitionInvalidException;
 import com.fksoft.domain.billing.BillingBaseInvalidException;
 import com.fksoft.domain.billing.BillingInvoiceNotFoundException;
 import com.fksoft.domain.billing.BillingInvoiceTransitionInvalidException;
@@ -141,7 +145,11 @@ public class HttpErrorMapping {
           entry(PayoutAlreadyExecutedException.class, HttpStatus.CONFLICT),
           entry(PayoutTransitionInvalidException.class, HttpStatus.CONFLICT),
           entry(PayoutGatewayException.class, HttpStatus.BAD_GATEWAY),
-          entry(PayoutWebhookSignatureInvalidException.class, HttpStatus.UNAUTHORIZED));
+          entry(PayoutWebhookSignatureInvalidException.class, HttpStatus.UNAUTHORIZED),
+          entry(SupportCaseNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(SupportCaseInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(SupportCaseTransitionInvalidException.class, HttpStatus.CONFLICT),
+          entry(SupportCaseRefundDuplicateException.class, HttpStatus.CONFLICT));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {
