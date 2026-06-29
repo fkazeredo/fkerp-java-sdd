@@ -21,7 +21,7 @@
 | 1 — Manual commercial core (restart) | 2026-06-29 05:35 (-03:00) | 2026-06-29 06:55 (-03:00) | ✅ Backend green: `./mvnw verify` **82 tests**, 7 Modulith modules, 6 slices (SPEC-0002…0007) merged to `develop`, released **`0.2.0`**. Angular screens deferred to 0.2.x (carried debt). Supervisor loop switched 30m → 1h per owner request. |
 | 1 — Manual commercial core (frontend) | 2026-06-29 07:40 (-03:00) | 2026-06-29 08:10 (-03:00) | ✅ Owner-directed: **5 telas Angular** (Accounts/Exchange/Quoting/Booking/Reconciliation) + nav; `npm` lint/test(**14**)/build verdes; released **`0.2.1`**. Fase 1 fechada ponta a ponta. |
 | 2 — Minimal compliance | 2026-06-29 08:20 (-03:00) | 2026-06-29 09:05 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=2); supervisor **reverificou**: `./mvnw verify` **108 tests** verde, 0 Checkstyle. Finance seam + Compliance + veto de fechamento; released **`0.3.0`** (tag, main+develop). DL-0012…0015. |
-| 3 — First real integration (ACL) | 2026-06-29 09:17 (-03:00) | _in progress_ | Supervisor loop (8b1087fe): sem 🟡 → próxima ⬜ = Fase 3; marcada 🟡; `RUN-PHASE` (FASE-ALVO=3) delegado a um subagente em background. |
+| 3 — First real integration (ACL) | 2026-06-29 09:17 (-03:00) | 2026-06-29 10:05 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=3); supervisor **reverificou**: `./mvnw verify` **135 tests** verde, 0 Checkstyle, V9–V11. Sourcing + ramo INTEGRATED + webhook ACL (HMAC, DTO externo não cruza p/ domínio). Released **`0.4.0`**. DL-0016…0019 (**DL-0017 Conf. Baixa**). |
 
 A phase is **Complete** only when every slice's acceptance criteria are tested and
 passing, the architecture gates (ArchUnit + Spring Modulith + Spotless/Checkstyle)
@@ -34,7 +34,7 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 | **0** | Foundation (walking skeleton + Event Storming) | SPEC-0001 | ✅ Complete | Released `0.1.0` (tag). See slice detail below. |
 | **1** | Manual commercial core | SPEC-0002…0007 | ✅ Complete | Backend `0.2.0` (82 tests) + Angular screens `0.2.1` (14 tests). End-to-end: 6 contextos com tela (loading/empty/erro). |
 | **2** | Minimal compliance | SPEC-0008 (+ Finance seam 0015) | ✅ Complete | Released `0.3.0` (tag). Finance AP/AR seam + period close, Compliance vault + mandatory attachment + **monthly-close veto** + retention. `./mvnw verify` 108 tests (9 Modulith modules). Telas: backend-first (UI follow-up). |
-| **3** | First real integration (ACL) | SPEC-0009 | 🟡 In progress | Supervisor loop (8b1087fe) started 2026-06-29 09:17 (-03:00); RUN-PHASE delegated to a subagent. Quote site, INTEGRATED branch. |
+| **3** | First real integration (ACL) | SPEC-0009 | ✅ Complete | Released `0.4.0` (tag). Sourcing + ramo `INTEGRATED` (confia no preço externo, sem recompor) + **webhook ACL de entrada** (HMAC, idempotente, DTO externo só em `infra.integration`). `./mvnw verify` 135 tests (10 Modulith modules). |
 | **4** | Cancellation + merchant trap | SPEC-0010 | ⬜ Not started | Policy as object + ALL_SALES_FINAL trap + no-show. |
 | **5** | Exchange exposure + reports | SPEC-0011 | ⬜ Not started | Subsidy × drift, book position, first FX reports. |
 | **6** | Point-clock crawler | SPEC-0012 | ⬜ Not started | Operational snapshot for People + signed AFD/AEJ for Compliance. |
@@ -89,6 +89,21 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 - [x] **Regra de ouro:** lançamento AP/AR sem o documento exigido **veta** o fechamento mensal (regressão e2e verde).
 - [x] Merge em `develop`, release `0.3.0` (tag), merge em `main`; DL-0012…0015 registradas.
 - [ ] Telas Angular de Compliance/Finance — follow-up (não exigidas para o veto/cofre operarem).
+
+## Phase 3 — slice detail
+
+| Slice | Spec | Deliverable | Status |
+|---|---|---|---|
+| 8a | SPEC-0009 | Sourcing — `SourcedOffer` (oferta externa em texto livre) + API; módulo `sourcing` (10º Modulith); `V9` | ✅ |
+| 8b | SPEC-0009/0005 | Quoting **ramo INTEGRATED** — confia no preço externo (`suggested == applied`, sem motor de sugestão, override recusado 409); `V10` | ✅ |
+| 8c | SPEC-0009 | **Webhook ACL de entrada** (`/api/integration/quotation-site/inbound`) — assinatura HMAC-SHA256, idempotente, DTO externo **só** em `infra.integration` (regra ArchUnit garante que não cruza p/ domínio); `V11` | ✅ |
+
+**Phase 3 exit criteria:**
+- [x] `cd backend && ./mvnw verify` green (135 tests; ArchUnit[7] + 10 Modulith modules + Spotless/Checkstyle) — reverificado pelo supervisor.
+- [x] Migrações `V9`/`V10`/`V11` aplicadas e validadas (Postgres real).
+- [x] **ACL real:** porta no domínio + adapter em `infra.integration`; ramo `INTEGRATED` ativado sem recompor; idempotência por `externalQuotationId`.
+- [x] Merge em `develop`, release `0.4.0` (tag), merge em `main`; DL-0016…0019 registradas (**DL-0017 Confiança Baixa** — decisão de negócio a revisitar).
+- [ ] Tela Angular — n/a nesta fase (integração máquina-a-máquina).
 
 ## Open architectural debts carried forward
 
