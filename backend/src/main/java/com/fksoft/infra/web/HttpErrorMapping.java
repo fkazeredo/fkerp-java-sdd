@@ -12,6 +12,9 @@ import com.fksoft.domain.booking.BookingQuoteNotFoundException;
 import com.fksoft.domain.booking.BookingTransitionInvalidException;
 import com.fksoft.domain.commissioning.CommissionBaseInvalidException;
 import com.fksoft.domain.commissioning.CommissionPctInvalidException;
+import com.fksoft.domain.compliance.ComplianceDocumentNotFoundException;
+import com.fksoft.domain.compliance.ComplianceRetentionNotExpiredException;
+import com.fksoft.domain.compliance.ComplianceUploadInvalidException;
 import com.fksoft.domain.error.DomainException;
 import com.fksoft.domain.exchange.ExchangeCurrencyPairInvalidException;
 import com.fksoft.domain.exchange.ExchangeRateInvalidException;
@@ -73,7 +76,10 @@ public class HttpErrorMapping {
           entry(FinanceEntryNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(FinanceEntryTransitionInvalidException.class, HttpStatus.CONFLICT),
           entry(FinancePeriodClosedException.class, HttpStatus.CONFLICT),
-          entry(FinancePeriodCannotCloseException.class, HttpStatus.CONFLICT));
+          entry(FinancePeriodCannotCloseException.class, HttpStatus.CONFLICT),
+          entry(ComplianceDocumentNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(ComplianceRetentionNotExpiredException.class, HttpStatus.CONFLICT),
+          entry(ComplianceUploadInvalidException.class, HttpStatus.BAD_REQUEST));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {

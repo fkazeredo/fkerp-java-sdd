@@ -70,9 +70,8 @@ class FinanceIntegrationTest extends AbstractPostgresIntegrationTest {
   }
 
   @Test
-  void closesAnOpenPeriodWhenNothingVetoes() {
-    createEntry("2026-07");
-
+  void closesAnEmptyPeriodWhenNothingVetoes() {
+    // An empty period has no non-conformant entries, so the Compliance veto allows the close.
     ResponseEntity<PeriodView> response =
         restTemplate.postForEntity("/api/finance/periods/2026-07/close", null, PeriodView.class);
 
@@ -84,7 +83,7 @@ class FinanceIntegrationTest extends AbstractPostgresIntegrationTest {
 
   @Test
   void rejectsAnEntryAgainstAClosedPeriod() {
-    createEntry("2026-08");
+    // Close an empty period (no veto), then a new entry against it must be rejected (BR4).
     restTemplate.postForEntity("/api/finance/periods/2026-08/close", null, PeriodView.class);
 
     ResponseEntity<ApiErrorResponse> response =
