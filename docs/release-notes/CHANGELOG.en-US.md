@@ -10,6 +10,28 @@ detailed source; this file is the stakeholder-facing en-US mirror. Versioning fo
 
 ---
 
+## 0.14.0 — Phase 8f · Marketing (SPEC-0019)
+
+`marketing` module (16th): B2B marketing with **LGPD consent as a first-class citizen**. Consent is an
+append-only log (current state = the latest row per subject+purpose; revoke/re-consent append rows,
+single opt-in in v1). A campaign sends **only** to subjects with a GRANTED consent — the rest are
+suppressed and counted — through a `NewsletterSender` ACL (traceable mock; the provider DTO never
+crosses into the domain), idempotently per recipient. Segments use validated criteria over existing
+data (closed catalog, minimization). Attribution links a campaign code to a booking and, on
+`BookingConfirmed`, publishes `CampaignConverted` for the DSS (`BookingConfirmed` is unchanged). LGPD
+erasure removes marketing PII while preserving an anonymized revocation tombstone (so the subject is
+never silently re-included), keeping attributions and other legal bases intact. Not a CRM — the
+consent/attribution layer (full CRM = buy). V24 migration. DL-0055…0059 (DL-0058 is Low-confidence /
+Costly-to-reverse: the LGPD erasure scope is a DPO decision and the purge is destructive).
+
+## 0.13.0 — Phase 8e · AfterSales (SPEC-0018)
+
+`aftersales` module (15th): the post-sale context — support cases with a lifecycle state machine and
+**governed SLA deadlines** (resolved from CommercialPolicy: 24h first response / 72h resolution / 48h
+cancellation-refund; an SLA breach is a non-blocking alert). Resolving a case orchestrates the owners:
+a refund is forwarded to Payout (idempotently, never cancelling the supplier obligation — the merchant
+trap holds) and a cancellation to Booking; it accrues the cost-to-serve the DSS uses. DL-0052…0054.
+
 ## 0.12.0 — Phase 8d · Payout (SPEC-0017)
 
 Supplier payout / settlement / refund with cents-exact installments. Payment ACL via an idempotent

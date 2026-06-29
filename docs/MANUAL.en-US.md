@@ -208,6 +208,43 @@ What the operator does:
 > `GET /api/aftersales/cases?type=&status=&bookingId=&breached=&page=&size=`. The SLA sweep runs as a
 > job with a controllable clock; the refund is idempotent per case.
 
+### Phase 8 — Marketing (LGPD consent, campaigns and attribution)
+
+**Marketing** talks to the **B2B** base (agencies/agents) and treats **LGPD consent** as a mandatory
+pre-condition: communication is **never** sent to someone who did not opt in. The module handles
+consent, segmentation, newsletter dispatch and measuring **how much the campaign turned into sales**.
+It is **not** a full CRM — it is the consent/attribution layer.
+
+What the operator does:
+
+- **Record consent:** for a subject (agency/agent), a purpose (e.g. newsletter) and a source (e.g. a
+  sign-up form). Each decision is a **row that is never deleted**; the current state is always the
+  subject's **latest** decision for that purpose.
+- **Revoke consent:** revoking does **not** erase history — it is appended as a new decision. From then
+  on, the subject is **excluded** from the next dispatches.
+- **Look up consent:** the **current state** plus the full **history** for a subject and purpose.
+- **Create a segment:** the audience defined by **criteria over already-existing data** (e.g. account
+  type, region) — no new data collected. Criteria outside the allowed list are rejected.
+- **Preview the reach:** the system shows how many **consented** subjects the segment would reach.
+- **Create and send a campaign:** the campaign targets a segment and has its own **code**. On dispatch,
+  the system sends **only to those who consented**; the others are **excluded and counted** (shown as
+  "suppressed"); nobody receives the same campaign **twice**. Dispatch goes through an **external
+  newsletter provider** (currently a traceable simulator).
+- **Attribute a sale to a campaign:** records that a booking came from a **campaign code**. When that
+  booking is **confirmed**, the system marks the **conversion** and sends that signal to **Intelligence
+  (the DSS)** — that is how campaign return is measured.
+- **Honour an erasure request (LGPD):** removes the subject's **marketing data** and **ends** consent,
+  while **keeping the proof that they opted out** (so they are not re-included by mistake). What
+  **another law requires to keep** (invoices, financial entries, the booking) is **not** erased here.
+
+> For IT: `POST /api/marketing/consents`, `DELETE /consents/{id}` (revoke),
+> `GET /consents?subject=&subjectType=&purpose=`; `POST /segments`, `GET /segments/{id}/preview`;
+> `POST /campaigns`, `POST /campaigns/{id}/send` (returns `targeted/suppressedNoConsent/queued`),
+> `GET /campaigns/{id}`; `POST /attribution`, `GET /attribution?campaignCode=`; `POST /erasure`.
+> Consent is an append-only log (state = latest row); dispatch is idempotent per
+> `(campaign, recipient)`; the newsletter provider is an ACL (traceable mock). Errors never leak
+> personal data.
+
 ## 4. Glossary
 
 - **Backend / server:** the part of the system that processes the rules and talks to the database.
@@ -240,6 +277,18 @@ What the operator does:
   (checked by the document vault / Compliance).
 - **Provisional entry:** an entry already recorded but that may still lack the required document; it
   becomes **confirmed** when validated.
+- **Consent (LGPD):** the subject's authorization to receive a communication (e.g. newsletter);
+  without it, nothing is sent. Recorded with purpose, legal basis and date; a **revocation** is
+  appended as a new decision and the history is preserved.
+- **Segment:** an audience defined by **criteria over already-existing data** (e.g. account type,
+  region); it collects no new data.
+- **Campaign:** a dispatch to a segment, with its own **code** used to measure attribution.
+- **Suppression (on dispatch):** when a recipient is **excluded** from a send for lack of consent; the
+  system **counts** the suppressed ones instead of failing the whole dispatch.
+- **Attribution / conversion:** the link between a campaign **code** and a **booking**; when the
+  booking is confirmed it becomes a **conversion** (the campaign-return signal for Intelligence).
+- **LGPD erasure:** honouring the subject's request to delete their **marketing data**, while keeping
+  the **revocation proof** (so they are not re-included) and whatever **another law** requires to keep.
 
 ## 5. Manual version history
 
@@ -250,6 +299,7 @@ What the operator does:
 | 0.5.0 | 4 — Cancellation | Per-product cancellation policy, penalty windows, no-show with proof-of-cancelled-flight waiver, and the "merchant trap" (two obligations that do not net out on a final sale). |
 | 0.10.0 | 8 — Finance (full) | Accounts Payable/Receivable and the monthly close with the "golden rule" (no close without the invoice); **automatic entries** from booking cancellations and no-shows (exactly once, no duplication); per-currency trial balance for the period. |
 | 0.13.0 | 8 — AfterSales | After-sales: support cases (complaint/change/cancellation/refund/info) tied to a booking; **governed SLA deadlines** (24h/72h/48h, tightenable by directive) with a non-blocking breach alert; resolution that **forwards** a refund to Payout (once, without cancelling the supplier obligation) and a cancellation to the booking; per-case "cost to serve". |
+| 0.14.0 | 8 — Marketing | B2B marketing with mandatory **LGPD consent**: record/revoke/look up consent (history preserved); **segment** over existing data with a reach **preview**; **campaign** that **sends only to those who consented** (suppressed are counted, no double-send) via a newsletter provider; **attribution** code→booking that becomes a **conversion signal** for the DSS; **LGPD erasure** that deletes marketing data but preserves the revocation proof. |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of

@@ -206,6 +206,46 @@ O que o operador faz:
 > `GET /api/aftersales/cases?type=&status=&bookingId=&breached=&page=&size=`. A varredura de SLA roda
 > por job com relógio controlável; o reembolso é idempotente por chamado.
 
+### Fase 8 — Marketing (consentimento LGPD, campanhas e atribuição)
+
+O **marketing** fala com a base **B2B** (agências/agentes) e trata o **consentimento (LGPD)** como
+condição obrigatória: **nunca** se manda comunicação para quem não autorizou. O módulo cuida do
+consentimento, da segmentação, do disparo da newsletter e da medição de **quanto a campanha trouxe de
+venda**. Ele **não é um CRM** completo — é a camada de consentimento e atribuição.
+
+O que o operador faz:
+
+- **Registrar consentimento:** informa o titular (agência/agente), a finalidade (ex.: newsletter) e a
+  origem (ex.: formulário de cadastro). Cada decisão vira um **registro que não se apaga**; o estado
+  atual é sempre a **última** decisão do titular para aquela finalidade.
+- **Revogar consentimento:** a revogação **não apaga** o histórico — entra como uma nova decisão. A
+  partir dela, o titular **deixa de receber** os próximos disparos.
+- **Consultar consentimento:** ver o **estado atual** e todo o **histórico** de um titular para uma
+  finalidade.
+- **Criar um segmento:** define o público por **critérios sobre dados que já existem** (ex.: tipo de
+  conta, região) — sem coletar nada novo. Critérios fora da lista permitida são recusados.
+- **Estimar o alcance (prévia):** o sistema mostra para **quantos titulares consentidos** o segmento
+  chegaria.
+- **Criar e disparar uma campanha:** a campanha aponta para um segmento e tem um **código** próprio. No
+  disparo, o sistema **envia só para quem consentiu**; quem não consentiu é **excluído e contado**
+  (aparece como "suprimidos"); ninguém recebe **duas vezes** a mesma campanha. O envio sai por um
+  **provedor de newsletter externo** (hoje um simulador rastreável).
+- **Atribuir uma venda à campanha:** registra que uma reserva veio de um **código de campanha**. Quando
+  essa reserva é **confirmada**, o sistema marca a **conversão** e manda esse sinal para a
+  **Inteligência (DSS)** — é assim que se mede o retorno da campanha.
+- **Atender pedido de exclusão (LGPD):** remove os **dados de marketing** do titular e **encerra** o
+  consentimento, mas **guarda a prova de que ele saiu** (para não voltar a ser incluído por engano). O
+  que **outra lei obriga a guardar** (notas fiscais, lançamentos financeiros, a reserva) **não** é
+  apagado por aqui.
+
+> Para quem é de TI: `POST /api/marketing/consents`, `DELETE /consents/{id}` (revoga),
+> `GET /consents?subject=&subjectType=&purpose=`; `POST /segments`, `GET /segments/{id}/preview`;
+> `POST /campaigns`, `POST /campaigns/{id}/send` (devolve `targeted/suppressedNoConsent/queued`),
+> `GET /campaigns/{id}`; `POST /attribution`, `GET /attribution?campaignCode=`; `POST /erasure`. O
+> consentimento é um log append-only (estado = última linha); o disparo é idempotente por
+> `(campanha, destinatário)`; o provedor de newsletter é uma ACL (mock rastreável). Erros não vazam
+> dado pessoal.
+
 ## 4. Glossário
 
 - **Backend / servidor:** a parte do sistema que processa as regras e fala com o banco de dados.
@@ -238,6 +278,18 @@ O que o operador faz:
   (conferido pelo cofre de documentos / Compliance).
 - **Lançamento provisório:** lançamento já registrado, mas que ainda pode estar sem o documento
   obrigatório; vira **confirmado** quando validado.
+- **Consentimento (LGPD):** a autorização do titular para receber uma comunicação (ex.: newsletter);
+  sem ela, **não** se envia. Fica registrado com finalidade, base legal e data; a **revogação** entra
+  como uma nova decisão e o histórico é preservado.
+- **Segmento:** um público definido por **critérios sobre dados já existentes** (ex.: tipo de conta,
+  região); não coleta dado novo.
+- **Campanha:** um envio para um segmento, com um **código** próprio usado para medir a atribuição.
+- **Supressão (no disparo):** quando um destinatário é **excluído** do envio por não ter consentimento;
+  o sistema **conta** os suprimidos em vez de falhar o disparo todo.
+- **Atribuição / conversão:** o vínculo entre o **código** de uma campanha e uma **reserva**; quando a
+  reserva é confirmada, vira uma **conversão** (sinal de retorno da campanha para a Inteligência).
+- **Exclusão LGPD (erasure):** atender o pedido do titular de apagar seus **dados de marketing**,
+  preservando a **prova de revogação** (para não reincluí-lo) e o que **outra lei** manda guardar.
 
 ## 5. Histórico de versões do manual
 
@@ -248,6 +300,7 @@ O que o operador faz:
 | 0.5.0 | 4 — Cancelamento | Política de cancelamento por produto, multas por janela, no-show com dispensa por prova de voo, e a "armadilha do merchant" (duas obrigações que não se anulam na venda final). |
 | 0.10.0 | 8 — Finance (full) | Contas a Pagar/Receber e o fechamento mensal com a "regra de ouro" (não fecha sem a nota); **lançamentos automáticos** a partir de cancelamentos e no-show das reservas (uma vez só, sem duplicar); balancete do período por moeda. |
 | 0.13.0 | 8 — AfterSales | Pós-venda: chamados (reclamação/alteração/cancelamento/reembolso/informação) ligados à reserva; prazos de **SLA governados** (24h/72h/48h, ajustáveis por diretiva) com alerta de violação que **não trava**; resolução que **encaminha** reembolso ao Payout (uma vez, sem cancelar a obrigação do fornecedor) e cancelamento à reserva; "custo de servir" por chamado. |
+| 0.14.0 | 8 — Marketing | Marketing B2B com **consentimento LGPD** obrigatório: registrar/revogar/consultar consentimento (histórico preservado); **segmento** por dados existentes com **prévia** de alcance; **campanha** que **só envia para quem consentiu** (suprimidos contados, sem envio duplicado) via provedor de newsletter; **atribuição** código→reserva que vira **sinal de conversão** para o DSS; **exclusão LGPD** que apaga o dado de marketing mas preserva a prova de revogação. |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.
