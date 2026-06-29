@@ -10,6 +10,7 @@ import com.fksoft.domain.booking.BookingLocatorInvalidException;
 import com.fksoft.domain.booking.BookingNotFoundException;
 import com.fksoft.domain.booking.BookingQuoteNotFoundException;
 import com.fksoft.domain.booking.BookingTransitionInvalidException;
+import com.fksoft.domain.booking.CancellationPolicyInvalidException;
 import com.fksoft.domain.commissioning.CommissionBaseInvalidException;
 import com.fksoft.domain.commissioning.CommissionPctInvalidException;
 import com.fksoft.domain.compliance.ComplianceDocumentNotFoundException;
@@ -76,6 +77,7 @@ public class HttpErrorMapping {
           entry(BookingTransitionInvalidException.class, HttpStatus.CONFLICT),
           entry(BookingLocatorDuplicateException.class, HttpStatus.CONFLICT),
           entry(BookingLocatorInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(CancellationPolicyInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(ReconciliationCaseNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(ReconciliationCurrencyMismatchException.class, HttpStatus.BAD_REQUEST),
           entry(FinancePartyInvalidException.class, HttpStatus.BAD_REQUEST),
