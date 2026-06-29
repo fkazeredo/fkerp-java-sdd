@@ -25,3 +25,4 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0007](DL-0007-accounts-cadastros-opcionais.md) | 1 | Accounts: CADASTUR/IATA opcionais no v1 (nenhum cadastro obrigatório) | Média | Barata |
 | [DL-0008](DL-0008-exchange-nome-do-modulo.md) | 1 | Manter o nome `Exchange` para o módulo de câmbio (Q1) | Alta | Moderada |
 | [DL-0009](DL-0009-quoting-formula-de-preco.md) | 1 | Quoting: preço = base BRL + markup (default 0); base comissionável em BRL | Média | **Cara** |
+| [DL-0010](DL-0010-booking-quote-multiplicidade.md) | 1 | Booking: Quote→Booking não 1:1 no v1 (localizador é a trava) | Média | Moderada |
