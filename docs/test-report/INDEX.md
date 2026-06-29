@@ -6,6 +6,7 @@ resultado, cobertura e como reproduzir.
 | Fatia | Spec | Arquivo | Resultado |
 |---|---|---|---|
 | Slice 0 — Walking Skeleton | SPEC-0001 | [slice-0-walking-skeleton.md](slice-0-walking-skeleton.md) | ✅ verde (backend 12 testes, frontend 4 testes, smoke OK) |
+| Slice 1 — Accounts | SPEC-0002 | [slice-1-accounts.md](slice-1-accounts.md) | ✅ verde (backend 32 testes; tela Angular pendente) |
 
 ## Resumo por nível (Fase 0)
 
