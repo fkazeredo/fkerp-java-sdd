@@ -20,7 +20,7 @@
 | 1 — Manual commercial core | 2026-06-29 05:08 (-03:00) | 2026-06-29 05:20 (-03:00) | ⏹️ Preempted by direct owner request (ADR 0015 — versionamento/SemVer) before any business code. Phase reverted to ⬜ Not started; only the roadmap marker had been touched. |
 | 1 — Manual commercial core (restart) | 2026-06-29 05:35 (-03:00) | 2026-06-29 06:55 (-03:00) | ✅ Backend green: `./mvnw verify` **82 tests**, 7 Modulith modules, 6 slices (SPEC-0002…0007) merged to `develop`, released **`0.2.0`**. Angular screens deferred to 0.2.x (carried debt). Supervisor loop switched 30m → 1h per owner request. |
 | 1 — Manual commercial core (frontend) | 2026-06-29 07:40 (-03:00) | 2026-06-29 08:10 (-03:00) | ✅ Owner-directed: **5 telas Angular** (Accounts/Exchange/Quoting/Booking/Reconciliation) + nav; `npm` lint/test(**14**)/build verdes; released **`0.2.1`**. Fase 1 fechada ponta a ponta. |
-| 2 — Minimal compliance | 2026-06-29 08:20 (-03:00) | _in progress_ | Supervisor loop (8b1087fe): sem 🟡 → próxima ⬜ = Fase 2; marcada 🟡; `RUN-PHASE` (FASE-ALVO=2) delegado a um subagente em background. |
+| 2 — Minimal compliance | 2026-06-29 08:20 (-03:00) | 2026-06-29 09:05 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=2); supervisor **reverificou**: `./mvnw verify` **108 tests** verde, 0 Checkstyle. Finance seam + Compliance + veto de fechamento; released **`0.3.0`** (tag, main+develop). DL-0012…0015. |
 
 A phase is **Complete** only when every slice's acceptance criteria are tested and
 passing, the architecture gates (ArchUnit + Spring Modulith + Spotless/Checkstyle)
@@ -32,7 +32,7 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 |---|---|---|---|---|
 | **0** | Foundation (walking skeleton + Event Storming) | SPEC-0001 | ✅ Complete | Released `0.1.0` (tag). See slice detail below. |
 | **1** | Manual commercial core | SPEC-0002…0007 | ✅ Complete | Backend `0.2.0` (82 tests) + Angular screens `0.2.1` (14 tests). End-to-end: 6 contextos com tela (loading/empty/erro). |
-| **2** | Minimal compliance | SPEC-0008 (+ Finance seam 0015) | 🟡 In progress | Supervisor loop (8b1087fe) started 2026-06-29 08:20 (-03:00); RUN-PHASE delegated to a subagent. Document vault + mandatory attachment + monthly-close veto + retention. |
+| **2** | Minimal compliance | SPEC-0008 (+ Finance seam 0015) | ✅ Complete | Released `0.3.0` (tag). Finance AP/AR seam + period close, Compliance vault + mandatory attachment + **monthly-close veto** + retention. `./mvnw verify` 108 tests (9 Modulith modules). Telas: backend-first (UI follow-up). |
 | **3** | First real integration (ACL) | SPEC-0009 | ⬜ Not started | Quote site, INTEGRATED branch. |
 | **4** | Cancellation + merchant trap | SPEC-0010 | ⬜ Not started | Policy as object + ALL_SALES_FINAL trap + no-show. |
 | **5** | Exchange exposure + reports | SPEC-0011 | ⬜ Not started | Subsidy × drift, book position, first FX reports. |
@@ -72,6 +72,22 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 - [x] APIs REST + OpenAPI dos 6 contextos; erro estável `{code,message,fields}`; i18n pt-BR + fallback.
 - [x] Merge em `develop`, release `0.2.0` (tag), merge em `main`.
 - [x] **Telas Angular** dos contextos da Fase 1 (loading/empty/erro) — `npm lint`/`test` (14)/`build` verdes; release `0.2.1`.
+
+## Phase 2 — slice detail
+
+| Slice | Spec | Deliverable | Status |
+|---|---|---|---|
+| 7a | SPEC-0015 | Finance seam — razão AP/AR + máquina de período (OPEN→CLOSING→CLOSED) com `CloseGuard` (porta) | ✅ |
+| 7b | SPEC-0008 | Compliance — cofre `Document` (hash SHA-256 + retenção), anexo obrigatório, `DocumentRequirement`, `FileStorage` (porta + adapter de FS) | ✅ |
+| 7c | SPEC-0008/0015 | **Veto de fechamento** ponta a ponta (lançamento sem documento exigido não fecha o mês) + job de retenção | ✅ |
+| — | 0008/0015 | Telas Angular de Compliance/Finance | ⬜ Follow-up (backend-first) |
+
+**Phase 2 exit criteria:**
+- [x] `cd backend && ./mvnw verify` green (108 tests; ArchUnit + 9 Modulith modules + Spotless/Checkstyle) — reverificado pelo supervisor.
+- [x] Migrações `V7` (finance) e `V8` (compliance, + seed de requirements) aplicadas e validadas (Postgres real).
+- [x] **Regra de ouro:** lançamento AP/AR sem o documento exigido **veta** o fechamento mensal (regressão e2e verde).
+- [x] Merge em `develop`, release `0.3.0` (tag), merge em `main`; DL-0012…0015 registradas.
+- [ ] Telas Angular de Compliance/Finance — follow-up (não exigidas para o veto/cofre operarem).
 
 ## Open architectural debts carried forward
 
