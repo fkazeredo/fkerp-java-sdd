@@ -94,7 +94,9 @@ POST /api/finance/periods/2026-06/close
 - `GET /api/finance/entries?direction=&status=&period=&party=&page=&size=` → `PageResponse`.
 - `POST /api/finance/periods/{yyyymm}/close` → 200 (fechado) | 409 `finance.period.cannot-close`.
 - `GET /api/finance/periods/{yyyymm}` → status + totais AP/AR.
-- OpenAPI atualizada.
+- `GET /api/finance/periods/{yyyymm}/trial-balance` → balancete operacional por moeda
+  (`payable`/`receivable`/`net = receivable − payable`) + contagens por status (BR10, DL-0043).
+- OpenAPI atualizada (code-first/springdoc).
 
 ## Events
 

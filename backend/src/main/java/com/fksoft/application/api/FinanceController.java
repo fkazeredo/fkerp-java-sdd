@@ -8,6 +8,7 @@ import com.fksoft.domain.finance.LedgerDirection;
 import com.fksoft.domain.finance.LedgerEntryView;
 import com.fksoft.domain.finance.Party;
 import com.fksoft.domain.finance.PeriodView;
+import com.fksoft.domain.finance.TrialBalanceView;
 import com.fksoft.infra.security.UserContextProvider;
 import com.fksoft.infra.web.PageResponse;
 import jakarta.validation.Valid;
@@ -90,6 +91,11 @@ public class FinanceController {
   @GetMapping("/periods/{yyyymm}")
   public PeriodView getPeriod(@PathVariable String yyyymm) {
     return financeService.getPeriod(AccountingPeriodId.of(yyyymm));
+  }
+
+  @GetMapping("/periods/{yyyymm}/trial-balance")
+  public TrialBalanceView trialBalance(@PathVariable String yyyymm) {
+    return financeService.trialBalance(AccountingPeriodId.of(yyyymm));
   }
 
   private String actor() {

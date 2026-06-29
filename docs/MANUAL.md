@@ -164,12 +164,18 @@ uma reserva gera um encargo, o sistema **cria o lançamento sozinho**, no mês e
 Cada operação vira lançamento **uma única vez**, mesmo que o aviso interno chegue repetido — não há
 duplicação.
 
+**Ver o balancete do mês.** A qualquer momento, o operador pode consultar o **balancete operacional**
+de um período: para **cada moeda** (sem misturar moedas), quanto há **a pagar**, **a receber** e o
+**saldo** (a receber menos a pagar), além de quantos lançamentos estão provisórios, confirmados ou
+liquidados. É uma visão de caixa do mês — não uma demonstração contábil.
+
 > Para quem é de TI: `POST /api/finance/entries` (cria, devolve `PROVISIONAL`),
 > `POST /api/finance/entries/{id}/confirm`, `GET /api/finance/entries?...` (lista paginada),
 > `POST /api/finance/periods/{aaaa-mm}/close` (fecha — `409 finance.period.cannot-close` com as
-> pendências quando o Compliance veta) e `GET /api/finance/periods/{aaaa-mm}` (status + totais
-> AP/AR por moeda). Os lançamentos automáticos são criados ao consumir os eventos de cancelamento/
-> no-show das reservas, de forma idempotente.
+> pendências quando o Compliance veta), `GET /api/finance/periods/{aaaa-mm}` (status + totais
+> AP/AR por moeda) e `GET /api/finance/periods/{aaaa-mm}/trial-balance` (balancete por moeda com
+> `payable`/`receivable`/`net` + contagens por status). Os lançamentos automáticos são criados ao
+> consumir os eventos de cancelamento/no-show das reservas, de forma idempotente.
 
 ## 4. Glossário
 

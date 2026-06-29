@@ -245,6 +245,58 @@ public class FinanceService implements LedgerDirectory {
     return toView(accountingPeriod);
   }
 
+  /**
+   * Builds the operational trial-balance of a period (SPEC-0015 BR10, DL-0043): AP/AR totals and
+   * net per currency (DL-0013 — never summing currencies) and the entry counts per status. A
+   * never-referenced period reads as an empty balance with zero counts.
+   *
+   * @param periodId the period
+   * @return the trial-balance view
+   */
+  @Transactional(readOnly = true)
+  public TrialBalanceView trialBalance(AccountingPeriodId periodId) {
+    String period = periodId.value();
+    AccountingPeriod accountingPeriod =
+        periods.findById(period).orElseGet(() -> AccountingPeriod.open(period));
+    List<LedgerEntry> entriesOfPeriod = entries.findByPeriod(period);
+
+    Map<String, BigDecimal> payableByCurrency = new LinkedHashMap<>();
+    Map<String, BigDecimal> receivableByCurrency = new LinkedHashMap<>();
+    long provisional = 0;
+    long confirmed = 0;
+    long settled = 0;
+    for (LedgerEntry entry : entriesOfPeriod) {
+      Money money = entry.money();
+      Map<String, BigDecimal> target =
+          entry.direction() == LedgerDirection.PAYABLE ? payableByCurrency : receivableByCurrency;
+      target.merge(money.currency(), money.amount(), BigDecimal::add);
+      // Make sure the other side has an entry for this currency too, so net is computed once.
+      (entry.direction() == LedgerDirection.PAYABLE ? receivableByCurrency : payableByCurrency)
+          .putIfAbsent(money.currency(), BigDecimal.ZERO);
+      switch (entry.status()) {
+        case PROVISIONAL -> provisional++;
+        case CONFIRMED -> confirmed++;
+        case SETTLED -> settled++;
+      }
+    }
+
+    List<TrialBalanceView.CurrencyBalance> balances = new ArrayList<>();
+    for (String currency : payableByCurrency.keySet()) {
+      BigDecimal payable = scaled(payableByCurrency.get(currency));
+      BigDecimal receivable = scaled(receivableByCurrency.getOrDefault(currency, BigDecimal.ZERO));
+      balances.add(
+          new TrialBalanceView.CurrencyBalance(
+              currency, payable, receivable, receivable.subtract(payable)));
+    }
+
+    return new TrialBalanceView(
+        period, accountingPeriod.status(), balances, provisional, confirmed, settled);
+  }
+
+  private static BigDecimal scaled(BigDecimal amount) {
+    return amount.setScale(2, java.math.RoundingMode.HALF_UP);
+  }
+
   @Override
   @Transactional(readOnly = true)
   public List<LedgerEntrySnapshot> entriesOfPeriod(String period) {
