@@ -15,12 +15,15 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0029](DL-0029-rep-type-target-rep-p-export-upload.md) | Tipo de REP (Q6): mirar **REP-P** e modelar AFD como upload da exportação oficial | **Baixa** | **Cara** | **Q6 — qual REP o cliente usa é incógnita de negócio**; muda formato/captura do artefato legal |
 | [DL-0033](DL-0033-crawl-period-and-multi-source.md) | Periodicidade do crawl (diário, período corrente) e lista de `sourceRef` configurável | **Baixa** | Barata | Periodicidade/filiais reais são decisão de RH ainda não dada (só configuração) |
 | [DL-0044](DL-0044-billing-tax-regime-simples-and-swappable-strategy.md) | Billing: regime **Simples Nacional** (default) + estratégia trocável de ISS/retenções (Q7) | **Baixa** | **Cara** | **Q7 — regime tributário/quem emite é incógnita de negócio (só o contador fecha)**; move a tese tributária e o impacto fiscal de notas já emitidas é externo e caro |
+| [DL-0048](DL-0048-payout-payment-gateway-acl-async-webhook.md) | Payout: gateway de pagamento como porta + **mock rastreável com webhook assíncrono** (ADR 0006) | **Baixa** | Moderada | Meio de pagamento real é Open Question da SPEC-0017; só o dono fecha (o mock prova o contrato) |
+| [DL-0049](DL-0049-payout-foreign-settlement-rate-and-brl-baixa.md) | Payout: liquidação do fornecedor com `settlementRate` (USD) + baixa em **BRL** | **Baixa** | **Cara** | Fluxo de câmbio real (remessa vs BRL) é Open Question; a tese de câmbio é compartilhada por Payout/Reconciliation/Exchange |
 
-> DL-0017 (Fase 3), **DL-0029/DL-0033** (Fase 6) e **DL-0044** (Fase 8c) são as de **Confiança=Baixa**
-> (Open Questions de negócio em aberto). **DL-0029 (Q6) e DL-0044 (Q7)** são as mais sensíveis:
-> Confiança=Baixa **e** Reversibilidade=Cara — incógnitas de negócio que só o cliente/contador fecha
-> (tipo de REP; regime tributário). DL-0009/DL-0017, DL-0018, **DL-0024**, **DL-0029** e **DL-0044** são
-> as de reversão não-barata.
+> DL-0017 (Fase 3), **DL-0029/DL-0033** (Fase 6), **DL-0044** (Fase 8c) e **DL-0048/DL-0049** (Fase 8d)
+> são as de **Confiança=Baixa** (Open Questions de negócio em aberto). **DL-0029 (Q6), DL-0044 (Q7) e
+> DL-0049** são as mais sensíveis: Confiança=Baixa **e** Reversibilidade=Cara — incógnitas de negócio que
+> só o cliente/contador fecha (tipo de REP; regime tributário; fluxo de câmbio da liquidação).
+> DL-0009/DL-0017, DL-0018, **DL-0024**, **DL-0029**, **DL-0044** e **DL-0049** são as de reversão
+> não-barata.
 
 ## Todas as decisões
 
@@ -73,3 +76,7 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0045](DL-0045-billing-module-and-taxable-base-is-commission.md) | 8c | Billing: novo módulo `domain.billing` (13º); `CommissionInvoice`; **base tributável = comissão** (nunca o pacote); referência ao lançamento por id+porta, sem FK | Alta | Moderada |
 | [DL-0046](DL-0046-nfse-municipal-acl-port-and-traceable-mock.md) | 8c | Billing: NFS-e municipal como porta `NfseGateway` + adaptador ACL com **mock rastreável** em `infra.integration.nfse`; assinatura e-CNPJ via porta `CertificateSigner` (stub → Platform/SPEC-0023); falha classificada (TIMEOUT/UNAVAILABLE→502, REJECTED→422) | Média | Moderada |
 | [DL-0047](DL-0047-billing-issue-idempotency-finance-event-and-compliance-archive.md) | 8c | Billing: emissão idempotente por comissão (UNIQUE parcial); arquiva NFS-e no Compliance via orquestrador `infra`; Finance lança o tributo consumindo `CommissionInvoiceIssued` (idempotente); `billing` é módulo **folha** (grafo acíclico) | Média | Moderada |
+| [DL-0048](DL-0048-payout-payment-gateway-acl-async-webhook.md) | 8d | Payout: porta `PaymentGateway` + adaptador **mock rastreável com webhook assíncrono** (ADR 0006) em `infra.integration.payment`; idempotente por `(payoutId, installmentSeq, providerRef)`; falha classificada (sem "pago" falso); DTO do provedor não vaza (ArchUnit) | **Baixa** | Moderada |
+| [DL-0049](DL-0049-payout-foreign-settlement-rate-and-brl-baixa.md) | 8d | Payout: liquidação do fornecedor modela `amount` (USD) + `settlementRate` (escala 6, >0) + `settledBrl` (baixa em BRL = amount × rate, HALF_UP); remessa internacional real adiada (mesmo gateway) | **Baixa** | **Cara** |
+| [DL-0050](DL-0050-payout-installments-no-interest-and-exact-cent-distribution.md) | 8d | Payout: parcelamento **v1 sem juros**; Σ parcelas == total exato (resto de centavos na 1ª parcela); cada parcela executa/comprova; Payout só `EXECUTED` quando todas executam; "sem plano" = 1 parcela implícita | Média | Moderada |
+| [DL-0051](DL-0051-payout-supplier-settled-consumed-by-finance-leaf-acyclic.md) | 8d | Payout folha: `SupplierSettled` consumido pelo **Finance** (listener idempotente, posta uma vez); Reconciliation/Exchange seguem fechando FX pela liquidação própria (costura ao evento adiada, sem ciclo); REFUND não cancela a obrigação do fornecedor (DL-0024) | Média | Moderada |
