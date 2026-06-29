@@ -43,6 +43,8 @@ import com.fksoft.domain.finance.FinancePeriodClosedException;
 import com.fksoft.domain.finance.FinancePeriodInvalidException;
 import com.fksoft.domain.intelligence.InsightDecisionInvalidException;
 import com.fksoft.domain.intelligence.InsightNotFoundException;
+import com.fksoft.domain.marketing.ConsentInvalidException;
+import com.fksoft.domain.marketing.ConsentNotFoundException;
 import com.fksoft.domain.payout.PayoutAlreadyExecutedException;
 import com.fksoft.domain.payout.PayoutAmountInvalidException;
 import com.fksoft.domain.payout.PayoutGatewayException;
@@ -149,7 +151,9 @@ public class HttpErrorMapping {
           entry(SupportCaseNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(SupportCaseInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(SupportCaseTransitionInvalidException.class, HttpStatus.CONFLICT),
-          entry(SupportCaseRefundDuplicateException.class, HttpStatus.CONFLICT));
+          entry(SupportCaseRefundDuplicateException.class, HttpStatus.CONFLICT),
+          entry(ConsentInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(ConsentNotFoundException.class, HttpStatus.NOT_FOUND));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {
