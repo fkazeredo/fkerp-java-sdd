@@ -9,8 +9,11 @@ conforme `docs/RUN-PHASE.md`.
 | DL | Título | Confiança | Reversibilidade | Por que destacada |
 |---|---|---|---|---|
 | [DL-0001](DL-0001-pacote-base-com-fksoft.md) | Manter pacote base `com.fksoft` | Alta | **Cara** | Renomear o pacote raiz após código nascer gera diff amplo |
+| [DL-0009](DL-0009-quoting-formula-de-preco.md) | Quoting: preço = base BRL + markup (default 0) | Média | **Cara** | Fórmula de preço move a tese econômica; refator amplo se mudar |
+| [DL-0017](DL-0017-inbound-account-not-found-rejects.md) | Inbound: Account inexistente **rejeita** (422) | **Baixa** | Moderada | Decisão de negócio em aberto na SPEC-0009; só o dono fecha |
 
-> Nenhuma decisão da Fase 0 ficou com Confiança=Baixa.
+> DL-0017 é a decisão de **Confiança=Baixa** da Fase 3 (Open Question de negócio). DL-0009/DL-0017 e
+> DL-0018 (reuso do agregado para o ramo INTEGRATED) são as de reversão não-barata desta fase.
 
 ## Todas as decisões
 
@@ -31,3 +34,7 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0013](DL-0013-finance-multimoeda-no-razao.md) | 2 | Finance: razão em moeda original (sem conversão); período agrega por moeda | Média | Moderada |
 | [DL-0014](DL-0014-finance-comprar-vs-construir.md) | 2 | Finance: construir o seam mínimo (AP/AR+período) agora; contabilidade plena = comprar depois | Alta | Moderada |
 | [DL-0015](DL-0015-compliance-filestorage-port.md) | 2 | Compliance: porta `FileStorage` + adaptador filesystem; hash SHA-256 | Alta | Barata |
+| [DL-0016](DL-0016-inbound-webhook-signature-hmac.md) | 3 | Webhook de entrada: assinatura HMAC-SHA256 com segredo compartilhado (`X-Signature`) | Média | Moderada |
+| [DL-0017](DL-0017-inbound-account-not-found-rejects.md) | 3 | Inbound: Account inexistente **rejeita** (422); não cria provisória nem enfileira | Baixa | Moderada |
+| [DL-0018](DL-0018-integrated-quote-modeling.md) | 3 | Quote INTEGRATED reusa o agregado; colunas de composição MANUAL viram nulas | Alta | Moderada |
+| [DL-0019](DL-0019-acl-resilience-scope-inbound.md) | 3 | ACL de entrada: classificação de falha + observabilidade (sem circuit breaker — não há chamada de saída) | Alta | Barata |
