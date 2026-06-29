@@ -419,3 +419,8 @@ exchange, finance, intelligence, people, quoting, reconciliation, sourcing`.
   e depois; um commit `refactor:` por módulo (ou poucos), revisável.
 
 **Aceite:** nenhum pacote `internal` sob `com.fksoft.domain`; gates verdes; nenhum contrato alterado.
+
+> **Documentação por iniciativa (Definition of Done):** ao entregar cada iniciativa acima, atualize
+> também **`docs/MANUAL.md` (pt-BR)** e a documentação afetada — spec(s), ADR(s), release note e
+> `docs/ROADMAP-STATUS.md`. O manual é **artefato vivo**: nenhuma mudança visível ao usuário é
+> "pronta" sem o manual refletindo-a (ver `CLAUDE.md` → Definition of Done + *Command — User manual*).

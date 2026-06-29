@@ -97,3 +97,16 @@ The manual MUST contain:
 Rules: prosa em **pt-BR**, sem jargão técnico desnecessário; descreve **apenas o que existe** (nada
 especulativo — Rule Zero); telas e textos citados batem com o i18n real (não inventar rótulos);
 mantém um índice quando crescer. Cada atualização entra no mesmo PR/commit da fatia.
+
+### Sempre atualizar o manual (reforço)
+
+O `docs/MANUAL.md` é **artefato vivo** e mantê-lo atualizado **não é opcional** — é verificado em
+toda Definition of Done. **Toda fatia que muda algo visível ao usuário** (telas novas/alteradas,
+navegação, atalhos, login, visões de operador) **só está "pronta" quando o manual reflete a
+mudança**, na mesma fatia.
+
+Ao entregar as **Iniciativas importadas do fkerp-poc** (ver `docs/ROADMAP.md` → *Iniciativas
+importadas do fkerp-poc*), atualize o manual conforme o caso: **UX-1** (novas telas, navegação,
+paleta de comandos `Ctrl/Cmd+K`, atalhos, tema claro/escuro, login); **OBS-1** (como o operador vê
+métricas/monitoramento e o endpoint de versão); **SEC-1** (login, perfis e permissões). Se o projeto
+adotar manual **bilíngue** (en-US + pt-BR, como no fkerp-poc), atualize **as duas** versões.
