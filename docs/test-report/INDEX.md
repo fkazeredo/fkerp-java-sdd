@@ -28,6 +28,8 @@ resultado, cobertura e como reproduzir.
 | Slice 11a — People + snapshot operacional | SPEC-0012 | [slice-11a-people-snapshot.md](slice-11a-people-snapshot.md) | ✅ verde (backend 187 testes; módulo people 11º + idempotência + histórico + V16) |
 | Slice 11b — Crawler ACL + fila + disjuntor | SPEC-0012 | [slice-11b-crawler-resilience.md](slice-11b-crawler-resilience.md) | ✅ verde (backend 197 testes; circuit breaker + retry/dead-letter + ACL + fronteira ArchUnit) |
 | Slice 11c — Ingestão AFD/AEJ assinado → cofre | SPEC-0012 | [slice-11c-afd-legal-ingestion.md](slice-11c-afd-legal-ingestion.md) | ✅ verde (backend 206 testes; verificação CAdES/PKCS#7 + cofre com retenção 5 anos) |
+| Slice 12a — Intelligence framework + PromoFxAdvisor | SPEC-0013 | [slice-12a-intelligence-promofx.md](slice-12a-intelligence-promofx.md) | ✅ verde (backend 216 testes; 12º módulo + insight read-model + advisor determinístico + V17 + ArchUnit "aconselha, nunca comanda" com dentes) |
+| Slice 12b — OverrideNudge (gated) + decisão + observabilidade | SPEC-0013 | [slice-12b-nudge-decision.md](slice-12b-nudge-decision.md) | ✅ verde (backend 219 testes; nudge off por flag sem dado falso + decisão humana sem ação + InsightDecided) |
 
 ## Resumo por nível (Fase 0)
 

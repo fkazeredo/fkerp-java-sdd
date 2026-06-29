@@ -48,6 +48,16 @@ public class IntelligenceService {
   private final ApplicationEventPublisher events;
 
   /**
+   * OverrideNudge feature flag (BR6 / Q4, DL-0036). Default {@code false}: while the
+   * commission-tier model does not exist, the nudge stays OFF and produces NO insight — no fake
+   * data. The seam (the type, the listener and this branch) is in place so it can be switched on
+   * without refactoring once the tier table exists.
+   */
+  @org.springframework.beans.factory.annotation.Value(
+      "${intelligence.override-nudge.enabled:false}")
+  private final boolean overrideNudgeEnabled;
+
+  /**
    * Learns the {@code booking → account} mapping from a confirmed booking (DL-0034) and rolls any
    * already-buffered FX facts into the agency accrual, then refreshes the agency's promo-FX
    * insight.
@@ -84,6 +94,34 @@ public class IntelligenceService {
     applyIfReady(attribution);
   }
 
+  /**
+   * Consumes a {@code PriceOverridden} fact for the OverrideNudge seam (BR6, DL-0036). While the
+   * commission-tier model does not exist (feature flag off, the default), this is a deliberate
+   * no-op — the nudge produces NO insight rather than fake data. When the tier table exists, the
+   * flag turns on and the distance-to-next-tier computation plugs in here without reshaping the
+   * framework.
+   *
+   * @param quoteId the overridden quote id (the future nudge subject)
+   */
+  @Transactional
+  public void onPriceOverridden(UUID quoteId) {
+    if (!overrideNudgeEnabled) {
+      log.debug(
+          "OverrideNudge disabled (no tier model yet) — ignoring PriceOverridden for {}", quoteId);
+      return;
+    }
+    // Seam only (Q4/BR6, DL-0036): the distance-to-next-tier and retroactive-gain computation needs
+    // the governed commission-tier table, which does not exist yet. Until it does, even with the
+    // flag
+    // on we produce NO insight (no fake data) and surface the gap as a warning rather than failing
+    // the
+    // override's transaction. Wiring this in is tracked by spec 0013 Open Question Q4.
+    log.warn(
+        "OverrideNudge flag is on but the commission-tier model (Q4) does not exist yet — "
+            + "no nudge generated for quote {} (see docs/specs/0013 Q4 / DL-0036)",
+        quoteId);
+  }
+
   /** Fetches an insight by id. */
   @Transactional(readOnly = true)
   public InsightView getById(UUID insightId) {
@@ -101,24 +139,49 @@ public class IntelligenceService {
   }
 
   /**
-   * Records a human decision on an insight (BR4) — never triggers an automatic action (BR2).
+   * Records a human decision on an insight (BR4) — never triggers an automatic action (BR2). The
+   * decision must be one of {@code ACCEPTED}, {@code REJECTED} or {@code DISMISSED}; anything else
+   * (including {@code NEW} or an unknown value) is rejected.
    *
+   * @param insightId the insight id
+   * @param decision the raw decision value (validated against the enum, minus {@code NEW})
+   * @param decidedBy who decided (audit)
+   * @return the updated insight view
    * @throws InsightNotFoundException when the insight does not exist
+   * @throws InsightDecisionInvalidException when the decision is outside {ACCEPTED, REJECTED,
+   *     DISMISSED}
    */
   @Transactional
-  public InsightView decide(UUID insightId, InsightStatus decision, String decidedBy) {
+  public InsightView decide(UUID insightId, String decision, String decidedBy) {
+    InsightStatus parsed = parseDecision(decision);
     Insight insight = insights.findById(insightId).orElseThrow(InsightNotFoundException::new);
     Instant now = clock.instant();
-    insight.decide(decision, decidedBy, now);
+    insight.decide(parsed, decidedBy, now);
     insights.save(insight);
-    events.publishEvent(new InsightDecided(insightId, decision, decidedBy, now));
+    events.publishEvent(new InsightDecided(insightId, parsed, decidedBy, now));
     log.info(
         "InsightDecided insightId={} decision={} decidedBy={} subjectRef={}",
         insightId,
-        decision,
+        parsed,
         decidedBy,
         insight.subjectRef());
     return insight.toView();
+  }
+
+  private InsightStatus parseDecision(String decision) {
+    if (decision == null) {
+      throw new InsightDecisionInvalidException();
+    }
+    InsightStatus status;
+    try {
+      status = InsightStatus.valueOf(decision.trim().toUpperCase(java.util.Locale.ROOT));
+    } catch (IllegalArgumentException unknown) {
+      throw new InsightDecisionInvalidException();
+    }
+    if (status == InsightStatus.NEW) {
+      throw new InsightDecisionInvalidException();
+    }
+    return status;
   }
 
   private BookingAttribution attribution(UUID bookingId) {

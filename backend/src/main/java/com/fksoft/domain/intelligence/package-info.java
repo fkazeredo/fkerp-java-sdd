@@ -22,8 +22,10 @@
  * objects ({@link com.fksoft.domain.intelligence.PromoFxAdvisor} and its inputs/outputs), the
  * events ({@link com.fksoft.domain.intelligence.InsightGenerated}, {@link
  * com.fksoft.domain.intelligence.InsightDecided}), the {@link
- * com.fksoft.domain.intelligence.InsightNarrator} port and the business exception. The {@code
- * internal} sub-package (entities, repositories, the event listener, the rule-based narrator) is
+ * com.fksoft.domain.intelligence.InsightNarrator} port and the business exceptions ({@link
+ * com.fksoft.domain.intelligence.InsightNotFoundException}, {@link
+ * com.fksoft.domain.intelligence.InsightDecisionInvalidException}). The {@code internal}
+ * sub-package (entities, repositories, the event listeners, the rule-based narrator) is
  * module-private.
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Intelligence")
