@@ -47,6 +47,19 @@ BR6  Parcelamento: um Payout pode ter N parcelas com vencimentos; cada parcela e
      individualmente; o Payout só fica EXECUTED quando todas as parcelas executam.
 BR7  REFUND MUST referenciar a obrigação de origem (CancellationCharge / chamado de AfterSales) —
      não se cria reembolso "solto".
+BR8  Meio de pagamento — ASSUMIDO (ver DL-0048): a execução vai ao mundo externo por uma porta
+     `PaymentGateway` (ACL) com adaptador **mock rastreável de webhook assíncrono** (ADR 0006):
+     request → PENDING; o callback assinado confirma/falha idempotente por
+     (payoutId, installmentSeq, providerRef). Provedor real (PIX/TED/boleto/gateway) = trocar o
+     adaptador. **Confiança=Baixa** (qual provedor é Open Question de negócio).
+BR9  Moeda da liquidação — ASSUMIDO (ver DL-0049): o `Payout` modela `amount` na moeda original
+     (USD) + `settlementRate` (escala 6, > 0) + `settledBrl` (a baixa em BRL = amount × rate,
+     HALF_UP). A baixa no Finance usa `settledBrl`. Remessa internacional real fica para integração
+     futura (mesmo gateway). **Confiança=Baixa, Reversibilidade=Cara.**
+BR10 Parcelamento — ASSUMIDO (ver DL-0050): v1 **sem juros**; soma das parcelas == total **exata**
+     (resto de centavos na 1ª parcela); cada parcela executa/comprova individualmente; Payout só
+     EXECUTED quando todas executam; "sem plano" = 1 parcela implícita. Juros/elegibilidade ficam
+     para CommercialPolicy (SPEC-0014) futura.
 ```
 
 ## Input/Output Examples
@@ -73,14 +86,24 @@ POST /api/payouts/{id}/execute
 ## Events
 
 - `SupplierSettled` — `{payoutId, bookingId, settlementRate, paidBrl, occurredAt}`. Produtor: `payout`.
-  Consumidores: `reconciliation`, `exchange`.
-- `AgentCommissionPaid` — `{payoutId, agentId, amount, occurredAt}`. Consumidor: `finance`, `intelligence`.
-- `RefundExecuted` — `{payoutId, originRef, amount, occurredAt}`. Consumidor: `aftersales`, `finance`.
+  Consumidor entregue: `finance` (posta o AP SUPPLIER_SETTLEMENT **uma vez**, idempotente). Consumo por
+  `reconciliation`/`exchange` **adiado** (DL-0051): eles já fecham o FX pela liquidação própria
+  (DL-0028); religá-los ao evento duplicaria o fechamento/arriscaria ciclo — costura registrada como
+  pendência, sem perda de cobertura (a consistência `settlementRate → fxGainLoss/totalGap` segue provada
+  pela regressão da SPEC-0007/0011).
+- `AgentCommissionPaid` — `{payoutId, agentId, amount, occurredAt}`. Produtor: `payout`. Consumidor
+  entregue: `finance` (baixa COMMISSION_PAYABLE, idempotente). `intelligence` — adiado.
+- `RefundExecuted` — `{payoutId, originRef, amount, occurredAt}`. Produtor: `payout`. Consumidor
+  entregue: `finance` (baixa REFUND, idempotente; **não** toca a obrigação do fornecedor — armadilha do
+  merchant intacta, DL-0024/0051). `aftersales` — adiado (módulo ainda não existe, 8e).
 
 ## Persistence Changes
 
+> Migrações reais entregues: **V21** (payout) e **V22** (mock do gateway + idempotência do webhook).
+> O `V17` do rascunho abaixo foi renumerado para **V21** (a última migração aplicada era V20).
+
 ```txt
-V17__create_payout.sql
+V21__create_payout.sql
   payouts(
     id uuid PK, kind varchar not null, payee_id varchar not null, payee_type varchar not null,
     booking_id uuid null, origin_ref varchar null,              -- p/ REFUND (BR7), valores
@@ -95,10 +118,19 @@ V17__create_payout.sql
     status varchar not null, executed_at timestamptz null, proof_document_id uuid null,
     UNIQUE (payout_id, seq)
   )
+
+V22__create_payment_mock_and_webhooks.sql           -- ADR 0006 / DL-0048 (mock do gateway)
+  mock_payout_jobs(id, payout_id, installment_seq, provider_ref UNIQUE, outcome, deliver_after,
+                   delivered, created_at)            -- a perna assíncrona do mock (webhook adiado)
+  processed_payout_webhooks(id, payout_id, installment_seq, provider_ref, outcome, processed_at,
+                   UNIQUE (payout_id, installment_seq, provider_ref))  -- idempotência do webhook (BR3)
 ```
 
 A porta de pagamento (`PaymentGateway`) e o comprovante (`FileStorage`/Compliance) ficam em
-`infra/integration`. Execução com **locking pessimista** + idempotência por payoutId/parcela.
+`infra/integration.payment`. Execução com **locking pessimista** + idempotência por payoutId/parcela;
+o webhook é idempotente por `(payoutId, installmentSeq, providerRef)`. O comprovante é arquivado no
+Compliance como `PAYMENT_PROOF` (comissão/liquidação) ou `REFUND_PROOF` (reembolso) pelo orquestrador
+em `infra.integration.payment` (Payout é folha — não importa Compliance).
 
 ## Validation Rules
 
@@ -137,10 +169,27 @@ pagamento sensíveis.
 
 ## Open Questions
 
-- **Meio de pagamento/gateway** real (PIX/TED/boleto/provedor) — define a ACL; em aberto.
-- Pagamento ao fornecedor em **moeda estrangeira** (remessa internacional/fechamento de câmbio) vs.
-  liquidação em BRL — confirmar o fluxo real.
-- Política de **parcelamento** (quem pode, juros) — depende de regra de negócio (CommercialPolicy).
+> Todas as Open Questions iniciais foram **resolvidas em modo autônomo** (RUN-PHASE) e movidas para
+> Business Rules como **ASSUMIDO** (ver os DL abaixo). Permanecem decisões de negócio a confirmar com
+> o dono (Confiança=Baixa); o código adota o default mais defensável e a troca é localizada.
+
+- ~~**Meio de pagamento/gateway** real~~ → **ASSUMIDO (BR8, DL-0048)**: porta + mock rastreável de
+  webhook assíncrono (ADR 0006). **Confiança=Baixa** — o provedor real é decisão do dono.
+- ~~Pagamento ao fornecedor em **moeda estrangeira** vs. BRL~~ → **ASSUMIDO (BR9, DL-0049)**: modela
+  `amount` (USD) + `settlementRate` + `settledBrl`. **Confiança=Baixa, Reversibilidade=Cara** —
+  o fluxo bancário real (remessa) é decisão do dono.
+- ~~Política de **parcelamento** (quem pode, juros)~~ → **ASSUMIDO (BR10, DL-0050)**: v1 sem juros,
+  centavos exatos; juros/elegibilidade ficam para CommercialPolicy (SPEC-0014).
+
+## Decisões registradas (decision-log)
+
+- **DL-0048** — `PaymentGateway` (porta ACL) + mock rastreável de webhook assíncrono (ADR 0006); DTO
+  do provedor não cruza para o domínio; falha classificada (sem "pago" falso). **Confiança=Baixa.**
+- **DL-0049** — liquidação do fornecedor: `settlementRate` (escala 6) + `settledBrl` (baixa BRL).
+  **Confiança=Baixa, Reversibilidade=Cara.**
+- **DL-0050** — parcelamento v1 sem juros + distribuição exata de centavos.
+- **DL-0051** — `SupplierSettled` consumido pelo **Finance** (posta uma vez); Payout é **folha**
+  (acíclico); REFUND não cancela a obrigação do fornecedor (armadilha do merchant intacta).
 
 ## Out of Scope
 
