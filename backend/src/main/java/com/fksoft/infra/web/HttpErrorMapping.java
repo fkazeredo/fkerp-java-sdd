@@ -1,5 +1,8 @@
 package com.fksoft.infra.web;
 
+import com.fksoft.domain.accounts.AccountDocumentDuplicateException;
+import com.fksoft.domain.accounts.AccountDocumentInvalidException;
+import com.fksoft.domain.accounts.AccountNotFoundException;
 import com.fksoft.domain.error.DomainException;
 import java.util.Map;
 import java.util.Set;
@@ -11,15 +14,18 @@ import org.springframework.stereotype.Component;
  * should return (ADR 0011). Keeping the mapping here — not in the domain — keeps domain exceptions
  * free of transport concerns.
  *
- * <p>The foundation (SPEC-0001) ships no business exceptions yet, so the registry is empty and any
- * (future, unmapped) {@code DomainException} defaults to {@code 422 Unprocessable Entity}. A
+ * <p>Any unmapped {@code DomainException} defaults to {@code 422 Unprocessable Entity}. A
  * build-time test ({@code HttpErrorMappingCompletenessTest}) fails if a {@code DomainException}
  * subtype is ever left unmapped, so the default can never hide a forgotten entry.
  */
 @Component
 public class HttpErrorMapping {
 
-  private final Map<Class<? extends DomainException>, HttpStatus> mapping = Map.of();
+  private final Map<Class<? extends DomainException>, HttpStatus> mapping =
+      Map.of(
+          AccountDocumentInvalidException.class, HttpStatus.BAD_REQUEST,
+          AccountDocumentDuplicateException.class, HttpStatus.CONFLICT,
+          AccountNotFoundException.class, HttpStatus.NOT_FOUND);
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {

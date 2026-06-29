@@ -136,7 +136,9 @@ que protege a invariante de dígitos (BR2).
 
 ## Open Questions
 
-- Quais cadastros (CADASTUR, IATA) são **obrigatórios** por tipo de conta? (Em aberto.)
+- ~~Quais cadastros (CADASTUR, IATA) são **obrigatórios** por tipo de conta?~~ → **ASSUMIDO**
+  (2026-06-29): nenhum cadastro externo é obrigatório no v1; `cadastur`/`iata` são opcionais e
+  guardados como vieram (BR5). Ver [DL-0007](../decision-log/DL-0007-accounts-cadastros-opcionais.md).
 - Modelagem de **carteira** (saldo/limite) — adiada para spec própria.
 - **Transições de status** (suspender/reativar/inativar) — adiadas até existir um workflow real que
   as exija; não inventar máquina de estados agora (`CLAUDE.md`, invariante 3).
