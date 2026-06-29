@@ -113,3 +113,16 @@ métricas/monitoramento e o endpoint de versão); **SEC-1** (login, perfis e per
 O manual é **bilíngue**: `docs/MANUAL.md` (pt-BR) e `docs/MANUAL.en-US.md` (en-US) — **mantenha as
 duas versões em sincronia** na mesma fatia (conteúdo, telas, número de versão e histórico). Nenhuma
 das duas pode ficar para trás.
+
+### Documentação bilíngue — escopo (Fase 15)
+
+A regra bilíngue **não é só o manual**. São **bilíngues e mantidos em sincronia na mesma fatia**:
+
+- **Manual do usuário** — `docs/MANUAL.md` (pt-BR) + `docs/MANUAL.en-US.md` (en-US).
+- **README** — `README.md` (pt-BR) + `README.en-US.md` (en-US), com seletor de idioma no topo.
+- **Release notes** — arquivos por versão em pt-BR (`docs/release-notes/<versão>.md`) **+** o changelog
+  consolidado en-US `docs/release-notes/CHANGELOG.en-US.md` (toda release nova entra nas duas faces).
+
+**Ficam só em pt-BR (Regra Zero — sem tradução de cerimônia):** specs, ADRs, decision-log, planos,
+relatórios de fase/teste, o `TUTORIAL.md` de construção e qualquer artefato técnico interno. Traduzir
+esses não agrega valor ao usuário e contraria a Regra Zero.
