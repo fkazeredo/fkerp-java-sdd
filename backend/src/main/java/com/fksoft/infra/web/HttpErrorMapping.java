@@ -5,6 +5,11 @@ import static java.util.Map.entry;
 import com.fksoft.domain.accounts.AccountDocumentDuplicateException;
 import com.fksoft.domain.accounts.AccountDocumentInvalidException;
 import com.fksoft.domain.accounts.AccountNotFoundException;
+import com.fksoft.domain.billing.BillingBaseInvalidException;
+import com.fksoft.domain.billing.BillingInvoiceNotFoundException;
+import com.fksoft.domain.billing.BillingInvoiceTransitionInvalidException;
+import com.fksoft.domain.billing.BillingMunicipalityRejectedException;
+import com.fksoft.domain.billing.BillingNfseWebserviceException;
 import com.fksoft.domain.booking.BookingLocatorDuplicateException;
 import com.fksoft.domain.booking.BookingLocatorInvalidException;
 import com.fksoft.domain.booking.BookingNotFoundException;
@@ -115,7 +120,12 @@ public class HttpErrorMapping {
           entry(InsightDecisionInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(PolicyParameterUnknownException.class, HttpStatus.NOT_FOUND),
           entry(PolicyRuleInvalidException.class, HttpStatus.BAD_REQUEST),
-          entry(PolicyDirectiveForbiddenException.class, HttpStatus.FORBIDDEN));
+          entry(PolicyDirectiveForbiddenException.class, HttpStatus.FORBIDDEN),
+          entry(BillingInvoiceNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(BillingInvoiceTransitionInvalidException.class, HttpStatus.CONFLICT),
+          entry(BillingBaseInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(BillingMunicipalityRejectedException.class, HttpStatus.UNPROCESSABLE_ENTITY),
+          entry(BillingNfseWebserviceException.class, HttpStatus.BAD_GATEWAY));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {

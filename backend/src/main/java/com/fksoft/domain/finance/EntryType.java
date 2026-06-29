@@ -13,5 +13,9 @@ public enum EntryType {
   UTILITY_EXPENSE,
   AUTONOMOUS_SERVICE,
   SUPPLIER_SETTLEMENT,
-  REFUND
+  REFUND,
+  /**
+   * A tax to remit (e.g. ISS/withholdings from an issued commission invoice — SPEC-0016, DL-0047).
+   */
+  TAX_PAYABLE
 }

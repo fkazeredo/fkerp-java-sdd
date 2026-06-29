@@ -134,6 +134,25 @@ class ArchitectureTest {
           .allowEmptyShould(true);
 
   /**
+   * The external vendor shape of the municipal NFS-e webservice ({@code infra.integration.nfse} —
+   * the {@link com.fksoft.infra.integration.nfse.MunicipalNfseEnvelope} and the rest of the
+   * adapter) must never cross into the domain (SPEC-0016 BR3, ACL/DL-0046): only the translated
+   * domain types ({@code NfseIssuance}/{@code NfseIssueRequest}) leave the adapter. This proves the
+   * NFS-e Anti-Corruption Layer keeps the municipality's shape out of the model.
+   */
+  @ArchTest
+  static final ArchRule DOMAIN_MUST_NOT_DEPEND_ON_NFSE_ADAPTER =
+      noClasses()
+          .that()
+          .resideInAPackage("..domain..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAPackage("..infra.integration.nfse..")
+          .as(
+              "the external municipal NFS-e shape must not cross into the domain (SPEC-0016 BR3, ACL)")
+          .allowEmptyShould(true);
+
+  /**
    * The point-clock crawler MUST NOT write into the core (SPEC-0012 BR6): it communicates only via
    * the People facade and in-process events. This rule proves it never touches any core business
    * module — directly or through their internals. It may use {@code people} (the operational
