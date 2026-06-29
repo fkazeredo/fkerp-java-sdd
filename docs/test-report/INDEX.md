@@ -23,6 +23,7 @@ resultado, cobertura e como reproduzir.
 | Slice 9b — Cancelamento rico + armadilha do merchant | SPEC-0010 | [slice-9b-cancel-charges-merchant-trap.md](slice-9b-cancel-charges-merchant-trap.md) | ✅ verde (backend 151 testes; congelamento + 2 obrigações que não se anulam, V13) |
 | Slice 9c — NoShowPolicy | SPEC-0010 | [slice-9c-no-show-policy.md](slice-9c-no-show-policy.md) | ✅ verde (backend 157 testes; fee + dispensa por prova de voo) |
 | Slice 10a — Market Rate | SPEC-0011 | [slice-10a-market-rate.md](slice-10a-market-rate.md) | ✅ verde (backend 162 testes; taxa de mercado + porta + V14) |
+| Slice 10b — FxPosition (subsídio × drift) | SPEC-0011 | [slice-10b-fx-position.md](slice-10b-fx-position.md) | ✅ verde (backend 174 testes; subsídio/drift/gap + V15; exemplo 7.2 provado) |
 
 ## Resumo por nível (Fase 0)
 
