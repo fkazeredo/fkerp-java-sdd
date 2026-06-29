@@ -1,10 +1,13 @@
 package com.fksoft.application.api;
 
+import com.fksoft.application.api.dto.DecideInsightRequest;
 import com.fksoft.domain.intelligence.InsightStatus;
 import com.fksoft.domain.intelligence.InsightType;
 import com.fksoft.domain.intelligence.InsightView;
 import com.fksoft.domain.intelligence.IntelligenceService;
+import com.fksoft.infra.security.UserContextProvider;
 import com.fksoft.infra.web.PageResponse;
+import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,6 +15,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,10 +36,22 @@ public class IntelligenceController {
   private static final int MAX_PAGE_SIZE = 100;
 
   private final IntelligenceService intelligenceService;
+  private final UserContextProvider userContextProvider;
 
   @GetMapping("/{insightId}")
   public InsightView get(@PathVariable UUID insightId) {
     return intelligenceService.getById(insightId);
+  }
+
+  /**
+   * Records the human decision on an insight (BR4). By principle this records the decision only —
+   * it does NOT execute any action on the operation (there is no DSS endpoint that acts).
+   */
+  @PostMapping("/{insightId}/decision")
+  public InsightView decide(
+      @PathVariable UUID insightId, @Valid @RequestBody DecideInsightRequest request) {
+    String actor = userContextProvider.currentUser().username();
+    return intelligenceService.decide(insightId, request.decision(), actor);
   }
 
   @GetMapping
