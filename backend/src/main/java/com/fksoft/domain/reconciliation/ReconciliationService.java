@@ -1,5 +1,6 @@
 package com.fksoft.domain.reconciliation;
 
+import com.fksoft.domain.exchange.FxPositionService;
 import com.fksoft.domain.quoting.QuoteDirectory;
 import com.fksoft.domain.quoting.QuoteSnapshot;
 import com.fksoft.domain.reconciliation.internal.ReconciliationCase;
@@ -36,6 +37,7 @@ public class ReconciliationService {
 
   private final ReconciliationCaseRepository repository;
   private final QuoteDirectory quoteDirectory;
+  private final FxPositionService fxPositionService;
   private final Clock clock;
   private final ApplicationEventPublisher events;
 
@@ -68,6 +70,12 @@ public class ReconciliationService {
     }
     events.publishEvent(new ReconciliationCaseOpened(reconciliationCase.id(), bookingId, now));
     log.info("ReconciliationCaseOpened caseId={} bookingId={}", reconciliationCase.id(), bookingId);
+
+    // Open the matching FX position in Exchange from the same frozen provenance (SPEC-0011 BR2,
+    // DL-0028). Exchange owns the subsidy/drift math; we pass it the foreign cost and frozen rate
+    // (no duplicated per-case computation, no cycle: reconciliation -> exchange).
+    QuoteSnapshot snapshot = quote.get();
+    fxPositionService.openPosition(bookingId, snapshot.basePrice(), snapshot.pinnedRate(), now);
   }
 
   /** Cancels the case for a cancelled booking, if one exists and is not already cancelled (BR2). */
@@ -114,6 +122,15 @@ public class ReconciliationService {
           new ReconciliationDiscrepancyFlagged(
               caseId, view.expectedSpread(), view.realizedSpread(), view.discrepancy(), now));
     }
+
+    // Close the matching FX position with the settlement rate just recorded (SPEC-0011 BR5,
+    // DL-0028). Reusing this rate avoids duplicating the per-case FX math in Exchange; a no-op when
+    // there is no FX position (e.g. a BRL-cost sale) or the rate is not yet recorded.
+    BigDecimal settlementRate = reconciliationCase.supplierSettlementRate();
+    if (settlementRate != null) {
+      fxPositionService.closePosition(reconciliationCase.bookingId(), settlementRate, now);
+    }
+
     log.info("ReconciliationSettlement caseId={} status={}", caseId, view.status());
     return view;
   }

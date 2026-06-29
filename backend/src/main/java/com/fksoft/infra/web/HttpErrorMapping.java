@@ -19,6 +19,7 @@ import com.fksoft.domain.compliance.ComplianceUploadInvalidException;
 import com.fksoft.domain.error.DomainException;
 import com.fksoft.domain.exchange.ExchangeCurrencyPairInvalidException;
 import com.fksoft.domain.exchange.ExchangeMarketRateNotFoundException;
+import com.fksoft.domain.exchange.ExchangePositionNotFoundException;
 import com.fksoft.domain.exchange.ExchangeRateInvalidException;
 import com.fksoft.domain.exchange.ExchangeRateNotFoundException;
 import com.fksoft.domain.finance.FinanceEntryNotFoundException;
@@ -66,6 +67,7 @@ public class HttpErrorMapping {
           entry(ExchangeRateInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(ExchangeRateNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(ExchangeMarketRateNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(ExchangePositionNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(CommissionPctInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(CommissionBaseInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(QuoteAccountNotFoundException.class, HttpStatus.NOT_FOUND),

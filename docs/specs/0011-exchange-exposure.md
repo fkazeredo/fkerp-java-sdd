@@ -58,9 +58,10 @@ BR9  ASSUMIDO (ver DL-0027): limite de alerta de drift = |drift| > 2% da exposi�
      do livro (Σ |foreignAmount × marketAtFreeze| das posições OPEN); alerta, não bloqueia.
 BR10 ASSUMIDO (ver DL-0025): taxa de mercado entra por porta MarketRateProvider + registro manual de
      contingência no v1 (feed externo = adapter/ACL futuro).
-BR11 ASSUMIDO (ver DL-0028): a FxPosition abre ao consumir BookingConfirmed (lê o QuoteSnapshot) e
-     fecha ao consumir a liquidação de Reconciliation (reusa supplierSettlementRate; não duplica o
-     per-case).
+BR11 ASSUMIDO (ver DL-0028): a FxPosition é dirigida por Reconciliation (que segura a proveniência
+     congelada): abre ao abrir o ReconciliationCase (na confirmação) e fecha ao registrar a
+     liquidação (reusa supplierSettlementRate; não duplica o per-case). Direção reconciliation →
+     exchange (acíclica); exchange é dono da matemática de subsídio/drift/gap.
 ```
 
 ## Input/Output Examples

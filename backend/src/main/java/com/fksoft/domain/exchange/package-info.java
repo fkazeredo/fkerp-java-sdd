@@ -15,7 +15,12 @@
  * com.fksoft.domain.exchange.MarketRateProvider} ports, the {@link
  * com.fksoft.domain.exchange.CurrencyPair} value object, the views, the {@link
  * com.fksoft.domain.exchange.RatePinned} event and the business exceptions. The {@code internal}
- * sub-package (entities, repositories, event listeners) is module-private.
+ * sub-package (entities, repositories) is module-private.
+ *
+ * <p>The FX position is opened/closed by Reconciliation (SPEC-0007), which holds the frozen quote
+ * provenance and calls {@link com.fksoft.domain.exchange.FxPositionService} with the foreign cost
+ * and frozen rate. Exchange does not depend on {@code quoting}/{@code booking} (that would form a
+ * dependency cycle); it owns only the subsidy/drift/gap math (DL-0028).
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Exchange")
 package com.fksoft.domain.exchange;

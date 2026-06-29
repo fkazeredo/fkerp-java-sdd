@@ -19,29 +19,32 @@ duplicar** a matemática por-caso que Reconciliation já faz.
 
 ## Decisão
 
-- **Abertura:** o módulo `exchange` consome o evento **`BookingConfirmed`** (já publicado por Booking,
-  já consumido por Reconciliation — mesma fonte de verdade). No listener, lê o `QuoteSnapshot` via a porta
-  pública `QuoteDirectory`:
-  - `foreignAmount = basePrice.amount()`, `currency = basePrice.currency()` (o custo em moeda estrangeira);
-  - `pinnedRate = snapshot.pinnedRate()`;
-  - `marketAtFreeze = MarketRateProvider.marketRateAt(pair, confirmationInstant)`.
-  - `subsidy = (marketAtFreeze − pinnedRate) × foreignAmount` (BR3), escala 2 HALF_UP. Publica
-    `RateSubsidyAccrued`. **Idempotente** por `bookingId` (UNIQUE + pré-checagem), igual a Reconciliation.
-  - **Só abre** quando há custo em moeda estrangeira (`currency ≠ BRL`) **e** existe MarketRate vigente; se
-    faltar a taxa de mercado, registra log de negócio e **não** abre (não inventa um `marketAtFreeze`).
-- **Fechamento (reuso, sem duplicar):** Reconciliation já calcula `fxGainLoss` por caso a partir do
-  `supplierSettlementRate`. Para **fechar** a posição, o `exchange` consome um evento de liquidação que
-  carrega a taxa: estende `SpreadRealized` de Reconciliation (SPEC-0007) com o `bookingId` e o
-  `supplierSettlementRate` já registrados — o `exchange` é **consumidor** desse fato, não recalcula o
-  per-case. Com a taxa:
+> **Refinamento de fronteira (Modulith):** `quoting → exchange` e `booking → quoting → exchange` já
+> existem. Se o `exchange` lesse `quoting`/`booking` para abrir a posição, formaria **ciclo** (
+> `exchange → quoting → exchange`). A verificação do Spring Modulith reprovou exatamente isso. Solução
+> sem afrouxar gate: **Reconciliation** (que já segura o `QuoteSnapshot` e o `supplierSettlementRate`,
+> e é o módulo *folha* — nada depende dele) **dirige** a posição chamando o caso de uso de `exchange`
+> com **valores primitivos**. Direção `reconciliation → exchange` é acíclica. O `exchange` continua
+> dono da matemática de subsídio/drift/gap; nada é duplicado.
+
+- **Abertura:** ao abrir o `ReconciliationCase` (em `BookingConfirmed`), Reconciliation chama
+  `FxPositionService.openPosition(bookingId, foreignCost, pinnedRate, freezeInstant)` com o
+  `snapshot.basePrice()` (custo em moeda estrangeira) e o `snapshot.pinnedRate()`. Dentro do `exchange`:
+  - `marketAtFreeze = MarketRateProvider.marketRateAt(pair, freezeInstant)`;
+  - `subsidy = (marketAtFreeze − pinnedRate) × foreignAmount` (BR3), escala 2 HALF_UP; publica
+    `RateSubsidyAccrued`. **Idempotente** por `bookingId` (UNIQUE + pré-checagem).
+  - **Só abre** quando o custo é em moeda estrangeira (`currency ≠ BRL`) **e** existe MarketRate vigente;
+    senão registra log de negócio e **não** abre (não inventa `marketAtFreeze`).
+- **Fechamento (reuso, sem duplicar):** ao registrar a liquidação, Reconciliation chama
+  `FxPositionService.closePosition(bookingId, supplierSettlementRate, settleInstant)` **reusando** a taxa
+  que ele já registrou (não recalcula o per-case). Dentro do `exchange`:
   - `realizedDrift = (settlementRate − marketAtFreeze) × foreignAmount` (BR5);
   - `totalGap = subsidy + realizedDrift`, que por identidade algébrica `== (settlementRate − pinnedRate) ×
     foreignAmount`. Publica `FxPositionClosed`.
-- **Consistência provada (regressão):** `totalGap` (com o **sinal** subsídio+drift do `exchange`) e o
-  `fxGainLoss` por-caso de Reconciliation derivam ambos de `(taxa_liquidação − taxa_congelada) ×
-  foreignAmount` — o teste cruza os dois e prova que batem em módulo (atenção ao sinal: Reconciliation
-  define `fxGainLoss = (pinned − settlement) × amount`, então `totalGap == −fxGainLoss`; o teste fixa essa
-  relação).
+- **Consistência provada (regressão):** `totalGap` (subsídio+drift do `exchange`) e o `fxGainLoss`
+  por-caso de Reconciliation derivam ambos de `(taxa_liquidação − taxa_congelada) × foreignAmount`. O teste
+  cruza os dois: Reconciliation define `fxGainLoss = (pinned − settlement) × amount`, logo
+  `totalGap == −fxGainLoss`; o teste fixa essa relação com números exatos.
 
 ## Justificativa
 
@@ -65,10 +68,10 @@ duplicar** a matemática por-caso que Reconciliation já faz.
 
 ## Impacto
 
-- Listener `BookingEventsListener`-equivalente em `exchange.internal`; consumo de `SpreadRealized` (estendido
-  com `bookingId` + `supplierSettlementRate`) de Reconciliation; `FxPosition` (entidade), `fx_positions`
-  (`V15`); eventos `RateSubsidyAccrued`, `BookPositionDrifted`, `FxPositionClosed`. SPEC-0007: `SpreadRealized`
-  ganha campos aditivos (retrocompatível — MINOR).
+- `FxPositionService` (caso de uso público de `exchange`, recebe primitivos), `FxPosition` (entidade
+  interna), `fx_positions` (`V15`); eventos `RateSubsidyAccrued`, `BookPositionDrifted`, `FxPositionClosed`.
+- `ReconciliationService` passa a injetar `FxPositionService` e chamar `openPosition`/`closePosition`
+  (direção `reconciliation → exchange`, acíclica). Nenhuma mudança de contrato em eventos existentes.
 
 ## Como reverter
 
