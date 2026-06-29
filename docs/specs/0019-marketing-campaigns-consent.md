@@ -34,16 +34,26 @@ insumo do DSS. Tratar consentimento como objeto evita o risco regulatório de "m
 ```txt
 BR1  Consent MUST registrar titular (id+tipo, valor), purpose (ex.: NEWSLETTER), legalBasis,
      status ∈ {GRANTED, REVOKED}, source e timestamp. Revogação é append (history preservado).
+     ASSUMIDO (ver DL-0056): tabela append-only; estado atual = última linha por (titular, finalidade);
+     revogar/reconsentir = nova linha imutável. Modelo single opt-in no v1 (ASSUMIDO, ver DL-0055).
 BR2  Nenhum envio de campanha MUST ocorrer para um titular sem Consent GRANTED para aquela finalidade.
      Tentativa => recipiente é **excluído** do disparo (não é erro global; é filtro + log).
 BR3  Segment MUST ser definido por critérios sobre dados já existentes (Accounts/eventos), sem coletar
-     dado novo desnecessário (minimização).
+     dado novo desnecessário (minimização). ASSUMIDO (ver DL-0059): critério em criteria_json (jsonb)
+     validado contra um catálogo fechado de campos permitidos (campo desconhecido => 400).
 BR4  Campaign dispara via porta de newsletter (ACL) com idempotência por (campaignId, recipient) —
-     não envia duas vezes ao mesmo destinatário.
+     não envia duas vezes ao mesmo destinatário. ASSUMIDO (ver DL-0055): porta NewsletterSender +
+     adaptador mock rastreável em infra/integration/newsletter; DTO do provedor não cruza p/ o domínio.
 BR5  Attribution liga um código/UTM a uma reserva: ao receber BookingConfirmed com código de campanha,
-     registra a atribuição; publica CampaignConverted para a Intelligence.
+     registra a atribuição; publica CampaignConverted para a Intelligence. ASSUMIDO (ver DL-0057): o
+     vínculo código→reserva é registrado por intake próprio do Marketing (POST /attribution, UNIQUE
+     (campaign_code, booking_id)); ao receber BookingConfirmed com código pré-registrado, confirma a
+     conversão. O evento BookingConfirmed NÃO é alterado no v1 (seam para UTM nativo no Booking).
 BR6  Pedido de exclusão/portabilidade do titular MUST ser atendível (LGPD): consultar/remover dados de
      marketing do titular, preservando o que outra base legal obrigue a manter (ex.: fiscal no Compliance).
+     ASSUMIDO (ver DL-0058): o erasure remove PII de marketing e anonimiza o consent, preservando um
+     tombstone de revogação (status=REVOKED) para a supressão futura (BR2); attributions/métricas (sem
+     PII) permanecem. Alcance exato a confirmar com o DPO (Confiança=Baixa).
 ```
 
 ## Input/Output Examples
@@ -130,9 +140,17 @@ O provedor de newsletter (`NewsletterSender`) fica em `infra/integration`. Conse
 
 ## Open Questions
 
-- **Provedor de newsletter** e modelo de consentimento (double opt-in?) — em aberto (define a ACL).
-- Se a Acme precisa de **CRM completo**, avaliar **comprar** e usar este módulo como camada de
-  consentimento/atribuição — decisão do dono.
+- ~~**Provedor de newsletter** e modelo de consentimento (double opt-in?)~~ — **ASSUMIDO (ver
+  DL-0055):** porta `NewsletterSender` + adaptador mock rastreável (provedor real = novo adaptador,
+  decisão do dono); modelo **single opt-in** no v1 (o modelo de dados já comporta double opt-in sem
+  refator). Confirmar o provedor real e se o duplo opt-in será exigido.
+- ~~Se a Acme precisa de **CRM completo**, avaliar **comprar**~~ — **ASSUMIDO (ver DL-0059):** este
+  módulo é a **camada de consentimento/atribuição** (não CRM); CRM pleno (leads/funil/scoring/
+  automações/conteúdo) fica **fora de escopo** (comprar e plugar este módulo). Decisão do dono se/
+  quando comprar.
+- **Alcance exato do apagamento LGPD (BR6)** — **ASSUMIDO (ver DL-0058, Confiança=Baixa):** anonimiza
+  PII e preserva tombstone de revogação. **O que exatamente sobrevive ao expurgo é decisão de DPO/
+  jurídico** — confirmar antes do primeiro uso real (expurgo é destrutivo).
 
 ## Out of Scope
 

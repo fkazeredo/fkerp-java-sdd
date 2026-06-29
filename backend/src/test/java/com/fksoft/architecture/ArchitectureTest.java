@@ -172,6 +172,26 @@ class ArchitectureTest {
           .allowEmptyShould(true);
 
   /**
+   * The external vendor shape of the newsletter provider ({@code infra.integration.newsletter} —
+   * the {@link com.fksoft.infra.integration.newsletter.NewsletterProviderRequest}/{@code
+   * NewsletterProviderResponse} and the rest of the adapter) must never cross into the domain
+   * (SPEC-0019 Scope, ACL/DL-0055): only the domain port types ({@code NewsletterMessage}/{@code
+   * NewsletterSendResult}) leave the adapter. This proves the newsletter Anti-Corruption Layer
+   * keeps the provider's shape out of the model (ADR 0007).
+   */
+  @ArchTest
+  static final ArchRule DOMAIN_MUST_NOT_DEPEND_ON_NEWSLETTER_ADAPTER =
+      noClasses()
+          .that()
+          .resideInAPackage("..domain..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAPackage("..infra.integration.newsletter..")
+          .as(
+              "the external newsletter-provider shape must not cross into the domain (SPEC-0019, ACL)")
+          .allowEmptyShould(true);
+
+  /**
    * The point-clock crawler MUST NOT write into the core (SPEC-0012 BR6): it communicates only via
    * the People facade and in-process events. This rule proves it never touches any core business
    * module — directly or through their internals. It may use {@code people} (the operational
