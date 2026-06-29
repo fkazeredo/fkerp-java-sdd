@@ -29,7 +29,7 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 | Phase | Name | Spec(s) | Status | Notes |
 |---|---|---|---|---|
 | **0** | Foundation (walking skeleton + Event Storming) | SPEC-0001 | ✅ Complete | Released `0.1.0` (tag). See slice detail below. |
-| **1** | Manual commercial core | SPEC-0002…0007 | ✅ Complete (backend) | Released `0.2.0` (tag). 6 slices green (82 tests). **Angular screens deferred to 0.2.x** — carried debt below. See slice detail. |
+| **1** | Manual commercial core | SPEC-0002…0007 | 🟡 In progress (frontend) | Backend released `0.2.0` (82 tests). Building the Angular screens (owner-directed) to close end-to-end acceptance. |
 | **2** | Minimal compliance | SPEC-0008 (+ Finance seam 0015) | ⬜ Not started | Document vault + mandatory attachment + monthly-close veto + retention. |
 | **3** | First real integration (ACL) | SPEC-0009 | ⬜ Not started | Quote site, INTEGRATED branch. |
 | **4** | Cancellation + merchant trap | SPEC-0010 | ⬜ Not started | Policy as object + ALL_SALES_FINAL trap + no-show. |
