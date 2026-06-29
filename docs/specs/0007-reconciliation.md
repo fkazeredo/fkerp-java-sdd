@@ -147,8 +147,11 @@ diferente de BRL onde se espera BRL). i18n em `messages_pt_BR.properties`.
 
 ## Open Questions
 
-- **Tolerância de discrepância** (valor/percentual default) — parâmetro governado; confirmar com o
-  dono (vira `CommercialPolicy` na SPEC-0014).
+- ~~**Tolerância de discrepância** (valor/percentual default) — confirmar.~~ → **ASSUMIDO**
+  (2026-06-29): `tolerância = max(R$1,00; 0,5% do spread esperado)`. Vira parâmetro governado na
+  SPEC-0014. Ver [DL-0011](../decision-log/DL-0011-reconciliation-tolerancia-discrepancia.md).
+  > Nota: o exemplo "SETTLED" desta spec é anterior à tolerância; pela BR7 (normativa) o caso do
+  > exemplo (realizado 285 vs esperado 135) é **DISCREPANCY**.
 - Conciliação **multi-booking** (uma fatura do fornecedor cobre N reservas) — adiada; aqui 1 caso : 1
   booking.
 

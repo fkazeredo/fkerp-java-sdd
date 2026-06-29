@@ -11,6 +11,7 @@ resultado, cobertura e como reproduzir.
 | Slice 3 — Commissioning | SPEC-0004 | [slice-3-commissioning.md](slice-3-commissioning.md) | ✅ verde (backend 54 testes; tela Angular pendente) |
 | Slice 4 — Quoting (keystone) | SPEC-0005 | [slice-4-quoting.md](slice-4-quoting.md) | ✅ verde (backend 62 testes; tela Angular pendente) |
 | Slice 5 — Booking | SPEC-0006 | [slice-5-booking.md](slice-5-booking.md) | ✅ verde (backend 73 testes; tela Angular pendente) |
+| Slice 6 — Reconciliation | SPEC-0007 | [slice-6-reconciliation.md](slice-6-reconciliation.md) | ✅ verde (backend 82 testes; tela Angular pendente) |
 
 ## Resumo por nível (Fase 0)
 
