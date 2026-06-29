@@ -36,6 +36,8 @@ Detailed guidelines live in `architecture/` and are loaded on demand (see Routin
 - Flyway migration when schema changes. OpenAPI/docs updated when contracts change.
 - i18n messages added for any user-facing text. Global error handling respected.
 - ADR created/updated when architecture changes.
+- **User manual (`docs/MANUAL.md`) updated in pt-BR** with the slice's new user-facing
+  capabilities (see *Command — User manual*).
 - Build and tests executed when possible. Never hide failed commands or skipped checks.
 
 ## Final response after implementation
@@ -76,3 +78,22 @@ npm run lint && npm test              # frontend (from spec 0002)
 
 Destructive operations are governed by `.claude/settings.json` permissions. Do not attempt
 to work around a denied command; explain the risk and ask the user to run it themselves.
+
+## Command — User manual (pt-BR) [`/manual`]
+
+Generate/update **`docs/MANUAL.md`**, a plain-language **pt-BR instruction manual for end
+users/operators** (not for developers), describing what the system already does. **Run it at the
+end of every slice** — keeping the manual current is part of the Definition of Done above.
+
+The manual MUST contain:
+
+- **Visão geral** — o que o sistema é e para quem (curto).
+- **Como acessar/usar** — passos simples; comandos só quando inevitáveis, sempre explicados.
+- **Funcionalidades por fase/fatia entregue** — em linguagem de negócio: cada tela/jornada, o que
+  faz e o passo a passo das ações principais.
+- **Glossário** dos termos de negócio quando ajudar o leitor.
+- **Histórico de versões do manual** — o que mudou a cada fatia, com a versão/tag correspondente.
+
+Rules: prosa em **pt-BR**, sem jargão técnico desnecessário; descreve **apenas o que existe** (nada
+especulativo — Rule Zero); telas e textos citados batem com o i18n real (não inventar rótulos);
+mantém um índice quando crescer. Cada atualização entra no mesmo PR/commit da fatia.
