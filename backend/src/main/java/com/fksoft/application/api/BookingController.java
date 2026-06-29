@@ -2,9 +2,12 @@ package com.fksoft.application.api;
 
 import com.fksoft.application.api.dto.CancelBookingRequest;
 import com.fksoft.application.api.dto.CreateBookingRequest;
+import com.fksoft.application.api.dto.NoShowRequest;
 import com.fksoft.domain.booking.BookingService;
 import com.fksoft.domain.booking.BookingStatus;
 import com.fksoft.domain.booking.BookingView;
+import com.fksoft.domain.booking.CancellationResult;
+import com.fksoft.domain.booking.NoShowResult;
 import com.fksoft.infra.security.UserContextProvider;
 import com.fksoft.infra.web.PageResponse;
 import jakarta.validation.Valid;
@@ -43,7 +46,11 @@ public class BookingController {
   public ResponseEntity<BookingView> create(@Valid @RequestBody CreateBookingRequest request) {
     BookingView view =
         bookingService.create(
-            request.quoteId(), request.locator().origin(), request.locator().code(), actor());
+            request.quoteId(),
+            request.locator().origin(),
+            request.locator().code(),
+            request.scopeRef(),
+            actor());
     return ResponseEntity.status(HttpStatus.CREATED).body(view);
   }
 
@@ -58,14 +65,17 @@ public class BookingController {
   }
 
   @PostMapping("/{id}/cancel")
-  public BookingView cancel(
+  public CancellationResult cancel(
       @PathVariable UUID id, @Valid @RequestBody CancelBookingRequest request) {
-    return bookingService.transition(id, BookingStatus.CANCELLED, request.reason(), actor());
+    return bookingService.cancel(
+        id, request.reason(), request.serviceStartsAt(), request.refundAmount(), actor());
   }
 
   @PostMapping("/{id}/no-show")
-  public BookingView noShow(@PathVariable UUID id) {
-    return bookingService.transition(id, BookingStatus.NO_SHOW, null, actor());
+  public NoShowResult noShow(
+      @PathVariable UUID id, @RequestBody(required = false) NoShowRequest request) {
+    boolean proof = request != null && request.hasProof();
+    return bookingService.noShow(id, proof, actor());
   }
 
   @PostMapping("/{id}/complete")

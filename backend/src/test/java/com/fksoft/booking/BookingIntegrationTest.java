@@ -13,6 +13,8 @@ import com.fksoft.domain.accounts.LegalType;
 import com.fksoft.domain.booking.BookingService;
 import com.fksoft.domain.booking.BookingStatus;
 import com.fksoft.domain.booking.BookingView;
+import com.fksoft.domain.booking.CancellationResult;
+import com.fksoft.domain.booking.CancellationType;
 import com.fksoft.domain.booking.LocatorOrigin;
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.quoting.QuoteView;
@@ -79,7 +81,8 @@ class BookingIntegrationTest extends AbstractPostgresIntegrationTest {
         restTemplate
             .postForEntity(
                 "/api/bookings",
-                new CreateBookingRequest(quoteId, new LocatorRequest(LocatorOrigin.INTERNAL, null)),
+                new CreateBookingRequest(
+                    quoteId, new LocatorRequest(LocatorOrigin.INTERNAL, null), null),
                 BookingView.class)
             .getBody();
 
@@ -124,20 +127,29 @@ class BookingIntegrationTest extends AbstractPostgresIntegrationTest {
   }
 
   @Test
-  void cancelsWithReason() {
+  void cancelsWithReasonAndReturnsTheChargesEnvelope() {
     UUID bookingId = createBooking();
     transition(bookingId, "pending");
 
-    ResponseEntity<BookingView> response =
+    ResponseEntity<CancellationResult> response =
         restTemplate.postForEntity(
             "/api/bookings/" + bookingId + "/cancel",
-            new CancelBookingRequest("cliente desistiu"),
-            BookingView.class);
+            new CancelBookingRequest("cliente desistiu", null, null),
+            CancellationResult.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
     assertThat(response.getBody().status()).isEqualTo(BookingStatus.CANCELLED);
-    assertThat(response.getBody().cancelReason()).isEqualTo("cliente desistiu");
+    // A booking cancelled from PENDING (never confirmed, no administered policy) has the safe
+    // default
+    // STANDARD policy with no windows -> no charges.
+    assertThat(response.getBody().policyType()).isEqualTo(CancellationType.STANDARD);
+    assertThat(response.getBody().charges()).isEmpty();
+
+    BookingView reloaded =
+        restTemplate.getForEntity("/api/bookings/" + bookingId, BookingView.class).getBody();
+    assertThat(reloaded).isNotNull();
+    assertThat(reloaded.cancelReason()).isEqualTo("cliente desistiu");
   }
 
   @Test
@@ -244,6 +256,7 @@ class BookingIntegrationTest extends AbstractPostgresIntegrationTest {
   }
 
   private static CreateBookingRequest externalBooking(UUID quoteId, String code) {
-    return new CreateBookingRequest(quoteId, new LocatorRequest(LocatorOrigin.EXTERNAL, code));
+    return new CreateBookingRequest(
+        quoteId, new LocatorRequest(LocatorOrigin.EXTERNAL, code), null);
   }
 }
