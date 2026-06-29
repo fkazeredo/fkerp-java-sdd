@@ -15,6 +15,7 @@ resultado, cobertura e como reproduzir.
 | Fase 1 — Telas Angular | SPEC-0002…0007 | [release-notes/0.2.1.md](../release-notes/0.2.1.md) | ✅ verde (frontend: lint + 14 testes + build; 5 telas + nav) |
 | Slice 7a — Finance | SPEC-0015 | [slice-7a-finance.md](slice-7a-finance.md) | ✅ verde (backend 95 testes; veto real na 7c) |
 | Slice 7b — Compliance | SPEC-0008 | [slice-7b-compliance.md](slice-7b-compliance.md) | ✅ verde (backend 106 testes; cofre + close-check + retenção) |
+| Slice 7c — Veto de fechamento | SPEC-0008/0015 | [slice-7c-close-veto.md](slice-7c-close-veto.md) | ✅ verde (backend 108 testes; regra de ouro + job de retenção) |
 
 ## Resumo por nível (Fase 0)
 
