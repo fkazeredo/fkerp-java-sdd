@@ -98,8 +98,8 @@ class ReconciliationIntegrationTest extends AbstractPostgresIntegrationTest {
 
     restTemplate.postForEntity(
         "/api/bookings/" + booking.id() + "/cancel",
-        new com.fksoft.application.api.dto.CancelBookingRequest("cliente desistiu"),
-        BookingView.class);
+        new com.fksoft.application.api.dto.CancelBookingRequest("cliente desistiu", null, null),
+        com.fksoft.domain.booking.CancellationResult.class);
 
     ReconciliationCaseView view =
         restTemplate
@@ -140,7 +140,8 @@ class ReconciliationIntegrationTest extends AbstractPostgresIntegrationTest {
                 "/api/bookings",
                 new CreateBookingRequest(
                     quoteId,
-                    new LocatorRequest(LocatorOrigin.EXTERNAL, "ALAMO-" + UUID.randomUUID())),
+                    new LocatorRequest(LocatorOrigin.EXTERNAL, "ALAMO-" + UUID.randomUUID()),
+                    null),
                 BookingView.class)
             .getBody();
     assertThat(booking).isNotNull();
