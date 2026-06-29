@@ -23,4 +23,26 @@ class ArchitectureRulesHaveTeethTest {
         .isInstanceOf(AssertionError.class)
         .hasMessageContaining("the domain must not depend on application (delivery) or infra");
   }
+
+  /**
+   * Proves the "advises, never commands" rule (SPEC-0013 BR2) has teeth. The fixture {@code
+   * archfixture.intelligence.CommandingInsight} deliberately depends on another module's command
+   * facade ({@code BookingService}); checking the production rule (re-pointed at the fixture's
+   * source package) against it must fail. Importing the production booking package too makes the
+   * dependency resolvable.
+   */
+  @Test
+  void intelligenceRuleFailsWhenIntelligenceDependsOnACommandFacade() {
+    JavaClasses fixture =
+        new ClassFileImporter()
+            .importPackages("archfixture.intelligence", "com.fksoft.domain.booking");
+
+    assertThatThrownBy(
+            () ->
+                ArchitectureTest.intelligenceAdvisesNeverCommandsForSource(
+                        "archfixture.intelligence..")
+                    .check(fixture))
+        .isInstanceOf(AssertionError.class)
+        .hasMessageContaining("intelligence must advise, never command");
+  }
 }
