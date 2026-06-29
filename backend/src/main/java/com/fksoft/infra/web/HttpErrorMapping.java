@@ -29,6 +29,7 @@ import com.fksoft.domain.finance.FinancePartyInvalidException;
 import com.fksoft.domain.finance.FinancePeriodCannotCloseException;
 import com.fksoft.domain.finance.FinancePeriodClosedException;
 import com.fksoft.domain.finance.FinancePeriodInvalidException;
+import com.fksoft.domain.intelligence.InsightNotFoundException;
 import com.fksoft.domain.people.PointAfdInvalidException;
 import com.fksoft.domain.people.PointSnapshotInvalidException;
 import com.fksoft.domain.people.PointSnapshotNotFoundException;
@@ -105,7 +106,8 @@ public class HttpErrorMapping {
           entry(IntegrationAccountNotFoundException.class, HttpStatus.UNPROCESSABLE_ENTITY),
           entry(PointSnapshotNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(PointSnapshotInvalidException.class, HttpStatus.BAD_REQUEST),
-          entry(PointAfdInvalidException.class, HttpStatus.BAD_REQUEST));
+          entry(PointAfdInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(InsightNotFoundException.class, HttpStatus.NOT_FOUND));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {
