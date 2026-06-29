@@ -18,7 +18,9 @@ public class OpenApiConfig {
         .info(
             new Info()
                 .title("Acme Travel ERP API")
-                .description("ERP Acme Travel — modular monolith. Foundation (SPEC-0001).")
-                .version("0.1.0"));
+                .description(
+                    "ERP Acme Travel — modular monolith. Phase 2 adds Finance (AP/AR + period)"
+                        + " and Compliance (document vault + close veto).")
+                .version("0.3.0"));
   }
 }
