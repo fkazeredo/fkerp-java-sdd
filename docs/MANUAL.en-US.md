@@ -254,3 +254,7 @@ What the operator does:
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of
 > `docs/MANUAL.md` (pt-BR) — keep both in sync on every slice.
+>
+> Phase 15 — Bilingual docs (chore, no version bump): bilingual coverage, previously the manual only,
+> now also includes the **README** (`README.en-US.md`) and the **consolidated en-US changelog**
+> (`docs/release-notes/CHANGELOG.en-US.md`). Technical reports stay pt-BR only (Rule Zero).
