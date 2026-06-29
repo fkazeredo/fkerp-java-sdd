@@ -52,6 +52,17 @@ BR5  Ao cancelar, o sistema MUST registrar os encargos resultantes como fatos di
 BR6  NoShowPolicy (carro): em NO_SHOW, cobra fee; se waivedIfFlightCancelled = true e houver prova de
      voo cancelado, a fee é dispensada (a prova é documento — Compliance).
 BR7  Todo cancelamento/no-show com encargo MUST ser auditado (quem, quando, política aplicada, valores).
+BR8  ASSUMIDO (ver DL-0021): merchant of record é **atributo** por marca/contrato
+     (`merchantOfRecord` na política); **default afiliado** (costBearer = SUPPLIER). Quando
+     `merchantOfRecord = true` (caso Portal de Experiências), a Acme assume: no ALL_SALES_FINAL o
+     SupplierCharge e o CustomerRefund têm costBearer = ACME (duas obrigações que não se anulam, BR5).
+BR9  ASSUMIDO (ver DL-0022): a multa e os encargos ficam na **moeda original** do valor de referência
+     (sem conversão cambial nesta fase); cada Charge carrega seu próprio Money. A consolidação em moeda
+     única é trabalho de Finance/Reconciliation (fora de escopo).
+BR10 ASSUMIDO (ver DL-0023): a prova de voo cancelado do no-show é representada como referência/flag
+     rastreável; a verificação de conformidade do documento é do Compliance (fora de escopo).
+BR11 ASSUMIDO (ver DL-0024): os encargos são fatos distintos que **nunca** se compensam — o domínio só
+     acumula Charges, jamais subtrai um do outro nem deriva um valor líquido (a armadilha do merchant).
 ```
 
 ## Input/Output Examples
@@ -151,10 +162,15 @@ método de domínio testável (datas/timezone sensíveis — `backend.md`).
 
 ## Open Questions
 
-- **Q3 (merchant of record):** se o portal é merchant, ele **assume** a obrigação com a marketplace e o
-  reembolso; se afiliado, não. Isso define **quem** é o `costBearer` no ALL_SALES_FINAL — **decisão de
-  negócio em aberto**; o modelo suporta ambos, mas o default precisa ser confirmado.
-- Multa em **moeda estrangeira** vs BRL (conversão pela taxa de quando?) — confirmar.
+- ~~**Q3 (merchant of record):** se o portal é merchant, ele **assume** a obrigação com a marketplace
+  e o reembolso; se afiliado, não. Isso define **quem** é o `costBearer` no ALL_SALES_FINAL.~~ →
+  **ASSUMIDO** (2026-06-29, BR8): atributo `merchantOfRecord` por marca/contrato, **default afiliado**
+  (costBearer = SUPPLIER); merchant=true → costBearer = ACME. Ver
+  [DL-0021](../decision-log/DL-0021-merchant-of-record-attribute-default-affiliate.md). Adota a
+  Recomendação do ROADMAP (Q3). Confiança Alta; o **default** continua revisável pelo dono.
+- ~~Multa em **moeda estrangeira** vs BRL (conversão pela taxa de quando?).~~ → **ASSUMIDO**
+  (2026-06-29, BR9): moeda original, **sem conversão** nesta fase. Ver
+  [DL-0022](../decision-log/DL-0022-penalty-currency-no-conversion.md).
 
 ## Out of Scope
 
