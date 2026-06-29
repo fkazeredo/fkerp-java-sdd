@@ -33,6 +33,9 @@ import com.fksoft.domain.quoting.QuoteOverrideReasonRequiredException;
 import com.fksoft.domain.quoting.QuoteRateMissingException;
 import com.fksoft.domain.reconciliation.ReconciliationCaseNotFoundException;
 import com.fksoft.domain.reconciliation.ReconciliationCurrencyMismatchException;
+import com.fksoft.domain.sourcing.IntegrationAccountNotFoundException;
+import com.fksoft.domain.sourcing.IntegrationPayloadInvalidException;
+import com.fksoft.domain.sourcing.IntegrationSignatureInvalidException;
 import com.fksoft.domain.sourcing.SourcedOfferInvalidException;
 import com.fksoft.domain.sourcing.SourcedOfferNotFoundException;
 import java.util.Map;
@@ -85,7 +88,10 @@ public class HttpErrorMapping {
           entry(ComplianceRetentionNotExpiredException.class, HttpStatus.CONFLICT),
           entry(ComplianceUploadInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(SourcedOfferInvalidException.class, HttpStatus.BAD_REQUEST),
-          entry(SourcedOfferNotFoundException.class, HttpStatus.NOT_FOUND));
+          entry(SourcedOfferNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(IntegrationSignatureInvalidException.class, HttpStatus.UNAUTHORIZED),
+          entry(IntegrationPayloadInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(IntegrationAccountNotFoundException.class, HttpStatus.UNPROCESSABLE_ENTITY));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {

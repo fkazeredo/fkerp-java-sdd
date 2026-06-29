@@ -19,8 +19,9 @@ public class OpenApiConfig {
             new Info()
                 .title("Acme Travel ERP API")
                 .description(
-                    "ERP Acme Travel — modular monolith. Phase 2 adds Finance (AP/AR + period)"
-                        + " and Compliance (document vault + close veto).")
-                .version("0.3.0"));
+                    "ERP Acme Travel — modular monolith. Phase 3 adds Sourcing (offer provenance)"
+                        + " and the first real ACL: the quotation-site inbound webhook (signed,"
+                        + " idempotent) that creates an INTEGRATED quote (trusted external price).")
+                .version("0.4.0"));
   }
 }
