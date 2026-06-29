@@ -1,5 +1,7 @@
 package com.fksoft.infra.web;
 
+import static java.util.Map.entry;
+
 import com.fksoft.domain.accounts.AccountDocumentDuplicateException;
 import com.fksoft.domain.accounts.AccountDocumentInvalidException;
 import com.fksoft.domain.accounts.AccountNotFoundException;
@@ -9,6 +11,11 @@ import com.fksoft.domain.error.DomainException;
 import com.fksoft.domain.exchange.ExchangeCurrencyPairInvalidException;
 import com.fksoft.domain.exchange.ExchangeRateInvalidException;
 import com.fksoft.domain.exchange.ExchangeRateNotFoundException;
+import com.fksoft.domain.quoting.QuoteAccountNotFoundException;
+import com.fksoft.domain.quoting.QuoteNotFoundException;
+import com.fksoft.domain.quoting.QuoteOverrideCurrencyMismatchException;
+import com.fksoft.domain.quoting.QuoteOverrideReasonRequiredException;
+import com.fksoft.domain.quoting.QuoteRateMissingException;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.http.HttpStatus;
@@ -27,15 +34,20 @@ import org.springframework.stereotype.Component;
 public class HttpErrorMapping {
 
   private final Map<Class<? extends DomainException>, HttpStatus> mapping =
-      Map.of(
-          AccountDocumentInvalidException.class, HttpStatus.BAD_REQUEST,
-          AccountDocumentDuplicateException.class, HttpStatus.CONFLICT,
-          AccountNotFoundException.class, HttpStatus.NOT_FOUND,
-          ExchangeCurrencyPairInvalidException.class, HttpStatus.BAD_REQUEST,
-          ExchangeRateInvalidException.class, HttpStatus.BAD_REQUEST,
-          ExchangeRateNotFoundException.class, HttpStatus.NOT_FOUND,
-          CommissionPctInvalidException.class, HttpStatus.BAD_REQUEST,
-          CommissionBaseInvalidException.class, HttpStatus.BAD_REQUEST);
+      Map.ofEntries(
+          entry(AccountDocumentInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(AccountDocumentDuplicateException.class, HttpStatus.CONFLICT),
+          entry(AccountNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(ExchangeCurrencyPairInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(ExchangeRateInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(ExchangeRateNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(CommissionPctInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(CommissionBaseInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(QuoteAccountNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(QuoteRateMissingException.class, HttpStatus.UNPROCESSABLE_ENTITY),
+          entry(QuoteNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(QuoteOverrideReasonRequiredException.class, HttpStatus.BAD_REQUEST),
+          entry(QuoteOverrideCurrencyMismatchException.class, HttpStatus.BAD_REQUEST));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {
