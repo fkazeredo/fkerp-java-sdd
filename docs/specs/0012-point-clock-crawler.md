@@ -54,6 +54,13 @@ BR5  A coleta MUST ser idempotente por (sourceRef, periodRef): reexecução não
 BR6  O crawler MUST NOT escrever em agregados de outros módulos: comunica-se só por evento/snapshot.
 BR7  Cada execução do job MUST ter histórico (início, fim, itens, falhas, correlation id) — job
      importante (`messaging-and-integrations.md`).
+BR8  ASSUMIDO (ver DL-0029) — Tipo de REP (Q6): mira-se **REP-P (software/nuvem)** e a captura do AFD/AEJ
+     assinado é modelada como **upload da exportação OFICIAL** (`POST /api/integration/point/afd`), que
+     **também serve REP-C via USB** (o operador extrai e faz upload). O modelo operacional × legal independe
+     do tipo; só a origem física do `.p7s` (USB × portal) é passo operacional, fora do código.
+BR9  ASSUMIDO (ver DL-0033) — Periodicidade: o job roda **diariamente** e coleta o **período corrente**
+     (`periodRef = YYYY-MM`); a **lista de `sourceRef`** (REPs/filiais) é **configurável** (default um). A
+     idempotência por `(sourceRef, periodRef)` torna recoletar seguro.
 ```
 
 ## Input/Output Examples
@@ -97,18 +104,25 @@ GET /api/integration/point/snapshots/{id}
 
 ## Persistence Changes
 
+> Nota de implementação: a Fase 4/5 já consumiram V12–V15, então esta migração é **`V16`** (não V12).
+
 ```txt
-V12__create_point_integration.sql
+V16__create_point_integration.sql
   point_snapshots(
     id uuid PK, source_ref varchar not null, period_ref varchar not null,
     operational_only boolean not null default true,
     payload_ref varchar not null,                 -- espelho/marcações capturados (via FileStorage)
+    marks integer not null default 0,             -- nº de marcações no espelho (operacional)
     collected_at timestamptz not null, created_at timestamptz not null,
     UNIQUE (source_ref, period_ref)               -- idempotência (BR5)
   )
   point_crawl_runs(
-    id uuid PK, started_at timestamptz not null, finished_at timestamptz null,
-    status varchar not null, items integer null, failures integer null, correlation_id varchar null
+    id uuid PK, source_ref varchar not null, period_ref varchar null,
+    started_at timestamptz not null, finished_at timestamptz null,
+    status varchar not null,                       -- RUNNING | SUCCEEDED | RETRY_SCHEDULED | DEAD_LETTER
+    attempts integer not null default 1,
+    items integer null, failures integer null,
+    failure_class varchar null, correlation_id varchar null
   )
 -- AFD/AEJ NÃO tem tabela própria: é Document no Compliance (SPEC-0008)
 ```
@@ -154,11 +168,16 @@ credenciais (`security.md`).
 
 ## Open Questions
 
-- **Q6 — tipo de REP (C/A/P):** muda **como** o AFD é capturado (USB no REP-C × exportação/portal no
-  REP-P) e o que o crawler consegue raspar. **Decisão de negócio em aberto**; o modelo separa
-  operacional × legal de forma independente do tipo, mas o **mecanismo de captura do AFD** precisa do Q6.
-- Periodicidade do crawl e janela de coleta — confirmar com o RH.
-- Múltiplos REPs/filiais (vários `sourceRef`) — suportado pelo modelo; confirmar a lista real.
+> Resolvidas em modo autônomo na Fase 6 (movidas para *Business Rules* — BR8/BR9). Reabrir só com decisão do
+> negócio (RH/cliente). As de **Confiança=Baixa** estão destacadas no `docs/decision-log/INDEX.md`.
+
+- ~~**Q6 — tipo de REP (C/A/P)**~~ → **ASSUMIDO (ver [DL-0029](../decision-log/DL-0029-rep-type-target-rep-p-export-upload.md))**,
+  BR8. Mira-se REP-P; AFD/AEJ via upload da exportação oficial (serve REP-C via USB). **Confiança=Baixa,
+  Reversibilidade=Cara** — qual REP o cliente usa é incógnita de negócio; **confirmar com o cliente**.
+- ~~Periodicidade do crawl e janela de coleta~~ → **ASSUMIDO (ver [DL-0033](../decision-log/DL-0033-crawl-period-and-multi-source.md))**,
+  BR9. Diário, período corrente; **confirmar com o RH**.
+- ~~Múltiplos REPs/filiais (vários `sourceRef`)~~ → **ASSUMIDO (ver [DL-0033](../decision-log/DL-0033-crawl-period-and-multi-source.md))**,
+  BR9. Lista de `sourceRef` configurável (default um); **confirmar a lista real**.
 
 ## Out of Scope
 

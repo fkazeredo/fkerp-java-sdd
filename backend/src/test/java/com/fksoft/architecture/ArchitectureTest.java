@@ -114,6 +114,53 @@ class ArchitectureTest {
           .as("the external quotation-site DTO must not cross into the domain (SPEC-0009 BR6, ACL)")
           .allowEmptyShould(true);
 
+  /**
+   * The external vendor shape of the point-clock crawler ({@code infra.integration.pointclock} —
+   * the {@link com.fksoft.infra.integration.pointclock.PortalMirror} and the rest of the adapter)
+   * must never cross into the domain (SPEC-0012 BR6, ACL/DL-0030): only the translated {@link
+   * com.fksoft.domain.people.CollectSnapshotCommand} leaves the adapter. This proves the crawler's
+   * Anti-Corruption Layer keeps the portal's shape out of the model.
+   */
+  @ArchTest
+  static final ArchRule DOMAIN_MUST_NOT_DEPEND_ON_POINT_CLOCK_ADAPTER =
+      noClasses()
+          .that()
+          .resideInAPackage("..domain..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAPackage("..infra.integration.pointclock..")
+          .as(
+              "the external point-clock portal shape must not cross into the domain (SPEC-0012 BR6, ACL)")
+          .allowEmptyShould(true);
+
+  /**
+   * The point-clock crawler MUST NOT write into the core (SPEC-0012 BR6): it communicates only via
+   * the People facade and in-process events. This rule proves it never touches any core business
+   * module — directly or through their internals. It may use {@code people} (the operational
+   * facade) and {@code compliance} (the vault, for the operational payload store and the AFD path),
+   * {@code money} and the error kernel — but not
+   * quoting/booking/exchange/reconciliation/commissioning/ finance/accounts/sourcing. Planting a
+   * dependency on, say, {@code domain.booking} makes this fail.
+   */
+  @ArchTest
+  static final ArchRule POINT_CLOCK_CRAWLER_MUST_NOT_WRITE_INTO_THE_CORE =
+      noClasses()
+          .that()
+          .resideInAPackage("..infra.integration.pointclock..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAnyPackage(
+              "..domain.quoting..",
+              "..domain.booking..",
+              "..domain.exchange..",
+              "..domain.reconciliation..",
+              "..domain.commissioning..",
+              "..domain.finance..",
+              "..domain.accounts..",
+              "..domain.sourcing..")
+          .as("the point-clock crawler must not write into the core (SPEC-0012 BR6)")
+          .allowEmptyShould(true);
+
   private static ArchCondition<JavaClass> notExposeLombokGeneratedMutators() {
     return new ArchCondition<>("not expose Lombok-generated mutators") {
       @Override
