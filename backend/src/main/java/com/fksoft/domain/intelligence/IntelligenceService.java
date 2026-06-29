@@ -122,6 +122,26 @@ public class IntelligenceService {
         quoteId);
   }
 
+  /**
+   * Consumes a {@code CampaignConverted} fact from Marketing (SPEC-0019 BR5; redesign 8.2-F): a
+   * booking with a campaign code was confirmed — i.e. a campaign turned into a sale. Intelligence
+   * is a consumer-leaf that advises, never commands (SPEC-0013 BR2): it only reads this signal. The
+   * full campaign-ROI read-model (8.2-F "PromoConversion") belongs to a later Intelligence slice;
+   * here we record the conversion as an observable business signal (counted by the {@code
+   * campaign_conversions_total} metric the Marketing side emits) without inventing an out-of-scope
+   * insight table (Rule Zero).
+   *
+   * @param campaignId the converted campaign id
+   * @param bookingId the booking that converted
+   */
+  @Transactional(readOnly = true)
+  public void onCampaignConverted(UUID campaignId, UUID bookingId) {
+    log.info(
+        "CampaignConversionObserved campaignId={} bookingId={} (DSS attribution signal, SPEC-0019)",
+        campaignId,
+        bookingId);
+  }
+
   /** Fetches an insight by id. */
   @Transactional(readOnly = true)
   public InsightView getById(UUID insightId) {
