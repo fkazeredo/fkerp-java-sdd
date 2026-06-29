@@ -17,7 +17,10 @@ add libraries for trivial problems.
 Pragmatic Git Flow (`main`, `develop`, `feature/*`, `bugfix/*`, `release/*`, `hotfix/*`) and
 Conventional Commits (`feat:`, `fix:`, `test:`, `docs:`). PRs are focused and reviewable,
 including tests, specs, migrations, screenshots for UI changes, API impacts and ADR updates
-when applicable. Semantic versioning when applicable; releases tagged from `main`.
+when applicable. Semantic Versioning (`MAJOR.MINOR.PATCH`) is the official policy — see
+**ADR 0015** for the per-digit criteria, reset rules, the `0.y.z` initial-development phase and
+the mapping to ROADMAP phases / Conventional Commits. The version's source of truth is
+`backend/pom.xml`; releases are tagged from `main`.
 
 Generated files are never edited manually — modify the generation source (OpenAPI contract,
 `.proto`, schema, generator config). Generated code separated from handwritten code (a
