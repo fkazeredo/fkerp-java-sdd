@@ -14,6 +14,7 @@ import com.fksoft.domain.quoting.internal.Quote;
 import com.fksoft.domain.quoting.internal.QuoteComposition;
 import com.fksoft.domain.quoting.internal.QuoteRepository;
 import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class QuoteService implements QuoteDirectory {
+public class QuoteService implements QuoteDirectory, QuoteIntegrationPort {
 
   private final QuoteRepository repository;
   private final AccountDirectory accountDirectory;
@@ -108,6 +109,30 @@ public class QuoteService implements QuoteDirectory {
         quote.accountId(),
         suggested.amount());
     return quote.toView();
+  }
+
+  /**
+   * Creates an INTEGRATED quote from a trusted, closed external price (SPEC-0009 BR2, DL-0018). The
+   * suggestion engine does not run and no override is created: {@code suggestedAmount ==
+   * appliedAmount == externalPrice}. This is the {@link QuoteIntegrationPort} the Sourcing ACL
+   * calls — only domain values cross the boundary (BR6).
+   */
+  @Override
+  @Transactional
+  public UUID createIntegratedQuote(
+      UUID accountId, UUID sourceOfferId, Money externalPrice, Instant validUntil, String actor) {
+    Quote quote =
+        repository.save(
+            Quote.composeIntegrated(
+                accountId, sourceOfferId, externalPrice, validUntil, clock.instant(), actor));
+    events.publishEvent(
+        new QuoteComposed(quote.id(), quote.accountId(), externalPrice, quote.createdAt()));
+    log.info(
+        "QuoteComposed quoteId={} accountId={} priceOrigin=INTEGRATED applied={}",
+        quote.id(),
+        quote.accountId(),
+        externalPrice.amount());
+    return quote.id();
   }
 
   /**

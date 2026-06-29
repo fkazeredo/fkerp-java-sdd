@@ -28,10 +28,16 @@ import com.fksoft.domain.finance.FinancePeriodInvalidException;
 import com.fksoft.domain.quoting.QuoteAccountNotFoundException;
 import com.fksoft.domain.quoting.QuoteNotFoundException;
 import com.fksoft.domain.quoting.QuoteOverrideCurrencyMismatchException;
+import com.fksoft.domain.quoting.QuoteOverrideNotApplicableException;
 import com.fksoft.domain.quoting.QuoteOverrideReasonRequiredException;
 import com.fksoft.domain.quoting.QuoteRateMissingException;
 import com.fksoft.domain.reconciliation.ReconciliationCaseNotFoundException;
 import com.fksoft.domain.reconciliation.ReconciliationCurrencyMismatchException;
+import com.fksoft.domain.sourcing.IntegrationAccountNotFoundException;
+import com.fksoft.domain.sourcing.IntegrationPayloadInvalidException;
+import com.fksoft.domain.sourcing.IntegrationSignatureInvalidException;
+import com.fksoft.domain.sourcing.SourcedOfferInvalidException;
+import com.fksoft.domain.sourcing.SourcedOfferNotFoundException;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.http.HttpStatus;
@@ -64,6 +70,7 @@ public class HttpErrorMapping {
           entry(QuoteNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(QuoteOverrideReasonRequiredException.class, HttpStatus.BAD_REQUEST),
           entry(QuoteOverrideCurrencyMismatchException.class, HttpStatus.BAD_REQUEST),
+          entry(QuoteOverrideNotApplicableException.class, HttpStatus.CONFLICT),
           entry(BookingQuoteNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(BookingNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(BookingTransitionInvalidException.class, HttpStatus.CONFLICT),
@@ -79,7 +86,12 @@ public class HttpErrorMapping {
           entry(FinancePeriodCannotCloseException.class, HttpStatus.CONFLICT),
           entry(ComplianceDocumentNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(ComplianceRetentionNotExpiredException.class, HttpStatus.CONFLICT),
-          entry(ComplianceUploadInvalidException.class, HttpStatus.BAD_REQUEST));
+          entry(ComplianceUploadInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(SourcedOfferInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(SourcedOfferNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(IntegrationSignatureInvalidException.class, HttpStatus.UNAUTHORIZED),
+          entry(IntegrationPayloadInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(IntegrationAccountNotFoundException.class, HttpStatus.UNPROCESSABLE_ENTITY));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {

@@ -51,6 +51,16 @@ BR5  Falhas de integração MUST ser classificadas (TIMEOUT, UNAVAILABLE, INVALI
      finja preço — `messaging-and-integrations.md`).
 BR6  O domínio MUST NOT depender do DTO do site externo: a tradução vive na ACL (infra/integration);
      só um comando de domínio cruza a fronteira.
+BR7  ASSUMIDO (2026-06-29, ver DL-0017): se a Account do documento do inbound NÃO existir, a entrada é
+     REJEITADA com `integration.account.not-found` (422) e nada é criado — não cria conta provisória
+     nem enfileira para curadoria (decisão de negócio reversível).
+BR8  ASSUMIDO (2026-06-29, ver DL-0016): a assinatura do webhook é HMAC-SHA256 do corpo bruto com
+     segredo compartilhado, no header `X-Signature` (hex, prefixo `sha256=` aceito), comparação em
+     tempo constante. A versão do contrato trafega no path (v1 implícita).
+BR9  ASSUMIDO (2026-06-29, ver DL-0018): o ramo INTEGRATED reusa o agregado `Quote`
+     (`composeIntegrated`); override não se aplica a INTEGRATED (`quoting.override.not-applicable`,
+     409). ASSUMIDO (ver DL-0019): resiliência proporcional — a ACL é de entrada (sem chamada de
+     saída), logo classificação de falha + idempotência + observabilidade, sem circuit breaker.
 ```
 
 ## Input/Output Examples
@@ -91,8 +101,11 @@ POST .../inbound   (assinatura inválida)
 
 ## Persistence Changes
 
+> **Nota (numeração real das migrações):** a última migração aplicada era **V8**; esta fase usa
+> **V9/V10/V11** (o esboço abaixo mantém o conteúdo, a numeração foi ajustada na implementação).
+
 ```txt
-V8__create_sourcing.sql
+V9__create_sourced_offers.sql
   sourced_offers(
     id uuid PK, product_text varchar not null,
     base_amount numeric(18,2) not null, base_currency varchar not null,
@@ -100,13 +113,15 @@ V8__create_sourcing.sql
     external_ref varchar null,
     created_at, updated_at timestamptz not null, created_by, updated_by varchar null, version bigint not null
   )
-  inbound_quotations(                          -- idempotência do webhook (BR4)
+V10__quotes_integrated_and_source_offer.sql                   -- DL-0018
+  ALTER TABLE quotes ADD COLUMN source_offer_id uuid null;    -- aditivo; null p/ quotes 100% manuais
+  -- afrouxa p/ NULL as colunas de composição MANUAL (fx_rate, comissões, markup…): INTEGRATED não recompõe
+V11__create_inbound_quotations.sql                            -- idempotência do webhook (BR4)
+  inbound_quotations(
     external_quotation_id varchar PK,
-    quote_id uuid not null,
+    quote_id uuid not null, account_id uuid not null,
     received_at timestamptz not null
   )
-V9__quotes_add_source_offer.sql
-  ALTER TABLE quotes ADD COLUMN source_offer_id uuid null;   -- aditivo; null p/ quotes 100% manuais
 ```
 
 A ACL e o cliente do site externo vivem em `com.fksoft.infra.integration`; expõem para o domínio
@@ -115,8 +130,9 @@ apenas uma **porta** (`QuotationSiteInboundPort`/comando). `Platform` observa o 
 ## Validation Rules
 
 - Integração: assinatura do webhook; validação do payload (response/request validation); timeout.
-- Application: idempotência (UNIQUE em `inbound_quotations`); resolução da `Account` pelo documento
-  (via fachada do Accounts) — inexistente => regra a confirmar (Open Question).
+- Application: idempotência (PK em `inbound_quotations.external_quotation_id`, BR4); resolução da
+  `Account` pelo documento via `AccountDirectory.findIdByDocument` (fachada do Accounts) —
+  inexistente => **rejeita 422** (BR7, ASSUMIDO ver DL-0017).
 - Domain: invariantes de `SourcedOffer` (BR1) e do Quote INTEGRATED (BR2, reusando o agregado de 0005).
 
 ## Error Behavior
@@ -149,9 +165,14 @@ o caso, **sem** vazar detalhe interno (`security.md`). i18n em `messages_pt_BR.p
 
 ## Open Questions
 
-- **Account inexistente** no inbound: criar conta provisória, rejeitar, ou enfileirar para curadoria?
-  (Em aberto — decisão de negócio.)
-- **Versão do contrato** do site de cotação e política de evolução — confirmar com o parceiro.
+- ~~**Account inexistente** no inbound: criar conta provisória, rejeitar, ou enfileirar para
+  curadoria?~~ → **ASSUMIDO** (2026-06-29): **rejeita 422** `integration.account.not-found` (não cria
+  provisória nem enfileira). Confiança **Baixa** (decisão de negócio), reversão moderada. Ver
+  [DL-0017](../decision-log/DL-0017-inbound-account-not-found-rejects.md). (BR7)
+- ~~**Versão do contrato / assinatura** do site de cotação~~ → **ASSUMIDO** (2026-06-29): assinatura
+  HMAC-SHA256 + segredo compartilhado (`X-Signature`), versão v1 no path. Ver
+  [DL-0016](../decision-log/DL-0016-inbound-webhook-signature-hmac.md). (BR8) — **política de evolução
+  do contrato fica a confirmar com o parceiro** quando ele publicar o contrato oficial.
 - Q3 (merchant of record) não afeta esta fatia, mas afeta cobrança/reembolso depois (SPEC-0010/0017).
 
 ## Out of Scope

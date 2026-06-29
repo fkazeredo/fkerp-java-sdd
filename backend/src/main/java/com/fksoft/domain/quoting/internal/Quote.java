@@ -4,6 +4,7 @@ import com.fksoft.domain.exchange.CurrencyPair;
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.quoting.PriceOrigin;
 import com.fksoft.domain.quoting.QuoteOverrideCurrencyMismatchException;
+import com.fksoft.domain.quoting.QuoteOverrideNotApplicableException;
 import com.fksoft.domain.quoting.QuoteOverrideReasonRequiredException;
 import com.fksoft.domain.quoting.QuoteSnapshot;
 import com.fksoft.domain.quoting.QuoteStatus;
@@ -32,6 +33,11 @@ import lombok.NoArgsConstructor;
  * an existing quote; {@code suggestedAmount} is immutable (BR5); only {@code appliedAmount} moves,
  * always through {@link #applyOverride} which records the divergence (BR6). Amounts in the sale
  * currency are stored as numerics and reconstructed with the pair's quote currency.
+ *
+ * <p>The INTEGRATED branch (SPEC-0009, DL-0018) reuses this aggregate: {@link #composeIntegrated}
+ * trusts a closed external price ({@code suggestedAmount == appliedAmount == externalPrice})
+ * without running the suggestion engine, so the MANUAL-only composition fields (FX, commission,
+ * markup, currency pair) stay {@code null} and {@link #applyOverride} is refused (BR2).
  * Module-internal.
  */
 @Entity
@@ -43,6 +49,8 @@ public class Quote {
   @Id private UUID id;
 
   private UUID accountId;
+
+  private UUID sourceOfferId;
 
   @Enumerated(EnumType.STRING)
   private PriceOrigin priceOrigin;
@@ -104,6 +112,7 @@ public class Quote {
     Quote quote = new Quote();
     quote.id = UUID.randomUUID();
     quote.accountId = accountId;
+    quote.sourceOfferId = null;
     quote.priceOrigin = composition.priceOrigin();
     quote.basePriceAmount = composition.basePrice().amount();
     quote.basePriceCurrency = composition.basePrice().currency();
@@ -132,18 +141,63 @@ public class Quote {
   }
 
   /**
+   * Creates an INTEGRATED quote from a trusted, closed external price (SPEC-0009 BR2, DL-0018): the
+   * suggestion engine does not run, so {@code suggestedAmount == appliedAmount == externalPrice}
+   * and the MANUAL-only composition fields stay {@code null}. No {@link OverrideRecord} exists. The
+   * external price's currency is stored in {@code basePriceCurrency} and is the quote's sale
+   * currency.
+   *
+   * @param accountId the resolved account the quote is for
+   * @param sourceOfferId the sourced offer recording the provenance (nullable)
+   * @param externalPrice the trusted, closed external price
+   * @param validUntil optional validity instant
+   * @param now creation instant (UTC)
+   * @param actor who/what created it (audit)
+   * @return a new, persistable INTEGRATED quote
+   */
+  public static Quote composeIntegrated(
+      UUID accountId,
+      UUID sourceOfferId,
+      Money externalPrice,
+      Instant validUntil,
+      Instant now,
+      String actor) {
+    Quote quote = new Quote();
+    quote.id = UUID.randomUUID();
+    quote.accountId = accountId;
+    quote.sourceOfferId = sourceOfferId;
+    quote.priceOrigin = PriceOrigin.INTEGRATED;
+    quote.basePriceAmount = externalPrice.amount();
+    quote.basePriceCurrency = externalPrice.currency();
+    quote.suggestedAmount = externalPrice.amount();
+    quote.appliedAmount = externalPrice.amount();
+    quote.status = QuoteStatus.COMPOSED;
+    quote.validUntil = validUntil;
+    quote.createdAt = now;
+    quote.updatedAt = now;
+    quote.createdBy = actor;
+    quote.updatedBy = actor;
+    return quote;
+  }
+
+  /**
    * Applies a price override: records an {@link OverrideRecord} and moves {@code appliedAmount}
-   * (BR6). The suggested amount is never touched (BR5).
+   * (BR6). The suggested amount is never touched (BR5). Refused on INTEGRATED quotes — the external
+   * price is trusted and there is no suggestion to diverge from (SPEC-0009 BR2).
    *
    * @param newApplied the new applied amount (must be in the sale currency — BR7)
    * @param reason the mandatory, non-empty reason (BR6)
    * @param performedBy who performed the override
    * @param when when it happened
+   * @throws QuoteOverrideNotApplicableException when the quote is INTEGRATED (SPEC-0009 BR2)
    * @throws QuoteOverrideReasonRequiredException when the reason is empty (BR6)
    * @throws QuoteOverrideCurrencyMismatchException when the currency differs from the suggestion
    *     (BR7)
    */
   public void applyOverride(Money newApplied, String reason, String performedBy, Instant when) {
+    if (priceOrigin == PriceOrigin.INTEGRATED) {
+      throw new QuoteOverrideNotApplicableException();
+    }
     if (reason == null || reason.isBlank()) {
       throw new QuoteOverrideReasonRequiredException();
     }
@@ -158,17 +212,26 @@ public class Quote {
     updatedBy = performedBy;
   }
 
-  /** Projects this aggregate to its public read view, reconstructing money in the sale currency. */
+  /**
+   * Projects this aggregate to its public read view, reconstructing money in the sale currency. For
+   * an INTEGRATED quote (DL-0018) the MANUAL-only sections — commission, markup, FX, converted base
+   * and rate provenance — are {@code null}; only the trusted price travels.
+   */
   public QuoteView toView() {
     String sale = saleCurrency();
+    boolean composed = priceOrigin != PriceOrigin.INTEGRATED;
     QuoteView.CommissionView commission =
-        new QuoteView.CommissionView(
-            Money.of(supplierCommission, sale),
-            Money.of(agentCommission, sale),
-            Money.of(spread, sale),
-            spreadNegative);
+        composed
+            ? new QuoteView.CommissionView(
+                Money.of(supplierCommission, sale),
+                Money.of(agentCommission, sale),
+                Money.of(spread, sale),
+                spreadNegative)
+            : null;
     QuoteView.MarkupView markup =
-        new QuoteView.MarkupView(markupPct, Money.of(markupAmount, sale), markupSource);
+        composed
+            ? new QuoteView.MarkupView(markupPct, Money.of(markupAmount, sale), markupSource)
+            : null;
     QuoteView.ProvenanceView provenance = new QuoteView.ProvenanceView(rateId, markupSource);
     List<QuoteView.OverrideRecordView> overrideViews =
         overrides.stream()
@@ -187,7 +250,7 @@ public class Quote {
         priceOrigin,
         Money.of(basePriceAmount, basePriceCurrency),
         fxRate,
-        Money.of(baseConvertedAmount, sale),
+        composed ? Money.of(baseConvertedAmount, sale) : null,
         commission,
         markup,
         Money.of(suggestedAmount, sale),
@@ -198,9 +261,24 @@ public class Quote {
         overrideViews);
   }
 
-  /** The frozen cross-module snapshot (account + expected financials). */
+  /**
+   * The frozen cross-module snapshot (account + expected financials). For an INTEGRATED quote the
+   * commission/FX fields are {@code null} (no two-sided commission was computed); the applied price
+   * is carried as {@code baseConverted} so consumers still see the trusted amount.
+   */
   public QuoteSnapshot toSnapshot() {
     String sale = saleCurrency();
+    if (priceOrigin == PriceOrigin.INTEGRATED) {
+      return new QuoteSnapshot(
+          id,
+          accountId,
+          Money.of(basePriceAmount, basePriceCurrency),
+          null,
+          Money.of(appliedAmount, sale),
+          null,
+          null,
+          null);
+    }
     return new QuoteSnapshot(
         id,
         accountId,
@@ -212,7 +290,11 @@ public class Quote {
         Money.of(spread, sale));
   }
 
+  /**
+   * The sale currency: the quote currency of the pair for a MANUAL quote, or the external price's
+   * currency for an INTEGRATED one (which has no currency pair — DL-0018).
+   */
   private String saleCurrency() {
-    return CurrencyPair.parse(currencyPair).quote();
+    return currencyPair != null ? CurrencyPair.parse(currencyPair).quote() : basePriceCurrency;
   }
 }
