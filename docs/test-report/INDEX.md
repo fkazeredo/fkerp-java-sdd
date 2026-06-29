@@ -19,6 +19,9 @@ resultado, cobertura e como reproduzir.
 | Slice 8a — Sourcing | SPEC-0009 | [slice-8a-sourcing.md](slice-8a-sourcing.md) | ✅ verde (backend 114 testes; SourcedOffer + offers API) |
 | Slice 8b — Quoting ramo INTEGRATED | SPEC-0009/0005 | [slice-8b-integrated-quote.md](slice-8b-integrated-quote.md) | ✅ verde (backend 118 testes; composeIntegrated + porta + V10) |
 | Slice 8c — ACL de entrada (webhook) | SPEC-0009 | [slice-8c-inbound-acl.md](slice-8c-inbound-acl.md) | ✅ verde (backend 135 testes; HMAC + tradução ACL + idempotência + INTEGRATED ponta a ponta) |
+| Slice 9a — CancellationPolicy como objeto | SPEC-0010 | [slice-9a-cancellation-policy-object.md](slice-9a-cancellation-policy-object.md) | ✅ verde (backend 145 testes; política como objeto + fonte administrável V12) |
+| Slice 9b — Cancelamento rico + armadilha do merchant | SPEC-0010 | [slice-9b-cancel-charges-merchant-trap.md](slice-9b-cancel-charges-merchant-trap.md) | ✅ verde (backend 151 testes; congelamento + 2 obrigações que não se anulam, V13) |
+| Slice 9c — NoShowPolicy | SPEC-0010 | [slice-9c-no-show-policy.md](slice-9c-no-show-policy.md) | ✅ verde (backend 157 testes; fee + dispensa por prova de voo) |
 
 ## Resumo por nível (Fase 0)
 
