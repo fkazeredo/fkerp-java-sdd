@@ -25,6 +25,7 @@
 | 4 — Cancellation + merchant trap | 2026-06-29 10:17 (-03:00) | 2026-06-29 11:00 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=4); supervisor **reverificou**: `./mvnw verify` **157 tests** verde, 0 Checkstyle, V12–V13. CancellationPolicy + armadilha do merchant (cobranças nunca se anulam) + no-show. Released **`0.5.0`**. DL-0020…0024 (**DL-0024 Rev. Cara**). |
 | 5 — Exchange exposure + reports | 2026-06-29 11:17 (-03:00) | 2026-06-29 12:00 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=5); supervisor **reverificou**: `./mvnw verify` **179 tests** verde, 0 Checkstyle, V14–V15. Taxa de mercado + subsídio×drift (`FxPosition`) + relatórios (`LiveExposure`/`PromoFxResult`, alerta de drift 2%). Released **`0.6.0`**. DL-0025…0028. Ciclo Modulith pego pelo gate e corrigido (reconciliation→exchange). |
 | 6 — Point-clock crawler | 2026-06-29 12:17 (-03:00) | 2026-06-29 13:00 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=6); supervisor **reverificou**: `./mvnw verify` **206 tests** verde, 0 Checkstyle, V16. Módulo `people` (11º) + crawler com **disjuntor/dead-letter** + ingestão de **AFD/AEJ assinado** no cofre (retenção 5 anos). Released **`0.7.0`**. DL-0029…0033 (**DL-0029 Conf. Baixa + Rev. Cara**: tipo de REP). |
+| 7 — Intelligence (DSS) | 2026-06-29 13:17 (-03:00) | _in progress_ | Supervisor loop (8b1087fe): sem 🟡 → próxima ⬜ = Fase 7; marcada 🟡; `RUN-PHASE` (FASE-ALVO=7) delegado a um subagente em background. |
 
 A phase is **Complete** only when every slice's acceptance criteria are tested and
 passing, the architecture gates (ArchUnit + Spring Modulith + Spotless/Checkstyle)
@@ -41,7 +42,7 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 | **4** | Cancellation + merchant trap | SPEC-0010 | ✅ Complete | Released `0.5.0` (tag). `CancellationPolicy` (STANDARD/ALL_SALES_FINAL/CUSTOM, janelas, costBearer) + `NoShowPolicy` + **armadilha do merchant** (reembolso ao cliente e cobrança do portal não se anulam). Vive no módulo `booking`. `./mvnw verify` 157 tests. |
 | **5** | Exchange exposure + reports | SPEC-0011 | ✅ Complete | Released `0.6.0` (tag). Taxa de mercado + decomposição **subsídio × drift** (`FxPosition`), **posição agregada do livro** (`LiveExposure`) com alerta de drift (2%) e relatório `PromoFxResult`. Estende `exchange`. `./mvnw verify` 179 tests. |
 | **6** | Point-clock crawler | SPEC-0012 | ✅ Complete | Released `0.7.0` (tag). `people` (11º módulo) + `PointClockCrawler` (ACL, **disjuntor + retry/dead-letter**, idempotente, não escreve no núcleo) + ingestão de **AFD/AEJ assinado** no cofre Compliance (retenção 5 anos). `./mvnw verify` 206 tests. **Q6 (REP) = Conf. Baixa — confirmar.** |
-| **7** | Intelligence (DSS) | SPEC-0013 | ⬜ Not started | OverrideNudge + PromoFxAdvisor. |
+| **7** | Intelligence (DSS) | SPEC-0013 | 🟡 In progress | Supervisor loop (8b1087fe) started 2026-06-29 13:17 (-03:00); RUN-PHASE delegated to a subagent. OverrideNudge + PromoFxAdvisor (aconselha, nunca comanda). |
 | **8+** | Support & generic contexts | SPEC-0014…0025 | ⬜ Not started | CommercialPolicy, Finance, Billing, Payout, AfterSales, Marketing, Portfolio, Assets, People, Platform, Identity, Admin. |
 
 ## Phase 0 — slice detail
