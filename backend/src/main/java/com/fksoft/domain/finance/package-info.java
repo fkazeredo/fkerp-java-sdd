@@ -12,6 +12,14 @@
  * objects, views, the {@link com.fksoft.domain.finance.LedgerEntryRegistered}/{@link
  * com.fksoft.domain.finance.PeriodClosed} events and the business exceptions. The {@code internal}
  * sub-package (entities, repositories) is module-private (Spring Modulith verify).
+ *
+ * <p>Event-driven AP/AR posting (SPEC-0015 BR5, DL-0041): Finance is a <strong>leaf
+ * consumer</strong> of the Booking module's charge events ({@code CancellationCharged}, {@code
+ * NoShowCharged}, {@code MerchantObligationIncurred}), turning them into ledger entries
+ * idempotently (state-check + UNIQUE on {@code (bookingId, chargeKind)}). It reads only those
+ * EXPOSED event types and never calls back into Booking, so the dependency {@code finance →
+ * booking} stays acyclic (Booking depends on neither Finance nor Compliance; Compliance depends on
+ * Finance).
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Finance")
 package com.fksoft.domain.finance;

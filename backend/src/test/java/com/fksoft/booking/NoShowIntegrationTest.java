@@ -41,6 +41,10 @@ class NoShowIntegrationTest extends AbstractPostgresIntegrationTest {
 
   @AfterEach
   void cleanUp() {
+    // Finance now posts AP/AR ledger entries from the no-show events (SPEC-0015 BR5, DL-0041);
+    // clear them so a no-show test does not leak entries into period-keyed Finance tests.
+    jdbcTemplate.execute("DELETE FROM posted_event_entries");
+    jdbcTemplate.execute("DELETE FROM ledger_entries");
     jdbcTemplate.execute("DELETE FROM cancellation_charges");
     jdbcTemplate.execute("DELETE FROM booking_cancellation_snapshots");
     jdbcTemplate.execute("DELETE FROM cancellation_policies");

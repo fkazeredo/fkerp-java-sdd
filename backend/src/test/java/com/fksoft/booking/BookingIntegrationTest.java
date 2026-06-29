@@ -46,7 +46,10 @@ class BookingIntegrationTest extends AbstractPostgresIntegrationTest {
   @AfterEach
   void cleanUp() {
     // Confirming a booking opens a reconciliation case (via the in-process listener), so clean it
-    // here too — otherwise leftover cases pollute the reconciliation tests.
+    // here too — otherwise leftover cases pollute the reconciliation tests. Likewise, cancelling a
+    // booking now posts AP/AR ledger entries (SPEC-0015 BR5, DL-0041) — clear them too.
+    jdbcTemplate.execute("DELETE FROM posted_event_entries");
+    jdbcTemplate.execute("DELETE FROM ledger_entries");
     jdbcTemplate.execute("DELETE FROM reconciliation_cases");
     jdbcTemplate.execute("DELETE FROM bookings");
     jdbcTemplate.execute("DELETE FROM override_records");

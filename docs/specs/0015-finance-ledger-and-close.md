@@ -47,12 +47,27 @@ BR3  AccountingPeriod.status: OPEN → CLOSING → CLOSED. closePeriod(period) M
        (b) se canClose=false, **falhar** com finance.period.cannot-close listando as pendências (não
            fecha); (c) se canClose=true, marcar CLOSED e publicar PeriodClosed.
 BR4  Lançamento em período CLOSED MUST ser rejeitado (finance.period.closed); ajustes vão para período aberto.
-BR5  Eventos de negócio viram lançamentos: ExpectedCommissionAccrued → RECEIVABLE/PAYABLE de comissão;
-     CancellationCharged → PENALTY/REFUND; SupplierSettlement → SUPPLIER_SETTLEMENT (consumo idempotente).
+BR5  Eventos de negócio viram lançamentos (consumo idempotente). **ASSUMIDO (ver DL-0041):** consome-se
+     o que já é publicado e órfão de lançamento — os eventos do Booking (SPEC-0010):
+       CancellationCharged.PENALTY → RECEIVABLE/PENALTY;
+       CancellationCharged.CUSTOMER_REFUND → PAYABLE/REFUND;
+       MerchantObligationIncurred (e o SUPPLIER do CancellationCharged, postado **uma vez** por aqui)
+         → PAYABLE/SUPPLIER_SETTLEMENT (merchant trap preservado, DL-0024: não neta com o REFUND);
+       NoShowCharged (fee≠null, não-waived) → RECEIVABLE/PENALTY.
+     Idempotência por UNIQUE (source_ref, charge_kind) + pré-check. **Diferido (seam pronto, sem
+     produtor hoje):** ExpectedCommissionAccrued (accrual de comissão na confirmação) e
+     SupplierSettlement (liquidação ao fornecedor) — não são publicados por nenhum módulo; quando
+     existirem, adiciona-se um listener idempotente análogo (DL-0041).
 BR6  Finance MUST NOT impor a regra de documento — apenas **consultar** o Compliance e respeitar o veto.
-BR7  ASSUMIDO (ver DL-0014): entrega-se agora o **seam mínimo** (AP/AR + período). Contabilidade plena
-     (partidas dobradas, DRE, SPED/ECD) NÃO é construída; se exigida, integra-se/compra-se um ERP
-     contábil e este módulo vira adaptador (as portas `CloseGuard`/`LedgerDirectory` isolam isso).
+BR7  ASSUMIDO (ver DL-0014, **reafirmado na entrega "full" em DL-0042**): a entrega é o **livro-caixa
+     operacional** (AP/AR + período + fechamento + lançamento automático por evento + balancete por
+     moeda). Contabilidade plena (plano de contas, partidas dobradas, DRE, SPED/ECD) **NÃO** é
+     construída; se exigida, integra-se/compra-se um ERP contábil e este módulo vira adaptador (as
+     portas `CloseGuard`/`LedgerDirectory` isolam isso).
+BR10 ASSUMIDO (ver DL-0043): relatório de período enriquecido `GET /periods/{yyyymm}/trial-balance`
+     — balancete operacional **por moeda** (DL-0013) e **por status** (PROVISIONAL/CONFIRMED/SETTLED),
+     com `net = receivable − payable` por moeda (saldo operacional, **não** resultado contábil) e
+     contagens. Aditivo: não altera `GET /periods/{yyyymm}`.
 BR8  ASSUMIDO (ver DL-0013): o razão guarda cada lançamento em **moeda original** (Money), sem
      conversão; o total do período agrega **por moeda** (nunca soma moedas diferentes).
 BR9  ASSUMIDO (ver DL-0012): o mapa `entryType × DocumentRequirement` é compartilhado com o Compliance
@@ -79,7 +94,9 @@ POST /api/finance/periods/2026-06/close
 - `GET /api/finance/entries?direction=&status=&period=&party=&page=&size=` → `PageResponse`.
 - `POST /api/finance/periods/{yyyymm}/close` → 200 (fechado) | 409 `finance.period.cannot-close`.
 - `GET /api/finance/periods/{yyyymm}` → status + totais AP/AR.
-- OpenAPI atualizada.
+- `GET /api/finance/periods/{yyyymm}/trial-balance` → balancete operacional por moeda
+  (`payable`/`receivable`/`net = receivable − payable`) + contagens por status (BR10, DL-0043).
+- OpenAPI atualizada (code-first/springdoc).
 
 ## Events
 
@@ -101,13 +118,21 @@ V15__create_finance.sql
   accounting_periods( period char(7) PK, status varchar not null, closed_at timestamptz null, closed_by varchar null )
 ```
 
+> Nota de implementação: o seam de Fase 2 entregou estas tabelas em **`V7__create_finance.sql`** (não
+> V15). A entrega "full" adiciona **`V19__create_posted_event_entries.sql`** — a tabela de
+> idempotência do lançamento por evento (DL-0041): `posted_event_entries(id, source_ref, charge_kind,
+> entry_id, created_at, UNIQUE(source_ref, charge_kind))`.
+
 `closePeriod` é transição financeira → **locking pessimista** no período. O `close-check` ao Compliance
 é consulta cross-módulo por **fachada/porta** (sem FK). Se o cliente comprar um ERP contábil, este
 módulo vira **adaptador** que sincroniza lançamentos/fechamento.
 
 ## Validation Rules
 
-- Application: idempotência no consumo de eventos (não duplica lançamento); período existente/aberto.
+- Application: idempotência no consumo de eventos (não duplica lançamento) — **ASSUMIDO (ver DL-0041)**:
+  tabela `posted_event_entries` com UNIQUE `(source_ref, charge_kind)` + pré-check de existência, na
+  mesma transação do lançamento; período existente/aberto (lançamento em período CLOSED é descartado/
+  logado, BR4).
 - Domain: máquina de período (BR3/BR4) e estados do lançamento (BR2) como invariantes.
 - Integração: `closePeriod` respeita o veto do Compliance (BR3/BR6).
 
