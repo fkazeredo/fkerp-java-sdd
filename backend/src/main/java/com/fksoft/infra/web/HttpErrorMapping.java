@@ -4,6 +4,9 @@ import com.fksoft.domain.accounts.AccountDocumentDuplicateException;
 import com.fksoft.domain.accounts.AccountDocumentInvalidException;
 import com.fksoft.domain.accounts.AccountNotFoundException;
 import com.fksoft.domain.error.DomainException;
+import com.fksoft.domain.exchange.ExchangeCurrencyPairInvalidException;
+import com.fksoft.domain.exchange.ExchangeRateInvalidException;
+import com.fksoft.domain.exchange.ExchangeRateNotFoundException;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.http.HttpStatus;
@@ -25,7 +28,10 @@ public class HttpErrorMapping {
       Map.of(
           AccountDocumentInvalidException.class, HttpStatus.BAD_REQUEST,
           AccountDocumentDuplicateException.class, HttpStatus.CONFLICT,
-          AccountNotFoundException.class, HttpStatus.NOT_FOUND);
+          AccountNotFoundException.class, HttpStatus.NOT_FOUND,
+          ExchangeCurrencyPairInvalidException.class, HttpStatus.BAD_REQUEST,
+          ExchangeRateInvalidException.class, HttpStatus.BAD_REQUEST,
+          ExchangeRateNotFoundException.class, HttpStatus.NOT_FOUND);
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {
