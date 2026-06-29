@@ -18,6 +18,11 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0048](DL-0048-payout-payment-gateway-acl-async-webhook.md) | Payout: gateway de pagamento como porta + **mock rastreável com webhook assíncrono** (ADR 0006) | **Baixa** | Moderada | Meio de pagamento real é Open Question da SPEC-0017; só o dono fecha (o mock prova o contrato) |
 | [DL-0049](DL-0049-payout-foreign-settlement-rate-and-brl-baixa.md) | Payout: liquidação do fornecedor com `settlementRate` (USD) + baixa em **BRL** | **Baixa** | **Cara** | Fluxo de câmbio real (remessa vs BRL) é Open Question; a tese de câmbio é compartilhada por Payout/Reconciliation/Exchange |
 
+> _Nota Fase 8e:_ DL-0052/0053/0054 são **Confiança=Média / Reversibilidade=Barata–Moderada** —
+> não entram neste destaque. O "quais custos contam" do custo de servir (DL-0053) e os prazos de
+> SLA (DL-0052) seguem confirmáveis com o dono, mas a reversão é barata (parâmetro governado em
+> runtime / value object local).
+
 > DL-0017 (Fase 3), **DL-0029/DL-0033** (Fase 6), **DL-0044** (Fase 8c) e **DL-0048/DL-0049** (Fase 8d)
 > são as de **Confiança=Baixa** (Open Questions de negócio em aberto). **DL-0029 (Q6), DL-0044 (Q7) e
 > DL-0049** são as mais sensíveis: Confiança=Baixa **e** Reversibilidade=Cara — incógnitas de negócio que
@@ -80,3 +85,6 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0049](DL-0049-payout-foreign-settlement-rate-and-brl-baixa.md) | 8d | Payout: liquidação do fornecedor modela `amount` (USD) + `settlementRate` (escala 6, >0) + `settledBrl` (baixa em BRL = amount × rate, HALF_UP); remessa internacional real adiada (mesmo gateway) | **Baixa** | **Cara** |
 | [DL-0050](DL-0050-payout-installments-no-interest-and-exact-cent-distribution.md) | 8d | Payout: parcelamento **v1 sem juros**; Σ parcelas == total exato (resto de centavos na 1ª parcela); cada parcela executa/comprova; Payout só `EXECUTED` quando todas executam; "sem plano" = 1 parcela implícita | Média | Moderada |
 | [DL-0051](DL-0051-payout-supplier-settled-consumed-by-finance-leaf-acyclic.md) | 8d | Payout folha: `SupplierSettled` consumido pelo **Finance** (listener idempotente, posta uma vez); Reconciliation/Exchange seguem fechando FX pela liquidação própria (costura ao evento adiada, sem ciclo); REFUND não cancela a obrigação do fornecedor (DL-0024) | Média | Moderada |
+| [DL-0052](DL-0052-aftersales-sla-from-commercial-policy.md) | 8e | AfterSales: SLA = parâmetro governado resolvido pela CommercialPolicy (chaves `AFTERSALES_SLA_FIRST_RESPONSE`=24h/`_RESOLUTION`=72h/`_REFUND`=48h, NUMBER horas; seed SYSTEM_DEFAULT V23); Diretiva pode sobrepor sem deploy | Média | Barata |
+| [DL-0053](DL-0053-aftersales-sla-breach-job-and-cost-to-serve.md) | 8e | AfterSales: breach por job de **relógio controlado** (`markBreaches(now)`, instante como parâmetro, padrão do Booking); breach é **flag/alerta** (não bloqueia, idempotente); custo de servir = `CostToServe` (Money BRL acumulável: handling+refund+reaberturas) | Média | Barata |
+| [DL-0054](DL-0054-aftersales-orchestrates-cancel-and-refund-via-facades.md) | 8e | AfterSales orquestra via **fachadas** (`PayoutService.create` REFUND com `originRef`=caseId; `BookingService.cancel`), **idempotente** por `linkedPayoutId` (não cria 2 Payouts); BR6 — não muda reserva nem lança financeiro; armadilha do merchant intacta; grafo **acíclico** | Média | Moderada |
