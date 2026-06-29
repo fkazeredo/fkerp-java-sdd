@@ -108,5 +108,8 @@ mudança**, na mesma fatia.
 Ao entregar as **Iniciativas importadas do fkerp-poc** (ver `docs/ROADMAP.md` → *Iniciativas
 importadas do fkerp-poc*), atualize o manual conforme o caso: **UX-1** (novas telas, navegação,
 paleta de comandos `Ctrl/Cmd+K`, atalhos, tema claro/escuro, login); **OBS-1** (como o operador vê
-métricas/monitoramento e o endpoint de versão); **SEC-1** (login, perfis e permissões). Se o projeto
-adotar manual **bilíngue** (en-US + pt-BR, como no fkerp-poc), atualize **as duas** versões.
+métricas/monitoramento e o endpoint de versão); **SEC-1** (login, perfis e permissões).
+
+O manual é **bilíngue**: `docs/MANUAL.md` (pt-BR) e `docs/MANUAL.en-US.md` (en-US) — **mantenha as
+duas versões em sincronia** na mesma fatia (conteúdo, telas, número de versão e histórico). Nenhuma
+das duas pode ficar para trás.
