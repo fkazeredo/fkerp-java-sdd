@@ -25,7 +25,7 @@
 | 4 — Cancellation + merchant trap | 2026-06-29 10:17 (-03:00) | 2026-06-29 11:00 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=4); supervisor **reverificou**: `./mvnw verify` **157 tests** verde, 0 Checkstyle, V12–V13. CancellationPolicy + armadilha do merchant (cobranças nunca se anulam) + no-show. Released **`0.5.0`**. DL-0020…0024 (**DL-0024 Rev. Cara**). |
 | 5 — Exchange exposure + reports | 2026-06-29 11:17 (-03:00) | 2026-06-29 12:00 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=5); supervisor **reverificou**: `./mvnw verify` **179 tests** verde, 0 Checkstyle, V14–V15. Taxa de mercado + subsídio×drift (`FxPosition`) + relatórios (`LiveExposure`/`PromoFxResult`, alerta de drift 2%). Released **`0.6.0`**. DL-0025…0028. Ciclo Modulith pego pelo gate e corrigido (reconciliation→exchange). |
 | 6 — Point-clock crawler | 2026-06-29 12:17 (-03:00) | 2026-06-29 13:00 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=6); supervisor **reverificou**: `./mvnw verify` **206 tests** verde, 0 Checkstyle, V16. Módulo `people` (11º) + crawler com **disjuntor/dead-letter** + ingestão de **AFD/AEJ assinado** no cofre (retenção 5 anos). Released **`0.7.0`**. DL-0029…0033 (**DL-0029 Conf. Baixa + Rev. Cara**: tipo de REP). |
-| 7 — Intelligence (DSS) | 2026-06-29 13:17 (-03:00) | _in progress_ | Supervisor loop (8b1087fe): sem 🟡 → próxima ⬜ = Fase 7; marcada 🟡; `RUN-PHASE` (FASE-ALVO=7) delegado a um subagente em background. |
+| 7 — Intelligence (DSS) | 2026-06-29 13:17 (-03:00) | 2026-06-29 14:05 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=7); supervisor **reverificou**: `./mvnw verify` **219 tests** (BUILD SUCCESS, 0 Checkstyle), V17. Módulo `intelligence` (12º) + `PromoFxAdvisor` + `OverrideNudge` atrás de flag; **"aconselha, nunca comanda"** com regra ArchUnit + teeth test; port LLM `InsightNarrator` (stub). Released **`0.8.0`**. DL-0034…0036. |
 
 A phase is **Complete** only when every slice's acceptance criteria are tested and
 passing, the architecture gates (ArchUnit + Spring Modulith + Spotless/Checkstyle)
@@ -42,7 +42,7 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 | **4** | Cancellation + merchant trap | SPEC-0010 | ✅ Complete | Released `0.5.0` (tag). `CancellationPolicy` (STANDARD/ALL_SALES_FINAL/CUSTOM, janelas, costBearer) + `NoShowPolicy` + **armadilha do merchant** (reembolso ao cliente e cobrança do portal não se anulam). Vive no módulo `booking`. `./mvnw verify` 157 tests. |
 | **5** | Exchange exposure + reports | SPEC-0011 | ✅ Complete | Released `0.6.0` (tag). Taxa de mercado + decomposição **subsídio × drift** (`FxPosition`), **posição agregada do livro** (`LiveExposure`) com alerta de drift (2%) e relatório `PromoFxResult`. Estende `exchange`. `./mvnw verify` 179 tests. |
 | **6** | Point-clock crawler | SPEC-0012 | ✅ Complete | Released `0.7.0` (tag). `people` (11º módulo) + `PointClockCrawler` (ACL, **disjuntor + retry/dead-letter**, idempotente, não escreve no núcleo) + ingestão de **AFD/AEJ assinado** no cofre Compliance (retenção 5 anos). `./mvnw verify` 206 tests. **Q6 (REP) = Conf. Baixa — confirmar.** |
-| **7** | Intelligence (DSS) | SPEC-0013 | 🟡 In progress | Supervisor loop (8b1087fe) started 2026-06-29 13:17 (-03:00); RUN-PHASE delegated to a subagent. OverrideNudge + PromoFxAdvisor (aconselha, nunca comanda). |
+| **7** | Intelligence (DSS) | SPEC-0013 | ✅ Complete | Released `0.8.0` (tag). Módulo `intelligence` (12º) — `PromoFxAdvisor` (determinístico) + `OverrideNudge` (atrás de feature flag até o dono dar as faixas, Q4), read-model que escuta eventos e **aconselha, nunca comanda** (regra ArchUnit + teeth test; port LLM `InsightNarrator` com default rule-based). `./mvnw verify` 219 tests. |
 | **8+** | Support & generic contexts | SPEC-0014…0025 | ⬜ Not started | CommercialPolicy, Finance, Billing, Payout, AfterSales, Marketing, Portfolio, Assets, People, Platform, Identity, Admin. |
 
 ## Phase 0 — slice detail
@@ -154,6 +154,21 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 - [x] **Não escreve no núcleo** (teste de fronteira) + DTO externo só em `infra.integration`.
 - [x] Merge em `develop`, release `0.7.0` (tag), merge em `main`; DL-0029…0033.
 - [ ] **DL-0029 (Q6 tipo de REP) — Confiança Baixa + Reversibilidade Cara**: confirmar com o cliente qual REP usa (a captura do AFD muda conforme). Tela Angular / Micrometer — follow-up.
+
+## Phase 7 — slice detail
+
+| Slice | Spec | Deliverable | Status |
+|---|---|---|---|
+| 12a | SPEC-0013 | Módulo `intelligence` (12º Modulith) — framework `Insight` (evidência+proveniência / recomendação+ganho-risco / guardrail) + **`PromoFxAdvisor`** determinístico, listeners read-only de eventos; `V17` | ✅ |
+| 12b | SPEC-0013 | **`OverrideNudge`** atrás de feature flag (default off até as faixas Q4); `POST /insights/{id}/decision` (registra decisão humana, sem ação) | ✅ |
+
+**Phase 7 exit criteria:**
+- [x] `cd backend && ./mvnw verify` green (219 tests; ArchUnit[10] + 12 Modulith modules **acíclico** + Spotless/Checkstyle) — reverificado pelo supervisor.
+- [x] Migração `V17` aplicada e validada (read-models, sem FK cross-módulo).
+- [x] **"Aconselha, nunca comanda"** provado: regra ArchUnit (intelligence não depende de `*Service`/`internal` de outros módulos) + **teeth test** + e2e que gera insight sem mutar a fonte.
+- [x] Port LLM `InsightNarrator` com default determinístico (sem LLM vivo; **gate nunca depende de chamada externa**); IA real ficaria atrás do port (ACL), saída validada/versionada, `claude-opus-4-8`.
+- [x] Merge em `develop`, release `0.8.0` (tag), merge em `main`; DL-0034…0036 (sem Confiança Baixa / Rev. Cara).
+- [ ] **Q4 (faixas de override)** segue **aberta** (Nudge fica gated até o diretor fornecer) — explicitamente adiada, não inventada. Tela Angular / Micrometer — follow-up.
 
 ## Open architectural debts carried forward
 
