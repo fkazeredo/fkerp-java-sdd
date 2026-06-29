@@ -26,6 +26,7 @@
 | 5 — Exchange exposure + reports | 2026-06-29 11:17 (-03:00) | 2026-06-29 12:00 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=5); supervisor **reverificou**: `./mvnw verify` **179 tests** verde, 0 Checkstyle, V14–V15. Taxa de mercado + subsídio×drift (`FxPosition`) + relatórios (`LiveExposure`/`PromoFxResult`, alerta de drift 2%). Released **`0.6.0`**. DL-0025…0028. Ciclo Modulith pego pelo gate e corrigido (reconciliation→exchange). |
 | 6 — Point-clock crawler | 2026-06-29 12:17 (-03:00) | 2026-06-29 13:00 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=6); supervisor **reverificou**: `./mvnw verify` **206 tests** verde, 0 Checkstyle, V16. Módulo `people` (11º) + crawler com **disjuntor/dead-letter** + ingestão de **AFD/AEJ assinado** no cofre (retenção 5 anos). Released **`0.7.0`**. DL-0029…0033 (**DL-0029 Conf. Baixa + Rev. Cara**: tipo de REP). |
 | 7 — Intelligence (DSS) | 2026-06-29 13:17 (-03:00) | 2026-06-29 14:05 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=7); supervisor **reverificou**: `./mvnw verify` **219 tests** (BUILD SUCCESS, 0 Checkstyle), V17. Módulo `intelligence` (12º) + `PromoFxAdvisor` + `OverrideNudge` atrás de flag; **"aconselha, nunca comanda"** com regra ArchUnit + teeth test; port LLM `InsightNarrator` (stub). Released **`0.8.0`**. DL-0034…0036. |
+| 8a — CommercialPolicy | 2026-06-29 14:17 (-03:00) | _in progress_ | Supervisor: a próxima ⬜ era o bloco "8+" (12 contextos); **expandido em sub-fases 8a–8l** (default (a), sem resposta do dono). Marcada **8a (SPEC-0014)** 🟡; `RUN-PHASE` FASE-ALVO=8/só-0014 delegado a um subagente. |
 
 A phase is **Complete** only when every slice's acceptance criteria are tested and
 passing, the architecture gates (ArchUnit + Spring Modulith + Spotless/Checkstyle)
@@ -43,7 +44,18 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 | **5** | Exchange exposure + reports | SPEC-0011 | ✅ Complete | Released `0.6.0` (tag). Taxa de mercado + decomposição **subsídio × drift** (`FxPosition`), **posição agregada do livro** (`LiveExposure`) com alerta de drift (2%) e relatório `PromoFxResult`. Estende `exchange`. `./mvnw verify` 179 tests. |
 | **6** | Point-clock crawler | SPEC-0012 | ✅ Complete | Released `0.7.0` (tag). `people` (11º módulo) + `PointClockCrawler` (ACL, **disjuntor + retry/dead-letter**, idempotente, não escreve no núcleo) + ingestão de **AFD/AEJ assinado** no cofre Compliance (retenção 5 anos). `./mvnw verify` 206 tests. **Q6 (REP) = Conf. Baixa — confirmar.** |
 | **7** | Intelligence (DSS) | SPEC-0013 | ✅ Complete | Released `0.8.0` (tag). Módulo `intelligence` (12º) — `PromoFxAdvisor` (determinístico) + `OverrideNudge` (atrás de feature flag até o dono dar as faixas, Q4), read-model que escuta eventos e **aconselha, nunca comanda** (regra ArchUnit + teeth test; port LLM `InsightNarrator` com default rule-based). `./mvnw verify` 219 tests. |
-| **8+** | Support & generic contexts | SPEC-0014…0025 | ⬜ Not started | CommercialPolicy, Finance, Billing, Payout, AfterSales, Marketing, Portfolio, Assets, People, Platform, Identity, Admin. |
+| **8a** | CommercialPolicy (parâmetros governados) | SPEC-0014 | 🟡 In progress | Supervisor loop (8b1087fe) 2026-06-29 14:17 (-03:00); RUN-PHASE FASE-ALVO=8, sub-spec **0014** apenas. Gradua o stub de markup (Fase 1) + motor de precedência Diretiva>Promoção>Contrato>Política>Padrão. |
+| **8b** | Finance (pleno) | SPEC-0015 | ⬜ Not started | Razão AP/AR + período/fechamento (seam mínimo já entregue na Fase 2). |
+| **8c** | Billing | SPEC-0016 | ⬜ Not started | NFS-e sobre a comissão + ISS/retenções. |
+| **8d** | Payout | SPEC-0017 | ⬜ Not started | Repasse/liquidação/reembolso + parcelamento + comprovante. |
+| **8e** | AfterSales | SPEC-0018 | ⬜ Not started | Chamados/alteração/reembolso/SLA + custo de servir. |
+| **8f** | Marketing | SPEC-0019 | ⬜ Not started | Campanha/segmentação/newsletter + consentimento LGPD. |
+| **8g** | Portfolio | SPEC-0020 | ⬜ Not started | Marcas representadas + contratos + metas. |
+| **8h** | Assets | SPEC-0021 | ⬜ Not started | Patrimônio interno (equip./licenças). |
+| **8i** | People (jornada) | SPEC-0022 | ⬜ Not started | Colaboradores + jornada (consome o snapshot da Fase 6) + banco de horas. |
+| **8j** | Platform (contexto) | SPEC-0023 | ⬜ Not started | Custódia e-CNPJ + governança de jobs + auditoria de sistema. |
+| **8k** | Identity | SPEC-0024 | ⬜ Not started | Auth real (OIDC) + papéis/permissões; gradua o stub de auth. |
+| **8l** | Admin | SPEC-0025 | ⬜ Not started | Fornecedores/contratos administrativos → Finance + Compliance. |
 
 ## Phase 0 — slice detail
 
