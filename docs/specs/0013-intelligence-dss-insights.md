@@ -53,6 +53,19 @@ BR6  OverrideNudge: calcula distância até a próxima faixa e o ganho retroativ
      feature flag (sem dado falso).
 BR7  Saída de qualquer modelo PREDITIVO MUST ser validada (schema, faixas, regras, confiança) e ter
      fallback quando inválida; decisões com impacto relevante são auditáveis (`messaging-and-integrations.md`).
+BR8  ASSUMIDO (ver DL-0034): o `subjectRef` do `PromoFxAdvisor` no v1 é a **agência** (conta), único
+     eixo derivável dos eventos (`BookingConfirmed.accountId`); `subjectKind` é enum
+     (`AGENCY|ROUTE|PRODUCT|SUPPLIER`) para plugar rota/produto sem refator. Intelligence é
+     **consumidor-folha**: correlaciona `booking→account` só por evento, NUNCA chama um produtor.
+BR9  ASSUMIDO (ver DL-0035): o `PromoFxAdvisor` é **determinístico**; veredito **CONVERTE** quando
+     `volumeAttracted ≥ MIN_VOLUME (default 5)` e `realizedGap ≥ 0`, **QUEIMA_MARGEM** quando
+     `realizedGap < 0` e `|realizedGap| > BURN_THRESHOLD (default R$ 1.000,00)`; limites são constantes
+     governadas (futura SPEC-0014). A saída é validada antes de persistir (fallback = nenhum insight).
+BR10 ASSUMIDO (ver DL-0036): `OverrideNudge` fica DESLIGADO por feature flag
+     `intelligence.override-nudge.enabled` (default false) enquanto Q4 (faixas) estiver em aberto —
+     seam pronto, sem dado falso. Recomputação **on-event** (incremental, recomputável). Nenhum LLM é
+     wired; a porta `InsightNarrator` tem default determinístico e, se um provedor real entrar, fica
+     atrás dela (ACL) com stub nos testes, saída validada, versionada e com dado pessoal mascarado.
 ```
 
 ## Input/Output Examples
@@ -152,12 +165,16 @@ i18n em `messages_pt_BR.properties`.
 
 ## Open Questions
 
-- **Q4 (faixas de override):** `OverrideNudge` depende do modelo de faixas retroativas; **em aberto** —
-  enquanto fixo, o insight fica desligado.
-- Cadência de recomputação dos read-models (on-event × batch noturno) e limites de guardrail
-  (parâmetros governados, SPEC-0014) — confirmar.
+- **Q4 (faixas de override):** `OverrideNudge` depende do modelo de faixas retroativas; **permanece em
+  aberto** (incógnita do diretor). ASSUMIDO o seam: insight desligado por flag até a tabela existir
+  (ver BR10 / DL-0036).
+- ~~Cadência de recomputação dos read-models e limites de guardrail~~ → ASSUMIDO: recomputação
+  **on-event** e limites como constantes governadas (defaults v1) — ver BR9/BR10 (DL-0035, DL-0036);
+  graduam para parâmetro real na SPEC-0014.
+- ~~Eixo do `PromoFxAdvisor` (rota × agência × produto)~~ → ASSUMIDO **agência** no v1, eixos
+  rota/produto plugáveis (ver BR8 / DL-0034); enriquecer eventos com rota/produto é melhoria futura.
 - Quais insights do catálogo 8.2 entram a seguir (churn, forecast, mix…) — priorização do dono; cada um
-  é uma spec própria.
+  é uma spec própria. (Permanece em aberto — fora do escopo desta fatia.)
 
 ## Out of Scope
 
