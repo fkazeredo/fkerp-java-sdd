@@ -19,16 +19,17 @@ public class OpenApiConfig {
             new Info()
                 .title("Acme Travel ERP API")
                 .description(
-                    "ERP Acme Travel — modular monolith. Phase 8c adds Billing (SPEC-0016): it issues"
-                        + " the commission NFS-e (nota fiscal de serviço) over the commission — the real"
-                        + " revenue — computing ISS parametrized by tax regime (Simples Nacional default,"
-                        + " swappable) and municipality. The taxable base is the commission, never the"
-                        + " gross package. The municipal NFS-e webservice is an external integration"
-                        + " behind a domain port with a traceable mock (ACL); an issued invoice is"
-                        + " archived in the Compliance vault (satisfying the commission entry's document"
-                        + " requirement so the month can close) and its ISS is posted to Finance via an"
-                        + " idempotent event. Endpoints: POST /api/billing/invoices (draft),"
-                        + " /{id}/issue, /{id}/cancel, GET /{id}.")
-                .version("0.11.0"));
+                    "ERP Acme Travel — modular monolith. Phase 8d adds Payout (SPEC-0017): it executes"
+                        + " the financial outflows — agent commission repass, supplier settlement (foreign"
+                        + " currency at the real settlement rate, with the BRL baixa) and customer refund"
+                        + " — supporting installments and a receipt. The payment to the outside world is an"
+                        + " ACL: a PaymentGateway domain port with a traceable mock that confirms/fails"
+                        + " asynchronously via a signed webhook (ADR 0006), processed idempotently so a"
+                        + " re-delivered callback never double-pays. Settling a supplier publishes the"
+                        + " SupplierSettled event consumed once by Finance (AP posting); refunds archive a"
+                        + " REFUND_PROOF and never cancel the supplier obligation (merchant trap). Endpoints:"
+                        + " POST /api/payouts, /{id}/execute, GET /{id}, GET /api/payouts (list),"
+                        + " POST /api/webhooks/payouts/mock.")
+                .version("0.12.0"));
   }
 }
