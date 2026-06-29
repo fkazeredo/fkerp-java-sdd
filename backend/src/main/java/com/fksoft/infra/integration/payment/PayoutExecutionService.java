@@ -1,11 +1,19 @@
 package com.fksoft.infra.integration.payment;
 
+import com.fksoft.domain.compliance.ComplianceService;
+import com.fksoft.domain.compliance.DocumentType;
+import com.fksoft.domain.compliance.DocumentView;
+import com.fksoft.domain.money.Money;
 import com.fksoft.domain.payout.PaymentGateway;
 import com.fksoft.domain.payout.PaymentInstruction;
 import com.fksoft.domain.payout.PaymentOutcome;
+import com.fksoft.domain.payout.PayoutKind;
 import com.fksoft.domain.payout.PayoutService;
 import com.fksoft.domain.payout.PayoutService.InstallmentToExecute;
 import com.fksoft.domain.payout.PayoutView;
+import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +40,8 @@ public class PayoutExecutionService {
 
   private final PayoutService payoutService;
   private final PaymentGateway paymentGateway;
+  private final ComplianceService complianceService;
+  private final Clock clock;
 
   /**
    * Starts executing the next installment of a payout (BR2/BR3): claims it (PENDING/FAILED →
@@ -59,21 +69,81 @@ public class PayoutExecutionService {
   }
 
   /**
-   * Processes a payment webhook outcome idempotently (BR3): on SUCCEEDED, confirms the installment
-   * (8d-3 will archive the receipt first and pass its id); on FAILED, fails the installment. The
-   * caller ({@link PaymentWebhookReceiver}) has already verified the signature and recorded the
-   * idempotency row, so a re-delivered callback never reaches here twice.
+   * Processes a payment webhook outcome idempotently (BR3/BR4): on SUCCEEDED, archives the receipt
+   * (comprovante) in the Compliance vault — PAYMENT_PROOF for a commission/settlement, REFUND_PROOF
+   * for a refund (BR4) — then confirms the installment with that document id (which, on the last
+   * installment, publishes the kind's business fact so Finance baixar). On FAILED, fails the
+   * installment (explicit FAILED, never a false paid). The caller ({@link PaymentWebhookReceiver})
+   * has already verified the signature and recorded the idempotency row, so a re-delivered callback
+   * never reaches here twice — the receipt is archived once and the payout confirmed once.
    *
    * @param confirmation the verified webhook outcome
    */
   @Transactional
   public void onWebhook(WebhookConfirmation confirmation) {
-    if (confirmation.outcome() == PaymentOutcome.SUCCEEDED) {
-      payoutService.confirmInstallment(
-          confirmation.payoutId(), confirmation.installmentSeq(), confirmation.proofDocumentId());
-    } else {
+    if (confirmation.outcome() != PaymentOutcome.SUCCEEDED) {
       payoutService.failInstallment(confirmation.payoutId(), confirmation.installmentSeq());
+      return;
     }
+    PayoutView payout = payoutService.getById(confirmation.payoutId());
+    UUID proofDocumentId = archiveReceipt(payout, confirmation.installmentSeq());
+    payoutService.confirmInstallment(
+        confirmation.payoutId(), confirmation.installmentSeq(), proofDocumentId);
+  }
+
+  /**
+   * Archives the payment receipt in the Compliance vault (BR4) via the public facade (infra →
+   * compliance is allowed; the leaf Payout module never imports Compliance). The document type is
+   * REFUND_PROOF for a refund, else PAYMENT_PROOF. It carries the booking/origin reference so the
+   * receipt is traceable; sensitive payment data is never written (SPEC-0017 Error Behavior).
+   */
+  private UUID archiveReceipt(PayoutView payout, int installmentSeq) {
+    DocumentType type =
+        payout.kind() == PayoutKind.REFUND ? DocumentType.REFUND_PROOF : DocumentType.PAYMENT_PROOF;
+    Money paid = installmentAmount(payout, installmentSeq);
+    String receipt = receiptText(payout, installmentSeq, paid);
+    DocumentView document =
+        complianceService.upload(
+            type,
+            receipt.getBytes(StandardCharsets.UTF_8),
+            "comprovante-payout-" + payout.id() + "-" + installmentSeq + ".txt",
+            "text/plain",
+            LocalDate.now(clock),
+            null, // a payment receipt is not a signed fiscal artifact
+            false, // no personal data in the receipt body (only ids/amounts)
+            null, // not attached to a Finance entry here — Finance posts via the event
+            null,
+            "payout-gateway");
+    log.info(
+        "PayoutReceiptArchived payoutId={} seq={} documentId={} type={}",
+        payout.id(),
+        installmentSeq,
+        document.id(),
+        type);
+    return document.id();
+  }
+
+  private static Money installmentAmount(PayoutView payout, int installmentSeq) {
+    return payout.installments().stream()
+        .filter(i -> i.seq() == installmentSeq)
+        .map(com.fksoft.domain.payout.InstallmentView::amount)
+        .findFirst()
+        .orElse(payout.amount());
+  }
+
+  private static String receiptText(PayoutView payout, int installmentSeq, Money paid) {
+    return "PAYMENT RECEIPT\npayoutId="
+        + payout.id()
+        + "\nkind="
+        + payout.kind()
+        + "\ninstallmentSeq="
+        + installmentSeq
+        + "\namount="
+        + paid.amount()
+        + " "
+        + paid.currency()
+        + (payout.bookingId() != null ? "\nbookingId=" + payout.bookingId() : "")
+        + (payout.originRef() != null ? "\noriginRef=" + payout.originRef() : "");
   }
 
   /**
@@ -82,7 +152,8 @@ public class PayoutExecutionService {
    * @param payoutId the payout id
    * @param installmentSeq the installment sequence
    * @param outcome the terminal outcome
-   * @param proofDocumentId the archived receipt id (8d-3), or {@code null}
+   * @param proofDocumentId the archived receipt id (filled by this service on success), or {@code
+   *     null}
    */
   public record WebhookConfirmation(
       UUID payoutId, int installmentSeq, PaymentOutcome outcome, UUID proofDocumentId) {}
