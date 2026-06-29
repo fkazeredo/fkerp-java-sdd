@@ -1,0 +1,92 @@
+package com.fksoft.infra.integration;
+
+import com.fksoft.domain.compliance.ComplianceUploadInvalidException;
+import com.fksoft.domain.compliance.FileStorage;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Set;
+import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+/**
+ * Filesystem adapter for the Compliance {@link FileStorage} port (DL-0015): stores document
+ * binaries under a configurable root ({@code compliance.storage.root}). It is the only component
+ * that knows a filesystem path; the {@code fileRef} it returns is an opaque UUID, so paths never
+ * leak (security.md). It validates the upload (size and content) and never trusts the extension
+ * alone (messaging-and-integrations.md §Files). Replaceable by an S3/Azure adapter without touching
+ * the domain.
+ */
+@Slf4j
+@Component
+public class FilesystemFileStorage implements FileStorage {
+
+  /** Hard size cap for a single document (10 MiB) — generous for fiscal PDFs/XML/signed files. */
+  private static final long MAX_SIZE_BYTES = 10L * 1024 * 1024;
+
+  private static final Set<String> ALLOWED_EXTENSIONS =
+      Set.of("pdf", "xml", "p7s", "txt", "jpg", "jpeg", "png");
+
+  private final Path root;
+
+  public FilesystemFileStorage(
+      @Value("${compliance.storage.root:./var/compliance-vault}") String root) {
+    this.root = Path.of(root);
+  }
+
+  @Override
+  public String store(byte[] content, String originalFilename, String contentType) {
+    if (content == null || content.length == 0 || content.length > MAX_SIZE_BYTES) {
+      throw new ComplianceUploadInvalidException();
+    }
+    validateExtension(originalFilename);
+    String fileRef = UUID.randomUUID().toString();
+    try {
+      Files.createDirectories(root);
+      Files.write(root.resolve(fileRef), content);
+    } catch (IOException io) {
+      // Never surface the filesystem path in the error (security.md).
+      log.error("Failed to store document content (ref={})", fileRef, io);
+      throw new UncheckedIOException(io);
+    }
+    return fileRef;
+  }
+
+  @Override
+  public byte[] read(String fileRef) {
+    try {
+      return Files.readAllBytes(root.resolve(fileRef));
+    } catch (IOException io) {
+      log.error("Failed to read document content (ref={})", fileRef, io);
+      throw new UncheckedIOException(io);
+    }
+  }
+
+  @Override
+  public void delete(String fileRef) {
+    try {
+      Files.deleteIfExists(root.resolve(fileRef));
+    } catch (IOException io) {
+      log.error("Failed to delete document content (ref={})", fileRef, io);
+      throw new UncheckedIOException(io);
+    }
+  }
+
+  private static void validateExtension(String originalFilename) {
+    if (originalFilename == null || originalFilename.isBlank()) {
+      // A missing filename is allowed (programmatic upload); only reject a present, bad extension.
+      return;
+    }
+    int dot = originalFilename.lastIndexOf('.');
+    if (dot < 0 || dot == originalFilename.length() - 1) {
+      throw new ComplianceUploadInvalidException();
+    }
+    String extension = originalFilename.substring(dot + 1).toLowerCase();
+    if (!ALLOWED_EXTENSIONS.contains(extension)) {
+      throw new ComplianceUploadInvalidException();
+    }
+  }
+}

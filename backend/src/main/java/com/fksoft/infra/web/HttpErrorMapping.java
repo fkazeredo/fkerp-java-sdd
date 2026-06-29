@@ -12,10 +12,19 @@ import com.fksoft.domain.booking.BookingQuoteNotFoundException;
 import com.fksoft.domain.booking.BookingTransitionInvalidException;
 import com.fksoft.domain.commissioning.CommissionBaseInvalidException;
 import com.fksoft.domain.commissioning.CommissionPctInvalidException;
+import com.fksoft.domain.compliance.ComplianceDocumentNotFoundException;
+import com.fksoft.domain.compliance.ComplianceRetentionNotExpiredException;
+import com.fksoft.domain.compliance.ComplianceUploadInvalidException;
 import com.fksoft.domain.error.DomainException;
 import com.fksoft.domain.exchange.ExchangeCurrencyPairInvalidException;
 import com.fksoft.domain.exchange.ExchangeRateInvalidException;
 import com.fksoft.domain.exchange.ExchangeRateNotFoundException;
+import com.fksoft.domain.finance.FinanceEntryNotFoundException;
+import com.fksoft.domain.finance.FinanceEntryTransitionInvalidException;
+import com.fksoft.domain.finance.FinancePartyInvalidException;
+import com.fksoft.domain.finance.FinancePeriodCannotCloseException;
+import com.fksoft.domain.finance.FinancePeriodClosedException;
+import com.fksoft.domain.finance.FinancePeriodInvalidException;
 import com.fksoft.domain.quoting.QuoteAccountNotFoundException;
 import com.fksoft.domain.quoting.QuoteNotFoundException;
 import com.fksoft.domain.quoting.QuoteOverrideCurrencyMismatchException;
@@ -61,7 +70,16 @@ public class HttpErrorMapping {
           entry(BookingLocatorDuplicateException.class, HttpStatus.CONFLICT),
           entry(BookingLocatorInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(ReconciliationCaseNotFoundException.class, HttpStatus.NOT_FOUND),
-          entry(ReconciliationCurrencyMismatchException.class, HttpStatus.BAD_REQUEST));
+          entry(ReconciliationCurrencyMismatchException.class, HttpStatus.BAD_REQUEST),
+          entry(FinancePartyInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(FinancePeriodInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(FinanceEntryNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(FinanceEntryTransitionInvalidException.class, HttpStatus.CONFLICT),
+          entry(FinancePeriodClosedException.class, HttpStatus.CONFLICT),
+          entry(FinancePeriodCannotCloseException.class, HttpStatus.CONFLICT),
+          entry(ComplianceDocumentNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(ComplianceRetentionNotExpiredException.class, HttpStatus.CONFLICT),
+          entry(ComplianceUploadInvalidException.class, HttpStatus.BAD_REQUEST));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {

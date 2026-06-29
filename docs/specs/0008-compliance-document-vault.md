@@ -60,6 +60,13 @@ BR7  Expurgo de um Document MUST ser rejeitado enquanto now < retentionUntil
      => 409 compliance.retention.not-expired.
 BR8  Documentos com dado pessoal MUST ter acesso controlado e cada acesso/baixa MUST ser auditado
      (LGPD — `security.md`).
+BR9  ASSUMIDO (ver DL-0012): o catálogo inicial `entryType × DocumentRequirement` é a tabela 7.7,
+     com uma fase por requisito (AT_REGISTRATION exigido para o lançamento ser conforme e travar o
+     fechamento; AT_SETTLEMENT exigido só na liquidação). O `close-check` considera apenas
+     AT_REGISTRATION. É seed (dado de sistema), extensível por nova migração sem mexer no código.
+BR10 ASSUMIDO (ver DL-0015): upload via porta `FileStorage` (domínio sem SDK de storage); adaptador
+     filesystem em `infra.integration` (raiz configurável); `hash` = SHA-256 do conteúdo (prefixo
+     `sha256:`). `fileRef` é opaco (UUID) e o caminho do arquivo nunca vaza em erro/log.
 ```
 
 ## Input/Output Examples
@@ -163,8 +170,11 @@ Erros **não** expõem caminho de arquivo nem dado sensível (`security.md`).
 
 ## Open Questions
 
-- Catálogo final de **tipos de lançamento × documento exigido** (mapa completo) — confirmar com a
-  contabilidade do cliente; o seed inicial cobre os casos da tabela 7.7.
+- ~~Catálogo final de **tipos de lançamento × documento exigido** (mapa completo)~~ → **ASSUMIDO
+  (ver DL-0012)**: seed inicial = tabela 7.7 com fase (ver BR9). Confirmar com a contabilidade do
+  cliente quando disponível (a extensão é só nova migração de seed).
+- ~~Abstração de storage e algoritmo de hash~~ → **ASSUMIDO (ver DL-0015)**: porta `FileStorage` +
+  adaptador filesystem; hash SHA-256 (ver BR10).
 - Política de **versão/substituição** de documento (NF cancelada e reemitida) — adiada.
 - Necessidade de **carimbo do tempo/assinatura** própria ao ingerir (além do que já vem assinado) —
   adiada (depende do certificado, SPEC-0023).
