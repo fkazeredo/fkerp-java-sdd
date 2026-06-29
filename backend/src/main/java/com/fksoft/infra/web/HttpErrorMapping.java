@@ -39,6 +39,14 @@ import com.fksoft.domain.finance.FinancePeriodClosedException;
 import com.fksoft.domain.finance.FinancePeriodInvalidException;
 import com.fksoft.domain.intelligence.InsightDecisionInvalidException;
 import com.fksoft.domain.intelligence.InsightNotFoundException;
+import com.fksoft.domain.payout.PayoutAlreadyExecutedException;
+import com.fksoft.domain.payout.PayoutAmountInvalidException;
+import com.fksoft.domain.payout.PayoutGatewayException;
+import com.fksoft.domain.payout.PayoutNotFoundException;
+import com.fksoft.domain.payout.PayoutPayeeInvalidException;
+import com.fksoft.domain.payout.PayoutRefundOriginRequiredException;
+import com.fksoft.domain.payout.PayoutTransitionInvalidException;
+import com.fksoft.domain.payout.PayoutWebhookSignatureInvalidException;
 import com.fksoft.domain.people.PointAfdInvalidException;
 import com.fksoft.domain.people.PointSnapshotInvalidException;
 import com.fksoft.domain.people.PointSnapshotNotFoundException;
@@ -125,7 +133,15 @@ public class HttpErrorMapping {
           entry(BillingInvoiceTransitionInvalidException.class, HttpStatus.CONFLICT),
           entry(BillingBaseInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(BillingMunicipalityRejectedException.class, HttpStatus.UNPROCESSABLE_ENTITY),
-          entry(BillingNfseWebserviceException.class, HttpStatus.BAD_GATEWAY));
+          entry(BillingNfseWebserviceException.class, HttpStatus.BAD_GATEWAY),
+          entry(PayoutNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(PayoutPayeeInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(PayoutAmountInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(PayoutRefundOriginRequiredException.class, HttpStatus.BAD_REQUEST),
+          entry(PayoutAlreadyExecutedException.class, HttpStatus.CONFLICT),
+          entry(PayoutTransitionInvalidException.class, HttpStatus.CONFLICT),
+          entry(PayoutGatewayException.class, HttpStatus.BAD_GATEWAY),
+          entry(PayoutWebhookSignatureInvalidException.class, HttpStatus.UNAUTHORIZED));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {
