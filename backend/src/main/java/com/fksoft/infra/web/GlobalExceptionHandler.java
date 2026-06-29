@@ -11,9 +11,11 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 /**
  * Single global error handler (ADR 0011): translates exceptions into the stable {@link
@@ -66,6 +68,24 @@ public class GlobalExceptionHandler {
     String message = resolve("validation.failed", new Object[0]);
     return ResponseEntity.badRequest()
         .body(new ApiErrorResponse("validation.failed", message, fields));
+  }
+
+  /** Unparseable request body (malformed JSON, unknown enum value in body) maps to {@code 400}. */
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  public ResponseEntity<ApiErrorResponse> handleUnreadable(HttpMessageNotReadableException ex) {
+    String message = resolve("request.malformed", new Object[0]);
+    return ResponseEntity.badRequest().body(ApiErrorResponse.of("request.malformed", message));
+  }
+
+  /** A path/query parameter that cannot be converted to its target type maps to {@code 400}. */
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public ResponseEntity<ApiErrorResponse> handleTypeMismatch(
+      MethodArgumentTypeMismatchException ex) {
+    String message = resolve("request.parameter-invalid", new Object[0]);
+    List<ApiErrorResponse.FieldViolation> fields =
+        List.of(new ApiErrorResponse.FieldViolation(ex.getName(), "invalid"));
+    return ResponseEntity.badRequest()
+        .body(new ApiErrorResponse("request.parameter-invalid", message, fields));
   }
 
   /** Last-resort handler: never leaks internal details; logs the cause for diagnosis. */

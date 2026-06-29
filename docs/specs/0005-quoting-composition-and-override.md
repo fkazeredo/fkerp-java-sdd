@@ -209,9 +209,10 @@ V4__create_quotes.sql
 
 ## Open Questions
 
-- **Fórmula de preço (a confirmar):** o preço de venda é `baseBrl + markup`, ou a agência paga a
-  tarifa e a margem é apenas o spread (sem markup)? A **base comissionável** é a base convertida
-  (BRL) ou a base na moeda do fornecedor (USD)? Decisão de negócio — registrar aqui a resposta.
+- ~~**Fórmula de preço (a confirmar):** preço = `baseBrl + markup` ou só spread? Base comissionável
+  em BRL ou USD?~~ → **ASSUMIDO** (2026-06-29): preço = `baseBRL + markup` (markup governado, default
+  0); base comissionável em **BRL**. Margem primária = spread. Ver
+  [DL-0009](../decision-log/DL-0009-quoting-formula-de-preco.md).
 - **Q4** (faixas de override) e **Q5** (escopo da comissão do agente) — herdadas de SPEC-0004.
 - **Motor de precedência** de `CommercialPolicy` (markup hoje é stub `SYSTEM_DEFAULT`) — spec futura
   harmoniza a costura (`simulation-and-mocking.md`).

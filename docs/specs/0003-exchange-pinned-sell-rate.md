@@ -132,7 +132,8 @@ Tabela **append-only** (sem UPDATE/DELETE em produção). `CHECK (rate > 0)` no 
 
 ## Open Questions
 
-- Nome `Exchange` (Q1 da Parte 13) — **assumido sim**; confirmar com o dono.
+- ~~Nome `Exchange` (Q1 da Parte 13) — assumido sim; confirmar.~~ → **ASSUMIDO** (2026-06-29):
+  mantido `Exchange`. Ver [DL-0008](../decision-log/DL-0008-exchange-nome-do-modulo.md).
 - Escopo da taxa por agência/produto (redesenho 7.3) — adiado (no v1 é global por par).
 - Política de arredondamento da **conversão** (HALF_UP, scale 2) é definida em Quoting (SPEC-0005).
 
