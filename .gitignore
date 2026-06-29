@@ -10,6 +10,9 @@ build/
 *.log
 hs_err_pid*
 
+# ---- Compliance document vault (filesystem FileStorage adapter, DL-0015) ----
+backend/var/
+
 # ---- Node / Angular ----
 frontend/node_modules/
 frontend/dist/
