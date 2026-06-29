@@ -8,18 +8,20 @@ import java.util.UUID;
 
 /**
  * Read view of a composed quote with its frozen provenance and override history, returned to the
- * delivery layer (entity never leaves the module).
+ * delivery layer (entity never leaves the module). For an INTEGRATED quote (SPEC-0009) the
+ * MANUAL-only fields {@code fxRate}, {@code baseConverted}, {@code commission} and {@code markup}
+ * are {@code null} (the external price is trusted, not recomposed).
  *
  * @param id quote id
  * @param accountId the account this quote belongs to
- * @param priceOrigin price origin (MANUAL in Phase 1)
+ * @param priceOrigin price origin (MANUAL or INTEGRATED)
  * @param basePrice the external/manual base price (supplier currency)
- * @param fxRate the frozen sell rate used in the composition
- * @param baseConverted the base converted to the sale currency
- * @param commission the two-sided commission decomposition
- * @param markup the applied markup
- * @param suggestedAmount the system-suggested sale price (immutable)
- * @param appliedAmount the currently applied sale price (changes via override)
+ * @param fxRate the frozen sell rate used in the composition ({@code null} for INTEGRATED)
+ * @param baseConverted the base converted to the sale currency ({@code null} for INTEGRATED)
+ * @param commission the two-sided commission decomposition ({@code null} for INTEGRATED)
+ * @param markup the applied markup ({@code null} for INTEGRATED)
+ * @param suggestedAmount the system-suggested sale price (immutable; equals applied for INTEGRATED)
+ * @param appliedAmount the currently applied sale price (changes via override; MANUAL only)
  * @param status quote status
  * @param validUntil optional validity instant
  * @param provenance frozen provenance references

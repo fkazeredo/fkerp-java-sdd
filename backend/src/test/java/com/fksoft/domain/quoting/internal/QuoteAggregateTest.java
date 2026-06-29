@@ -7,7 +7,9 @@ import com.fksoft.domain.exchange.CurrencyPair;
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.quoting.PriceOrigin;
 import com.fksoft.domain.quoting.QuoteOverrideCurrencyMismatchException;
+import com.fksoft.domain.quoting.QuoteOverrideNotApplicableException;
 import com.fksoft.domain.quoting.QuoteOverrideReasonRequiredException;
+import com.fksoft.domain.quoting.QuoteStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -74,5 +76,50 @@ class QuoteAggregateTest {
     assertThatThrownBy(
             () -> quote.applyOverride(Money.of(new BigDecimal("2650.00"), "USD"), "x", "op1", NOW))
         .isInstanceOf(QuoteOverrideCurrencyMismatchException.class);
+  }
+
+  @Test
+  void composesIntegratedTrustingTheExternalPriceWithoutSuggestionEngine() {
+    UUID accountId = UUID.randomUUID();
+    UUID offerId = UUID.randomUUID();
+    Quote quote =
+        Quote.composeIntegrated(
+            accountId, offerId, Money.of(new BigDecimal("480.00"), "BRL"), null, NOW, "connector");
+
+    assertThat(quote.priceOrigin()).isEqualTo(PriceOrigin.INTEGRATED);
+    assertThat(quote.status()).isEqualTo(QuoteStatus.COMPOSED);
+    // suggested == applied == external price; no recomposition (BR2).
+    assertThat(quote.suggestedAmount()).isEqualByComparingTo("480.00");
+    assertThat(quote.appliedAmount()).isEqualByComparingTo("480.00");
+    assertThat(quote.overrides()).isEmpty();
+    // MANUAL-only composition fields stay null (DL-0018).
+    assertThat(quote.fxRate()).isNull();
+    assertThat(quote.baseConvertedAmount()).isNull();
+    assertThat(quote.supplierCommission()).isNull();
+    assertThat(quote.markupSource()).isNull();
+    // The view exposes the trusted price and null MANUAL sections.
+    assertThat(quote.toView().appliedAmount()).isEqualTo(Money.of(new BigDecimal("480.00"), "BRL"));
+    assertThat(quote.toView().commission()).isNull();
+    assertThat(quote.toView().markup()).isNull();
+  }
+
+  @Test
+  void refusesOverrideOnIntegratedQuote() {
+    Quote integrated =
+        Quote.composeIntegrated(
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            Money.of(new BigDecimal("480.00"), "BRL"),
+            null,
+            NOW,
+            "connector");
+
+    assertThatThrownBy(
+            () ->
+                integrated.applyOverride(
+                    Money.of(new BigDecimal("450.00"), "BRL"), "tentativa", "op1", NOW))
+        .isInstanceOf(QuoteOverrideNotApplicableException.class);
+    assertThat(integrated.appliedAmount()).isEqualByComparingTo("480.00");
+    assertThat(integrated.overrides()).isEmpty();
   }
 }
