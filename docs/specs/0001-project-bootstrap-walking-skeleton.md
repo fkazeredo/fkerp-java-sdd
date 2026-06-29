@@ -60,6 +60,15 @@ Entidades MUST NOT usar @Data nem @Setter (ArchUnit reprova); mudam por métodos
 Nenhuma classe *Impl para serviços internos; injeção só por construtor.
 ```
 
+Decisões assumidas em modo autônomo (antes eram Open Questions):
+
+- **ASSUMIDO (ver DL-0001):** o pacote base é mantido como **`com.fksoft`** (do template).
+- **ASSUMIDO (ver ADR 0011 + DL-0003/0006):** `UserContextProvider` é um **stub de dev**
+  (`DevStubUserContextProvider`, usuário fixo) até a spec de Identity (SPEC-0024); a Identity
+  real (login/papéis) fica adiada.
+- **ASSUMIDO (ver DL-0006):** Spring Modulith roda com `detection-strategy=explicitly-annotated`
+  (as camadas `domain/application/infra` não são módulos; o gate de camadas é do ArchUnit).
+
 ## Input/Output Examples
 
 ```http
@@ -125,9 +134,14 @@ Not applicable. (Eventos de negócio começam na SPEC-0002.)
 
 ## Open Questions
 
-- Pacote base `com.fksoft` (do template) — manter ou renomear para algo específico do projeto?
-  Decisão do dono; não bloqueia.
-- Identity real (login/papéis) é adiada; `UserContextProvider` é stub de dev até sua spec.
+Resolvidas em modo autônomo (ver Business Rules e `docs/decision-log/`):
+
+- ~~Pacote base `com.fksoft` — manter ou renomear?~~ → ASSUMIDO manter (DL-0001).
+- ~~Identity real / stub de `UserContextProvider`?~~ → ASSUMIDO stub de dev (ADR 0011, DL-0003).
+
+Nota: a SPEC lista o ADR 0014 (conjunto inicial de módulos) em *Related ADRs*, mas esse ADR
+ainda **não existe**; sua criação foi adiada para a Fase 1, quando o primeiro módulo de negócio
+nasce (ver DL-0005). Não bloqueia a Fase 0.
 
 ## Out of Scope
 

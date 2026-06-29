@@ -1,0 +1,16 @@
+# Default: normalize text files to LF in the repo
+* text=auto eol=lf
+
+# Shell scripts and the Maven wrapper MUST be LF (run on Linux CI)
+*.sh text eol=lf
+mvnw text eol=lf
+
+# Windows scripts stay CRLF
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binaries
+*.jar binary
+*.png binary
+*.jpg binary
+*.ico binary
