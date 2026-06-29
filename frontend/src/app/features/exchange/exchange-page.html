@@ -1,0 +1,75 @@
+<section class="page">
+  <h1 class="page__title">{{ 'exchange.title' | translate }}</h1>
+
+  <form class="card form" (ngSubmit)="submit()" #f="ngForm">
+    <h2 class="card__title">{{ 'exchange.pin' | translate }}</h2>
+    <div class="form__row">
+      <label>
+        {{ 'exchange.pair' | translate }}
+        <input name="currencyPair" [(ngModel)]="currencyPair" required />
+      </label>
+      <label>
+        {{ 'exchange.rate' | translate }}
+        <input name="rate" type="number" step="0.000001" [(ngModel)]="rate" required />
+      </label>
+      <label>
+        {{ 'exchange.note' | translate }}
+        <input name="note" [(ngModel)]="note" />
+      </label>
+    </div>
+    @if (submitError()) {
+      <p class="form__error" data-testid="exchange-submit-error">{{ submitError() | translate }}</p>
+    }
+    <button type="submit" [disabled]="submitting() || f.invalid">
+      {{ 'exchange.pinAction' | translate }}
+    </button>
+  </form>
+
+  <div class="card">
+    <div class="list__header">
+      <h2 class="card__title">{{ 'exchange.history' | translate }}</h2>
+      <label>
+        {{ 'exchange.pair' | translate }}
+        <input name="searchPair" [(ngModel)]="pair" (change)="load()" />
+      </label>
+    </div>
+
+    @if (state() === 'loading') {
+      <p data-testid="exchange-loading">{{ 'common.loading' | translate }}</p>
+    }
+    @if (state() === 'error') {
+      <div class="card--error" data-testid="exchange-error">
+        <p>{{ errorCode() | translate }}</p>
+        <button type="button" (click)="load()">{{ 'common.retry' | translate }}</button>
+      </div>
+    }
+    @if (state() === 'success') {
+      @if (rates().length === 0) {
+        <p data-testid="exchange-empty">{{ 'exchange.empty' | translate }}</p>
+      } @else {
+        <table class="table" data-testid="exchange-table">
+          <thead>
+            <tr>
+              <th>{{ 'exchange.pair' | translate }}</th>
+              <th>{{ 'exchange.rate' | translate }}</th>
+              <th>{{ 'exchange.effectiveFrom' | translate }}</th>
+              <th>{{ 'exchange.setBy' | translate }}</th>
+              <th>{{ 'exchange.note' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (rate of rates(); track rate.id) {
+              <tr>
+                <td>{{ rate.currencyPair }}</td>
+                <td>{{ rate.rate }}</td>
+                <td>{{ rate.effectiveFrom }}</td>
+                <td>{{ rate.setBy }}</td>
+                <td>{{ rate.note }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+  </div>
+</section>

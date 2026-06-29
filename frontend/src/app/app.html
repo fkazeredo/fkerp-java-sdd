@@ -1,3 +1,11 @@
 <main class="app-shell">
+  <nav class="nav">
+    <a routerLink="/accounts" routerLinkActive="active">{{ 'nav.accounts' | translate }}</a>
+    <a routerLink="/exchange" routerLinkActive="active">{{ 'nav.exchange' | translate }}</a>
+    <a routerLink="/quotes" routerLinkActive="active">{{ 'nav.quotes' | translate }}</a>
+    <a routerLink="/bookings" routerLinkActive="active">{{ 'nav.bookings' | translate }}</a>
+    <a routerLink="/reconciliation" routerLinkActive="active">{{ 'nav.reconciliation' | translate }}</a>
+    <a routerLink="/health" routerLinkActive="active">{{ 'nav.health' | translate }}</a>
+  </nav>
   <router-outlet />
 </main>
