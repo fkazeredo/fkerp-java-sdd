@@ -12,8 +12,11 @@ import java.util.UUID;
  *
  * @param quoteId the quote to turn into a booking (required)
  * @param locator the locator origin and optional code (required)
+ * @param scopeRef the product/supplier scope reference used to resolve the cancellation policy
+ *     (SPEC-0010 BR1), or {@code null} when none (then the safe default policy applies)
  */
-public record CreateBookingRequest(@NotNull UUID quoteId, @NotNull @Valid LocatorRequest locator) {
+public record CreateBookingRequest(
+    @NotNull UUID quoteId, @NotNull @Valid LocatorRequest locator, String scopeRef) {
 
   /**
    * Locator part of the request.

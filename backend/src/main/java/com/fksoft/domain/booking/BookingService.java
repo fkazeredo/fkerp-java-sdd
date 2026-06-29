@@ -1,12 +1,20 @@
 package com.fksoft.domain.booking;
 
 import com.fksoft.domain.booking.internal.Booking;
+import com.fksoft.domain.booking.internal.BookingCancellationSnapshot;
+import com.fksoft.domain.booking.internal.BookingCancellationSnapshotRepository;
 import com.fksoft.domain.booking.internal.BookingRepository;
+import com.fksoft.domain.booking.internal.CancellationCharge;
+import com.fksoft.domain.booking.internal.CancellationChargeRepository;
+import com.fksoft.domain.booking.internal.CancellationPolicySource;
+import com.fksoft.domain.booking.internal.CancellationPolicySourceRepository;
+import com.fksoft.domain.money.Money;
 import com.fksoft.domain.quoting.QuoteDirectory;
 import com.fksoft.domain.quoting.QuoteSnapshot;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -19,10 +27,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Application service for the booking module (SPEC-0006): creates bookings from quotes, drives the
- * lifecycle state machine, publishes the lifecycle events, and expires stale PENDING bookings
- * (BR4). The quote is validated through the Quoting facade; the account is copied from its snapshot
- * (BR1).
+ * Application service for the booking module (SPEC-0006/0010): creates bookings from quotes, drives
+ * the lifecycle state machine, publishes the lifecycle events, expires stale PENDING bookings
+ * (BR4), freezes the cancellation/no-show policy snapshot at confirmation (SPEC-0010 BR1), and
+ * materializes the distinct cancellation charges — including the merchant trap (BR5/BR11).
  */
 @Slf4j
 @Service
@@ -35,6 +43,9 @@ public class BookingService {
   private static final String PENDING_TIMEOUT_REASON = "PENDING_TIMEOUT";
 
   private final BookingRepository repository;
+  private final CancellationPolicySourceRepository policySourceRepository;
+  private final BookingCancellationSnapshotRepository snapshotRepository;
+  private final CancellationChargeRepository chargeRepository;
   private final QuoteDirectory quoteDirectory;
   private final Clock clock;
   private final ApplicationEventPublisher events;
@@ -46,13 +57,16 @@ public class BookingService {
    * @param origin the locator origin (INTERNAL generates a code; EXTERNAL uses {@code
    *     externalCode})
    * @param externalCode the operator-typed code when EXTERNAL (non-empty)
+   * @param scopeRef the product/supplier scope reference for the cancellation policy, or {@code
+   *     null}
    * @param actor who creates it (audit)
    * @return the created booking view
    * @throws BookingQuoteNotFoundException when the quote does not exist (BR1)
    * @throws BookingLocatorDuplicateException when the locator already exists (BR3)
    */
   @Transactional
-  public BookingView create(UUID quoteId, LocatorOrigin origin, String externalCode, String actor) {
+  public BookingView create(
+      UUID quoteId, LocatorOrigin origin, String externalCode, String scopeRef, String actor) {
     QuoteSnapshot quote =
         quoteDirectory.find(quoteId).orElseThrow(BookingQuoteNotFoundException::new);
     Locator locator =
@@ -62,28 +76,32 @@ public class BookingService {
     if (repository.existsByLocatorOriginAndLocatorCode(locator.origin(), locator.code())) {
       throw new BookingLocatorDuplicateException();
     }
-    Booking booking = Booking.create(quoteId, quote.accountId(), locator, clock.instant(), actor);
+    Booking booking =
+        Booking.create(quoteId, quote.accountId(), scopeRef, locator, clock.instant(), actor);
     try {
       repository.saveAndFlush(booking);
     } catch (DataIntegrityViolationException duplicate) {
       throw new BookingLocatorDuplicateException();
     }
     log.info(
-        "BookingCreated bookingId={} quoteId={} locator={}/{}",
+        "BookingCreated bookingId={} quoteId={} locator={}/{} scopeRef={}",
         booking.id(),
         quoteId,
         locator.origin(),
-        locator.code());
+        locator.code(),
+        booking.scopeRef());
     return booking.toView();
   }
 
   /**
-   * Applies a lifecycle transition (BR2) and publishes the matching event for CONFIRMED/CANCELLED/
-   * NO_SHOW (BR5). Important transitions are audited (BR6).
+   * Applies a lifecycle transition (BR2) and publishes the matching event for CONFIRMED/NO_SHOW
+   * (BR5). On CONFIRMED it also freezes the cancellation/no-show policy snapshot (SPEC-0010 BR1).
+   * Cancellation goes through {@link #cancel} (it produces charges); this method rejects a
+   * CANCELLED target so the rich path is always used.
    *
    * @param bookingId the booking id
-   * @param target the target status
-   * @param reason the reason (required by the controller for cancellation)
+   * @param target the target status (not CANCELLED — use {@link #cancel})
+   * @param reason the reason
    * @param actor who performs the transition (audit)
    * @return the updated booking view
    * @throws BookingNotFoundException when the booking does not exist
@@ -95,9 +113,68 @@ public class BookingService {
     Instant now = clock.instant();
     booking.transitionTo(target, reason, now, actor);
     repository.save(booking);
-    publishTransition(booking, target, reason, now);
+    if (target == BookingStatus.CONFIRMED) {
+      freezeSnapshot(booking, now);
+      events.publishEvent(
+          new BookingConfirmed(booking.id(), booking.quoteId(), booking.accountId(), now));
+    } else if (target == BookingStatus.NO_SHOW) {
+      events.publishEvent(new BookingNoShow(booking.id(), now));
+    }
     log.info("BookingTransition bookingId={} to={} performedBy={}", booking.id(), target, actor);
     return booking.toView();
+  }
+
+  /**
+   * Cancels a booking using its frozen policy snapshot (SPEC-0010), computing the resulting charges
+   * as distinct facts that do not net out (BR5/BR11 — the merchant trap), persisting and auditing
+   * them (BR7), and publishing {@code CancellationCharged} (and {@code MerchantObligationIncurred}
+   * for ALL_SALES_FINAL).
+   *
+   * @param bookingId the booking id
+   * @param reason the cancellation reason (audited)
+   * @param serviceStartsAt when the booked service starts (UTC) — the penalty-window base (BR2)
+   * @param refundAmount a commercial refund to the customer, or {@code null} when none
+   * @param actor who cancels it (audit)
+   * @return the cancellation result with the charges
+   * @throws BookingNotFoundException when the booking does not exist
+   * @throws BookingTransitionInvalidException when the booking cannot be cancelled (BR2)
+   */
+  @Transactional
+  public CancellationResult cancel(
+      UUID bookingId, String reason, Instant serviceStartsAt, Money refundAmount, String actor) {
+    Booking booking = repository.findById(bookingId).orElseThrow(BookingNotFoundException::new);
+    Instant now = clock.instant();
+    booking.transitionTo(BookingStatus.CANCELLED, reason, now, actor);
+    repository.save(booking);
+
+    BookingCancellationSnapshot snapshot = snapshotFor(booking, now);
+    CancellationPolicy policy = snapshot.policy();
+    long hoursUntilService =
+        serviceStartsAt == null ? 0 : Math.max(0, ChronoUnit.HOURS.between(now, serviceStartsAt));
+
+    List<Charge> charges =
+        CancellationCharges.compute(
+            policy, hoursUntilService, snapshot.sale(), snapshot.supplierCost(), refundAmount);
+    for (Charge charge : charges) {
+      chargeRepository.save(CancellationCharge.of(booking.id(), charge, now, actor));
+    }
+
+    events.publishEvent(new BookingCancelled(booking.id(), reason, now));
+    events.publishEvent(new CancellationCharged(booking.id(), charges, policy.type(), now));
+    charges.stream()
+        .filter(c -> c.kind() == ChargeKind.SUPPLIER)
+        .findFirst()
+        .ifPresent(
+            supplier ->
+                events.publishEvent(new MerchantObligationIncurred(booking.id(), supplier, now)));
+
+    log.info(
+        "BookingCancelled bookingId={} policyType={} charges={} performedBy={}",
+        booking.id(),
+        policy.type(),
+        charges.size(),
+        actor);
+    return new CancellationResult(booking.id(), booking.status(), policy.type(), charges);
   }
 
   /**
@@ -121,8 +198,9 @@ public class BookingService {
 
   /**
    * Cancels every booking that has been PENDING since at or before {@code cutoff} (BR4), publishing
-   * {@code BookingCancelled} with reason {@code PENDING_TIMEOUT}. Idempotent: a second run finds
-   * none (they are no longer PENDING).
+   * {@code BookingCancelled} with reason {@code PENDING_TIMEOUT}. A PENDING booking has not been
+   * confirmed, so it has no frozen policy and no charges (a free timeout cancellation). Idempotent:
+   * a second run finds none (they are no longer PENDING).
    *
    * @param cutoff the timeout boundary (typically now minus 72h)
    * @return how many bookings were expired
@@ -141,17 +219,64 @@ public class BookingService {
     return expired.size();
   }
 
-  private void publishTransition(
-      Booking booking, BookingStatus target, String reason, Instant now) {
-    switch (target) {
-      case CONFIRMED ->
-          events.publishEvent(
-              new BookingConfirmed(booking.id(), booking.quoteId(), booking.accountId(), now));
-      case CANCELLED -> events.publishEvent(new BookingCancelled(booking.id(), reason, now));
-      case NO_SHOW -> events.publishEvent(new BookingNoShow(booking.id(), now));
-      default -> {
-        // other transitions publish no domain event in Phase 1
-      }
+  /**
+   * Freezes the cancellation/no-show policy and the reference amounts at the FIRST confirmation
+   * (BR1). Idempotent: a re-confirmation (e.g. CHANGED -> CONFIRMED) keeps the original snapshot,
+   * so a later policy edit never alters an already-confirmed booking.
+   */
+  private void freezeSnapshot(Booking booking, Instant now) {
+    if (snapshotRepository.existsById(booking.id())) {
+      return;
     }
+    CancellationPolicy policy = resolvePolicy(booking.scopeRef());
+    NoShowPolicy noShow = resolveNoShow(booking.scopeRef());
+    QuoteSnapshot quote =
+        quoteDirectory.find(booking.quoteId()).orElseThrow(BookingQuoteNotFoundException::new);
+    snapshotRepository.save(
+        BookingCancellationSnapshot.freeze(
+            booking.id(), policy, noShow, quote.baseConverted(), quote.basePrice(), now));
+  }
+
+  /**
+   * The snapshot governing a cancellation. Normally it was frozen at confirmation (BR1); for a
+   * booking cancelled without ever being confirmed (defensive), it falls back to the safe default.
+   */
+  private BookingCancellationSnapshot snapshotFor(Booking booking, Instant now) {
+    return snapshotRepository
+        .findById(booking.id())
+        .orElseGet(
+            () -> {
+              QuoteSnapshot quote =
+                  quoteDirectory
+                      .find(booking.quoteId())
+                      .orElseThrow(BookingQuoteNotFoundException::new);
+              return BookingCancellationSnapshot.freeze(
+                  booking.id(),
+                  CancellationPolicy.standardNoWindows(),
+                  NoShowPolicy.none(),
+                  quote.baseConverted(),
+                  quote.basePrice(),
+                  now);
+            });
+  }
+
+  private CancellationPolicy resolvePolicy(String scopeRef) {
+    if (scopeRef == null) {
+      return CancellationPolicy.standardNoWindows();
+    }
+    return policySourceRepository
+        .findByScopeRef(scopeRef)
+        .map(CancellationPolicySource::toPolicy)
+        .orElseGet(CancellationPolicy::standardNoWindows);
+  }
+
+  private NoShowPolicy resolveNoShow(String scopeRef) {
+    if (scopeRef == null) {
+      return NoShowPolicy.none();
+    }
+    return policySourceRepository
+        .findByScopeRef(scopeRef)
+        .map(CancellationPolicySource::toNoShowPolicy)
+        .orElseGet(NoShowPolicy::none);
   }
 }

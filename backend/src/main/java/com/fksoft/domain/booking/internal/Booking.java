@@ -35,6 +35,9 @@ public class Booking {
 
   private UUID accountId;
 
+  /** Product/supplier scope reference used to resolve the cancellation policy (SPEC-0010 BR1). */
+  private String scopeRef;
+
   @Enumerated(EnumType.STRING)
   private BookingStatus status;
 
@@ -61,17 +64,20 @@ public class Booking {
    *
    * @param quoteId the originating quote id
    * @param accountId the account id copied from the quote
+   * @param scopeRef the product/supplier scope reference for the cancellation policy, or {@code
+   *     null} when none (then the safe default policy applies — SPEC-0010 BR1)
    * @param locator the locator (internal-generated or external)
    * @param now creation instant (UTC)
    * @param actor who created it (audit)
    * @return a new, persistable booking
    */
   public static Booking create(
-      UUID quoteId, UUID accountId, Locator locator, Instant now, String actor) {
+      UUID quoteId, UUID accountId, String scopeRef, Locator locator, Instant now, String actor) {
     Booking booking = new Booking();
     booking.id = UUID.randomUUID();
     booking.quoteId = quoteId;
     booking.accountId = accountId;
+    booking.scopeRef = scopeRef == null || scopeRef.isBlank() ? null : scopeRef.trim();
     booking.status = BookingStatus.ORDERED;
     booking.locatorOrigin = locator.origin();
     booking.locatorCode = locator.code();
