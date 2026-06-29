@@ -3,18 +3,23 @@ package com.fksoft.application.api;
 import com.fksoft.application.api.dto.ConsentStateResponse;
 import com.fksoft.application.api.dto.CreateCampaignRequest;
 import com.fksoft.application.api.dto.DefineSegmentRequest;
+import com.fksoft.application.api.dto.ErasureRequest;
 import com.fksoft.application.api.dto.GrantConsentRequest;
+import com.fksoft.application.api.dto.RegisterAttributionRequest;
 import com.fksoft.application.api.dto.SegmentPreviewResponse;
+import com.fksoft.domain.marketing.AttributionView;
 import com.fksoft.domain.marketing.CampaignSendResult;
 import com.fksoft.domain.marketing.CampaignView;
 import com.fksoft.domain.marketing.ConsentPurpose;
 import com.fksoft.domain.marketing.ConsentView;
+import com.fksoft.domain.marketing.ErasureResult;
 import com.fksoft.domain.marketing.MarketingService;
 import com.fksoft.domain.marketing.SegmentView;
 import com.fksoft.domain.marketing.SubjectRef;
 import com.fksoft.domain.marketing.SubjectType;
 import com.fksoft.infra.security.UserContextProvider;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -98,6 +103,27 @@ public class MarketingController {
   @PostMapping("/campaigns/{id}/send")
   public CampaignSendResult sendCampaign(@PathVariable UUID id) {
     return marketingService.sendCampaign(id, actor());
+  }
+
+  // --- Attribution (BR5) ---
+
+  @PostMapping("/attribution")
+  public ResponseEntity<AttributionView> registerAttribution(
+      @Valid @RequestBody RegisterAttributionRequest request) {
+    AttributionView view = marketingService.registerAttribution(request.toCommand(), actor());
+    return ResponseEntity.status(HttpStatus.CREATED).body(view);
+  }
+
+  @GetMapping("/attribution")
+  public List<AttributionView> attribution(@RequestParam String campaignCode) {
+    return marketingService.attributionsForCode(campaignCode);
+  }
+
+  // --- LGPD erasure (BR6) ---
+
+  @PostMapping("/erasure")
+  public ErasureResult erase(@Valid @RequestBody ErasureRequest request) {
+    return marketingService.erase(request.toSubject(), actor());
   }
 
   private String actor() {

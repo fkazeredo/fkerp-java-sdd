@@ -1,5 +1,7 @@
 package com.fksoft.domain.marketing;
 
+import com.fksoft.domain.marketing.internal.Attribution;
+import com.fksoft.domain.marketing.internal.AttributionRepository;
 import com.fksoft.domain.marketing.internal.Campaign;
 import com.fksoft.domain.marketing.internal.CampaignRepository;
 import com.fksoft.domain.marketing.internal.CampaignSend;
@@ -8,8 +10,12 @@ import com.fksoft.domain.marketing.internal.Consent;
 import com.fksoft.domain.marketing.internal.ConsentRepository;
 import com.fksoft.domain.marketing.internal.Segment;
 import com.fksoft.domain.marketing.internal.SegmentRepository;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +45,7 @@ public class MarketingService {
   private final SegmentRepository segmentRepository;
   private final CampaignRepository campaignRepository;
   private final CampaignSendRepository campaignSendRepository;
+  private final AttributionRepository attributionRepository;
   private final NewsletterSender newsletterSender;
   private final Clock clock;
   private final ApplicationEventPublisher events;
@@ -279,7 +286,135 @@ public class MarketingService {
         .orElseThrow(CampaignNotFoundException::new);
   }
 
+  // --- Attribution (BR5/DL-0057) ---
+
+  /**
+   * Registers a campaign→booking attribution intake (BR5/DL-0057): the carrier of the campaign code
+   * declares the link. Idempotent per {@code (campaignCode, bookingId)} — re-registering returns
+   * the existing row. The conversion is only confirmed later when the booking is confirmed.
+   *
+   * @param command the intake (campaign code + booking)
+   * @param actor who registers it (audit)
+   * @return the attribution view
+   */
+  @Transactional
+  public AttributionView registerAttribution(RegisterAttributionCommand command, String actor) {
+    return attributionRepository
+        .findByCampaignCodeAndBookingId(command.campaignCode(), command.bookingId())
+        .map(Attribution::toView)
+        .orElseGet(
+            () -> {
+              Attribution attribution =
+                  Attribution.register(
+                      command.campaignCode(), command.bookingId(), clock.instant());
+              attributionRepository.save(attribution);
+              log.info(
+                  "AttributionRegistered campaignCode={} bookingId={} by={}",
+                  command.campaignCode(),
+                  command.bookingId(),
+                  actor);
+              return attribution.toView();
+            });
+  }
+
+  /**
+   * Confirms the conversion of any attribution pre-registered for a confirmed booking
+   * (BR5/DL-0057): called by the {@code BookingConfirmed} consumer. For each attribution of the
+   * booking not yet converted, it flips it and publishes a {@link CampaignConverted} for the
+   * Intelligence — <strong>idempotently</strong> (a re-delivered/duplicate confirmation publishes
+   * nothing). A booking with no pre-registered code does nothing (no forced attribution).
+   *
+   * @param bookingId the confirmed booking (value)
+   */
+  @Transactional
+  public void confirmConversion(UUID bookingId) {
+    Instant now = clock.instant();
+    for (Attribution attribution : attributionRepository.findByBookingId(bookingId)) {
+      if (attribution.confirmConversion(now)) {
+        attributionRepository.save(attribution);
+        campaignRepository
+            .findByCode(attribution.campaignCode())
+            .ifPresent(
+                campaign -> {
+                  events.publishEvent(new CampaignConverted(campaign.id(), bookingId, now));
+                  log.info(
+                      "CampaignConverted campaignId={} bookingId={}", campaign.id(), bookingId);
+                });
+      }
+    }
+  }
+
+  /** The attributions registered for a campaign code, newest first (BR5 report). */
+  @Transactional(readOnly = true)
+  public List<AttributionView> attributionsForCode(String campaignCode) {
+    return attributionRepository.findByCampaignCodeOrderByAttributedAtDesc(campaignCode).stream()
+        .map(Attribution::toView)
+        .toList();
+  }
+
+  // --- LGPD erasure (BR6/DL-0058) ---
+
+  /**
+   * Attends an LGPD erasure request (BR6/DL-0058): removes the subject's marketing PII and ends
+   * consent while <strong>preserving an anonymized revocation tombstone</strong> so the subject is
+   * never silently re-included in a future send (the suppression the subject asked for). It first
+   * appends a REVOKED row for every purpose the subject currently has GRANTED, then anonymizes
+   * every consent row of the subject (clearing the free-text source and replacing the subject id
+   * with an irreversible pseudonym). It never touches data another legal basis requires to keep
+   * (fiscal in Compliance, financial entries, the booking) — those are outside this module. The
+   * {@code attributions} (campaign code + booking, no subject PII) are business metrics and remain.
+   *
+   * @param subject the subject to erase (value)
+   * @param actor who performs the erasure (audit)
+   * @return the erasure result (how many rows anonymized; whether suppressed)
+   */
+  @Transactional
+  public ErasureResult erase(SubjectRef subject, String actor) {
+    Instant now = clock.instant();
+    // 1) Ensure a revocation tombstone for any currently-granted purpose (suppression survives).
+    for (ConsentPurpose purpose : ConsentPurpose.values()) {
+      if (currentState(subject, purpose).isGranted()) {
+        Consent revocation =
+            Consent.record(
+                subject, purpose, LegalBasis.CONSENT, ConsentStatus.REVOKED, null, now, actor);
+        consentRepository.save(revocation);
+        events.publishEvent(new ConsentRevoked(subject.id(), subject.type(), purpose, now));
+      }
+    }
+    // 2) Anonymize every consent row of the subject (PII removed; tombstone preserved).
+    String pseudonym = pseudonymize(subject);
+    List<Consent> rows = consentRepository.findAllForSubject(subject.type(), subject.id());
+    for (Consent row : rows) {
+      row.anonymize(pseudonym);
+      consentRepository.save(row);
+    }
+    boolean suppressed = !rows.isEmpty();
+    log.info(
+        "MarketingErasure subjectType={} anonymizedConsents={} suppressed={} by={}",
+        subject.type(),
+        rows.size(),
+        suppressed,
+        actor);
+    return new ErasureResult(pseudonym, rows.size(), suppressed);
+  }
+
   // --- internals ---
+
+  /**
+   * An irreversible pseudonym for the subject (DL-0058): a SHA-256 hash of the type+id, so the
+   * anonymized tombstone can no longer be tied back to the person while still being a stable,
+   * collision-resistant key for the suppression record.
+   */
+  private static String pseudonymize(SubjectRef subject) {
+    try {
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      byte[] hash =
+          digest.digest((subject.type() + ":" + subject.id()).getBytes(StandardCharsets.UTF_8));
+      return "anon-" + HexFormat.of().formatHex(hash).substring(0, 32);
+    } catch (NoSuchAlgorithmException impossible) {
+      throw new IllegalStateException("SHA-256 unavailable", impossible);
+    }
+  }
 
   /**
    * The candidate recipients for a purpose (DL-0059): the distinct subjects that have any consent

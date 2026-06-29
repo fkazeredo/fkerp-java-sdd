@@ -36,7 +36,17 @@ public class OpenApiConfig {
                         + " cancelling the supplier obligation — merchant trap) or a cancellation to"
                         + " Booking, and it accrues the cost-to-serve. Endpoints: POST /api/aftersales/cases,"
                         + " /{id}/assign|progress|wait|resolve|close, GET /{id}, GET /api/aftersales/cases"
-                        + " (list).")
-                .version("0.13.0"));
+                        + " (list). Marketing (SPEC-0019) adds the B2B marketing context, governing LGPD"
+                        + " consent as a first-class citizen: consent is an append-only log (current state"
+                        + " is the latest row per subject+purpose); a campaign only sends to subjects with a"
+                        + " GRANTED consent (the others are suppressed and counted) through a NewsletterSender"
+                        + " ACL (traceable mock), idempotently per recipient; segments use validated criteria"
+                        + " over existing data (minimization); attribution links a campaign code to a booking"
+                        + " and, on BookingConfirmed, publishes CampaignConverted for the DSS; and an LGPD"
+                        + " erasure removes marketing PII while preserving an anonymized revocation tombstone."
+                        + " Endpoints: POST /api/marketing/consents, DELETE /consents/{id}, GET /consents,"
+                        + " POST /segments, GET /segments/{id}/preview, POST /campaigns, GET /campaigns/{id},"
+                        + " POST /campaigns/{id}/send, POST /attribution, GET /attribution, POST /erasure.")
+                .version("0.14.0"));
   }
 }
