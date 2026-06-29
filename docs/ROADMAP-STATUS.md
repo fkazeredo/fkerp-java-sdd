@@ -198,3 +198,26 @@ are green, docs are updated, and the work is merged to `develop` (and released).
    the matching exit-criteria checkboxes.
 2. When all slices of a phase are ✅ and the release tag is cut, flip the phase to ✅.
 3. Keep the "Open architectural debts" table current — move items out when resolved.
+
+## Imported initiatives (from fkerp-poc) — backlog for the Loop
+
+> Cross-cutting work imported from the sibling **fkerp-poc** study (UX/design, observability,
+> quality, identity, refactor). Detailed in [ROADMAP.md](ROADMAP.md) → "Iniciativas importadas do
+> fkerp-poc". **Goal bar: professional, production-grade UX and engineering** — the POC is markedly
+> more polished, and this project's screens/features must reach that standard. Each item becomes
+> spec(s)/slice(s) via the `TUTORIAL.md` loop with **all gates green** (ArchUnit + Spring Modulith +
+> Spotless/Checkstyle + frontend lint/test/build).
+
+| ID | Initiative | Spec / ADR | Status | Notes |
+|---|---|---|---|---|
+| **REFAC-1** | Remover pacotes `internal` do `domain` (herança Go) → achatar em `com.fksoft.domain.<módulo>` | ADR + chore | ⬜ Not started | 11 módulos (main+test): accounts, booking, commercialpolicy, compliance, exchange, finance, intelligence, people, quoting, reconciliation, sourcing. Estrutural, sem mudar contrato; gates verdes; encapsulação via `@NamedInterface`/ArchUnit. |
+| **UX-1** | UX & Frontend **profissional** (PrimeNG 21 Aura + Tailwind v4 + shell SaaS + command palette `Ctrl/Cmd+K` + tema claro/escuro + atalhos + a11y + `canDeactivate` + login/silent-refresh + dashboard KPIs) | SPEC-0026 (nova) | ⬜ Not started | **Gradua DL-0003** (PrimeNG/Tailwind). Repaginar TODAS as telas ao padrão profissional; estados loading/empty/error/permissão. |
+| **OBS-1** | Observabilidade, logs & monitoramento (Micrometer + Actuator/Prometheus + logs JSON + Prometheus/Loki/Grafana-Alloy/Grafana via compose + `GET /api/version`) | SPEC-0027 (nova) | ⬜ Not started | Espelhar `infra/` da POC, adaptado a este backend. |
+| **QA-1** | Qualidade & E2E (Playwright em stack isolada `compose.e2e.yaml` 4201 + `@vitest/coverage-v8` + JaCoCo + sad paths) | SPEC-0028 (nova) | ⬜ Not started | E2E **nunca** toca o banco de dev; job de E2E no CI. |
+| **SEC-1** | Identity/AuthZ profissional (Spring Security + OAuth2 Resource Server JWT, escopos → perfis) | gradua SPEC-0024 | ⬜ Not started | Substitui o `DevStubUserContextProvider`; backend é a única autoridade. |
+| **TECH-1** | Estudo de versões/frameworks: upgrade **Spring Boot 3.5 → 4.x** (a POC usa Boot 4); `ngx-graph` só se necessário | ADR (novo) | ⬜ Not started | Cá em 3.5.16 por estabilidade (DL-0002); upgrade com gates verdes. |
+
+> **Ordem sugerida ao Loop:** REFAC-1 (rápido, limpa a estrutura) → UX-1 (maior impacto visível) →
+> OBS-1 → QA-1 → SEC-1 → TECH-1. Intercalar com as fases 8c–8l conforme a prioridade do dono.
+> Estas iniciativas **resolvem** os débitos "PrimeNG + Tailwind" (UX-1) e "Boot 3.5 → 4.x" (TECH-1)
+> listados acima em *Open architectural debts*.

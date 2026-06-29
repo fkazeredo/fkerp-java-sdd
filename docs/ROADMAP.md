@@ -288,3 +288,134 @@ veto do Compliance e, na prática, **co-entrega na Fatia 2**.
 > A ordem de implementação continua sendo **uma fatia por vez** pelo ciclo do `TUTORIAL.md`. Ter as
 > specs escritas **não** significa criar 22 módulos vazios de uma vez — significa que o destino está
 > desenhado; o código nasce fatia a fatia, e cada spec é atualizada no PR da sua fatia.
+
+---
+
+## Iniciativas importadas do fkerp-poc (para o Loop implementar)
+
+> Estudo do projeto irmão **fkerp-poc** (um ERP CRM→Sales→Booking, mesmo dono e mesmo método de
+> construção). Visualmente e em maturidade de engenharia ele está **bem mais profissional** que o
+> estado atual deste projeto. Estas iniciativas trazem a **UX/design**, a **observabilidade** e as
+> **práticas de qualidade** dele para cá. São **transversais** (não pertencem a um contexto de
+> negócio só) e podem ser intercaladas com as fases 8c–8l. Cada uma vira **spec + fatia(s)** pelo
+> laço do `TUTORIAL.md`, com os portões de sempre (ArchUnit/Spring Modulith/Spotless/Checkstyle +
+> lint/test/build do frontend).
+>
+> **Meta geral — acabamento profissional:** nada de tela "genérica/amadora". Toda funcionalidade
+> com estados reais (loading/empty/error/sem-permissão), acessível, responsiva e consistente —
+> o padrão do fkerp-poc é o piso, não o teto.
+
+### UX-1 — UX & Frontend profissional · `SPEC-0026` (nova)
+
+**Objetivo:** elevar o frontend ao padrão do fkerp-poc. A base já casa (Angular 22 zoneless +
+signals, standalone, sem NgModules/NgRx).
+
+**Trazer:**
+- **PrimeNG 21** (preset **Aura** via `@primeuix/themes`) + `primeicons` + `@angular/cdk` —
+  **gradua o adiamento da DL-0003**. (PrimeNG 21 declara peer `@angular/* ^21`; a POC instala com
+  `--legacy-peer-deps` e valida build/testes no Angular 22.)
+- **Tailwind v4** integrado ao PrimeNG por **camadas CSS** (`tailwind-base, primeng,
+  tailwind-utilities`), com `@tailwindcss/postcss` + `tailwindcss-primeui` + `postcss`
+  (ver `.postcssrc.json` e `app.config` `cssLayer` na POC).
+- **Shell SaaS:** sidebar (marca, CTA primária, navegação com estado ativo, cadastros, rodapé
+  Atalhos/Sair), top bar (paleta de comandos + alternância de tema) e **drawer** no mobile.
+- **Navegação orientada a workflow** (ex.: Comercial · Reservas · Acompanhamento · Cadastros), e
+  não espelho do banco.
+- **Tema claro/escuro** (`ThemeService`: classe `.app-dark` no `<html>`, persistência em
+  `localStorage`, fallback para a preferência do SO) + **design tokens** (`--app-*`).
+- **Paleta de comandos** (`Ctrl/Cmd+K`) e **atalhos de teclado** globais (`n`, `g`+letra, `?`
+  ajuda) e contextuais por tela, com **guarda** (ignora com diálogo aberto / foco em campo) e
+  **autofoco** no 1º campo; Tab/Enter/Esc em todos os formulários.
+- **Proteção de mudanças não salvas** (`canDeactivate` guard) em todo formulário.
+- **Estados reais** em toda tela: loading, vazio (ilustrado), erro, sem permissão, parcial; tabelas
+  com filtros em "surfaces" e densidade adequada.
+- **Auth UX:** tela de login (card), **silent refresh** via cookie httpOnly + retry no 401 no
+  interceptor, access token em signal na memória, guards de rota.
+- **Home/Dashboard** com KPIs reaproveitando a sidebar (indicadores por status, pendências).
+
+**Aceite:** todas as telas existentes (Accounts/Exchange/Quoting/Booking/Reconciliation + as novas
+das fases) **repaginadas** no padrão; `ng lint` + `ng test` (Vitest) + `ng build` verdes; orçamento
+de build ajustado para o Tailwind; **nenhum texto fora do i18n** (ngx-translate).
+
+**Checklist de profissionalismo:** consistência de superfícies/cabeçalhos; acessibilidade (labels,
+foco visível, navegação por teclado); responsivo; feedback de operação; confirmação antes de ações
+destrutivas; submit desabilitado durante processamento.
+
+### OBS-1 — Observabilidade, logs & monitoramento · `SPEC-0027` (nova)
+
+**Objetivo:** trazer a stack de observabilidade do fkerp-poc (pasta `infra/`).
+
+**Trazer:**
+- **Micrometer + Spring Boot Actuator + endpoint Prometheus** (`/actuator/prometheus`); métricas
+  técnicas (HTTP, JVM, pool de DB) e **de negócio** relevantes.
+- **Logs estruturados em JSON** (com o correlation id já existente); nunca segredos nem dado
+  pessoal (mascarar).
+- **Stack provisionada via Docker Compose:** **Prometheus** + **Loki** + **Grafana Alloy** +
+  **Grafana** com datasources e um dashboard "Spring Boot" **pré-provisionados** — espelhar
+  `infra/{prometheus,loki,alloy,grafana}` da POC, adaptado a este backend.
+- **Endpoint de versão** `GET /api/version` (app.version/SemVer) — alinha com o versionamento já
+  adotado (ADR 0015).
+
+**Aceite:** `docker compose up` sobe app + db + observabilidade; métricas e logs visíveis no Grafana
+(Explore → Loki; dashboard de overview); `/actuator/health` (liveness/readiness) e
+`/actuator/prometheus` expostos; `/api/version` responde a versão.
+
+### QA-1 — Qualidade & E2E · `SPEC-0028` (nova)
+
+**Objetivo:** subir o nível de teste ao do fkerp-poc.
+
+**Trazer:**
+- **Playwright** para E2E das jornadas críticas, numa **stack isolada e descartável**
+  (`compose.e2e.yaml`: Postgres efêmero em `tmpfs`, portas próprias, **frontend 4201**), com
+  scripts `e2e:up` / `e2e:down` e `baseURL` sobrescrevível por `E2E_BASE_URL` — **nunca** toca o
+  banco de desenvolvimento.
+- **Cobertura** de frontend (`@vitest/coverage-v8`) e **JaCoCo** no backend (report-only).
+- **Caminhos tristes** sistemáticos (401/403/400/404/409/422, idempotência, visibilidade, bordas)
+  em todas as camadas, como na POC.
+- **Job de E2E no CI** (sobe a stack isolada).
+
+**Aceite:** suíte Playwright verde na stack 4201 com o banco de dev intacto; cobertura reportada;
+CI com job de E2E.
+
+### SEC-1 — Identity/AuthZ profissional · gradua `SPEC-0024`
+
+**Objetivo:** trocar o stub de identidade pelo modelo da POC.
+
+**Trazer:** **Spring Security + OAuth2 Resource Server (JWT)**, autorização **por escopo**
+(ex.: `crm:lead:read:all`, `commission:approve`) agrupada em **perfis**; o backend é a única
+autoridade e o frontend apenas espelha. Seeds de usuário por perfil (dev). Mantém o
+`UserContextProvider` como porta — substitui o `DevStubUserContextProvider`.
+
+**Aceite:** login real + refresh; endpoints protegidos por escopo; testes de guard/interceptor e de
+autorização (sad paths) verdes.
+
+### TECH-1 — Estudo de versões/frameworks (Spring Boot 4) · ADR (novo)
+
+**Objetivo:** avaliar alinhar o backend ao fkerp-poc, que usa **Spring Boot 4**; este projeto está
+em **3.5.16** por estabilidade (DL-0002).
+
+**Decidir num ADR de upgrade 3.5 → 4.x** (impactos: Spring Framework 7, Spring Modulith 2.x, APIs
+deprecadas, Testcontainers/Flyway) — só executar com **gates verdes**. Avaliar também
+`@swimlane/ngx-graph` (editor visual de workflow) **somente se** houver necessidade real de workflow
+configurável — a POC **construiu e depois reverteu parcialmente** um motor de workflow configurável
+por excesso de custo (lição de Regra Zero; não antecipar).
+
+### REFAC-1 — Remover pacotes `internal` do `domain` (herança do Go) · ADR + chore
+
+**Objetivo:** o layout atual tem `com.fksoft.domain.<módulo>.internal.*` — convenção de
+visibilidade do **Go** (`internal/`), que **não** se aplica ao Java/Spring Modulith. **Achatar:**
+mover os tipos de `…/<módulo>/internal/` para **`…/<módulo>/`** (o próprio pacote do módulo), em
+`main` **e** `test`, em todos os módulos: `accounts, booking, commercialpolicy, compliance,
+exchange, finance, intelligence, people, quoting, reconciliation, sourcing`.
+
+**Cuidados (para os portões continuarem verdes):**
+- O Spring Modulith trata **subpacotes** como internos por padrão; ao mover para o pacote-base do
+  módulo, preservar a **encapsulação** expondo a fachada/porta pública via **`@NamedInterface`** e
+  mantendo entidades/repositórios acessíveis **apenas** pela fachada (as regras ArchUnit de
+  "nenhum módulo toca persistência/entidade de outro" continuam valendo e devem pegar vazamentos).
+- Atualizar imports e quaisquer **regras ArchUnit/Modulith** que citem `internal`, além de testes
+  de fronteira.
+- Refactor **puramente estrutural** (sem mudar comportamento nem JSON); `./mvnw verify` verde antes
+  e depois; um commit `refactor:` por módulo (ou poucos), revisável.
+
+**Aceite:** nenhum pacote `internal` sob `com.fksoft.domain`; gates verdes; nenhum contrato alterado.
