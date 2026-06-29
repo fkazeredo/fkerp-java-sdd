@@ -1,6 +1,9 @@
 # ---- Java / Maven ----
 backend/target/
 **/target/
+# IDE-generated annotation-processor output (Spring Modulith apt) at workspace root
+build/
+**/generated-spring-modulith/
 *.class
 *.jar
 !**/.mvn/wrapper/maven-wrapper.jar

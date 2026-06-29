@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+  Minimal, google-java-format-compatible Checkstyle gate.
+  Kept lean on purpose (Rule Zero): high-value hygiene rules only, so it never
+  fights Spotless' google-java-format output. Tighten as the codebase grows.
+-->
+<module name="Checker">
+  <property name="severity" value="warning"/>
+  <property name="fileExtensions" value="java"/>
+
+  <module name="LineLength">
+    <property name="max" value="140"/>
+    <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+  </module>
+
+  <module name="TreeWalker">
+    <module name="AvoidStarImport"/>
+    <module name="UnusedImports"/>
+    <module name="RedundantImport"/>
+    <module name="NeedBraces"/>
+    <module name="OneTopLevelClass"/>
+  </module>
+</module>
