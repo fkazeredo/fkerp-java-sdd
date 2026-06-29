@@ -52,6 +52,16 @@ BR5  Ao registrar a liquidação (SPEC-0007 fornece supplierSettlementRate), a F
 BR6  ExchangeExposure (agregado do livro) = Σ posições OPEN de (subsidy + driftAtual). É leitura/
      projeção; MUST NOT alterar posições.
 BR7  Todos os números guardam proveniência (qual taxa congelada, qual marketAtFreeze, qual liquidação).
+BR8  ASSUMIDO (ver DL-0026): congelamento é global por par de moeda no v1; as posições agregam por
+     par/livro (sem escopo agência/produto).
+BR9  ASSUMIDO (ver DL-0027): limite de alerta de drift = |drift| > 2% da exposição estrangeira aberta
+     do livro (Σ |foreignAmount × marketAtFreeze| das posições OPEN); alerta, não bloqueia.
+BR10 ASSUMIDO (ver DL-0025): taxa de mercado entra por porta MarketRateProvider + registro manual de
+     contingência no v1 (feed externo = adapter/ACL futuro).
+BR11 ASSUMIDO (ver DL-0028): a FxPosition é dirigida por Reconciliation (que segura a proveniência
+     congelada): abre ao abrir o ReconciliationCase (na confirmação) e fecha ao registrar a
+     liquidação (reusa supplierSettlementRate; não duplica o per-case). Direção reconciliation →
+     exchange (acíclica); exchange é dono da matemática de subsídio/drift/gap.
 ```
 
 ## Input/Output Examples
@@ -151,10 +161,21 @@ provedor é ACL (vendor DTO não vaza).
 
 ## Open Questions
 
-- **Fonte oficial** da taxa de mercado (qual provedor/feed; fechamento PTAX vs intradiário) — confirmar.
-- **Escopo** do congelamento (global vs por agência/produto — 7.3 "a confirmar") afeta como as posições
-  agrupam; assumido **global** no v1.
-- **Limite de drift** (valor de alerta) — parâmetro governado a definir (SPEC-0014).
+- ~~**Fonte oficial** da taxa de mercado (qual provedor/feed; fechamento PTAX vs intradiário).~~ →
+  **ASSUMIDO** (2026-06-29): porta `MarketRateProvider` + **registro manual de contingência** no v1;
+  feed real é adapter futuro (ACL); PTAX × intradiário é configuração do adapter. Ver
+  [DL-0025](../decision-log/DL-0025-market-rate-source-port-and-manual.md).
+- ~~**Escopo** do congelamento (global vs por agência/produto — 7.3 "a confirmar").~~ → **ASSUMIDO**
+  (2026-06-29): **global por par de moeda** no v1 (alinha SPEC-0003 e a recomendação do ROADMAP). Ver
+  [DL-0026](../decision-log/DL-0026-freeze-scope-global-per-pair.md).
+- ~~**Limite de drift** (valor de alerta) — parâmetro governado a definir (SPEC-0014).~~ → **ASSUMIDO**
+  (2026-06-29): default governado **|drift| > 2%** da exposição estrangeira aberta do livro; vira
+  parâmetro governado na SPEC-0014. Ver
+  [DL-0027](../decision-log/DL-0027-drift-alert-threshold-2pct.md).
+- **Gatilho de abertura da posição** — **ASSUMIDO** (2026-06-29): abre em `BookingConfirmed` lendo a
+  proveniência congelada do `QuoteSnapshot`; fecha reusando o `supplierSettlementRate` de Reconciliation
+  (sem duplicar o per-case). Ver
+  [DL-0028](../decision-log/DL-0028-fxposition-open-on-booking-confirmed.md).
 
 ## Out of Scope
 
