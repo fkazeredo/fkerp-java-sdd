@@ -35,6 +35,19 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+# Point-clock crawler (SPEC-0012). The vendor portal client is out of scope (DL-0029/0031): the
+# default source binding is a traceable simulation. Tune the schedule, source list and the
+# circuit-breaker/retry knobs here. Credentials are custodied by the Platform (never here — BR1).
+point-clock:
+  sources: ${POINT_CLOCK_SOURCES:REP-DEFAULT}      # comma-separated REP/branch refs (BR9/DL-0033)
+  crawl:
+    initial-delay-ms: ${POINT_CLOCK_INITIAL_DELAY_MS:600000}
+    interval-ms: ${POINT_CLOCK_INTERVAL_MS:86400000} # daily (BR9/DL-0033)
+    max-attempts: ${POINT_CLOCK_MAX_ATTEMPTS:3}      # retry budget before dead-letter (DL-0031)
+  breaker:
+    failure-threshold: ${POINT_CLOCK_BREAKER_THRESHOLD:3} # consecutive failures that open the breaker
+    cooldown-ms: ${POINT_CLOCK_BREAKER_COOLDOWN_MS:60000}  # open → half-open cooldown
+
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{correlationId:-}] %logger{36} - %msg%n"
