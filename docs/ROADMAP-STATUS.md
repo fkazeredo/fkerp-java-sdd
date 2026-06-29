@@ -24,7 +24,8 @@
 | 3 — First real integration (ACL) | 2026-06-29 09:17 (-03:00) | 2026-06-29 10:05 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=3); supervisor **reverificou**: `./mvnw verify` **135 tests** verde, 0 Checkstyle, V9–V11. Sourcing + ramo INTEGRATED + webhook ACL (HMAC, DTO externo não cruza p/ domínio). Released **`0.4.0`**. DL-0016…0019 (**DL-0017 Conf. Baixa**). |
 | 4 — Cancellation + merchant trap | 2026-06-29 10:17 (-03:00) | 2026-06-29 11:00 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=4); supervisor **reverificou**: `./mvnw verify` **157 tests** verde, 0 Checkstyle, V12–V13. CancellationPolicy + armadilha do merchant (cobranças nunca se anulam) + no-show. Released **`0.5.0`**. DL-0020…0024 (**DL-0024 Rev. Cara**). |
 | 5 — Exchange exposure + reports | 2026-06-29 11:17 (-03:00) | 2026-06-29 12:00 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=5); supervisor **reverificou**: `./mvnw verify` **179 tests** verde, 0 Checkstyle, V14–V15. Taxa de mercado + subsídio×drift (`FxPosition`) + relatórios (`LiveExposure`/`PromoFxResult`, alerta de drift 2%). Released **`0.6.0`**. DL-0025…0028. Ciclo Modulith pego pelo gate e corrigido (reconciliation→exchange). |
-| 6 — Point-clock crawler | 2026-06-29 12:17 (-03:00) | _in progress_ | Supervisor loop (8b1087fe): sem 🟡 → próxima ⬜ = Fase 6; marcada 🟡; `RUN-PHASE` (FASE-ALVO=6) delegado a um subagente em background. |
+| 6 — Point-clock crawler | 2026-06-29 12:17 (-03:00) | 2026-06-29 13:00 (-03:00) | ✅ Subagente executou `RUN-PHASE` (FASE-ALVO=6); supervisor **reverificou**: `./mvnw verify` **206 tests** verde, 0 Checkstyle, V16. Módulo `people` (11º) + crawler com **disjuntor/dead-letter** + ingestão de **AFD/AEJ assinado** no cofre (retenção 5 anos). Released **`0.7.0`**. DL-0029…0033 (**DL-0029 Conf. Baixa + Rev. Cara**: tipo de REP). |
+| 7 — Intelligence (DSS) | 2026-06-29 13:17 (-03:00) | _in progress_ | Supervisor loop (8b1087fe): sem 🟡 → próxima ⬜ = Fase 7; marcada 🟡; `RUN-PHASE` (FASE-ALVO=7) delegado a um subagente em background. |
 
 A phase is **Complete** only when every slice's acceptance criteria are tested and
 passing, the architecture gates (ArchUnit + Spring Modulith + Spotless/Checkstyle)
@@ -40,8 +41,8 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 | **3** | First real integration (ACL) | SPEC-0009 | ✅ Complete | Released `0.4.0` (tag). Sourcing + ramo `INTEGRATED` (confia no preço externo, sem recompor) + **webhook ACL de entrada** (HMAC, idempotente, DTO externo só em `infra.integration`). `./mvnw verify` 135 tests (10 Modulith modules). |
 | **4** | Cancellation + merchant trap | SPEC-0010 | ✅ Complete | Released `0.5.0` (tag). `CancellationPolicy` (STANDARD/ALL_SALES_FINAL/CUSTOM, janelas, costBearer) + `NoShowPolicy` + **armadilha do merchant** (reembolso ao cliente e cobrança do portal não se anulam). Vive no módulo `booking`. `./mvnw verify` 157 tests. |
 | **5** | Exchange exposure + reports | SPEC-0011 | ✅ Complete | Released `0.6.0` (tag). Taxa de mercado + decomposição **subsídio × drift** (`FxPosition`), **posição agregada do livro** (`LiveExposure`) com alerta de drift (2%) e relatório `PromoFxResult`. Estende `exchange`. `./mvnw verify` 179 tests. |
-| **6** | Point-clock crawler | SPEC-0012 | 🟡 In progress | Supervisor loop (8b1087fe) started 2026-06-29 12:17 (-03:00); RUN-PHASE delegated to a subagent. Operational snapshot for People + signed AFD/AEJ for Compliance. |
-| **7** | Intelligence (DSS) | SPEC-0013 | ⬜ Not started | OverrideNudge + PromoFxAdvisor. |
+| **6** | Point-clock crawler | SPEC-0012 | ✅ Complete | Released `0.7.0` (tag). `people` (11º módulo) + `PointClockCrawler` (ACL, **disjuntor + retry/dead-letter**, idempotente, não escreve no núcleo) + ingestão de **AFD/AEJ assinado** no cofre Compliance (retenção 5 anos). `./mvnw verify` 206 tests. **Q6 (REP) = Conf. Baixa — confirmar.** |
+| **7** | Intelligence (DSS) | SPEC-0013 | 🟡 In progress | Supervisor loop (8b1087fe) started 2026-06-29 13:17 (-03:00); RUN-PHASE delegated to a subagent. OverrideNudge + PromoFxAdvisor (aconselha, nunca comanda). |
 | **8+** | Support & generic contexts | SPEC-0014…0025 | ⬜ Not started | CommercialPolicy, Finance, Billing, Payout, AfterSales, Marketing, Portfolio, Assets, People, Platform, Identity, Admin. |
 
 ## Phase 0 — slice detail
@@ -137,6 +138,22 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 - [x] **subsídio × drift** com números exatos (HALF_UP, relógio/feed controlado) + regressão `totalGap == −fxGainLoss` vs SPEC-0007; exposição agregada testada sobre múltiplas posições.
 - [x] Merge em `develop`, release `0.6.0` (tag), merge em `main`; DL-0025…0028 (sem Confiança Baixa / Rev. Cara).
 - [ ] Métricas Prometheus — por ora **log de evento de negócio** (sem `MeterRegistry`, padrão das Fases 1–5); follow-up. Tela Angular — backend-first.
+
+## Phase 6 — slice detail
+
+| Slice | Spec | Deliverable | Status |
+|---|---|---|---|
+| 11a | SPEC-0012 | Módulo `people` (11º Modulith) — `PointSnapshot` (só operacional, idempotente por `(sourceRef, periodRef)`) + histórico `PointCrawlRun`; `V16` | ✅ |
+| 11b | SPEC-0012 | `PointClockCrawler` (ACL em `infra.integration`) — **disjuntor** (CLOSED/OPEN/HALF_OPEN) + retry/**dead-letter**, mock com injeção de falha; 2 regras ArchUnit (DTO externo fora do domínio; crawler não escreve no núcleo) | ✅ |
+| 11c | SPEC-0012 | Ingestão de **AFD/AEJ assinado** (`Pkcs7AfdSignatureVerifier`, CAdES/PKCS#7 + checagem de adulteração) → cofre Compliance (`retentionUntil=+5y`); inválido → 400, nada guardado | ✅ |
+
+**Phase 6 exit criteria:**
+- [x] `cd backend && ./mvnw verify` green (206 tests; ArchUnit[9] + 11 Modulith modules + Spotless/Checkstyle) — reverificado pelo supervisor.
+- [x] Migração `V16` aplicada e validada (Postgres real).
+- [x] **Resiliência testada:** disjuntor abre e curto-circuita sem bater no portal; falha persistente → `DEAD_LETTER` + evento, sem snapshot falso; ingestão idempotente; AFD adulterado rejeitado.
+- [x] **Não escreve no núcleo** (teste de fronteira) + DTO externo só em `infra.integration`.
+- [x] Merge em `develop`, release `0.7.0` (tag), merge em `main`; DL-0029…0033.
+- [ ] **DL-0029 (Q6 tipo de REP) — Confiança Baixa + Reversibilidade Cara**: confirmar com o cliente qual REP usa (a captura do AFD muda conforme). Tela Angular / Micrometer — follow-up.
 
 ## Open architectural debts carried forward
 

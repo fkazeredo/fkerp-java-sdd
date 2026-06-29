@@ -57,3 +57,6 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0031](DL-0031-circuit-breaker-queue-retry-in-process.md) | 6 | Disjuntor + fila de retry + dead-letter in-process (sem resilience4j); origem do REP atrás de porta com mock injetor de falhas | Alta | Moderada |
 | [DL-0032](DL-0032-afd-signature-integrity-check.md) | 6 | Verificação de assinatura/integridade do AFD na ingestão (envelope CAdES/PKCS#7 + hash); ICP-Brasil completo fica p/ Platform (SPEC-0023) | Média | Moderada |
 | [DL-0033](DL-0033-crawl-period-and-multi-source.md) | 6 | Periodicidade diária, período corrente `YYYY-MM`; lista de `sourceRef` configurável (default um) | **Baixa** | Barata |
+| [DL-0034](DL-0034-promofx-subject-is-agency-event-derived.md) | 7 | PromoFxAdvisor: sujeito = agência (derivado de evento, não rota); intelligence é consumidor-folha | Média | Moderada |
+| [DL-0035](DL-0035-promofx-verdict-thresholds-and-deterministic-advisor.md) | 7 | PromoFxAdvisor: advisor determinístico; limites CONVERTE × QUEIMA_MARGEM (MIN_VOLUME=5, BURN=R$1.000) + ganho estimado | Média | Barata |
+| [DL-0036](DL-0036-overridenudge-gated-flag-and-llm-port-seam.md) | 7 | OverrideNudge desligado por feature flag (Q4); seam de porta LLM desenhado mas **não** wired; recomputação on-event | Média | Barata |

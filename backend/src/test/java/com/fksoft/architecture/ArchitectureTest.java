@@ -161,6 +161,55 @@ class ArchitectureTest {
           .as("the point-clock crawler must not write into the core (SPEC-0012 BR6)")
           .allowEmptyShould(true);
 
+  /**
+   * The Intelligence (DSS) module ADVISES, it never COMMANDS (SPEC-0013 BR2, redesign Part 8): it
+   * consumes other modules' events and reads projections, but it MUST NOT invoke any other module's
+   * command facade. This rule proves the principle structurally — {@code intelligence} must not
+   * depend on any other domain module's {@code *Service} (the command facades) nor reach into any
+   * other module's {@code internal} package. It may still depend on the exposed events/views/value
+   * objects, the {@code money} kernel and the error kernel. Planting a dependency on, say, {@code
+   * BookingService} or {@code exchange.internal} makes this fail (see {@link
+   * ArchitectureRulesHaveTeethTest}).
+   */
+  @ArchTest
+  static final ArchRule INTELLIGENCE_ADVISES_NEVER_COMMANDS =
+      intelligenceAdvisesNeverCommandsForSource("..domain.intelligence..");
+
+  /**
+   * Builds the "advises, never commands" rule for a given source package. Production uses {@code
+   * ..domain.intelligence..}; the teeth test re-points it at the fixture package to prove the rule
+   * actually fails when an intelligence-side type touches a command facade.
+   */
+  static ArchRule intelligenceAdvisesNeverCommandsForSource(String sourcePackage) {
+    return noClasses()
+        .that()
+        .resideInAPackage(sourcePackage)
+        .should()
+        .dependOnClassesThat(isAnotherModuleCommandFacadeOrInternal())
+        .as(
+            "intelligence must advise, never command: no dependency on another module's "
+                + "*Service or internal package (SPEC-0013 BR2)")
+        .allowEmptyShould(true);
+  }
+
+  private static com.tngtech.archunit.base.DescribedPredicate<JavaClass>
+      isAnotherModuleCommandFacadeOrInternal() {
+    return new com.tngtech.archunit.base.DescribedPredicate<>(
+        "another domain module's *Service command facade or internal package") {
+      @Override
+      public boolean test(JavaClass target) {
+        String pkg = target.getPackageName();
+        if (!pkg.startsWith("com.fksoft.domain.")
+            || pkg.startsWith("com.fksoft.domain.intelligence")) {
+          return false;
+        }
+        boolean otherInternal = pkg.contains(".internal");
+        boolean commandFacade = target.getSimpleName().endsWith("Service");
+        return otherInternal || commandFacade;
+      }
+    };
+  }
+
   private static ArchCondition<JavaClass> notExposeLombokGeneratedMutators() {
     return new ArchCondition<>("not expose Lombok-generated mutators") {
       @Override
