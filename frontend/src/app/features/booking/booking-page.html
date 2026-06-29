@@ -1,0 +1,80 @@
+<section class="page">
+  <h1 class="page__title">{{ 'booking.title' | translate }}</h1>
+
+  <form class="card form" (ngSubmit)="create()" #f="ngForm">
+    <h2 class="card__title">{{ 'booking.new' | translate }}</h2>
+    <label>
+      {{ 'booking.quoteId' | translate }}
+      <input name="quoteId" [(ngModel)]="quoteId" required />
+    </label>
+    <div class="form__row">
+      <label>
+        {{ 'booking.origin' | translate }}
+        <select name="origin" [(ngModel)]="origin">
+          <option value="EXTERNAL">EXTERNAL</option>
+          <option value="INTERNAL">INTERNAL</option>
+        </select>
+      </label>
+      @if (origin === 'EXTERNAL') {
+        <label>
+          {{ 'booking.code' | translate }}
+          <input name="code" [(ngModel)]="code" required />
+        </label>
+      }
+    </div>
+    @if (createError()) {
+      <p class="form__error" data-testid="booking-create-error">{{ createError() | translate }}</p>
+    }
+    <button type="submit" [disabled]="busy() || f.invalid">{{ 'common.create' | translate }}</button>
+  </form>
+
+  @if (booking(); as b) {
+    <div class="card" data-testid="booking-detail">
+      <h2 class="card__title">{{ 'booking.detail' | translate }}</h2>
+      <dl class="kv">
+        <dt>{{ 'booking.status' | translate }}</dt>
+        <dd><span class="badge">{{ b.status }}</span></dd>
+        <dt>{{ 'booking.locator' | translate }}</dt>
+        <dd>{{ b.locator.origin }} · {{ b.locator.code }}</dd>
+        <dt>{{ 'booking.quoteId' | translate }}</dt>
+        <dd>{{ b.quoteId }}</dd>
+        @if (b.confirmedAt) {
+          <dt>{{ 'booking.confirmedAt' | translate }}</dt>
+          <dd>{{ b.confirmedAt }}</dd>
+        }
+        @if (b.cancelReason) {
+          <dt>{{ 'booking.cancelReason' | translate }}</dt>
+          <dd>{{ b.cancelReason }}</dd>
+        }
+      </dl>
+
+      @if (actionError()) {
+        <p class="form__error" data-testid="booking-action-error">{{ actionError() | translate }}</p>
+      }
+
+      <div class="actions">
+        @for (action of allowedActions(); track action) {
+          @if (action !== 'cancel') {
+            <button type="button" [disabled]="busy()" (click)="act(action)">
+              {{ actionKey(action) | translate }}
+            </button>
+          }
+        }
+      </div>
+
+      @if (allowedActions().includes('cancel')) {
+        <form class="form" (ngSubmit)="cancel()" #cf="ngForm">
+          <div class="form__row">
+            <label>
+              {{ 'booking.cancelReason' | translate }}
+              <input name="cancelReason" [(ngModel)]="cancelReason" required />
+            </label>
+          </div>
+          <button type="submit" class="ghost" [disabled]="busy() || cf.invalid">
+            {{ 'booking.action_cancel' | translate }}
+          </button>
+        </form>
+      }
+    </div>
+  }
+</section>

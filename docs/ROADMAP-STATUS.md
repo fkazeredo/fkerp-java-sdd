@@ -19,6 +19,7 @@
 | 0 — Foundation | 2026-06-29 03:57 (-03:00) | 2026-06-29 04:57 (-03:00) | ✅ Green: `./mvnw verify` 12 tests, `docker compose up` → health UP, frontend 4 tests, released `0.1.0`. |
 | 1 — Manual commercial core | 2026-06-29 05:08 (-03:00) | 2026-06-29 05:20 (-03:00) | ⏹️ Preempted by direct owner request (ADR 0015 — versionamento/SemVer) before any business code. Phase reverted to ⬜ Not started; only the roadmap marker had been touched. |
 | 1 — Manual commercial core (restart) | 2026-06-29 05:35 (-03:00) | 2026-06-29 06:55 (-03:00) | ✅ Backend green: `./mvnw verify` **82 tests**, 7 Modulith modules, 6 slices (SPEC-0002…0007) merged to `develop`, released **`0.2.0`**. Angular screens deferred to 0.2.x (carried debt). Supervisor loop switched 30m → 1h per owner request. |
+| 1 — Manual commercial core (frontend) | 2026-06-29 07:40 (-03:00) | 2026-06-29 08:10 (-03:00) | ✅ Owner-directed: **5 telas Angular** (Accounts/Exchange/Quoting/Booking/Reconciliation) + nav; `npm` lint/test(**14**)/build verdes; released **`0.2.1`**. Fase 1 fechada ponta a ponta. |
 
 A phase is **Complete** only when every slice's acceptance criteria are tested and
 passing, the architecture gates (ArchUnit + Spring Modulith + Spotless/Checkstyle)
@@ -29,7 +30,7 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 | Phase | Name | Spec(s) | Status | Notes |
 |---|---|---|---|---|
 | **0** | Foundation (walking skeleton + Event Storming) | SPEC-0001 | ✅ Complete | Released `0.1.0` (tag). See slice detail below. |
-| **1** | Manual commercial core | SPEC-0002…0007 | ✅ Complete (backend) | Released `0.2.0` (tag). 6 slices green (82 tests). **Angular screens deferred to 0.2.x** — carried debt below. See slice detail. |
+| **1** | Manual commercial core | SPEC-0002…0007 | ✅ Complete | Backend `0.2.0` (82 tests) + Angular screens `0.2.1` (14 tests). End-to-end: 6 contextos com tela (loading/empty/erro). |
 | **2** | Minimal compliance | SPEC-0008 (+ Finance seam 0015) | ⬜ Not started | Document vault + mandatory attachment + monthly-close veto + retention. |
 | **3** | First real integration (ACL) | SPEC-0009 | ⬜ Not started | Quote site, INTEGRATED branch. |
 | **4** | Cancellation + merchant trap | SPEC-0010 | ⬜ Not started | Policy as object + ALL_SALES_FINAL trap + no-show. |
@@ -62,22 +63,22 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 | 4 | SPEC-0005 | Quoting (keystone) — composição + override com proveniência | ✅ Backend |
 | 5 | SPEC-0006 | Booking — ciclo de vida + localizador + timeout 72h + eventos | ✅ Backend |
 | 6 | SPEC-0007 | Reconciliation — esperado × realizado + ganho/perda cambial | ✅ Backend |
-| — | 0002–0007 | **Telas Angular** dos 6 contextos (loading/empty/erro) | ⬜ Pendente (0.2.x) |
+| — | 0002–0007 | **Telas Angular** dos contextos (Accounts/Exchange/Quoting/Booking/Reconciliation + nav) | ✅ `0.2.1` |
 
 **Phase 1 exit criteria:**
 - [x] `cd backend && ./mvnw verify` green (82 tests; ArchUnit + 7 Modulith modules + Spotless/Checkstyle).
 - [x] Migrações `V2`…`V6` aplicadas (Flyway) e validadas pelos testes de integração (Postgres real).
 - [x] APIs REST + OpenAPI dos 6 contextos; erro estável `{code,message,fields}`; i18n pt-BR + fallback.
 - [x] Merge em `develop`, release `0.2.0` (tag), merge em `main`.
-- [ ] **Telas Angular** dos contextos da Fase 1 — pendentes (follow-up 0.2.x).
+- [x] **Telas Angular** dos contextos da Fase 1 (loading/empty/erro) — `npm lint`/`test` (14)/`build` verdes; release `0.2.1`.
 
 ## Open architectural debts carried forward
 
 | Item | Owner phase | Tracked in |
 |---|---|---|
 | ~~ADR 0014 (initial module set & order) not yet written~~ → **written by owner** | resolved | [ADR 0014](adr/0014-initial-modules-and-slice-order.md), [DL-0005](decision-log/DL-0005-adr-0014-ausente-adiar-fase-1.md) |
-| **Telas Angular da Fase 1** (Accounts/Exchange/Quoting/Booking/Reconciliation) — backend pronto, UI pendente | Phase 1 follow-up (0.2.x) | [report-phase-1.md](report-phase-1.md), [release-notes/0.2.0.md](release-notes/0.2.0.md) |
-| PrimeNG + Tailwind not yet added (Angular UI libs) | Phase 1 follow-up (primeira tela real) | [DL-0003](decision-log/DL-0003-stack-frontend-fase-0.md) |
+| ~~**Telas Angular da Fase 1**~~ → **entregues** em `0.2.1` (5 telas + nav; 14 testes) | resolved | [release-notes/0.2.1.md](release-notes/0.2.1.md) |
+| PrimeNG + Tailwind not yet added (telas atuais em CSS puro) | Future (quando a UI exigir) | [DL-0003](decision-log/DL-0003-stack-frontend-fase-0.md) |
 | Spring Boot 3.5 → 4.x upgrade | Future (own ADR) | [DL-0002](decision-log/DL-0002-stack-versoes-backend.md) |
 
 ## How to update this file
