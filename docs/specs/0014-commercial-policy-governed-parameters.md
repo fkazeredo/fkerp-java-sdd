@@ -48,6 +48,15 @@ BR4  Sempre MUST existir um SYSTEM_DEFAULT para todo parameterKey usado (resolu�
 BR5  Uma DIRECTIVE é o topo da precedência e MUST ser auditada de forma reforçada (quem, quando,
      justificativa) — é a "ordem do diretor".
 BR6  A resolução é **pura/consultável** e não altera estado de outros contextos (Open-Host).
+BR7  ASSUMIDO (ver DL-0038): a criação de regras/diretivas é **self-service em runtime** (diretor/
+     admin), auditável; **fluxos** (máquinas de estado/integrações/schema) continuam por spec+deploy.
+     `POST /directives` exige papel **diretor** + justificativa (403 `policy.directive.forbidden`);
+     `POST /rules` exige papel **admin/curador** ou diretor. A regra criada reflete imediatamente.
+BR8  ASSUMIDO (ver DL-0037): especificidade de escopo = nº de dimensões não-nulas casadas; ordenação
+     total determinística `(layer.rank, specificity DESC, validFrom DESC, createdAt DESC, id ASC)`.
+BR9  ASSUMIDO (ver DL-0039): o seed SYSTEM_DEFAULT cobre só as chaves já usadas (MARKUP_PCT=0,
+     FX_DRIFT_LIMIT=0.02, RECON_DISCREPANCY_TOL=R$1,00); a comissão do agente (Q5) é comportada pelo
+     mesmo motor **por escopo** (agência>produto>global), mas seu consumo é da SPEC-0004 (segue aberto lá).
 ```
 
 ## Input/Output Examples
@@ -86,7 +95,7 @@ POST /api/commercial-policy/directives
 ## Persistence Changes
 
 ```txt
-V14__create_commercial_policy.sql
+V18__create_commercial_policy.sql   -- número real na sequência Flyway (V14..V17 já usadas); ver DL-0037
   parameter_rules(
     id uuid PK, parameter_key varchar not null, layer varchar not null,
     scope_account_id uuid null, scope_product_ref varchar null, scope_channel varchar null,  -- matcher
@@ -136,11 +145,13 @@ malformado); `policy.directive.forbidden` → 403 (sem papel). i18n em `messages
 
 ## Open Questions
 
-- **Q5 (escopo da comissão do agente)** e demais parâmetros que viram regra governada — o conjunto
-  final de `parameterKey` depende das decisões de negócio; o seed cobre os já usados (markup, limite de
-  drift, tolerância de conciliação).
-- **Q8 (operador edita regra em runtime?):** define se a criação de regras/diretivas é self-service ou
-  só por TI — **em aberto** (afeta autorização/auditoria).
+- **Q5 (escopo da comissão do agente)** — ASSUMIDO **parcialmente** (ver DL-0039 / BR9): o motor
+  desta spec **comporta** a comissão do agente como parâmetro governado por escopo (default global),
+  mas **seu consumo no Commissioning é da SPEC-0004** — segue **aberto lá**, não nesta spec.
+- ~~**Q8 (operador edita regra em runtime?)**~~ → **ASSUMIDO (ver DL-0038 / BR7)**: self-service para
+  parâmetros e diretivas (auditável; papel diretor p/ diretiva); fluxos não.
+- O **conjunto final de `parameterKey`** segue evoluindo por spec dona (SLA/ISS/etc. entram com
+  SPEC-0018/0016…); o seed atual cobre as chaves **já usadas** (ASSUMIDO, ver DL-0039 / BR9).
 
 ## Out of Scope
 
