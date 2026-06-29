@@ -38,7 +38,14 @@ A Acme ganha **comissão**; a NF incide sobre **ela**, não sobre o pacote do fo
 BR1  CommissionInvoice MUST referenciar o lançamento de comissão (Finance) e ter base = valor da
      comissão (Money), nunca o valor do pacote.
 BR2  O ISS MUST ser calculado pela alíquota do serviço/município aplicável; as retenções (ex.: IRRF,
-     PIS/COFINS/CSLL, ISS retido) conforme tomador/regime — **as regras concretas dependem de Q7**.
+     PIS/COFINS/CSLL, ISS retido) conforme tomador/regime.
+BR2a ASSUMIDO (ver DL-0044): regime tributário default = **Simples Nacional**; emitente = a própria
+     Acme; o cálculo de ISS/retenções é **parametrizado por regime (Simples/Presumido/Real) e
+     município**, atrás de uma estratégia trocável (`TaxRegimeStrategy`). No Simples (v1): ISS =
+     `issRate(município) × base_comissão` (default 5%, teto da LC 116/2003; São Paulo `3550308` = 2%);
+     **retenções federais = nenhuma** (optante do Simples; IN RFB 1.234/2012). Trocar o regime real
+     do contador = plugar outra estratégia, sem refator. **Q7 segue como incógnita de negócio até o
+     contador confirmar** (Confiança=Baixa, Reversibilidade=Cara).
 BR3  Emissão MUST assinar com o e-CNPJ (via porta do Platform) e transmitir ao webservice municipal;
      resposta com número/código de verificação MUST ser persistida.
 BR4  Emissão MUST ser idempotente por (lançamento de comissão): não emite duas NFs para a mesma
@@ -79,16 +86,19 @@ POST /api/billing/invoices/{id}/issue
 ## Persistence Changes
 
 ```txt
-V16__create_billing.sql
+V20__create_billing.sql   -- V16..V19 já usadas; esta migração começa em V20
   commission_invoices(
-    id uuid PK, commission_entry_id uuid not null UNIQUE,        -- idempotência (BR4), valor p/ Finance
+    id uuid PK, commission_entry_id uuid not null,               -- valor p/ Finance
     base_amount numeric(18,2) not null, base_currency varchar not null,
     iss_amount numeric(18,2) null, withholdings_json jsonb null,
     status varchar not null, number varchar null, verification_code varchar null,
     document_id uuid null,                                        -- valor p/ Compliance
-    municipality varchar null, service_code varchar null,
+    municipality varchar null, service_code varchar null, tax_regime varchar not null,
     created_at, updated_at timestamptz not null, created_by, updated_by varchar null, version bigint not null
   )
+  -- idempotência (BR4/BR6): no máximo uma nota VIVA por comissão; cancelada libera reemissão
+  UNIQUE INDEX (commission_entry_id) WHERE status <> 'CANCELADA'
+  municipal_iss_rates(municipality varchar PK, iss_rate numeric(5,4) not null)  -- seed: default + SP 2%
 ```
 
 O cliente de NFS-e e o cálculo de tributos ficam em `infra/integration` (ACL) e em serviço de domínio;
@@ -128,9 +138,14 @@ a assinatura é **porta do Platform** (`CertificateSigner`). Vendor DTO da prefe
 
 ## Open Questions
 
-- **Q7 — regime tributário e quem emite** (Simples/Presumido/Real): define **alíquota efetiva, base e
-  retenções**. **Decisão de negócio em aberto** — o cálculo de tributos fica parametrizado até a resposta.
-- Município(s) de incidência e padrão de NFS-e (ABRASF/Nacional) — confirmar (muda a ACL).
+- **Q7 — regime tributário e quem emite** (Simples/Presumido/Real): **ASSUMIDO (ver DL-0044)** —
+  Simples Nacional default, emitente = Acme, cálculo parametrizado por regime+município atrás de
+  estratégia trocável. **Permanece como incógnita de negócio** (Confiança=Baixa, Reversibilidade=Cara):
+  só o contador/diretor da Acme fecha o regime real; até lá, o default Simples vale e a estratégia é
+  trocável sem refator.
+- Município(s) de incidência e padrão de NFS-e (ABRASF/Nacional) — **parametrizado no adaptador ACL**
+  (ver DL-0046): município/serviceCode são entrada; o padrão ABRASF é simulado pelo mock rastreável.
+  Confirmar o município/padrão reais troca o adaptador, não o domínio.
 
 ## Out of Scope
 

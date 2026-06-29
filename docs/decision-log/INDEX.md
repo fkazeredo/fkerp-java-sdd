@@ -14,11 +14,13 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0024](DL-0024-charges-are-distinct-facts-never-netted.md) | Encargos são fatos distintos que **nunca** se compensam (armadilha do merchant) | Alta | **Cara** | Tese econômica da Fase 4; sair do "sem netting" exige nova spec |
 | [DL-0029](DL-0029-rep-type-target-rep-p-export-upload.md) | Tipo de REP (Q6): mirar **REP-P** e modelar AFD como upload da exportação oficial | **Baixa** | **Cara** | **Q6 — qual REP o cliente usa é incógnita de negócio**; muda formato/captura do artefato legal |
 | [DL-0033](DL-0033-crawl-period-and-multi-source.md) | Periodicidade do crawl (diário, período corrente) e lista de `sourceRef` configurável | **Baixa** | Barata | Periodicidade/filiais reais são decisão de RH ainda não dada (só configuração) |
+| [DL-0044](DL-0044-billing-tax-regime-simples-and-swappable-strategy.md) | Billing: regime **Simples Nacional** (default) + estratégia trocável de ISS/retenções (Q7) | **Baixa** | **Cara** | **Q7 — regime tributário/quem emite é incógnita de negócio (só o contador fecha)**; move a tese tributária e o impacto fiscal de notas já emitidas é externo e caro |
 
-> DL-0017 (Fase 3) e **DL-0029/DL-0033** (Fase 6) são as de **Confiança=Baixa** (Open Questions de negócio
-> em aberto). **DL-0029 é a mais sensível da Fase 6**: Confiança=Baixa **e** Reversibilidade=Cara — o tipo de
-> REP (Q6) é incógnita de negócio que move o formato e a captura do artefato legal. DL-0009/DL-0017, DL-0018,
-> **DL-0024** e **DL-0029** são as de reversão não-barata.
+> DL-0017 (Fase 3), **DL-0029/DL-0033** (Fase 6) e **DL-0044** (Fase 8c) são as de **Confiança=Baixa**
+> (Open Questions de negócio em aberto). **DL-0029 (Q6) e DL-0044 (Q7)** são as mais sensíveis:
+> Confiança=Baixa **e** Reversibilidade=Cara — incógnitas de negócio que só o cliente/contador fecha
+> (tipo de REP; regime tributário). DL-0009/DL-0017, DL-0018, **DL-0024**, **DL-0029** e **DL-0044** são
+> as de reversão não-barata.
 
 ## Todas as decisões
 
@@ -67,3 +69,7 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0041](DL-0041-finance-event-driven-ap-ar-posting.md) | 8b | Finance posta AP/AR automático ao consumir `CancellationCharged`/`NoShowCharged`/`MerchantObligationIncurred` (booking), idempotente por UNIQUE `(source_ref, charge_kind)` + state-check; comissão/SupplierSettlement diferidos (sem produtor) | Média | Moderada |
 | [DL-0042](DL-0042-finance-buy-vs-build-full-gl-reaffirmed.md) | 8b | Finance: reafirma comprar-vs-construir — entrega "full" é livro-caixa (AP/AR+período+evento+balancete), **não** GL pleno (plano de contas/partidas dobradas/DRE/SPED = comprar/integrar) | Alta | Moderada |
 | [DL-0043](DL-0043-finance-trial-balance-per-currency.md) | 8b | Finance: `GET /periods/{yyyymm}/trial-balance` por moeda e por status (net operacional = AR−AP), sem plano de contas; endpoint novo aditivo (não muda `GET /periods`) | Alta | Barata |
+| [DL-0044](DL-0044-billing-tax-regime-simples-and-swappable-strategy.md) | 8c | Billing: regime **Simples Nacional** (default) + emitente = Acme; ISS/retenções parametrizados por regime+município atrás de `TaxRegimeStrategy` trocável (Q7) | **Baixa** | **Cara** |
+| [DL-0045](DL-0045-billing-module-and-taxable-base-is-commission.md) | 8c | Billing: novo módulo `domain.billing` (13º); `CommissionInvoice`; **base tributável = comissão** (nunca o pacote); referência ao lançamento por id+porta, sem FK | Alta | Moderada |
+| [DL-0046](DL-0046-nfse-municipal-acl-port-and-traceable-mock.md) | 8c | Billing: NFS-e municipal como porta `NfseGateway` + adaptador ACL com **mock rastreável** em `infra.integration.nfse`; assinatura e-CNPJ via porta `CertificateSigner` (stub → Platform/SPEC-0023); falha classificada (TIMEOUT/UNAVAILABLE→502, REJECTED→422) | Média | Moderada |
+| [DL-0047](DL-0047-billing-issue-idempotency-finance-event-and-compliance-archive.md) | 8c | Billing: emissão idempotente por comissão (UNIQUE parcial); arquiva NFS-e no Compliance via orquestrador `infra`; Finance lança o tributo consumindo `CommissionInvoiceIssued` (idempotente); `billing` é módulo **folha** (grafo acíclico) | Média | Moderada |
