@@ -21,6 +21,8 @@ import com.fksoft.domain.quoting.QuoteNotFoundException;
 import com.fksoft.domain.quoting.QuoteOverrideCurrencyMismatchException;
 import com.fksoft.domain.quoting.QuoteOverrideReasonRequiredException;
 import com.fksoft.domain.quoting.QuoteRateMissingException;
+import com.fksoft.domain.reconciliation.ReconciliationCaseNotFoundException;
+import com.fksoft.domain.reconciliation.ReconciliationCurrencyMismatchException;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.http.HttpStatus;
@@ -57,7 +59,9 @@ public class HttpErrorMapping {
           entry(BookingNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(BookingTransitionInvalidException.class, HttpStatus.CONFLICT),
           entry(BookingLocatorDuplicateException.class, HttpStatus.CONFLICT),
-          entry(BookingLocatorInvalidException.class, HttpStatus.BAD_REQUEST));
+          entry(BookingLocatorInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(ReconciliationCaseNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(ReconciliationCurrencyMismatchException.class, HttpStatus.BAD_REQUEST));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {
