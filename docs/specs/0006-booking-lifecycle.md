@@ -155,8 +155,10 @@ V5__create_bookings.sql
 
 ## Open Questions
 
-- O `Quote` é consumido **uma vez** por Booking, ou um Quote pode gerar várias Bookings? (Assumido:
-  1:1 no v1; confirmar com o dono.)
+- ~~O `Quote` é consumido **uma vez** por Booking, ou pode gerar várias Bookings?~~ → **ASSUMIDO**
+  (2026-06-29): **não 1:1** no v1 — um Quote pode lastrear várias Bookings; a **unicidade do
+  localizador** é a trava (preserva re-booking após cancelamento). Ver
+  [DL-0010](../decision-log/DL-0010-booking-quote-multiplicidade.md).
 - `CHANGED` recompõe preço/comissão ou só remarca? Recomposição depende da fórmula de preço (Open
   Question da SPEC-0005) — **adiada**; aqui `CHANGED` só marca estado.
 

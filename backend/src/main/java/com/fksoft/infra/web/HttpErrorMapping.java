@@ -5,6 +5,11 @@ import static java.util.Map.entry;
 import com.fksoft.domain.accounts.AccountDocumentDuplicateException;
 import com.fksoft.domain.accounts.AccountDocumentInvalidException;
 import com.fksoft.domain.accounts.AccountNotFoundException;
+import com.fksoft.domain.booking.BookingLocatorDuplicateException;
+import com.fksoft.domain.booking.BookingLocatorInvalidException;
+import com.fksoft.domain.booking.BookingNotFoundException;
+import com.fksoft.domain.booking.BookingQuoteNotFoundException;
+import com.fksoft.domain.booking.BookingTransitionInvalidException;
 import com.fksoft.domain.commissioning.CommissionBaseInvalidException;
 import com.fksoft.domain.commissioning.CommissionPctInvalidException;
 import com.fksoft.domain.error.DomainException;
@@ -47,7 +52,12 @@ public class HttpErrorMapping {
           entry(QuoteRateMissingException.class, HttpStatus.UNPROCESSABLE_ENTITY),
           entry(QuoteNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(QuoteOverrideReasonRequiredException.class, HttpStatus.BAD_REQUEST),
-          entry(QuoteOverrideCurrencyMismatchException.class, HttpStatus.BAD_REQUEST));
+          entry(QuoteOverrideCurrencyMismatchException.class, HttpStatus.BAD_REQUEST),
+          entry(BookingQuoteNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(BookingNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(BookingTransitionInvalidException.class, HttpStatus.CONFLICT),
+          entry(BookingLocatorDuplicateException.class, HttpStatus.CONFLICT),
+          entry(BookingLocatorInvalidException.class, HttpStatus.BAD_REQUEST));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {
