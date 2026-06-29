@@ -42,6 +42,7 @@ class ComplianceIntegrationTest extends AbstractPostgresIntegrationTest {
 
   @Autowired private TestRestTemplate restTemplate;
   @Autowired private JdbcTemplate jdbcTemplate;
+  @Autowired private com.fksoft.domain.compliance.ComplianceService complianceService;
 
   @AfterEach
   void cleanUp() {
@@ -133,6 +134,18 @@ class ComplianceIntegrationTest extends AbstractPostgresIntegrationTest {
     assertThat(check).isNotNull();
     assertThat(check.canClose()).isTrue();
     assertThat(check.pending()).isEmpty();
+  }
+
+  @Test
+  void flagsDocumentsApproachingRetention() {
+    uploadNfse("2026-06-20", null, null); // retention until 2031-06-20
+
+    // A huge horizon includes the document; a tiny one excludes it (deadline is years away).
+    int flaggedFar = complianceService.flagRetentionExpiring(10_000);
+    int flaggedNear = complianceService.flagRetentionExpiring(1);
+
+    assertThat(flaggedFar).isEqualTo(1);
+    assertThat(flaggedNear).isZero();
   }
 
   @Test

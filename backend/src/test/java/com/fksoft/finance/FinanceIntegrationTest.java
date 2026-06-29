@@ -25,8 +25,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * End-to-end tests for the Finance module (SPEC-0015): create AP/AR entries (PROVISIONAL), confirm
- * them, close a period (with the default permissive guard in this slice — the real Compliance veto
- * arrives in slice 7c), reject a malformed period, and reject an entry against a CLOSED period.
+ * them, close an empty period (the Compliance veto allows it), reject a malformed period, and
+ * reject an entry against a CLOSED period. The veto-with-pending regression lives in {@code
+ * com.fksoft.compliance.CloseVetoIntegrationTest}.
  */
 class FinanceIntegrationTest extends AbstractPostgresIntegrationTest {
 
