@@ -1,0 +1,35 @@
+# Local stack for the Acme Travel ERP (SPEC-0001 acceptance: app + db come up,
+# GET /api/system/health returns UP). Configuration via .env (see .env.example).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-acme_erp}
+      POSTGRES_USER: ${DB_USERNAME:-acme}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-acme}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-acme} -d ${DB_NAME:-acme_erp}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  app:
+    build:
+      context: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-acme_erp}
+      DB_USERNAME: ${DB_USERNAME:-acme}
+      DB_PASSWORD: ${DB_PASSWORD:-acme}
+      SERVER_PORT: "8080"
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
