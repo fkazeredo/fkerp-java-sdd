@@ -9,6 +9,15 @@
 **Legend:** ✅ Complete (implemented, `./mvnw verify` green, merged) · 🟡 In progress ·
 ⬜ Not started · ⛔ Blocked.
 
+## Execution log
+
+> Timeline of autonomous execution runs (date/time in America/Sao_Paulo, UTC-03:00).
+> Append one row per run; keep newest at the bottom. This is the project's run-control record.
+
+| Phase | Started | Finished | Outcome |
+|---|---|---|---|
+| 0 — Foundation | 2026-06-29 03:57 (-03:00) | _in progress_ | Autonomous run via `docs/RUN-PHASE.md`; first commit `b611618`. |
+
 A phase is **Complete** only when every slice's acceptance criteria are tested and
 passing, the architecture gates (ArchUnit + Spring Modulith + Spotless/Checkstyle)
 are green, docs are updated, and the work is merged to `develop` (and released).
@@ -45,7 +54,7 @@ are green, docs are updated, and the work is merged to `develop` (and released).
 
 | Item | Owner phase | Tracked in |
 |---|---|---|
-| ADR 0014 (initial module set & order) not yet written | Phase 1 (first module) | [DL-0005](decision-log/DL-0005-adr-0014-ausente-adiar-fase-1.md) |
+| ~~ADR 0014 (initial module set & order) not yet written~~ → **written by owner** | resolved | [ADR 0014](adr/0014-initial-modules-and-slice-order.md), [DL-0005](decision-log/DL-0005-adr-0014-ausente-adiar-fase-1.md) |
 | PrimeNG + Tailwind not yet added (Angular UI libs) | Phase 1 (SPEC-0002 first real screen) | [DL-0003](decision-log/DL-0003-stack-frontend-fase-0.md) |
 | Spring Boot 3.5 → 4.x upgrade | Future (own ADR) | [DL-0002](decision-log/DL-0002-stack-versoes-backend.md) |
 

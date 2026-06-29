@@ -19,12 +19,24 @@ estratégia **padrão** do Modulith (`direct-sub-packages`) e o pacote base
 
 ## Decisão
 
-Configurar `spring.modulith.detection-strategy=explicitly-annotated` no
-`application.yml`. Assim, **só** pacotes anotados com `@ApplicationModule` viram
-módulos. Na Fase 0 não há módulo de negócio anotado → `ApplicationModules.of(...)`
-fica vazio e `verify()` passa trivialmente. A partir da Fase 1, cada módulo
-(`domain.accounts`, `domain.exchange`, ...) recebe `@ApplicationModule` e o
-Modulith passa a impor as fronteiras entre eles.
+Usar a estratégia **explicitly-annotated**: só pacotes anotados com
+`@ApplicationModule` viram módulos. O mecanismo **determinístico** é o SPI
+`org.springframework.modulith.core.ApplicationModuleDetectionStrategy`, implementado
+por `com.fksoft.ExplicitlyAnnotatedModuleDetection` (delegando a
+`ApplicationModuleDetectionStrategy.explicitlyAnnotated()`) e registrado em
+`src/test/resources/META-INF/spring.factories`. Fica em **escopo de teste** porque
+(a) o `spring-modulith-core` só vem em runtime/test e (b) o único ponto que verifica
+módulos é `ModularityTests` (`ApplicationModules.of(...).verify()`); produção nunca
+chama `verify()`.
+
+Detalhe técnico: o `ApplicationModules.of(...)` estático **não** lê o
+`application.yml`; ele resolve a estratégia via `SpringProperties`/`spring.factories`.
+Por isso a escolha é via SPI (`spring.factories`), e não via propriedade no YAML.
+
+Na Fase 0 não há módulo de negócio anotado → `ApplicationModules.of(...)` fica vazio
+e `verify()` passa trivialmente. A partir da Fase 1, cada módulo (`domain.accounts`,
+`domain.exchange`, ...) recebe `@ApplicationModule` e o Modulith passa a impor as
+fronteiras entre eles.
 
 ## Justificativa
 
@@ -44,8 +56,10 @@ Modulith passa a impor as fronteiras entre eles.
 
 ## Impacto
 
-- Arquivos: `backend/src/main/resources/application.yml`, `ModularityTests`.
+- Arquivos: `backend/src/test/java/com/fksoft/ExplicitlyAnnotatedModuleDetection.java`,
+  `backend/src/test/resources/META-INF/spring.factories`, `ModularityTests`.
 
 ## Como reverter
 
-Trocar a propriedade `spring.modulith.detection-strategy`. Trivial.
+Trocar a implementação registrada no `spring.factories` (ex.: delegar a
+`directSubPackages()`), ou remover a estratégia para voltar ao padrão. Trivial.

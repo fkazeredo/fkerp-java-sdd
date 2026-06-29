@@ -139,9 +139,9 @@ Resolvidas em modo autônomo (ver Business Rules e `docs/decision-log/`):
 - ~~Pacote base `com.fksoft` — manter ou renomear?~~ → ASSUMIDO manter (DL-0001).
 - ~~Identity real / stub de `UserContextProvider`?~~ → ASSUMIDO stub de dev (ADR 0011, DL-0003).
 
-Nota: a SPEC lista o ADR 0014 (conjunto inicial de módulos) em *Related ADRs*, mas esse ADR
-ainda **não existe**; sua criação foi adiada para a Fase 1, quando o primeiro módulo de negócio
-nasce (ver DL-0005). Não bloqueia a Fase 0.
+Nota: o ADR 0014 (conjunto inicial de módulos e ordem) foi **criado pelo dono** —
+`docs/adr/0014-initial-modules-and-slice-order.md` (ver DL-0005, supersedida). Ele documenta o
+destino dos módulos sem criar módulos vazios (os módulos nascem fatia a fatia na Fase 1).
 
 ## Out of Scope
 

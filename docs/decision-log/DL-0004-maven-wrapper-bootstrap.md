@@ -15,12 +15,14 @@ ainda não tinha `backend/`. Era preciso decidir **como gerar o wrapper**.
 
 ## Decisão
 
-Versionar o **Maven Wrapper 3.3.x** apontando para **Maven 3.9.11** em
-`backend/.mvn/wrapper/maven-wrapper.properties` + scripts `mvnw`/`mvnw.cmd`. Para
-gerar os arquivos corretos uma única vez, baixar a distribuição do Maven 3.9.11
-(scratchpad), rodar `mvn -N wrapper:wrapper` dentro de `backend/`, e a partir daí
-usar exclusivamente `./mvnw`. O `maven-wrapper.jar` (~60 KB) é versionado (exceção
-explícita no `.gitignore`), garantindo build reprodutível offline do wrapper.
+Versionar o **Maven Wrapper 3.3.4** (tipo `only-script`) apontando para **Maven
+3.9.16** em `backend/.mvn/wrapper/maven-wrapper.properties` + scripts
+`mvnw`/`mvnw.cmd`. Para gerar os arquivos corretos uma única vez, baixar a
+distribuição do Maven 3.9.16 (scratchpad), rodar
+`mvn -N wrapper:wrapper -Dmaven=3.9.16 -Dtype=only-script` dentro de `backend/`, e a
+partir daí usar exclusivamente `./mvnw`. O tipo `only-script` **não versiona um
+`maven-wrapper.jar`**: os próprios scripts baixam a distribuição do Maven, mantendo
+o repositório mais leve.
 
 ## Justificativa
 

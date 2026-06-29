@@ -45,9 +45,18 @@ quando o primeiro `@ApplicationModule` nascer.
 
 - Specs: nota adicionada à SPEC-0001 esclarecendo que 0014 é entregue na Fase 1.
 - Arquivos: nenhum código.
-- Próxima fase: criar `docs/adr/0014-initial-module-set-and-order.md` na Fase 1.
+- Próxima fase: criar o ADR 0014 na Fase 1. (Atualização: o dono já o criou em
+  `docs/adr/0014-initial-modules-and-slice-order.md` — ver seção de Atualização abaixo.)
 
 ## Como reverter
 
 Antecipar a criação do ADR 0014 é só escrever o arquivo a partir do ROADMAP.
 Trivial.
+
+## Atualização (2026-06-29) — SUPERSEDED
+
+O **próprio dono criou** o ADR 0014 — `docs/adr/0014-initial-modules-and-slice-order.md`
+("Inclui a ADR 14 que estava perdida"). Portanto a lacuna está fechada e a decisão de
+adiar deixa de valer. (Durante a execução autônoma eu cheguei a criar um arquivo
+duplicado por interpretação errada do pedido; ele foi removido — o ADR válido é o do
+dono.) Esta DL fica como histórico do raciocínio original de adiamento.
