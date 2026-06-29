@@ -11,6 +11,9 @@ import com.fksoft.domain.booking.BookingNotFoundException;
 import com.fksoft.domain.booking.BookingQuoteNotFoundException;
 import com.fksoft.domain.booking.BookingTransitionInvalidException;
 import com.fksoft.domain.booking.CancellationPolicyInvalidException;
+import com.fksoft.domain.commercialpolicy.PolicyDirectiveForbiddenException;
+import com.fksoft.domain.commercialpolicy.PolicyParameterUnknownException;
+import com.fksoft.domain.commercialpolicy.PolicyRuleInvalidException;
 import com.fksoft.domain.commissioning.CommissionBaseInvalidException;
 import com.fksoft.domain.commissioning.CommissionPctInvalidException;
 import com.fksoft.domain.compliance.ComplianceDocumentNotFoundException;
@@ -109,7 +112,10 @@ public class HttpErrorMapping {
           entry(PointSnapshotInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(PointAfdInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(InsightNotFoundException.class, HttpStatus.NOT_FOUND),
-          entry(InsightDecisionInvalidException.class, HttpStatus.BAD_REQUEST));
+          entry(InsightDecisionInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(PolicyParameterUnknownException.class, HttpStatus.NOT_FOUND),
+          entry(PolicyRuleInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(PolicyDirectiveForbiddenException.class, HttpStatus.FORBIDDEN));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {

@@ -30,6 +30,7 @@ resultado, cobertura e como reproduzir.
 | Slice 11c — Ingestão AFD/AEJ assinado → cofre | SPEC-0012 | [slice-11c-afd-legal-ingestion.md](slice-11c-afd-legal-ingestion.md) | ✅ verde (backend 206 testes; verificação CAdES/PKCS#7 + cofre com retenção 5 anos) |
 | Slice 12a — Intelligence framework + PromoFxAdvisor | SPEC-0013 | [slice-12a-intelligence-promofx.md](slice-12a-intelligence-promofx.md) | ✅ verde (backend 216 testes; 12º módulo + insight read-model + advisor determinístico + V17 + ArchUnit "aconselha, nunca comanda" com dentes) |
 | Slice 12b — OverrideNudge (gated) + decisão + observabilidade | SPEC-0013 | [slice-12b-nudge-decision.md](slice-12b-nudge-decision.md) | ✅ verde (backend 219 testes; nudge off por flag sem dado falso + decisão humana sem ação + InsightDecided) |
+| Slice 8a — CommercialPolicy (parâmetros governados + precedência) | SPEC-0014 | [slice-8a-commercial-policy.md](slice-8a-commercial-policy.md) | ✅ verde (backend 239 testes; motor de precedência Diretiva>Promoção>Contrato>Política>Padrão com proveniência + V18 seed; gradua o stub de markup sem quebrar o Quoting; diretiva auditada vence imediatamente) |
 
 ## Resumo por nível (Fase 0)
 

@@ -3,6 +3,7 @@ package com.fksoft.domain.quoting;
 import com.fksoft.domain.accounts.AccountDirectory;
 import com.fksoft.domain.commercialpolicy.MarkupDecision;
 import com.fksoft.domain.commercialpolicy.MarkupProvider;
+import com.fksoft.domain.commercialpolicy.MarkupScope;
 import com.fksoft.domain.commissioning.CommissionCalculator;
 import com.fksoft.domain.commissioning.CommissionInput;
 import com.fksoft.domain.commissioning.CommissionStatement;
@@ -73,7 +74,8 @@ public class QuoteService implements QuoteDirectory, QuoteIntegrationPort {
             new CommissionInput(
                 baseConverted, command.supplierCommissionPct(), command.agentCommissionPct()));
 
-    MarkupDecision markup = markupProvider.currentMarkup();
+    MarkupDecision markup =
+        markupProvider.currentMarkup(MarkupScope.ofAccount(command.accountId()));
     Money markupAmount = baseConverted.multiply(markup.pct());
     Money suggested = baseConverted.add(markupAmount);
 

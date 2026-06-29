@@ -19,11 +19,12 @@ public class OpenApiConfig {
             new Info()
                 .title("Acme Travel ERP API")
                 .description(
-                    "ERP Acme Travel — modular monolith. Phase 4 graduates booking cancellation"
-                        + " into a rich cancellation policy (STANDARD | ALL_SALES_FINAL | CUSTOM,"
-                        + " penalty windows, cost bearer) frozen at confirmation, the merchant trap"
-                        + " (ALL_SALES_FINAL charges the supplier even when the customer is"
-                        + " refunded — two obligations that do not net out) and a no-show policy.")
-                .version("0.5.0"));
+                    "ERP Acme Travel — modular monolith. Phase 8a adds CommercialPolicy: the"
+                        + " governed-parameter precedence engine (DIRECTIVE > PROMOTION > CONTRACT >"
+                        + " POLICY > SYSTEM_DEFAULT) with provenance, runtime self-service for rules"
+                        + " and directives (audited; director role + justification for directives),"
+                        + " and graduates the markup seam so a Quote's markup flows from the engine"
+                        + " carrying the winning layer as its source.")
+                .version("0.9.0"));
   }
 }
