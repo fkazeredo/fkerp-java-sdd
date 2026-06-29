@@ -1,7 +1,7 @@
 # 0016 - Billing (NF de Comissão, ISS e Retenções)
 
-Status: Approved
-Related ADRs: 0011, 0012, 0014
+Status: Delivered (Fase 8c — release 0.11.0; ver DL-0044..DL-0047)
+Related ADRs: 0011, 0012, 0014, 0015
 
 > Convenções herdadas da **SPEC-0001**. Assinatura/transmissão usam o **certificado e-CNPJ custodiado
 > pelo Platform (SPEC-0023)**; o documento emitido é guardado no **Compliance (SPEC-0008)**; a base
