@@ -2,8 +2,9 @@
 
 > Manual em **português**, para o usuário/operador (não técnico). Descreve **o que o sistema já faz
 > hoje**. É atualizado **a cada fatia entregue** (ver o comando *User manual* no `CLAUDE.md`).
+> Versão em inglês (espelho, mantida em sincronia): `docs/MANUAL.en-US.md`.
 >
-> **Versão do sistema:** 0.4.0 (em construção) · **Fase atual:** 3 (Primeira integração real — ACL)
+> **Versão do sistema:** 0.10.0 · **Fase atual:** 8 (Finance, pleno)
 
 ## 1. O que é o sistema
 
@@ -11,10 +12,9 @@ O **ERP Acme Travel** é o sistema de gestão comercial e financeira da Acme Tra
 representante de marcas de turismo — GSA). Quando pronto, ele vai cuidar de câmbio, comissões,
 cotações, reservas, conciliação e dos documentos fiscais das vendas.
 
-**Nesta fase (0 — Fundação), o sistema ainda não tem funcionalidades de negócio.** Esta versão
-existe para provar que a "espinha dorsal" do sistema funciona de ponta a ponta: o aplicativo sobe,
-conecta no banco de dados e responde. As funcionalidades de negócio começam na **Fase 1**
-(cadastro de contas comerciais).
+As funcionalidades de negócio são entregues **uma fatia vertical por vez**. Este manual foca nas
+fatias que já têm **tela/jornada para o usuário**; capacidades internas aparecem aqui conforme
+ganham uso direto pelo operador (veja o *Histórico de versões* no fim).
 
 ## 2. Como acessar
 
