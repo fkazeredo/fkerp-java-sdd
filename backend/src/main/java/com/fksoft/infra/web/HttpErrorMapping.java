@@ -32,6 +32,8 @@ import com.fksoft.domain.quoting.QuoteOverrideReasonRequiredException;
 import com.fksoft.domain.quoting.QuoteRateMissingException;
 import com.fksoft.domain.reconciliation.ReconciliationCaseNotFoundException;
 import com.fksoft.domain.reconciliation.ReconciliationCurrencyMismatchException;
+import com.fksoft.domain.sourcing.SourcedOfferInvalidException;
+import com.fksoft.domain.sourcing.SourcedOfferNotFoundException;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.http.HttpStatus;
@@ -79,7 +81,9 @@ public class HttpErrorMapping {
           entry(FinancePeriodCannotCloseException.class, HttpStatus.CONFLICT),
           entry(ComplianceDocumentNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(ComplianceRetentionNotExpiredException.class, HttpStatus.CONFLICT),
-          entry(ComplianceUploadInvalidException.class, HttpStatus.BAD_REQUEST));
+          entry(ComplianceUploadInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(SourcedOfferInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(SourcedOfferNotFoundException.class, HttpStatus.NOT_FOUND));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {
