@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, "feature/**", "release/**", "hotfix/**"]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  backend:
+    name: Backend (verify + ArchUnit + Modulith + Testcontainers)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Build, test and gates
+        working-directory: backend
+        run: |
+          chmod +x mvnw
+          ./mvnw -B -ntp verify
+
+  flyway-validate:
+    name: Flyway validate
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: acme_erp
+          POSTGRES_USER: acme
+          POSTGRES_PASSWORD: acme
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U acme -d acme_erp"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Migrate and validate migrations
+        run: |
+          docker run --rm --network host \
+            -v "${{ github.workspace }}/backend/src/main/resources/db/migration:/flyway/sql" \
+            flyway/flyway:11-alpine \
+            -url=jdbc:postgresql://localhost:5432/acme_erp \
+            -user=acme -password=acme -connectRetries=10 \
+            migrate validate
+
+  frontend:
+    name: Frontend (lint + test + build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npx ng lint
+      - run: npx ng test --watch=false
+      - run: npx ng build

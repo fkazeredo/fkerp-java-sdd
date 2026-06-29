@@ -1,0 +1,24 @@
+<section class="health">
+  <h1 class="health__title">{{ 'health.title' | translate }}</h1>
+
+  @if (state() === 'loading') {
+    <p class="health__loading" data-testid="health-loading">{{ 'health.loading' | translate }}</p>
+  }
+
+  @if (state() === 'success') {
+    <div class="health__card health__card--up" data-testid="health-success">
+      <p class="health__ok">{{ 'health.ok' | translate }}</p>
+      <p>{{ 'health.status' | translate }}: <strong>{{ health()?.status }}</strong></p>
+      <p>{{ 'health.db' | translate }}: <strong>{{ health()?.db }}</strong></p>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="health__card health__card--down" data-testid="health-error">
+      <p class="health__error">{{ 'health.error' | translate }}</p>
+      <button type="button" class="health__retry" (click)="load()">
+        {{ 'health.retry' | translate }}
+      </button>
+    </div>
+  }
+</section>

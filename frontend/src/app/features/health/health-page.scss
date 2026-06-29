@@ -1,0 +1,43 @@
+.health {
+  max-width: 32rem;
+  margin: 4rem auto;
+  font-family: system-ui, sans-serif;
+  text-align: center;
+
+  &__title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &__card {
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid #ddd;
+
+    &--up {
+      border-color: #2e7d32;
+      background: #edf7ed;
+    }
+
+    &--down {
+      border-color: #c62828;
+      background: #fdecea;
+    }
+  }
+
+  &__ok {
+    font-weight: 600;
+    color: #2e7d32;
+  }
+
+  &__error {
+    font-weight: 600;
+    color: #c62828;
+  }
+
+  &__retry {
+    margin-top: 0.75rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+  }
+}
