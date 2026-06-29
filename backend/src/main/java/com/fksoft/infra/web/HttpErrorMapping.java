@@ -43,8 +43,12 @@ import com.fksoft.domain.finance.FinancePeriodClosedException;
 import com.fksoft.domain.finance.FinancePeriodInvalidException;
 import com.fksoft.domain.intelligence.InsightDecisionInvalidException;
 import com.fksoft.domain.intelligence.InsightNotFoundException;
+import com.fksoft.domain.marketing.CampaignInvalidException;
+import com.fksoft.domain.marketing.CampaignNotFoundException;
 import com.fksoft.domain.marketing.ConsentInvalidException;
 import com.fksoft.domain.marketing.ConsentNotFoundException;
+import com.fksoft.domain.marketing.NewsletterException;
+import com.fksoft.domain.marketing.SegmentInvalidException;
 import com.fksoft.domain.payout.PayoutAlreadyExecutedException;
 import com.fksoft.domain.payout.PayoutAmountInvalidException;
 import com.fksoft.domain.payout.PayoutGatewayException;
@@ -153,7 +157,11 @@ public class HttpErrorMapping {
           entry(SupportCaseTransitionInvalidException.class, HttpStatus.CONFLICT),
           entry(SupportCaseRefundDuplicateException.class, HttpStatus.CONFLICT),
           entry(ConsentInvalidException.class, HttpStatus.BAD_REQUEST),
-          entry(ConsentNotFoundException.class, HttpStatus.NOT_FOUND));
+          entry(ConsentNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(SegmentInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(CampaignInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(CampaignNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(NewsletterException.class, HttpStatus.BAD_GATEWAY));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {

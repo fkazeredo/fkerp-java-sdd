@@ -58,11 +58,13 @@ CREATE TABLE campaigns (
 );
 
 -- Per-recipient idempotency of a dispatch (BR4): a recipient is sent to at most once per campaign.
+-- The (campaign_id, recipient_ref) pair is the PRIMARY KEY — it is also the idempotency guard.
 CREATE TABLE campaign_sends (
     campaign_id   uuid          NOT NULL,
     recipient_ref varchar(120)  NOT NULL,            -- recipient subject id (VALUE)
     sent_at       timestamptz   NOT NULL,
-    CONSTRAINT ux_campaign_sends UNIQUE (campaign_id, recipient_ref)
+    provider_ref  varchar(120),                      -- provider's message reference (audit)
+    PRIMARY KEY (campaign_id, recipient_ref)
 );
 
 CREATE INDEX ix_campaign_sends_campaign ON campaign_sends (campaign_id);

@@ -50,4 +50,15 @@ public interface ConsentRepository extends JpaRepository<Consent, UUID> {
   @Query("select c from Consent c where c.subjectType = :type and c.subjectId = :subjectId")
   List<Consent> findAllForSubject(
       @Param("type") SubjectType type, @Param("subjectId") String subjectId);
+
+  /**
+   * The distinct subjects (type + id) that have <strong>any</strong> consent row for a purpose —
+   * the candidate base a campaign for that purpose draws from in v1 (DL-0059: the send starts from
+   * the consent base the module owns). The current GRANTED/REVOKED status of each is then resolved
+   * by {@link #findLatest} so the filter (BR2) suppresses the revoked ones.
+   */
+  @Query(
+      "select distinct c.subjectType, c.subjectId from Consent c where c.purpose = :purpose "
+          + "order by c.subjectType, c.subjectId")
+  List<Object[]> findDistinctSubjectsForPurpose(@Param("purpose") ConsentPurpose purpose);
 }

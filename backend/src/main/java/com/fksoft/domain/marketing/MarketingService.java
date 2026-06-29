@@ -1,10 +1,17 @@
 package com.fksoft.domain.marketing;
 
+import com.fksoft.domain.marketing.internal.Campaign;
+import com.fksoft.domain.marketing.internal.CampaignRepository;
+import com.fksoft.domain.marketing.internal.CampaignSend;
+import com.fksoft.domain.marketing.internal.CampaignSendRepository;
 import com.fksoft.domain.marketing.internal.Consent;
 import com.fksoft.domain.marketing.internal.ConsentRepository;
+import com.fksoft.domain.marketing.internal.Segment;
+import com.fksoft.domain.marketing.internal.SegmentRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -29,6 +36,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class MarketingService {
 
   private final ConsentRepository consentRepository;
+  private final SegmentRepository segmentRepository;
+  private final CampaignRepository campaignRepository;
+  private final CampaignSendRepository campaignSendRepository;
+  private final NewsletterSender newsletterSender;
   private final Clock clock;
   private final ApplicationEventPublisher events;
 
@@ -130,6 +141,163 @@ public class MarketingService {
   public List<ConsentView> history(SubjectRef subject, ConsentPurpose purpose) {
     return consentRepository.findHistory(subject.type(), subject.id(), purpose).stream()
         .map(Consent::toView)
+        .toList();
+  }
+
+  // --- Segments (BR3/DL-0059) ---
+
+  /**
+   * Defines a segment from validated criteria (BR3/DL-0059). The criteria are validated against the
+   * closed catalog by {@link SegmentCriteria}; an unknown field is a {@link
+   * SegmentInvalidException}.
+   *
+   * @param command the definition (name + raw criteria)
+   * @param actor who defines it (audit)
+   * @return the persisted segment view
+   * @throws SegmentInvalidException when the criteria are unknown or malformed
+   */
+  @Transactional
+  public SegmentView defineSegment(DefineSegmentCommand command, String actor) {
+    SegmentCriteria criteria = new SegmentCriteria(command.criteria());
+    Instant now = clock.instant();
+    Segment segment = Segment.define(command.name(), criteria, now, actor);
+    segmentRepository.save(segment);
+    log.info(
+        "SegmentDefined segmentId={} name={} definedBy={}", segment.id(), command.name(), actor);
+    return segment.toView();
+  }
+
+  /**
+   * Estimates a segment's reach (BR3). In v1 the reach is computed over the consent base the module
+   * owns (DL-0059): the subjects with a current GRANTED consent for the newsletter — i.e. the ones
+   * a campaign over this segment could actually reach. No new personal data is collected.
+   *
+   * @param segmentId the segment id
+   * @return the number of currently consented, reachable subjects
+   * @throws SegmentInvalidException when the segment does not exist
+   */
+  @Transactional(readOnly = true)
+  public long previewSegment(UUID segmentId) {
+    segmentRepository.findById(segmentId).orElseThrow(SegmentInvalidException::new);
+    return consentedRecipients(ConsentPurpose.NEWSLETTER).size();
+  }
+
+  // --- Campaigns (BR2/BR4/DL-0055) ---
+
+  /**
+   * Creates a campaign over a segment (SPEC-0019). The {@code code} is the unique public
+   * attribution token. A duplicate code surfaces as a translated business error, never a raw
+   * constraint leak.
+   *
+   * @param command the campaign details (segment, code, content, window)
+   * @param actor who creates it (audit)
+   * @return the persisted campaign view
+   * @throws SegmentInvalidException when the segment does not exist
+   */
+  @Transactional
+  public CampaignView createCampaign(CreateCampaignCommand command, String actor) {
+    segmentRepository.findById(command.segmentId()).orElseThrow(SegmentInvalidException::new);
+    Instant now = clock.instant();
+    Campaign campaign =
+        Campaign.create(
+            command.segmentId(),
+            command.code(),
+            command.contentRef(),
+            command.windowFrom(),
+            command.windowTo(),
+            now,
+            actor);
+    campaignRepository.save(campaign);
+    log.info(
+        "CampaignCreated campaignId={} segmentId={} code={} createdBy={}",
+        campaign.id(),
+        command.segmentId(),
+        command.code(),
+        actor);
+    return campaign.toView();
+  }
+
+  /**
+   * Dispatches a campaign (BR2/BR4/DL-0055): gathers the candidate recipients, <strong>filters by
+   * consent before enqueuing</strong> (BR2) so subjects without a current GRANTED consent are
+   * suppressed and counted (never a global error), skips recipients already sent to (BR4
+   * idempotency, the {@code campaign_sends} key), sends each remaining message through the {@link
+   * NewsletterSender} ACL and records the send. Publishes {@link CampaignSent} with the counts (no
+   * PII).
+   *
+   * @param campaignId the campaign id
+   * @param actor who triggers it (audit)
+   * @return the send result (targeted / suppressed / queued)
+   * @throws CampaignNotFoundException when the campaign does not exist
+   */
+  @Transactional
+  public CampaignSendResult sendCampaign(UUID campaignId, String actor) {
+    Campaign campaign =
+        campaignRepository.findById(campaignId).orElseThrow(CampaignNotFoundException::new);
+    Instant now = clock.instant();
+    ConsentPurpose purpose = ConsentPurpose.NEWSLETTER;
+
+    List<SubjectRef> candidates = candidateRecipients(purpose);
+    int targeted = candidates.size();
+    int suppressed = 0;
+    int queued = 0;
+
+    for (SubjectRef recipient : candidates) {
+      if (!currentState(recipient, purpose).isGranted()) {
+        suppressed++; // BR2: no GRANTED consent → excluded from the dispatch (filter + count)
+        continue;
+      }
+      if (campaignSendRepository.existsByCampaignIdAndRecipientRef(campaignId, recipient.id())) {
+        continue; // BR4: already sent to this recipient for this campaign — idempotent skip
+      }
+      NewsletterSendResult sent =
+          newsletterSender.send(new NewsletterMessage(campaignId, recipient.id(), campaign.code()));
+      campaignSendRepository.save(
+          CampaignSend.record(campaignId, recipient.id(), sent.providerMessageRef(), now));
+      queued++;
+    }
+
+    campaign.markSent(now, actor);
+    campaignRepository.save(campaign);
+    events.publishEvent(new CampaignSent(campaignId, targeted, suppressed, now));
+    log.info(
+        "CampaignSent campaignId={} targeted={} suppressedNoConsent={} queued={} sentBy={}",
+        campaignId,
+        targeted,
+        suppressed,
+        queued,
+        actor);
+    return new CampaignSendResult(campaignId, targeted, suppressed, queued);
+  }
+
+  /** Fetches a campaign by id. */
+  @Transactional(readOnly = true)
+  public CampaignView getCampaign(UUID campaignId) {
+    return campaignRepository
+        .findById(campaignId)
+        .map(Campaign::toView)
+        .orElseThrow(CampaignNotFoundException::new);
+  }
+
+  // --- internals ---
+
+  /**
+   * The candidate recipients for a purpose (DL-0059): the distinct subjects that have any consent
+   * row for it — the base the module owns. Their current GRANTED/REVOKED status is resolved by the
+   * send filter (BR2).
+   */
+  private List<SubjectRef> candidateRecipients(ConsentPurpose purpose) {
+    return consentRepository.findDistinctSubjectsForPurpose(purpose).stream()
+        .map(row -> new SubjectRef((String) row[1], (SubjectType) row[0]))
+        .toList();
+  }
+
+  /**
+   * The subjects with a current GRANTED consent for a purpose (the reachable base, for preview).
+   */
+  private List<SubjectRef> consentedRecipients(ConsentPurpose purpose) {
+    return candidateRecipients(purpose).stream()
+        .filter(recipient -> currentState(recipient, purpose).isGranted())
         .toList();
   }
 }
