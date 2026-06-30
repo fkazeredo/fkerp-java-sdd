@@ -25,6 +25,10 @@ services:
       DB_USERNAME: ${DB_USERNAME:-acme}
       DB_PASSWORD: ${DB_PASSWORD:-acme}
       SERVER_PORT: "8080"
+      # Observability (SPEC-0027/DL-0096): in the container, emit structured JSON logs (ECS) so
+      # Grafana Alloy can ship them to Loki. Dev/local runs keep the human-readable console
+      # (logging.pattern.console) — this override only applies to the containerized app.
+      LOGGING_STRUCTURED_FORMAT_CONSOLE: ${LOGGING_STRUCTURED_FORMAT_CONSOLE:-ecs}
     ports:
       - "${APP_PORT:-8080}:8080"
     depends_on:
