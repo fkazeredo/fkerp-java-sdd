@@ -54,6 +54,16 @@ conforme `docs/RUN-PHASE.md`.
 > padrões já validados do projeto (relógio controlado, módulo-folha). As reversões são
 > baratas/moderadas e localizadas no módulo `assets`.
 
+> _Nota Fase 8i (People — jornada/banco de horas — SPEC-0022):_ DL-0069 (jornada/banco como serviço
+> de domínio puro sobre o snapshot operacional, sem reescrever o crawler — Média/Moderada), DL-0071
+> (divergência sinaliza, nunca corrige — Média/Barata) e DL-0072 (holerite no Compliance/PAYROLL por
+> valor — Alta/Barata) são reversões baratas/localizadas no módulo `people`. **DL-0070** é a do
+> destaque (**Confiança=Baixa**): a **política de banco de horas** (janela de compensação, limites,
+> acordo coletivo) é decisão **trabalhista/negocial** que só o RH/jurídico da empresa fecha — o v1
+> adota o saldo mensal + janela CLT configurável (default 6 meses do acordo individual escrito,
+> art. 59). A reversão é **Moderada** (entra um sistema de folha por cima), não Cara: o
+> `JourneyCalculator` e as tabelas já são a base.
+
 ## Todas as decisões
 
 | DL | Fase | Título | Conf. | Rev. |
@@ -126,3 +136,7 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0066](DL-0066-assets-license-expiry-controlled-clock-job-30d.md) | 8h | Assets: alerta de licença a vencer por **job de relógio controlado** (30d, idempotente por `expiry_signaled_at`); `?expiringWithinDays=N` ad-hoc | Média | Barata |
 | [DL-0067](DL-0067-assets-publishes-events-leaf-no-consumers-now.md) | 8h | Assets é **folha**: publica `AssetRegistered`/`AssetLicenseExpiring` in-process; **não** fia consumidores Finance/Intelligence (custo automático = regra inexistente) | Média | Barata |
 | [DL-0068](DL-0068-assets-retire-audit-inline-and-status-machine.md) | 8h | Assets: baixa (RETIRED) **auditada inline** (retired_at/by/reason); ACTIVE→RETIRED terminal; re-baixar → 409 | Média | Barata |
+| [DL-0069](DL-0069-people-journey-as-pure-service-over-operational-snapshot.md) | 8i | People: jornada/banco como serviço de domínio puro sobre o snapshot operacional (não reescreve o crawler); `snapshotRef` por valor | Média | Moderada |
+| [DL-0070](DL-0070-people-timebank-monthly-balance-and-clt-compensation-window.md) | 8i | People: banco de horas = saldo mensal (extras/faltas, sinal) + janela de compensação CLT configurável (default 6 meses, art. 59) | **Baixa** | Moderada |
+| [DL-0071](DL-0071-people-discrepancy-detection-alerts-not-corrects.md) | 8i | People: divergência (ímpar/faltante/incoerente) sinaliza alerta + fila, **nunca corrige** (BR4); idempotente | Média | Barata |
+| [DL-0072](DL-0072-people-payslip-archived-in-compliance-by-value.md) | 8i | People: holerite no Compliance (PAYROLL, retenção 5a, `hasPersonalData`) via orquestrador infra; `documentId` por valor | Alta | Barata |
