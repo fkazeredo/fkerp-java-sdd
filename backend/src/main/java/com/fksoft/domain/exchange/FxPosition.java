@@ -1,7 +1,6 @@
-package com.fksoft.domain.exchange.internal;
+package com.fksoft.domain.exchange;
 
-import com.fksoft.domain.exchange.FxPositionStatus;
-import com.fksoft.domain.exchange.FxPositionView;
+import com.fksoft.domain.ModuleInternal;
 import com.fksoft.domain.money.Money;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -32,6 +31,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "fx_positions")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class FxPosition {
 
   private static final int MONEY_SCALE = 2;

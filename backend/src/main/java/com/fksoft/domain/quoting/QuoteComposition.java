@@ -1,8 +1,8 @@
-package com.fksoft.domain.quoting.internal;
+package com.fksoft.domain.quoting;
 
+import com.fksoft.domain.ModuleInternal;
 import com.fksoft.domain.exchange.CurrencyPair;
 import com.fksoft.domain.money.Money;
-import com.fksoft.domain.quoting.PriceOrigin;
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -28,6 +28,7 @@ import java.util.UUID;
  * @param markupSource markup governance source
  * @param suggestedAmount suggested sale price
  */
+@ModuleInternal
 public record QuoteComposition(
     PriceOrigin priceOrigin,
     Money basePrice,

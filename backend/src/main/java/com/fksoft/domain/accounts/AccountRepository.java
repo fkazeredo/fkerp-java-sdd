@@ -1,7 +1,6 @@
-package com.fksoft.domain.accounts.internal;
+package com.fksoft.domain.accounts;
 
-import com.fksoft.domain.accounts.AccountStatus;
-import com.fksoft.domain.accounts.LegalType;
+import com.fksoft.domain.ModuleInternal;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -15,6 +14,7 @@ import org.springframework.data.repository.query.Param;
  * unique index on {@code (legal_type, document_number)} is the authoritative duplicate guard (BR3);
  * {@link #existsByLegalTypeAndDocumentNumber} is the friendly pre-check on top of it.
  */
+@ModuleInternal
 public interface AccountRepository extends JpaRepository<Account, UUID> {
 
   /** Whether an account already exists for the given legal type and normalized document digits. */

@@ -1,8 +1,6 @@
-package com.fksoft.domain.accounts.internal;
+package com.fksoft.domain.accounts;
 
-import com.fksoft.domain.accounts.AccountStatus;
-import com.fksoft.domain.accounts.Document;
-import com.fksoft.domain.accounts.LegalType;
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -26,6 +24,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "accounts")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class Account {
 
   @Id private UUID id;

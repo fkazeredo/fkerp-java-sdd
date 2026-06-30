@@ -1,7 +1,5 @@
 package com.fksoft.domain.exchange;
 
-import com.fksoft.domain.exchange.internal.PinnedSellRate;
-import com.fksoft.domain.exchange.internal.PinnedSellRateRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;

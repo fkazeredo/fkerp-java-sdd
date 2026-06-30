@@ -1,6 +1,6 @@
-package com.fksoft.domain.commercialpolicy.internal;
+package com.fksoft.domain.commercialpolicy;
 
-import com.fksoft.domain.commercialpolicy.ParameterScope;
+import com.fksoft.domain.ModuleInternal;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
@@ -17,6 +17,7 @@ import java.util.Optional;
  * validFrom} DESC → {@code createdAt} DESC → {@code id} ASC. The {@code id} tie-break makes the
  * result deterministic — two rules never share an id.
  */
+@ModuleInternal
 public final class ParameterResolver {
 
   private static final Comparator<ParameterRule> PRECEDENCE =

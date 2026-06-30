@@ -1,8 +1,5 @@
 package com.fksoft.domain.commercialpolicy;
 
-import com.fksoft.domain.commercialpolicy.internal.ParameterResolver;
-import com.fksoft.domain.commercialpolicy.internal.ParameterRule;
-import com.fksoft.domain.commercialpolicy.internal.ParameterRuleRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;

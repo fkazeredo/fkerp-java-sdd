@@ -1,5 +1,6 @@
-package com.fksoft.domain.quoting.internal;
+package com.fksoft.domain.quoting;
 
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -22,6 +23,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "override_records")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class OverrideRecord {
 
   @Id private UUID id;

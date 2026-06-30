@@ -1,12 +1,9 @@
-package com.fksoft.domain.sourcing.internal;
+package com.fksoft.domain.sourcing;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fksoft.domain.money.Money;
-import com.fksoft.domain.sourcing.IntegrationLevel;
-import com.fksoft.domain.sourcing.OfferOrigin;
-import com.fksoft.domain.sourcing.SourcedOfferInvalidException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;

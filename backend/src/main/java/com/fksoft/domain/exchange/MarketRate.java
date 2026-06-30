@@ -1,8 +1,6 @@
-package com.fksoft.domain.exchange.internal;
+package com.fksoft.domain.exchange;
 
-import com.fksoft.domain.exchange.CurrencyPair;
-import com.fksoft.domain.exchange.MarketRateSource;
-import com.fksoft.domain.exchange.MarketRateView;
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -26,6 +24,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "market_rates")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class MarketRate {
 
   @Id private UUID id;

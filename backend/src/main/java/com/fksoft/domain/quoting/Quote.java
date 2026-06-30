@@ -1,14 +1,8 @@
-package com.fksoft.domain.quoting.internal;
+package com.fksoft.domain.quoting;
 
+import com.fksoft.domain.ModuleInternal;
 import com.fksoft.domain.exchange.CurrencyPair;
 import com.fksoft.domain.money.Money;
-import com.fksoft.domain.quoting.PriceOrigin;
-import com.fksoft.domain.quoting.QuoteOverrideCurrencyMismatchException;
-import com.fksoft.domain.quoting.QuoteOverrideNotApplicableException;
-import com.fksoft.domain.quoting.QuoteOverrideReasonRequiredException;
-import com.fksoft.domain.quoting.QuoteSnapshot;
-import com.fksoft.domain.quoting.QuoteStatus;
-import com.fksoft.domain.quoting.QuoteView;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -44,6 +38,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "quotes")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class Quote {
 
   @Id private UUID id;

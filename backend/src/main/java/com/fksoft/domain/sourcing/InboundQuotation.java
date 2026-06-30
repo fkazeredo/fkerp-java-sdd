@@ -1,5 +1,6 @@
-package com.fksoft.domain.sourcing.internal;
+package com.fksoft.domain.sourcing;
 
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -18,6 +19,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "inbound_quotations")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class InboundQuotation {
 
   @Id private String externalQuotationId;
