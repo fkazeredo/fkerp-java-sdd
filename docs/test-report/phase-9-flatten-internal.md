@@ -46,7 +46,7 @@ testes que consomem tipos ex-`internal` de um pacote diferente (ex.: `com.fksoft
 
 ## Resultado
 
-`./mvnw verify` **verde** ao fim de cada lote e no fechamento. Total final: **<NTESTS> testes**, 0
+`./mvnw verify` **verde** ao fim de cada lote e no fechamento. Total final: **468 testes**, 0
 falhas, 0 erros (eram 466 na 0.20.0; o delta é o teste de teeth da nova regra + a própria regra
 contada como `@ArchTest`). **ArchUnit 16 regras** (era 15). **Spotless** 0 alterações, **Checkstyle**
 0 violações. **Nenhum pacote `internal`** sob `com.fksoft.domain` (main e test) — critério de aceite

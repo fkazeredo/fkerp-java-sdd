@@ -1,12 +1,36 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.20.0.md`](0.20.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.20.1.md`](0.20.1.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.20.1 — Phase 9 · Structural cleanup: drop the `internal` package from the domain (refactor, no user-facing change)
+
+**PATCH, refactor only — no contract change and no new user capability** (Rule Zero). The domain's
+implementation types moved out of the `com.fksoft.domain.<module>.internal.*` sub-package into the
+module's base package `com.fksoft.domain.<module>.*`. The `internal` folder convention — inherited
+from the product's Go version, where `internal/` is a compiler keyword — **no longer exists** under
+`com.fksoft.domain`. Nothing in the REST endpoints, DTOs, JSON, published events, i18n keys, database
+schema or behavior changed, so the **user manual is intentionally unchanged**.
+
+Flattening would otherwise turn each module's base package into its whole public surface for Spring
+Modulith (the unnamed named interface), so Modulith would **stop hiding** the formerly-internal
+types. To avoid weakening any gate (CLAUDE.md Rule 5), the boundary was **moved**, not removed:
+(1) a type marker `@com.fksoft.domain.ModuleInternal` on every formerly-internal public type
+(package-private types stay hidden by the compiler, no marker needed); (2) a new ArchUnit rule
+`MODULE_INTERNAL_TYPES_ARE_NOT_VISIBLE_ACROSS_MODULES` — no class of another domain module may depend
+on a `@ModuleInternal` type (the module itself and the `infra` layer are exempt — ADR 0010/0012);
+(3) a teeth test proving the rule fails when a foreign module touches such a type. The
+Intelligence/Portfolio/Platform boundary predicates now recognise the marker instead of the
+`.internal` package signal. **20 domain modules** flattened (main + test); ArchUnit now has **16
+rules**; Spring Modulith stays acyclic across the 22 modules. **No Flyway migration.** OpenAPI doc
+version bumped to 0.20.1 (metadata, not a contract). ADR 0016 + DL-0089. Tag `0.20.1`.
 
 ---
 
