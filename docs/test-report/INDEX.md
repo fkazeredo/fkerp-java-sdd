@@ -66,6 +66,7 @@ resultado, cobertura e como reproduzir.
 | Slice 10-2 — Login/silent-refresh + paleta + atalhos + canDeactivate | SPEC-0026 | [slice-10-2-auth-palette-a11y.md](slice-10-2-auth-palette-a11y.md) | ✅ verde (frontend: lint + 42 testes + build; revalidação via `/me`; `Ctrl/Cmd+K`; atalhos; ajuda `?`; `canDeactivate`) |
 | Slice 10-3 — Repaginação das telas + estados | SPEC-0026 | [slice-10-3-repaginate-screens.md](slice-10-3-repaginate-screens.md) | ✅ verde (frontend: lint + 50 testes + build; 6 telas com PrimeNG + `ScreenState` loading/empty/error/permissão; lazy routes) |
 | Slice 10-4 — Dashboard com KPIs | SPEC-0026 | [slice-10-4-dashboard.md](slice-10-4-dashboard.md) | ✅ verde (frontend: lint + 57 testes + build; KPIs no cliente dos endpoints existentes; **sem backend novo**; backend `./mvnw verify` 468 testes intacto) |
+| Fatia 11-1 — Actuator + Micrometer + Prometheus + `/api/version` | SPEC-0027 | [phase-11-1-actuator-version.md](phase-11-1-actuator-version.md) | ✅ verde (backend **474 testes**; `GET /api/version` público `{version,gitCommit,buildTime}` por build-info+git com degradação graciosa — DL-0097; Actuator expõe só `health,info,prometheus,metrics`; `health`/`info`/`version` públicos, `prometheus`/`metrics` atrás de **ROLE_IT** 401/403/200 — DL-0095; `env`/`beans` 404 via novo handler `NoResourceFoundException`; tag `application`) |
 
 ## Resumo por nível (Fase 0)
 
