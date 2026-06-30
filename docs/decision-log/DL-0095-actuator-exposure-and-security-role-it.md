@@ -32,6 +32,17 @@ A regra é adicionada ao `SecurityConfig.configure(...)` (a mesma cadeia real us
 teste), antes da regra genérica `/actuator/health*` pública, garantindo precedência correta dos
 matchers.
 
+4. **Como o Prometheus raspa o endpoint protegido.** Como `/actuator/prometheus` exige `ROLE_IT`, o
+   Prometheus do compose **autentica com um Bearer token** de um usuário `ROLE_IT` (config
+   `authorization.credentials_file` apontando para `infra/prometheus/scrape-token`, montado no
+   container; arquivo **não versionado** — o operador o gera com o login do seed `it` e o coloca lá).
+   Sem o token, o Prometheus recebe 401 e o alvo aparece como `down` no Grafana — comportamento
+   **seguro por padrão** (não vaza telemetria a um scraper não autenticado). Em produção endurecida,
+   a recomendação é um **service account/token de longa duração** ou raspagem por rede restrita
+   (as duas se somam à proteção por papel). Esta é a reconciliação operacional da decisão (a POC
+   raspava sem auth porque tratava o actuator como interno; aqui o papel é a trava primária e o token
+   é o caminho do scraper).
+
 ## Justificativa
 
 - **Tarefa da fase (autoridade máxima):** pede explicitamente exposição deliberada + proteção dos

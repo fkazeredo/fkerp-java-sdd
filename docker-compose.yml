@@ -1,5 +1,8 @@
-# Local stack for the Acme Travel ERP (SPEC-0001 acceptance: app + db come up,
-# GET /api/system/health returns UP). Configuration via .env (see .env.example).
+# Local stack for the Acme Travel ERP.
+# - app + db: the application and its database (SPEC-0001: GET /api/system/health returns UP).
+# - prometheus + loki + alloy + grafana: the observability stack (SPEC-0027 / Phase 11). `docker
+#   compose up` brings the whole thing up; metrics and logs land in Grafana (datasources + dashboard
+#   pre-provisioned). Configuration via .env (see .env.example).
 services:
   db:
     image: postgres:16-alpine
@@ -16,6 +19,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 12
+    networks: [acme]
 
   app:
     build:
@@ -34,6 +38,70 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks: [acme]
+
+  # ---- Observability stack (SPEC-0027 / Phase 11) ----
+
+  prometheus:
+    image: prom/prometheus:latest
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      # Bearer token for the role-gated /actuator/prometheus scrape (DL-0095). Generate it once and
+      # drop it at infra/prometheus/scrape-token (NOT versioned) — see infra/prometheus/README.md.
+      - ./infra/prometheus/scrape-token:/etc/prometheus/scrape-token:ro
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    networks: [acme]
+
+  loki:
+    image: grafana/loki:latest
+    user: root
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes:
+      - ./infra/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki-data:/loki
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    networks: [acme]
+
+  alloy:
+    image: grafana/alloy:latest
+    user: root
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --storage.path=/var/lib/alloy/data
+    volumes:
+      - ./infra/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
+    networks: [acme]
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin}
+      GF_USERS_DEFAULT_THEME: dark
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    depends_on:
+      - prometheus
+      - loki
+    networks: [acme]
 
 volumes:
   db-data:
+  loki-data:
+  grafana-data:
+
+networks:
+  acme:
+    driver: bridge
