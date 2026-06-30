@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideTranslateLoader, provideTranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { PageResponse } from '../../core/models/api.models';
@@ -34,6 +35,7 @@ function configure(service: Partial<ReconciliationService>): void {
   TestBed.configureTestingModule({
     imports: [ReconciliationPage],
     providers: [
+      provideNoopAnimations(),
       provideTranslateService({
         lang: 'pt-BR',
         fallbackLang: 'pt-BR',

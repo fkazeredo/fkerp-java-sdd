@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideTranslateLoader, provideTranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { InMemoryTranslateLoader } from '../../core/i18n/in-memory-translate.loader';
@@ -32,6 +33,7 @@ function configure(service: Partial<QuotingService>): void {
   TestBed.configureTestingModule({
     imports: [QuotingPage],
     providers: [
+      provideNoopAnimations(),
       provideTranslateService({
         lang: 'pt-BR',
         fallbackLang: 'pt-BR',

@@ -1,29 +1,52 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
+import { ButtonModule } from 'primeng/button';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { MessageModule } from 'primeng/message';
+import { TableModule } from 'primeng/table';
 import { ApiError } from '../../core/http/api-error';
+import { FormLeaveGuard } from '../../core/guards/can-deactivate.guard';
+import { ScreenState, ScreenStateKind } from '../../shared/screen-state/screen-state';
 import { PinnedSellRateResponse } from './exchange.models';
 import { ExchangeService } from './exchange.service';
 
-type ViewState = 'loading' | 'success' | 'error';
-
 /**
- * Exchange screen (SPEC-0003): a "pin rate" form plus the append-only history for a currency pair,
- * with loading/empty/error states. The prevailing rate is simply the newest history row.
+ * Exchange screen (SPEC-0003, repaginated SPEC-0026): a "pin rate" form plus the append-only history
+ * for a currency pair, with the loading/empty/error/permission states (BR8) via {@link ScreenState}.
+ * The prevailing rate is simply the newest history row. Implements {@link FormLeaveGuard} (BR9).
  */
 @Component({
   selector: 'app-exchange-page',
-  imports: [FormsModule, TranslatePipe],
+  imports: [
+    FormsModule,
+    TranslatePipe,
+    ButtonModule,
+    InputNumberModule,
+    InputTextModule,
+    MessageModule,
+    TableModule,
+    ScreenState,
+  ],
   templateUrl: './exchange-page.html',
 })
-export class ExchangePage implements OnInit {
+export class ExchangePage implements OnInit, FormLeaveGuard {
   private readonly exchangeService = inject(ExchangeService);
 
-  readonly state = signal<ViewState>('loading');
+  readonly state = signal<'loading' | 'success' | 'error'>('loading');
   readonly rates = signal<PinnedSellRateResponse[]>([]);
   readonly errorCode = signal<string | null>(null);
   readonly submitting = signal(false);
   readonly submitError = signal<string | null>(null);
+
+  readonly listState = computed<ScreenStateKind>(() => {
+    const s = this.state();
+    if (s === 'success') {
+      return this.rates().length === 0 ? 'empty' : 'success';
+    }
+    return s;
+  });
 
   pair = 'USD/BRL';
   currencyPair = 'USD/BRL';
@@ -32,6 +55,11 @@ export class ExchangePage implements OnInit {
 
   ngOnInit(): void {
     this.load();
+  }
+
+  /** Whether a rate value has been entered but not yet pinned (SPEC-0026 BR9). */
+  isDirty(): boolean {
+    return !this.submitting() && this.rate != null;
   }
 
   /** Loads the history for the searched pair. */
@@ -62,6 +90,7 @@ export class ExchangePage implements OnInit {
         next: () => {
           this.submitting.set(false);
           this.note = '';
+          this.rate = null;
           this.pair = this.currencyPair;
           this.load();
         },

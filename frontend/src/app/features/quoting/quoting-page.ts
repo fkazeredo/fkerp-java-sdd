@@ -1,22 +1,39 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
+import { ButtonModule } from 'primeng/button';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { MessageModule } from 'primeng/message';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
 import { ApiError } from '../../core/http/api-error';
 import { formatMoney } from '../../core/models/api.models';
+import { FormLeaveGuard } from '../../core/guards/can-deactivate.guard';
 import { QuoteView } from './quoting.models';
 import { QuotingService } from './quoting.service';
 
 /**
- * Quoting screen (SPEC-0005, keystone): composes a MANUAL quote and shows the suggested vs applied
- * amount with the full commission decomposition and provenance, then lets a human apply an override
- * with a mandatory reason — the divergence recorded against the suggestion.
+ * Quoting screen (SPEC-0005, keystone — repaginated SPEC-0026): composes a MANUAL quote and shows the
+ * suggested vs applied amount with the full commission decomposition and provenance, then lets a
+ * human apply an override with a mandatory reason — the divergence recorded against the suggestion.
+ * Implements {@link FormLeaveGuard}: a composed-but-not-applied override prompts before leaving (BR9).
  */
 @Component({
   selector: 'app-quoting-page',
-  imports: [FormsModule, TranslatePipe],
+  imports: [
+    FormsModule,
+    TranslatePipe,
+    ButtonModule,
+    InputNumberModule,
+    InputTextModule,
+    MessageModule,
+    TableModule,
+    TagModule,
+  ],
   templateUrl: './quoting-page.html',
 })
-export class QuotingPage {
+export class QuotingPage implements FormLeaveGuard {
   private readonly quotingService = inject(QuotingService);
 
   readonly quote = signal<QuoteView | null>(null);
@@ -35,6 +52,11 @@ export class QuotingPage {
 
   appliedAmount: number | null = null;
   reason = '';
+
+  /** Whether an override is being drafted (reason typed) but not yet applied (SPEC-0026 BR9). */
+  isDirty(): boolean {
+    return !this.busy() && !!this.quote() && !!this.reason;
+  }
 
   /** Composes the quote from the form and shows the result. */
   compose(): void {
