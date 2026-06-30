@@ -4,7 +4,7 @@
 > already does today**. Updated **on every delivered slice** (see the *User manual* command in
 > `CLAUDE.md`). Portuguese version: `docs/MANUAL.md` (kept in sync).
 >
-> **System version:** 0.21.0 · **Current phase:** 10 (UX & professional frontend)
+> **System version:** 0.22.0 · **Current phase:** 11 (Observability & monitoring)
 
 ## 1. What the system is
 
@@ -509,6 +509,32 @@ the system a professional ERP feel. What you now see and use:
 > computed **in the browser** from the list endpoints that already existed — **no new server endpoint**
 > was added.
 
+### Phase 11 — Monitoring and version (for operations / IT)
+
+This phase **changes no business rule and no regular-operator screen**: it gives the **IT** team ways to
+**watch the system's health and usage** and to **know which version is running**. It is the ERP's
+observability foundation (metrics, logs and monitoring dashboards).
+
+- **Which version is running.** The **`/api/version`** endpoint (open, no login) returns the system
+  **version** (e.g. `0.22.0`), the **commit id** and the **build date/time** — a one-glance way to see
+  exactly what is deployed (useful for support and a footer/"about").
+- **System health (probes).** **`/actuator/health`** (and its *liveness*/*readiness* sub-items) stay
+  **open** so infra tooling can check the system is alive and ready. The "Health" screen you already
+  knew keeps working.
+- **Metrics (IT only).** **`/actuator/prometheus`** publishes the system **metrics** (app memory/CPU,
+  request volume and timing, and **business counters** such as confirmed bookings, composed quotes,
+  issued commission invoices, logins). This endpoint is **restricted to the IT role** — without the
+  role you get **access denied**; unauthenticated, you do not get in.
+- **Grafana dashboards.** Alongside the system, a **monitoring stack** (Prometheus + Loki + Grafana)
+  comes up via `docker compose`. In **Grafana** (port 3000), IT sees the **"Acme Travel ERP — Backend
+  Overview"** dashboard (memory, request rate, CPU and business events) plus the centralized **logs**.
+  In the container, the system logs are **structured (JSON)** with each request's **correlation id** —
+  and **never** carry a password, token or personal data.
+
+> For IT: so Prometheus can scrape the protected metrics endpoint, generate a **token** for a user with
+> the **IT** role and point it at `infra/prometheus/scrape-token` (see `infra/prometheus/README.md`).
+> The monitoring stack is **config/infra** — it is not part of the backend build/tests.
+
 ## 4. Glossary
 
 - **Backend / server:** the part of the system that processes the rules and talks to the database.
@@ -573,6 +599,14 @@ the system a professional ERP feel. What you now see and use:
   the window, with a **history** of every run.
 - **System audit:** the **append-only** record of security/integration/job facts (who, what, when) for
   traceability. It keeps **metadata only**, never a secret.
+- **Metric:** a number the system continuously publishes about itself (memory, response time, how many
+  bookings confirmed, etc.) so IT can watch its health and usage.
+- **Prometheus / Grafana / Loki:** the monitoring tools — **Prometheus** collects the metrics, **Loki**
+  aggregates the logs and **Grafana** shows it all on dashboards. They come up together with the system.
+- **Structured (JSON) log:** the system's event record in machine format (JSON), with each request's
+  correlation id and **without** password/token/personal data.
+- **Version endpoint (`/api/version`):** the (open) endpoint that reports which version/commit/build
+  date is running.
 
 ## 5. Manual version history
 
@@ -591,6 +625,7 @@ the system a professional ERP feel. What you now see and use:
 | 0.19.0 | 8 — Identity | **Real login**: sign in with **username and password** ("Sign in" screen), name and "Sign out" at the top; **generic** error that never reveals whether the user exists. **Roles and permissions** (Director/Finance/Operations/IT/Policy Admin/Viewer): **sensitive actions require the role** (issue NF and close the month → Finance; trigger job/custody certificate → IT; directive → Director) — without the role, **access denied**, recorded. **Access audit** (logins and denials; who/action/when, **no password/token**). The **backend is the authority** — the screen only mirrors. Corporate single sign-on (external provider) = next step (Phase 13). |
 | 0.20.0 | 8 — Admin (administrative suppliers/contracts) | **Administrative desk**: a **lean** registry of **administrative suppliers** (power, water, telephone, software/service, self-employed) and their **contracts** (validity, recurrence, amount, document). **Recording a month's expense** automatically creates the **Accounts Payable** entry with the right kind and **points at the required documents** (utility → bill; self-employed → RPA; PJ service → NFS-e); **idempotent** (no duplicates). **The golden rule applies here**: an expense **without its document blocks the month from closing**. **Contract-expiry alert** (up to 30 days, alert only). **Registering/recording requires the Finance role**; every change is **audited** (CNPJ/CPF never shown in full). Full procurement (quotation/order) = buy if required. **End of the 8x block.** |
 | 0.21.0 | 10 — UX & professional frontend | **New experience** (no rule changes): **SaaS layout** (sidebar + top bar + mobile drawer); **light/dark theme** with the choice saved; **command palette `Ctrl/Cmd+K`** + shortcuts (`g`+key, `?` help); renewed **login** with **silent session revalidation** (returns to the intended screen); **unsaved-changes warning** when leaving a form; **real states** (loading/empty/error/permission) on every screen; a **Dashboard** with Accounts/Bookings/Reconciliation/Exchange KPIs computed in the browser. Screens built with **PrimeNG 21 + Tailwind v4** on Angular 22; **no new server endpoint**. Graduates DL-0003. |
+| 0.22.0 | 11 — Observability & monitoring | **Monitoring and version (for operations/IT)**, with no business-rule change: **`/api/version`** (open) returns version/commit/build date; **health probes** (`/actuator/health`) stay open; **metrics** (`/actuator/prometheus`) — technical (memory/CPU/requests) and **business** (bookings/quotes/invoices/logins) — **restricted to the IT role**; a **monitoring stack** (Prometheus + Loki + Grafana) that comes up via `docker compose`, with the "Acme Travel ERP — Backend Overview" dashboard and centralized logs; **JSON logs** with the correlation id and **no** secret/personal data. |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of

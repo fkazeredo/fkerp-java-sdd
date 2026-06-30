@@ -4,7 +4,7 @@
 > hoje**. É atualizado **a cada fatia entregue** (ver o comando *User manual* no `CLAUDE.md`).
 > Versão em inglês (espelho, mantida em sincronia): `docs/MANUAL.en-US.md`.
 >
-> **Versão do sistema:** 0.21.0 · **Fase atual:** 10 (UX & Frontend profissional)
+> **Versão do sistema:** 0.22.0 · **Fase atual:** 11 (Observabilidade & monitoramento)
 
 ## 1. O que é o sistema
 
@@ -513,6 +513,32 @@ deixando-o com cara de ERP profissional. O que você passa a ver e usar:
 > calculados **no próprio navegador** a partir dos endpoints de lista que já existiam — **nenhum novo
 > endpoint** foi criado no servidor.
 
+### Fase 11 — Monitoramento e versão (para a operação/TI)
+
+Esta fase **não muda nenhuma regra de negócio nem tela do operador comum**: ela dá ao time de **TI**
+formas de **acompanhar a saúde e o uso do sistema** e de **saber qual versão está no ar**. É a base de
+observabilidade do ERP (métricas, logs e painéis de monitoramento).
+
+- **Qual versão está rodando.** O endereço **`/api/version`** (aberto, sem login) responde com a
+  **versão** do sistema (ex.: `0.22.0`), o **código do commit** e a **data/hora do build**. Serve para
+  conferir, num relance, exatamente o que está publicado (útil em suporte e em rodapé/“sobre”).
+- **Saúde do sistema (sondas).** Os endereços **`/actuator/health`** (e os sub-itens de *liveness* e
+  *readiness*) ficam **abertos** para as ferramentas de infra checarem se o sistema está vivo e pronto.
+  A tela "Saúde" que o operador já conhecia continua funcionando.
+- **Métricas (só para TI).** O endereço **`/actuator/prometheus`** publica as **métricas** do sistema
+  (memória/CPU da aplicação, volume e tempo das chamadas, e **contadores de negócio** como reservas
+  confirmadas, cotações compostas, NF de comissão emitidas, logins). Esse endereço é **restrito ao
+  papel TI** — quem não tem o papel recebe **acesso negado**; quem não está autenticado, **não entra**.
+- **Painéis no Grafana.** Junto com o sistema sobe (via `docker compose`) uma **stack de monitoramento**
+  (Prometheus + Loki + Grafana). No **Grafana** (porta 3000), o time de TI vê o painel **“Acme Travel
+  ERP — Backend Overview”** com memória, taxa de requisições, CPU e os eventos de negócio, além dos
+  **logs** centralizados. Os logs do sistema, no container, saem em **formato estruturado (JSON)** com
+  o **número de correlação** de cada requisição — e **nunca** trazem senha, token ou dado pessoal.
+
+> Para o time de TI: para o Prometheus coletar as métricas (endereço protegido), gere um **token** de um
+> usuário com papel **TI** e aponte-o no `infra/prometheus/scrape-token` (ver `infra/prometheus/README.md`).
+> A stack de monitoramento é **configuração/infra** — não faz parte do build/test do backend.
+
 ## 4. Glossário
 
 - **Backend / servidor:** a parte do sistema que processa as regras e fala com o banco de dados.
@@ -577,6 +603,14 @@ deixando-o com cara de ERP profissional. O que você passa a ver e usar:
   **sem duplicar** no período, com **histórico** de cada execução.
 - **Auditoria de sistema:** o registro **somente-anexação** de fatos de segurança/integração/jobs
   (quem, o quê, quando) — para rastreabilidade. Guarda **só metadados**, nunca segredo.
+- **Métrica:** um número que o sistema publica continuamente sobre si mesmo (memória, tempo de
+  resposta, quantas reservas confirmadas etc.), para o time de TI acompanhar a saúde e o uso.
+- **Prometheus / Grafana / Loki:** as ferramentas de monitoramento — o **Prometheus** coleta as
+  métricas, o **Loki** junta os logs e o **Grafana** mostra tudo em painéis. Sobem junto com o sistema.
+- **Log estruturado (JSON):** o registro de eventos do sistema em formato de máquina (JSON), com o
+  número de correlação de cada requisição e **sem** senha/token/dado pessoal.
+- **Endpoint de versão (`/api/version`):** o endereço (aberto) que informa qual versão/commit/data de
+  build está rodando.
 
 ## 5. Histórico de versões do manual
 
@@ -595,6 +629,7 @@ deixando-o com cara de ERP profissional. O que você passa a ver e usar:
 | 0.19.0 | 8 — Identidade (Identity) | **Login de verdade**: entrar com **usuário e senha** (tela "Entrar"), nome e "Sair" no topo; erro **genérico** sem revelar se o usuário existe. **Papéis e permissões** (Diretor/Financeiro/Operacional/TI/Curador/Leitor): as **ações sensíveis exigem o papel** (emitir NF e fechar o mês → Financeiro; disparar job/custódia do certificado → TI; diretiva → Diretor) — sem o papel, **acesso negado** registrado. **Auditoria de acesso** (login e recusas; quem/ação/quando, **sem senha/token**). O **servidor é a autoridade** — a tela só reflete. Login único corporativo (provedor externo) = próxima etapa (Fase 13). |
 | 0.20.0 | 8 — Admin (fornecedores/contratos administrativos) | **Balcão administrativo**: cadastro **enxuto** de **fornecedores administrativos** (luz, água, telefone, software/serviço, autônomo) e seus **contratos** (vigência, recorrência, valor, documento). **Lançar a despesa do mês** cria automaticamente o lançamento em **Contas a Pagar** com o tipo certo e **aponta os documentos exigidos** (conta de consumo → fatura; autônomo → RPA; serviço PJ → NFS-e); **idempotente** (não duplica). **A regra de ouro vale aqui**: despesa **sem o documento impede o mês de fechar**. **Aviso de contrato a vencer** (até 30 dias, só alerta). **Cadastrar/lançar exige o papel Financeiro**; toda alteração **auditada** (CNPJ/CPF nunca aparece inteiro). Compras completas (cotação/ordem) = comprar se exigido. **Fim do bloco 8x.** |
 | 0.21.0 | 10 — UX & Frontend profissional | **Nova experiência** (sem mudar regras): **layout SaaS** (barra lateral + topo + gaveta no celular); **tema claro/escuro** com a escolha salva; **paleta de comandos `Ctrl/Cmd+K`** + atalhos (`g`+tecla, `?` ajuda); **login** renovado com **revalidação silenciosa da sessão** (volta para a tela pretendida); **aviso de alterações não salvas** ao sair de um formulário; **estados reais** (carregando/vazio/erro/permissão) em todas as telas; **Painel (dashboard)** com indicadores de Contas/Reservas/Conciliação/Câmbio calculados no navegador. Telas com **PrimeNG 21 + Tailwind v4** sobre Angular 22; **nenhum endpoint novo** no servidor. Gradua a DL-0003. |
+| 0.22.0 | 11 — Observabilidade & monitoramento | **Monitoramento e versão (para a operação/TI)**, sem mudar regras de negócio: endereço **`/api/version`** (aberto) com versão/commit/data do build; **sondas de saúde** (`/actuator/health`) abertas; **métricas** (`/actuator/prometheus`) — técnicas (memória/CPU/requisições) e de **negócio** (reservas/cotações/NF/logins) — **restritas ao papel TI**; **stack de monitoramento** (Prometheus + Loki + Grafana) que sobe junto via `docker compose`, com painel "Acme Travel ERP — Backend Overview" e logs centralizados; **logs em JSON** com número de correlação e **sem** segredo/dado pessoal. |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.
