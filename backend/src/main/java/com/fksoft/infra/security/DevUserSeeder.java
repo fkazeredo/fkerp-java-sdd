@@ -1,7 +1,7 @@
 package com.fksoft.infra.security;
 
-import com.fksoft.domain.identity.internal.IdentityUser;
-import com.fksoft.domain.identity.internal.IdentityUserRepository;
+import com.fksoft.domain.identity.IdentityUser;
+import com.fksoft.domain.identity.IdentityUserRepository;
 import java.time.Clock;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;

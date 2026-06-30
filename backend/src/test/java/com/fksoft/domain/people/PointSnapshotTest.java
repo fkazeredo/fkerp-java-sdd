@@ -2,7 +2,6 @@ package com.fksoft.domain.people;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fksoft.domain.people.internal.PointSnapshot;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
 

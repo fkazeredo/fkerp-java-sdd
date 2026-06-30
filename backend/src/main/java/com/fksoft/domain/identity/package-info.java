@@ -11,7 +11,7 @@
  * UserContextProvider} port is the seam that survives that swap, so the modules never change.
  *
  * <p><strong>Role/permission model (DL-0080/DL-0082).</strong> {@link
- * com.fksoft.domain.identity.internal.IdentityUser} (minimal local user, BCrypt hash only — never a
+ * com.fksoft.domain.identity.IdentityUser} (minimal local user, BCrypt hash only — never a
  * plaintext password/token, BR4), {@code roles} and {@code role_permissions} are the single source
  * of truth of internal authorization (BR5). Sensitive actions require the corresponding role,
  * enforced at the HTTP layer (Spring Security) and reaffirmed by the existing domain checks (e.g.
@@ -25,10 +25,12 @@
  * over that seam.
  *
  * <p>Spring Modulith application module. It depends on the Platform audit facade (a command call to
- * a consumer-leaf that never imports {@code identity}), so the graph stays acyclic. The {@code
- * internal} sub-package (user aggregate + repositories) is module-private; the Spring Security/JWT
- * configuration lives in {@code com.fksoft.infra.security} behind the {@code UserContextProvider}
- * port (ADR 0010/0012).
+ * a consumer-leaf that never imports {@code identity}), so the graph stays acyclic. The
+ * implementation types (user aggregate + repositories) live in this same package marked {@link
+ * com.fksoft.domain.ModuleInternal} and must never be reached from other modules — encapsulation is
+ * enforced by ArchUnit (Phase 9 / ADR 0016); the {@code infra} layer may still operate the user
+ * store (the Spring Security/JWT configuration lives in {@code com.fksoft.infra.security} behind
+ * the {@code UserContextProvider} port — ADR 0010/0012).
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Identity")
 package com.fksoft.domain.identity;

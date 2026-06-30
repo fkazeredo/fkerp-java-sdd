@@ -1,8 +1,5 @@
 package com.fksoft.domain.identity;
 
-import com.fksoft.domain.identity.internal.IdentityUser;
-import com.fksoft.domain.identity.internal.IdentityUserRepository;
-import com.fksoft.domain.identity.internal.RoleRepository;
 import com.fksoft.domain.platform.AuditType;
 import com.fksoft.domain.platform.SystemAuditService;
 import java.time.Clock;

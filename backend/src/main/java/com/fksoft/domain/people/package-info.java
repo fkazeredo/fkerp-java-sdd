@@ -20,9 +20,10 @@
  * com.fksoft.domain.people.PointSnapshotCollected}/{@link
  * com.fksoft.domain.people.PointCrawlingFailed} events, the {@link
  * com.fksoft.domain.people.PointFailureClass} classification and the business exceptions. The
- * {@code internal} sub-package (entities, repositories) is module-private (Spring Modulith verify).
- * It is a leaf module — nothing depends on it except the infra crawler — so it forms no dependency
- * cycle.
+ * implementation types (entities, repositories) live in this same package marked {@link
+ * com.fksoft.domain.ModuleInternal} and must never be reached from other modules — encapsulation is
+ * enforced by ArchUnit (Phase 9 / ADR 0016). It is a leaf module — nothing depends on it except the
+ * infra crawler — so it forms no dependency cycle.
  *
  * <p><strong>HR side (SPEC-0022).</strong> The module also owns the minimal HR capability built on
  * top of that operational snapshot: the {@link com.fksoft.domain.people.PeopleService} registers

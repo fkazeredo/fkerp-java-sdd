@@ -1,11 +1,5 @@
 package com.fksoft.domain.admin;
 
-import com.fksoft.domain.admin.internal.AdminContract;
-import com.fksoft.domain.admin.internal.AdminContractRepository;
-import com.fksoft.domain.admin.internal.AdminExpense;
-import com.fksoft.domain.admin.internal.AdminExpenseRepository;
-import com.fksoft.domain.admin.internal.AdminSupplier;
-import com.fksoft.domain.admin.internal.AdminSupplierRepository;
 import com.fksoft.domain.compliance.DocumentRequirementDirectory;
 import com.fksoft.domain.finance.AccountingPeriodId;
 import com.fksoft.domain.finance.EntryType;
@@ -277,8 +271,8 @@ public class AdminService {
    * each (BR5/DL-0087). The evaluation instant is a parameter (controlled clock, like {@code
    * PortfolioService.flagExpiringContracts}), so the rule is deterministically testable. A contract
    * is "expiring" when its {@code validUntil} is within {@value
-   * com.fksoft.domain.admin.internal.AdminContract#EXPIRY_WARNING_DAYS} days of {@code now} (or
-   * already past). Non-blocking; idempotent per contract.
+   * com.fksoft.domain.admin.AdminContract#EXPIRY_WARNING_DAYS} days of {@code now} (or already
+   * past). Non-blocking; idempotent per contract.
    *
    * @param now the evaluation instant (UTC)
    * @return how many contracts were newly flagged as expiring

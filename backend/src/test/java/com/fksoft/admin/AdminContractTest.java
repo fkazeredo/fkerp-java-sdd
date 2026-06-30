@@ -3,8 +3,8 @@ package com.fksoft.admin;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.fksoft.domain.admin.AdminContract;
 import com.fksoft.domain.admin.AdminContractInvalidException;
-import com.fksoft.domain.admin.internal.AdminContract;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
