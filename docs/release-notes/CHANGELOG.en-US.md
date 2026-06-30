@@ -1,7 +1,7 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.12.0.md`](0.12.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.17.0.md`](0.17.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
@@ -9,6 +9,31 @@ detailed source; this file is the stakeholder-facing en-US mirror. Versioning fo
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
 
 ---
+
+## 0.17.0 — Phase 8i · People (SPEC-0022)
+
+`people` module (HR side): the **minimal HR** capability built on top of the operational point snapshot
+the module has owned since Phase 6 — **collaborators, period journey, time-bank and discrepancies** —
+without becoming payroll. It is **built on top** of the clock, **not a crawler rewrite**: the journey is
+computed over the **operational snapshot** (treated as **non-legal**, BR6), while the legal artifact (the
+signed AFD/AEJ) stays in the Compliance vault. Heavy payroll (eSocial/FGTS/vacation/13th) is **buy/
+integrate** (a generic subdomain). Three slices. **8i-1 (V27):** `Employee` has a **unique** identifier,
+admission date, contracted daily journey (`HH:mm`, the `ContractedJourney` value object), an
+ACTIVE/ON_LEAVE/TERMINATED status (born ACTIVE) and the employment-contract document (Compliance, by
+value). **8i-2 (DL-0069/0070/0071):** the pure `JourneyCalculator` computes the **time-bank balance** =
+worked − contracted minutes (signed: positive overtime, negative shortfall; a negative bank is allowed —
+CLT art. 59) and detects discrepancies (`ODD_PUNCH`/`MISSING_PUNCH`/`INCOHERENT_JOURNAL`). `processJourney`
+is **idempotent** per `(employee, period)` and consumes the period's operational snapshot **by value**
+(`snapshotRef`, DL-0069); a discrepancy becomes an **alert** in a treatment queue and **never
+auto-corrects** (BR4/DL-0071). It publishes `JourneyProcessed` and `JourneyDiscrepancy`. **8i-3
+(DL-0072):** an `infra` orchestrator archives the payslip in the Compliance vault as a **PAYROLL**
+document (5-year retention, `hasPersonalData=true` — LGPD) referenced by value; People never becomes a
+vault. Endpoints under `/api/people`: `POST /employees`, `GET /employees/{id}`, `GET /employees?status=`,
+`POST /employees/{id}/journey`, `GET /employees/{id}/journey?period=`,
+`GET /employees/{id}/timebank?period=`, `GET /discrepancies?period=&status=`,
+`POST /employees/{id}/payslip`. DL-0069…0072 (DL-0070 is the only Low-confidence one — the time-bank
+compensation policy is a labor/collective-agreement decision the HR/legal team must confirm; reversal is
+Moderate, not Costly). `./mvnw verify` green: 411 tests, ArchUnit 14, Modulith acyclic, 0 Checkstyle.
 
 ## 0.16.0 — Phase 8h · Assets (SPEC-0021)
 
