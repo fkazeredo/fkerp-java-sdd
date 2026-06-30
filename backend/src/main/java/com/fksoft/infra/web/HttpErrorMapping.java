@@ -9,6 +9,10 @@ import com.fksoft.domain.aftersales.SupportCaseInvalidException;
 import com.fksoft.domain.aftersales.SupportCaseNotFoundException;
 import com.fksoft.domain.aftersales.SupportCaseRefundDuplicateException;
 import com.fksoft.domain.aftersales.SupportCaseTransitionInvalidException;
+import com.fksoft.domain.assets.AssetAlreadyRetiredException;
+import com.fksoft.domain.assets.AssetInvalidException;
+import com.fksoft.domain.assets.AssetNotFoundException;
+import com.fksoft.domain.assets.LicenseExpiryRequiredException;
 import com.fksoft.domain.billing.BillingBaseInvalidException;
 import com.fksoft.domain.billing.BillingInvoiceNotFoundException;
 import com.fksoft.domain.billing.BillingInvoiceTransitionInvalidException;
@@ -171,7 +175,11 @@ public class HttpErrorMapping {
           entry(BrandDuplicateException.class, HttpStatus.CONFLICT),
           entry(BrandInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(RepresentationContractInvalidException.class, HttpStatus.BAD_REQUEST),
-          entry(BrandGoalInvalidException.class, HttpStatus.BAD_REQUEST));
+          entry(BrandGoalInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(AssetNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(AssetInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(LicenseExpiryRequiredException.class, HttpStatus.BAD_REQUEST),
+          entry(AssetAlreadyRetiredException.class, HttpStatus.CONFLICT));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {

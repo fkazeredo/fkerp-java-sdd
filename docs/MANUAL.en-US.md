@@ -287,6 +287,38 @@ What the operator does:
 > booking, case) are **values**, no FK; no price/commission lives here — the realized is just a
 > read-model projection of the sales events.
 
+### Phase 8 — Internal patrimony (equipment, licenses and other goods)
+
+**Internal patrimony** (*Assets*) records the **Acme's own goods** — equipment, **software licenses**
+and other goods — with the acquisition **cost** and the links to the corresponding **document** (in the
+document vault / Compliance) and **finance ledger entry**. It is a **lean** registry: it ties
+cost↔document together and **warns when a license is about to expire**; it is **not** a full
+asset-management system (no depreciation, no maintenance/IT tickets, no resale stock). It is **patrimony,
+not a product**: it never enters pricing or a sale.
+
+What the operator does:
+
+- **Register a good:** pick the **type** (equipment, software license or other), enter the
+  **identification** (e.g. "JetBrains All Products Pack"), the acquisition **date** and **cost** and,
+  optionally, the **supplier**, the **document** (invoice/contract already in the vault) and the **cost
+  entry** (in finance) — the latter two are referenced by **identifier**, without duplicating the data.
+  The good is born **active**. A **software license** **requires an expiry date**.
+- **Look up/list goods:** view a good by its id, or list filtering by **type** and/or **status**
+  (active/retired). You can also ask for the **licenses expiring** within the next **N** days.
+- **Retire a good:** when a good leaves use, record the **retirement** with a **reason**; the system
+  keeps **who** retired it and **when** (audit). Retirement is **final** — a retired good cannot be
+  retired again.
+- **Expiring-license warning:** the system signals, **once per license**, the licenses that are **about
+  to expire** (within 30 days) or have expired, so IT/governance can renew in time. It is a **warning**,
+  not a block.
+
+> For IT: `POST /api/assets`, `GET /assets/{id}`,
+> `GET /assets?type=&status=&expiringWithinDays=`, `POST /assets/{id}/retire` (retire with a reason),
+> `POST /assets/flag-expiring` (triggers the expiry warning). The document (Compliance) and ledger-entry
+> (Finance) identifiers are **values**, no FK; no sale price lives here. If the business needs **full
+> asset management** (depreciation, maintenance), the recommendation is to **buy** a dedicated system and
+> use this module as the registry/integration point.
+
 ## 4. Glossary
 
 - **Backend / server:** the part of the system that processes the rules and talks to the database.
@@ -331,6 +363,12 @@ What the operator does:
   booking is confirmed it becomes a **conversion** (the campaign-return signal for Intelligence).
 - **LGPD erasure:** honouring the subject's request to delete their **marketing data**, while keeping
   the **revocation proof** (so they are not re-included) and whatever **another law** requires to keep.
+- **Internal patrimony (*Assets*):** the company's own goods (equipment, software licenses, other
+  goods), with cost, document and a lifecycle (active/retired). It is a registry, not a product.
+- **Retiring a good (*retire*):** marking a good as out of use, with a reason and an audit (who/when).
+  It is final.
+- **Expiring license:** a software license whose **expiry date** is near (within 30 days) or has passed;
+  the system **warns** so it can be renewed, without blocking anything.
 
 ## 5. Manual version history
 
@@ -343,6 +381,7 @@ What the operator does:
 | 0.13.0 | 8 — AfterSales | After-sales: support cases (complaint/change/cancellation/refund/info) tied to a booking; **governed SLA deadlines** (24h/72h/48h, tightenable by directive) with a non-blocking breach alert; resolution that **forwards** a refund to Payout (once, without cancelling the supplier obligation) and a cancellation to the booking; per-case "cost to serve". |
 | 0.14.0 | 8 — Marketing | B2B marketing with mandatory **LGPD consent**: record/revoke/look up consent (history preserved); **segment** over existing data with a reach **preview**; **campaign** that **sends only to those who consented** (suppressed are counted, no double-send) via a newsletter provider; **attribution** code→booking that becomes a **conversion signal** for the DSS; **LGPD erasure** that deletes marketing data but preserves the revocation proof. |
 | 0.15.0 | 8 — Portfolio | Representation: register/deactivate/list **represented brands** (unique identifier); register **representation contracts** (validity + a vault document), with an **alert** (not a block) for selling without an in-force contract and an **expiring-contract warning** (within 30 days); set **goals per brand** (volume or revenue) and track **realized vs goal** from the brand's **confirmed sales**. It touches no price or commission. |
+| 0.16.0 | 8 — Patrimony (Assets) | Registry of **internal patrimony** (equipment, software licenses, other goods): register with **type/identification/date/cost** and value links to the **document** (vault) and the **finance entry**; a software license requires an **expiry date**; an audited, **final retirement** (with a reason); list/filter by type/status and by **expiring licenses**; a **warning** (once per license) for licenses expiring within 30 days. It is patrimony, not a product — no price/sale; full asset management = buy. |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of

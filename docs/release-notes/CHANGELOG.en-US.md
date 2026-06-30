@@ -10,6 +10,26 @@ detailed source; this file is the stakeholder-facing en-US mirror. Versioning fo
 
 ---
 
+## 0.16.0 — Phase 8h · Assets (SPEC-0021)
+
+`assets` module (18th): the **internal-patrimony** context — the Acme's own equipment, software licenses
+and other goods. A deliberately **lean** registry that ties an asset's cost (Finance) and document
+(Compliance) together and alerts on expiring licenses — **not** a full asset-management system (no
+depreciation, maintenance or resale stock; buy one if full management is needed — DL-0065). An `Asset`
+has a type (EQUIPMENT | SOFTWARE_LICENSE | OTHER), an identifier, an ACTIVE/RETIRED status, the
+acquisition date and cost (Money); a SOFTWARE_LICENSE **requires an `expiresAt`** (BR1, else a 400). The
+acquisition document (Compliance) and cost ledger entry (Finance) are referenced **by value, never an
+FK** (BR2). Retirement is **audited (who/when/reason) and terminal** — retiring twice is a 409,
+preserving the first audit (BR4/DL-0068). Assets is **a leaf producer** (DL-0067): it publishes
+`AssetRegistered` and `AssetLicenseExpiring` in-process but wires no Finance/Intelligence consumers
+(posting a patrimony cost is a business rule the spec does not define). A controlled-clock job flags
+active licenses within the 30-day horizon and publishes `AssetLicenseExpiring` **once per license**
+(idempotent, an alert that never blocks — DL-0066); `GET /api/assets?expiringWithinDays=N` is the ad-hoc
+listing. Assets is **patrimony, not a product** — it never prices a sale (BR5). V26 migration.
+DL-0064…0068 (none is Low-confidence + Costly: Q2 was settled by the architect's recommendation —
+two contexts). `./mvnw verify` green: 388 tests, ArchUnit 14, Modulith acyclic (18th module), 0
+Checkstyle.
+
 ## 0.15.0 — Phase 8g · Portfolio (SPEC-0020)
 
 `portfolio` module (17th): the **representation** context — what the Acme represents commercially (it is
