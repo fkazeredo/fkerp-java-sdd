@@ -1,5 +1,6 @@
 package com.fksoft.infra.jobs;
 
+import com.fksoft.domain.admin.AdminService;
 import com.fksoft.domain.aftersales.AfterSalesService;
 import com.fksoft.domain.assets.AssetService;
 import com.fksoft.domain.compliance.ComplianceService;
@@ -48,6 +49,7 @@ public class GovernedJobs {
       AfterSalesService afterSalesService,
       AssetService assetService,
       PortfolioService portfolioService,
+      AdminService adminService,
       ComplianceService complianceService,
       CertificateCustodyService certificateCustodyService,
       @Value("${compliance.retention.horizon-days:30}") int retentionHorizonDays,
@@ -66,6 +68,9 @@ public class GovernedJobs {
     work.put(
         "representation-expiry",
         () -> JobOutcome.of(portfolioService.flagExpiringContracts(clock.instant())));
+    work.put(
+        "admin-contract-expiry",
+        () -> JobOutcome.of(adminService.flagExpiringContracts(clock.instant())));
     work.put(
         "certificate-expiry",
         () ->

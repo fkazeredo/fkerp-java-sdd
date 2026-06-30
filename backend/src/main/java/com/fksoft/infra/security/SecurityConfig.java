@@ -147,6 +147,10 @@ public class SecurityConfig {
                     .hasAnyRole("DIRECTOR", "POLICY_ADMIN")
                     .requestMatchers("/api/identity/roles", "/api/identity/access-audit")
                     .hasAnyRole("DIRECTOR", "IT")
+                    // Administrative writes (supplier/contract/expense registration, expiry sweep)
+                    // generate AP/finance facts → require the finance role (SPEC-0025, DL-0088).
+                    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/admin/**")
+                    .hasRole("FINANCE")
                     // Everything else under /api requires authentication.
                     .requestMatchers("/api/**")
                     .authenticated()
