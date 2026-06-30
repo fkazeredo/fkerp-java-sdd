@@ -1,7 +1,7 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.17.0.md`](0.17.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.18.0.md`](0.18.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
@@ -9,6 +9,43 @@ detailed source; this file is the stakeholder-facing en-US mirror. Versioning fo
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
 
 ---
+
+## 0.18.0 — Phase 8j · Platform (SPEC-0023)
+
+`platform` module: the **operated-infra** context (the 20th Modulith module, DL-0073) that **guards**
+secrets, **governs** the automatic routines and **audits** the system — it holds **no business rule**
+(BR6, ArchUnit-enforced with teeth). Three slices. **8j-1 (certificate custody, BR1/BR5, DL-0074/0078):**
+the e-CNPJ certificate/credentials are custodied with the secret material **encrypted at rest** —
+**AES-256-GCM** (authenticated envelope, random IV), the **master key held outside the database** (env),
+behind the `SecretCipher` port (`AesGcmSecretCipher` adapter). The private key/password **never** appears
+in code, log, event, DTO or the database in clear; only **metadata** is exposed (`GET /api/platform/
+certificate/status` → subject, validity, days-to-expiry, status). Signing is the Platform-owned
+`CertificateSigner` port; the Billing stub now **delegates** to the custody when a certificate is present
+(keeping the `billing.CertificateSigner` port, back-compat, DL-0078). A controlled-clock sweep raises
+`CertificateExpiring` (idempotent, 30-day horizon). **8j-2 (job governance, BR2/BR3, DL-0075/0076):** the
+`ScheduledJob`/`JobRun` registry and `runWithGovernance(job, window, work)` — **idempotency per
+`(job, window)`** (a second run for the same window is SKIPPED), **distributed locking** via a Postgres
+**advisory lock** (one instance at a time; a concurrent run gets **409 locked**, the `JobLock` port +
+`PostgresAdvisoryJobLock`) and a `JobRun` with start/finish/status/items/correlation id. A failure is
+recorded **FAILED and re-raised** — never masked as success (BR3; the `JobRun` closes in a `REQUIRES_NEW`
+transaction so it survives the work's rollback). The seeded catalog (V28) is the already-activated jobs
+(point-clock crawl, SLA/license/representation/retention/certificate sweeps); the job's **logic stays in
+its owner module** (BR6) and the five existing schedulers plus a new `RepresentationExpiryScheduler` now
+run through `GovernedJobs`. Endpoints: `GET /api/platform/jobs`, `GET /jobs/runs?job=&status=`,
+`POST /jobs/{name}/trigger` (202). **8j-3 (system audit, BR4, DL-0077):** an **append-only**
+`SystemAuditEntry` (no mutator) consolidates security/integration/job events with timestamp, actor and
+correlation id via an in-process listener of the Platform's exposed events plus a `SystemAuditService.
+record(...)` facade for other producers; the detail is **metadata only** — never the secret material
+(BR1). `GET /api/platform/audit?actor=&type=&from=&to=` is filterable and paginated. **V28** creates
+`platform_certificates` (metadata in clear + encrypted material + key alias), `scheduled_jobs` (seeded)
+and `job_runs` (with the `(job_name, idempotency_key)` partial-unique window guard) and `system_audit`
+(append-only). OpenAPI **0.18.0**; errors `platform.certificate.{not-found(404),unavailable(503)}` and
+`platform.job.{not-found(404),locked(409)}`, i18n pt-BR + en fallback. **DL-0074** is the phase's single
+Low-confidence / Costly-reversibility decision (where to custody — cloud KMS × HSM × secret manager — and
+A1×A3 is the owner's infra/security call; the `SecretCipher` port lets a real backend be plugged without
+touching the domain, but swapping the vault requires re-encrypting/migrating the real secret).
+`./mvnw verify` green: **434 tests**, ArchUnit **15 rules** (the new "Platform owns no domain rule" rule
+with teeth), Spring Modulith acyclic with the new `platform` module, Spotless/Checkstyle clean.
 
 ## 0.17.0 — Phase 8i · People (SPEC-0022)
 
