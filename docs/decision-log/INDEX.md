@@ -45,6 +45,15 @@ conforme `docs/RUN-PHASE.md`.
 > fecha. A reversão é Moderada (trocar a fonte do casamento no listener quando a marca for nativa na
 > venda), não Cara: o intake próprio + seam rastreável (espelha DL-0057) protege o contrato de metas.
 
+> _Nota Fase 8h (Assets — SPEC-0021):_ DL-0064 (dois contextos, Q2 fechada — Alta/Moderada), DL-0065
+> (sem depreciação/gestão plena, registro + seam comprar-vs-construir — Alta/Moderada), DL-0066
+> (alerta de licença a vencer por relógio controlado, 30d, idempotente — Média/Barata), DL-0067
+> (Assets é folha: publica eventos, não fia consumidores Finance/Intelligence — Média/Barata) e
+> DL-0068 (baixa auditada inline, RETIRED terminal — Média/Barata). **Nenhuma** entra no destaque
+> (Baixa/Cara): a Q2 foi resolvida pela recomendação do arquiteto (dois contextos) e o resto segue
+> padrões já validados do projeto (relógio controlado, módulo-folha). As reversões são
+> baratas/moderadas e localizadas no módulo `assets`.
+
 ## Todas as decisões
 
 | DL | Fase | Título | Conf. | Rev. |
@@ -112,3 +121,8 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0061](DL-0061-portfolio-sell-without-active-contract-alerts-not-blocks.md) | 8g | Portfolio: vender marca **sem contrato vigente** apenas **alerta** (v1), não bloqueia; cobertura de contrato exposta como leitura | Média | Barata |
 | [DL-0062](DL-0062-portfolio-brand-sale-attribution-intake-and-realized-projection.md) | 8g | Portfolio: realizado por marca via **intake próprio** (`booking→brandRef`, UNIQUE) + projeção idempotente de `BookingConfirmed` (VOLUME) e `SpreadRealized` (REVENUE); **não** altera o evento da venda | **Baixa** | Moderada |
 | [DL-0063](DL-0063-portfolio-representation-expiring-controlled-clock-alert.md) | 8g | Portfolio: `RepresentationExpiring` por **job de relógio controlado** (antecedência 30d, idempotente, alerta — não bloqueio) | Média | Barata |
+| [DL-0064](DL-0064-assets-separate-context-lean-registry.md) | 8h | Assets é contexto **separado** de Portfolio (Q2: dois contextos); registro enxuto de patrimônio; 18º módulo Modulith | Alta | Moderada |
+| [DL-0065](DL-0065-assets-no-depreciation-buy-vs-build-seam.md) | 8h | Assets **sem depreciação/gestão plena** (Out of Scope): registro + seam comprar-vs-construir | Alta | Moderada |
+| [DL-0066](DL-0066-assets-license-expiry-controlled-clock-job-30d.md) | 8h | Assets: alerta de licença a vencer por **job de relógio controlado** (30d, idempotente por `expiry_signaled_at`); `?expiringWithinDays=N` ad-hoc | Média | Barata |
+| [DL-0067](DL-0067-assets-publishes-events-leaf-no-consumers-now.md) | 8h | Assets é **folha**: publica `AssetRegistered`/`AssetLicenseExpiring` in-process; **não** fia consumidores Finance/Intelligence (custo automático = regra inexistente) | Média | Barata |
+| [DL-0068](DL-0068-assets-retire-audit-inline-and-status-machine.md) | 8h | Assets: baixa (RETIRED) **auditada inline** (retired_at/by/reason); ACTIVE→RETIRED terminal; re-baixar → 409 | Média | Barata |

@@ -41,6 +41,25 @@ BR4  Baixa (RETIRED) MUST ser auditada (quem, quando, motivo).
 BR5  Assets MUST NOT precificar venda nem participar do fluxo comercial (é patrimônio, não produto).
 ```
 
+### Decisões assumidas (modo autônomo — Fase 8h)
+
+- **BR6 — ASSUMIDO (ver DL-0064):** Assets é um **contexto separado** de Portfolio (Q2: dois
+  contextos, não um), entregue como **registro enxuto** de patrimônio (18º módulo Spring Modulith).
+- **BR7 — ASSUMIDO (ver DL-0065):** **sem depreciação contábil nem gestão plena de ativos** no v1
+  (Out of Scope); o módulo é o **registro + seam** ("comprar vs. construir") se o dono exigir gestão
+  plena.
+- **BR8 — ASSUMIDO (ver DL-0066):** o alerta de licença a vencer (BR3) roda por **job de relógio
+  controlado** (`flagExpiringLicenses(now)`), antecedência **30 dias** (`assets.license.horizon-days`),
+  **idempotente** por `expiry_signaled_at`. A listagem `?expiringWithinDays=N` é uma leitura ad-hoc
+  com o `N` do request (default 30).
+- **BR9 — ASSUMIDO (ver DL-0067):** Assets é **módulo-folha**: apenas **publica** `AssetRegistered` e
+  `AssetLicenseExpiring` in-process; **não** fia consumidores em Finance/Intelligence nesta fatia
+  (lançar custo automático de patrimônio é regra de negócio inexistente na spec). O vínculo ao Finance
+  é por id (valor, `financeEntryId`), para um lançamento já existente.
+- **BR10 — ASSUMIDO (ver DL-0068):** a baixa (BR4) é **auditada inline** no agregado
+  (`retired_at`/`retired_by`/`retirement_reason`); a transição **ACTIVE→RETIRED é terminal** (sem
+  reativação no v1); re-baixar lança `assets.asset.already-retired` (409).
+
 ## Input/Output Examples
 
 ```http
@@ -111,10 +130,13 @@ Alerta de vencimento por **job** (idempotência/locking). Documento/lançamento 
 
 ## Open Questions
 
-- **Q2 — `Portfolio` + `Assets`: os dois ou um?** Se "inventário" for unificado, esta spec funde com a
-  SPEC-0020; **em aberto** (assumido: distintos).
-- Necessidade de **depreciação/gestão plena de ativos** — se sim, **comprar** e usar este módulo como
-  registro/seam — decisão do dono.
+> **Resolvidas em modo autônomo na Fase 8h** (movidas para *Business Rules* acima):
+> - ~~**Q2 — `Portfolio` + `Assets`: os dois ou um?**~~ → **dois contextos distintos** (ASSUMIDO, ver
+>   DL-0064; recomendação do arquiteto no ROADMAP).
+> - ~~Necessidade de **depreciação/gestão plena de ativos**~~ → **não** no v1: registro + seam
+>   comprar-vs-construir (ASSUMIDO, ver DL-0065). Se o dono exigir gestão plena, **comprar**.
+
+_Nenhuma Open Question de negócio permanece em aberto para esta fatia._
 
 ## Out of Scope
 
