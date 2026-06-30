@@ -10,6 +10,37 @@ detailed source; this file is the stakeholder-facing en-US mirror. Versioning fo
 
 ---
 
+## 0.23.1 — Phase 14 · Stack upgrade to Spring Boot 4.0.7 (internal maintenance, no user-facing change)
+
+**PATCH — infrastructure maintenance, no contract change (REST/DTO/wire-JSON/published-event/i18n/schema
+unchanged) and no new user-facing capability (Rule Zero).**
+
+The backend moves from **Spring Boot 3.5.16 to 4.0.7** (Spring Framework 7, Jakarta EE 11), with **Spring
+Modulith 2.0.7** and **springdoc-openapi 3.0.3**. Java stays **21 (LTS)**, Testcontainers **1.21.4**,
+Postgres **16-alpine**. The `DL-0002` Phase-0 version pin is **superseded** by this phase (ADR 0017).
+
+- **Changed:** Spring Boot parent `3.5.16 → 4.0.7`; Spring Modulith `1.4.12 → 2.0.7`; springdoc
+  `2.8.17 → 3.0.3`; the Testcontainers BOM is now imported explicitly (Boot 4 no longer manages it).
+- **Added (compatibility):** `spring-boot-starter-classic` keeps the pre-4.0 classpath (Jackson 2 default),
+  so the 22 production Jackson-2 uses (jsonb codecs, integration/security adapters) stay unchanged —
+  **production serialization is identical, no contract change**. Full Jackson-3 migration is tracked debt
+  (DL-0108). Test deps `spring-boot-resttestclient`, `spring-boot-restclient` and
+  `spring-boot-micrometer-metrics-test` were added for Boot-4 test support.
+- **Test-only fixes (behaviour preserved):** `TestRestTemplate` relocated +
+  `@AutoConfigureTestRestTemplate` on the base class (41 ITs); `@AutoConfigureObservability` →
+  `@AutoConfigureMetrics` (2 metrics ITs); test `JsonNode` reads → `tools.jackson.databind.JsonNode`
+  (8 ITs); the Spring Framework 7 status rename `UNPROCESSABLE_ENTITY → UNPROCESSABLE_CONTENT` (3 ITs +
+  1 production mapping). **HTTP 422 stays 422 on the wire.**
+- **Not done (Rule Zero):** `@swimlane/ngx-graph` was not adopted (no configurable-workflow requirement);
+  the production Jackson-3 migration and `RestTestClient` adoption are deferred (DL-0108).
+- **Decisions:** **ADR 0017** (the upgrade), **DL-0108** (sub-decisions), **DL-0002** updated (superseded).
+- **Verified:** backend `./mvnw verify` green on Spring Boot 4.0.7 — **537 tests, 0 failures** (same count
+  as 0.23.0), JaCoCo ≈ 89.7 % (floor 0.80), Spotless/Checkstyle/ArchUnit/Spring Modulith (22 modules)
+  green; frontend lint/test (56)/build green. No gate weakened. The MANUAL is unchanged (Rule Zero).
+- This is the **last numbered ROADMAP phase** (Phase 15 is the standing bilingual-docs rule/chore).
+
+---
+
 ## 0.23.0 — Phase 13 · Professional Identity/AuthZ (graduates SPEC-0024)
 
 **MINOR — graduates SPEC-0024 to a live external OIDC IdP. Contains a BREAKING change (highlighted per

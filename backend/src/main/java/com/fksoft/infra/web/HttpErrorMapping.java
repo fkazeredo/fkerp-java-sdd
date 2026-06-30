@@ -106,7 +106,7 @@ import org.springframework.stereotype.Component;
  * should return (ADR 0011). Keeping the mapping here — not in the domain — keeps domain exceptions
  * free of transport concerns.
  *
- * <p>Any unmapped {@code DomainException} defaults to {@code 422 Unprocessable Entity}. A
+ * <p>Any unmapped {@code DomainException} defaults to {@code 422 Unprocessable Content}. A
  * build-time test ({@code HttpErrorMappingCompletenessTest}) fails if a {@code DomainException}
  * subtype is ever left unmapped, so the default can never hide a forgotten entry.
  */
@@ -127,7 +127,7 @@ public class HttpErrorMapping {
           entry(CommissionPctInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(CommissionBaseInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(QuoteAccountNotFoundException.class, HttpStatus.NOT_FOUND),
-          entry(QuoteRateMissingException.class, HttpStatus.UNPROCESSABLE_ENTITY),
+          entry(QuoteRateMissingException.class, HttpStatus.UNPROCESSABLE_CONTENT),
           entry(QuoteNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(QuoteOverrideReasonRequiredException.class, HttpStatus.BAD_REQUEST),
           entry(QuoteOverrideCurrencyMismatchException.class, HttpStatus.BAD_REQUEST),
@@ -153,7 +153,7 @@ public class HttpErrorMapping {
           entry(SourcedOfferNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(IntegrationSignatureInvalidException.class, HttpStatus.UNAUTHORIZED),
           entry(IntegrationPayloadInvalidException.class, HttpStatus.BAD_REQUEST),
-          entry(IntegrationAccountNotFoundException.class, HttpStatus.UNPROCESSABLE_ENTITY),
+          entry(IntegrationAccountNotFoundException.class, HttpStatus.UNPROCESSABLE_CONTENT),
           entry(PointSnapshotNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(PointSnapshotInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(PointAfdInvalidException.class, HttpStatus.BAD_REQUEST),
@@ -170,7 +170,7 @@ public class HttpErrorMapping {
           entry(BillingInvoiceNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(BillingInvoiceTransitionInvalidException.class, HttpStatus.CONFLICT),
           entry(BillingBaseInvalidException.class, HttpStatus.BAD_REQUEST),
-          entry(BillingMunicipalityRejectedException.class, HttpStatus.UNPROCESSABLE_ENTITY),
+          entry(BillingMunicipalityRejectedException.class, HttpStatus.UNPROCESSABLE_CONTENT),
           entry(BillingNfseWebserviceException.class, HttpStatus.BAD_GATEWAY),
           entry(PayoutNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(PayoutPayeeInvalidException.class, HttpStatus.BAD_REQUEST),
@@ -211,7 +211,7 @@ public class HttpErrorMapping {
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {
-    return mapping.getOrDefault(type, HttpStatus.UNPROCESSABLE_ENTITY);
+    return mapping.getOrDefault(type, HttpStatus.UNPROCESSABLE_CONTENT);
   }
 
   /** The set of explicitly mapped exception types (used by the completeness test). */

@@ -6,8 +6,8 @@ import com.fksoft.security.TestJwtTokens;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.micrometer.metrics.test.autoconfigure.AutoConfigureMetrics;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -24,11 +24,11 @@ import org.springframework.http.ResponseEntity;
  * include set, so they 404 (not exposed). These tests SEND a token, so they run the genuine
  * security chain — the test-actor shortcut applies only when there is no Authorization header.
  *
- * <p>{@code @AutoConfigureObservability} re-enables metrics export under {@code @SpringBootTest}
- * (Spring Boot disables it by default in tests), so the real {@code /actuator/prometheus} scrape
- * endpoint is registered exactly as it is at runtime.
+ * <p>{@code @AutoConfigureMetrics} re-enables metrics export under {@code @SpringBootTest} (Spring
+ * Boot disables it by default in tests), so the real {@code /actuator/prometheus} scrape endpoint
+ * is registered exactly as it is at runtime.
  */
-@AutoConfigureObservability
+@AutoConfigureMetrics
 class ActuatorExposureIntegrationTest extends AbstractPostgresIntegrationTest {
 
   @Autowired private TestRestTemplate restTemplate;

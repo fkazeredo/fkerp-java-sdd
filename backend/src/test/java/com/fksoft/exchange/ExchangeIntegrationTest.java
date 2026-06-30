@@ -2,7 +2,6 @@ package com.fksoft.exchange;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fksoft.application.api.dto.PinRateRequest;
 import com.fksoft.application.api.dto.PinnedSellRateResponse;
 import com.fksoft.domain.exchange.CurrencyPair;
@@ -17,10 +16,11 @@ import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import tools.jackson.databind.JsonNode;
 
 /**
  * End-to-end tests for the exchange API and Open-Host port (SPEC-0003): pin + current, future-dated

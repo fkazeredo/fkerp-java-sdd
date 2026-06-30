@@ -156,7 +156,7 @@ conforme `docs/RUN-PHASE.md`.
 | DL | Fase | Título | Conf. | Rev. |
 |---|---|---|---|---|
 | [DL-0001](DL-0001-pacote-base-com-fksoft.md) | 0 | Manter pacote base `com.fksoft` | Alta | Cara |
-| [DL-0002](DL-0002-stack-versoes-backend.md) | 0 | Versões do stack backend (Spring Boot 3.5.16, Modulith 1.4.12, Java 21) | Alta | Moderada |
+| [DL-0002](DL-0002-stack-versoes-backend.md) | 0 | Versões do stack backend (Spring Boot 3.5.16, Modulith 1.4.12, Java 21) — **SUPERADA na Fase 14: Spring Boot 4.0.7 (ver ADR 0017 / DL-0108)** | Alta | Moderada |
 | [DL-0003](DL-0003-stack-frontend-fase-0.md) | 0 | Stack frontend Fase 0 (Angular 22 + ngx-translate; PrimeNG/Tailwind adiados) — **GRADUADO na Fase 10 (ver DL-0090)** | Alta | Barata |
 | [DL-0004](DL-0004-maven-wrapper-bootstrap.md) | 0 | Bootstrap do Maven Wrapper sem Maven no sistema | Alta | Barata |
 | [DL-0005](DL-0005-adr-0014-ausente-adiar-fase-1.md) | 0 | ADR 0014 ausente: ~~adiar~~ → **criado** a pedido do dono (ver ADR 0014) | Alta | Barata |
@@ -262,3 +262,4 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0105](DL-0105-identity-test-jwks-local-keypair-and-login-contract-removal.md) | 13 | Identity: testes mintam **RS256 com JWKS local de teste** (sem IdP na internet); `POST /api/identity/login` in-house **removido** (login move ao IdP — breaking em 0.23.0) | Média | Moderada |
 | [DL-0106](DL-0106-identity-frontend-oidc-code-pkce-real-silent-refresh.md) | 13 | Identity (frontend): login **OIDC Authorization Code + PKCE** (`angular-oauth2-oidc`) + **silent-refresh real** (refresh token); gradua DL-0092 | Média | Moderada |
 | [DL-0107](DL-0107-identity-role-catalogue-retained-local-user-store-retired.md) | 13 | Identity: catálogo papel→permissão **permanece local** (fonte do enforcement, BR5); store local de **usuários** aposentado (V31, usuários vivem no IdP) | Alta | Moderada |
+| [DL-0108](DL-0108-upgrade-spring-boot-4-classic-starter-jackson2-bridge.md) | 14 | Upgrade para **Spring Boot 4.0.7** + Modulith 2.0.7 + springdoc 3.0.3 (Java 21 mantido); ponte **`spring-boot-starter-classic`** mantém Jackson 2 na produção (migração p/ Jackson 3 = débito rastreado); correções de teste (TestRestTemplate relocado, `@AutoConfigureMetrics`, `JsonNode`→Jackson 3, 422→`UNPROCESSABLE_CONTENT`) sem afrouxar portão; **substitui DL-0002** (ver ADR 0017) | Alta | Moderada |
