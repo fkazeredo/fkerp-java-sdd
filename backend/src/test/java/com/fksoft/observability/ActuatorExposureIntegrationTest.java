@@ -2,8 +2,7 @@ package com.fksoft.observability;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fksoft.application.api.dto.LoginRequest;
-import com.fksoft.application.api.dto.LoginResponse;
+import com.fksoft.security.TestJwtTokens;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +57,7 @@ class ActuatorExposureIntegrationTest extends AbstractPostgresIntegrationTest {
 
   @Test
   void prometheusWithNonItRoleIsForbidden() {
-    String viewer = login("viewer"); // ROLE_VIEWER, not ROLE_IT
+    String viewer = TestJwtTokens.mint("viewer", "ROLE_VIEWER"); // not ROLE_IT
 
     ResponseEntity<String> response =
         restTemplate.exchange(
@@ -69,7 +68,7 @@ class ActuatorExposureIntegrationTest extends AbstractPostgresIntegrationTest {
 
   @Test
   void prometheusWithItRoleReturnsExpositionFormat() {
-    String it = login("it"); // ROLE_IT
+    String it = TestJwtTokens.mint("it", "ROLE_IT");
 
     ResponseEntity<String> response =
         restTemplate.exchange(
@@ -87,7 +86,7 @@ class ActuatorExposureIntegrationTest extends AbstractPostgresIntegrationTest {
 
   @Test
   void envAndBeansAreNotExposed() {
-    String it = login("it"); // even ROLE_IT cannot reach what is not in the include set
+    String it = TestJwtTokens.mint("it", "ROLE_IT"); // even ROLE_IT cannot reach the unexposed set
 
     ResponseEntity<String> env =
         restTemplate.exchange(
@@ -98,16 +97,6 @@ class ActuatorExposureIntegrationTest extends AbstractPostgresIntegrationTest {
 
     assertThat(env.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     assertThat(beans.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-  }
-
-  private String login(String username) {
-    LoginResponse body =
-        restTemplate
-            .postForEntity(
-                "/api/identity/login", new LoginRequest(username, "dev12345"), LoginResponse.class)
-            .getBody();
-    assertThat(body).isNotNull();
-    return body.token();
   }
 
   private static HttpHeaders bearer(String token) {

@@ -2,9 +2,8 @@ package com.fksoft.identity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fksoft.application.api.dto.LoginRequest;
-import com.fksoft.application.api.dto.LoginResponse;
 import com.fksoft.infra.web.ApiErrorResponse;
+import com.fksoft.security.TestJwtTokens;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -18,13 +17,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * End-to-end tests for the role enforcement and access audit (SPEC-0024 slice 8k-2, DL-0082/0083).
- * Against a real Postgres: a sensitive action requires the corresponding role (the security
- * boundary regression — the dev stub used to let everyone through), denials are audited, and the
- * access-audit endpoint is itself protected.
+ * End-to-end tests for the role enforcement and access audit (SPEC-0024, DL-0082/0083; tokens
+ * minted by the external-IdP-shaped test issuer — Phase 13/DL-0105). Against a real Postgres: a
+ * sensitive action requires the corresponding role (the security boundary — the dev stub used to
+ * let everyone through), denials are audited, the access-audit endpoint is itself protected, and
+ * the first authenticated touch records the access audit.
  *
- * <p>These tests SEND a token for a specific user, so they run the genuine security chain — the
- * test-actor shortcut applies only when there is no Authorization header.
+ * <p>These tests SEND a token for a specific user (with specific realm roles), so they run the
+ * genuine security chain — the test-actor shortcut applies only when there is no Authorization
+ * header.
  */
 class AccessControlIntegrationTest extends AbstractPostgresIntegrationTest {
 
@@ -39,7 +40,7 @@ class AccessControlIntegrationTest extends AbstractPostgresIntegrationTest {
   @Test
   void issuingAnInvoiceWithoutTheFinanceRoleIsForbiddenAndAudited() {
     // 'director' has ROLE_DIRECTOR but NOT ROLE_FINANCE — the sensitive NF issuance must be denied.
-    String token = login("director");
+    String token = TestJwtTokens.mint("director", "ROLE_DIRECTOR");
 
     ResponseEntity<ApiErrorResponse> denied =
         restTemplate.exchange(
@@ -69,7 +70,7 @@ class AccessControlIntegrationTest extends AbstractPostgresIntegrationTest {
   void issuingAnInvoiceWithTheFinanceRolePassesTheSecurityGate() {
     // 'finance' has ROLE_FINANCE — the request passes the security gate (and then 404s on the fake
     // id, which proves it reached the controller — it was NOT blocked at 403).
-    String token = login("finance");
+    String token = TestJwtTokens.mint("finance", "ROLE_FINANCE");
 
     ResponseEntity<ApiErrorResponse> response =
         restTemplate.exchange(
@@ -85,8 +86,8 @@ class AccessControlIntegrationTest extends AbstractPostgresIntegrationTest {
 
   @Test
   void triggeringAJobRequiresTheItRole() {
-    String director = login("director"); // no ROLE_IT
-    String it = login("it"); // has ROLE_IT
+    String director = TestJwtTokens.mint("director", "ROLE_DIRECTOR"); // no ROLE_IT
+    String it = TestJwtTokens.mint("it", "ROLE_IT"); // has ROLE_IT
 
     ResponseEntity<ApiErrorResponse> denied =
         restTemplate.exchange(
@@ -107,7 +108,7 @@ class AccessControlIntegrationTest extends AbstractPostgresIntegrationTest {
 
   @Test
   void issuingADirectiveRequiresTheDirectorRole() {
-    String finance = login("finance"); // no ROLE_DIRECTOR
+    String finance = TestJwtTokens.mint("finance", "ROLE_FINANCE"); // no ROLE_DIRECTOR
 
     ResponseEntity<ApiErrorResponse> denied =
         restTemplate.exchange(
@@ -122,8 +123,8 @@ class AccessControlIntegrationTest extends AbstractPostgresIntegrationTest {
 
   @Test
   void accessAuditAndRolesEndpointsAreThemselvesProtected() {
-    String viewer = login("viewer"); // neither DIRECTOR nor IT
-    String it = login("it");
+    String viewer = TestJwtTokens.mint("viewer", "ROLE_VIEWER"); // neither DIRECTOR nor IT
+    String it = TestJwtTokens.mint("it", "ROLE_IT");
 
     ResponseEntity<ApiErrorResponse> deniedAudit =
         restTemplate.exchange(
@@ -141,30 +142,24 @@ class AccessControlIntegrationTest extends AbstractPostgresIntegrationTest {
   }
 
   @Test
-  void loginIsRecordedInTheAccessAudit() {
-    login("finance");
+  void firstAuthenticatedTouchIsRecordedInTheAccessAudit() {
+    // GET /me is the post-login session bootstrap — it records AUTH_LOGIN for the authenticated
+    // user.
+    String finance = TestJwtTokens.mint("finance", "ROLE_FINANCE");
+    restTemplate.exchange(
+        "/api/identity/me", HttpMethod.GET, new HttpEntity<>(bearer(finance)), String.class);
 
     Integer logins =
         jdbcTemplate.queryForObject(
             "SELECT count(*) FROM system_audit WHERE type = 'AUTH_LOGIN' AND actor = 'finance'",
             Integer.class);
     assertThat(logins).isGreaterThanOrEqualTo(1);
-    // BR4: the audit never carries the password/token.
+    // BR4: the audit never carries the token.
     String detail =
         jdbcTemplate.queryForObject(
             "SELECT detail_json::text FROM system_audit WHERE type='AUTH_LOGIN' AND actor='finance' LIMIT 1",
             String.class);
-    assertThat(detail).doesNotContain("dev12345").contains("LOGIN_SUCCESS");
-  }
-
-  private String login(String username) {
-    LoginResponse body =
-        restTemplate
-            .postForEntity(
-                "/api/identity/login", new LoginRequest(username, "dev12345"), LoginResponse.class)
-            .getBody();
-    assertThat(body).isNotNull();
-    return body.token();
+    assertThat(detail).contains("LOGIN_SUCCESS").doesNotContain(finance);
   }
 
   private static String directiveBody() {
