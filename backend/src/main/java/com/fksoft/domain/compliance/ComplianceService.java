@@ -35,11 +35,15 @@ import org.springframework.transaction.annotation.Transactional;
  * value), answers the period close-check (the veto consumed by Finance), reads content (audited)
  * and blocks purge before retention. It reads ledger entries only through the Finance {@link
  * LedgerDirectory} port (no cross-module FK).
+ *
+ * <p>It also implements the {@link DocumentRequirementDirectory} read port (SPEC-0025; DL-0086), so
+ * the Admin module can learn which documents an entry type requires at registration — referencing
+ * the requirement without imposing it (the veto stays here).
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ComplianceService {
+public class ComplianceService implements DocumentRequirementDirectory {
 
   private final DocumentRepository documents;
   private final DocumentAttachmentRepository attachments;
@@ -237,6 +241,20 @@ public class ComplianceService {
           "RetentionExpiring flagged {} document(s) within {} days", expiring.size(), horizonDays);
     }
     return expiring.size();
+  }
+
+  /**
+   * The document types required at registration for an entry type (DL-0012), as the public {@link
+   * DocumentRequirementDirectory} port consumed by the Admin module (DL-0086). Read-only — it
+   * surfaces the requirement, it never imposes it.
+   *
+   * @param entryType the Finance entry type name (value)
+   * @return the required document type names (empty when none)
+   */
+  @Override
+  @Transactional(readOnly = true)
+  public List<String> requiredAtRegistration(String entryType) {
+    return List.copyOf(requiredDocumentTypes(entryType));
   }
 
   private Set<String> requiredDocumentTypes(String entryType) {

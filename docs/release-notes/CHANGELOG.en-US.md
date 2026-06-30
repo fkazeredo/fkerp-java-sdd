@@ -1,12 +1,51 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.18.0.md`](0.18.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.20.0.md`](0.20.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.20.0 — Phase 8l · Admin (SPEC-0025) — last sub-phase of the 8x block
+
+`admin` module (the 22nd Modulith module, DL-0084): the **administrative desk** — a **lean registry**
+of administrative suppliers (utilities, software/service PJ, self-employed) and their contracts that
+feeds expense entries into the **Finance** ledger and references the supporting documents in the
+**Compliance** vault. It is a **generic** subdomain delivered as registry + seam — **full procurement**
+(quotation/purchase order) is out of scope (buy it if required). **8l-1 (suppliers + contracts + role
+gate, BR1/BR2/BR6, DL-0084/0088):** register an `AdminSupplier` (UTILITY | SOFTWARE | SERVICE | OTHER,
+born ACTIVE) and `AdminContract` (validity window, recurrence, amount, Compliance document **by
+value** — never an FK); an invalid validity window is a 400. **Writes require `ROLE_FINANCE`** (the
+expense becomes a financial obligation): without it → **403, audited**; with it → 201. Every change is
+audited in the Platform's `system_audit` (`ADMIN_CHANGE`, **metadata only** — a CNPJ/CPF, which may be
+a self-employed's personal data, never travels in full). **8l-2 (expense → Finance + required
+documents, BR3/BR4, DL-0085/0086):** registering a recurring expense **creates** a **PAYABLE** entry
+through the `FinanceService.register` facade (no FK), keeps the `financeEntryId` by value and **lists
+the documents** the Compliance requires (the `DocumentRequirementDirectory` read port); the kind maps
+the entry type and the documents — UTILITY→`UTILITY_EXPENSE`/[UTILITY_BILL],
+autonomous→`AUTONOMOUS_SERVICE`/[RPA], PJ→`SERVICE`/[NFSE], OTHER→`OTHER_EXPENSE`/[]. It is
+**idempotent** per `(supplier, period, kind)` (a duplicate is a 409, no second posting). Admin **does
+not** impose the document rule nor close a period (BR4) — it only **generates** the entry and
+**references** the document; the veto stays Finance+Compliance. **The golden rule holds for the
+administrative side too:** a utility expense **without** its bill **blocks the month from closing** (the
+regression proves `canClose=false` before attaching, `canClose=true` after). **8l-3 (contract-expiry
+alert, BR5, DL-0087):** `AdminContractExpiring` is published by a **controlled-clock governed job**
+(30-day horizon, idempotent per contract) under the Platform job governance — an **alert, never a
+block**. **Migration V30** (idempotent): `admin_suppliers`/`admin_contracts`/`admin_expenses` (UNIQUE
+`(supplier_id, period, kind)`), Finance/Compliance references **by value**; an **additive** Compliance
+seed for `SERVICE` (NFSE at registration, payment proof at settlement) **without editing the applied
+V8**; the `admin-contract-expiry` job seeded in the Platform catalogue. The Finance `EntryType` gained
+`SERVICE`/`OTHER_EXPENSE` (additive). New endpoints under `/api/admin` (suppliers/contracts/expenses/
+flag-expiring), OpenAPI **0.20.0**. Decisions **DL-0084..0088** — none is Low-confidence **and**
+Expensive-to-reverse (the procurement Open Question was closed by the spec itself; the rest follow
+already-validated project patterns). **`./mvnw verify` green: 466 tests** (was 444; +22 Admin: 6 unit
++ 16 integration), ArchUnit 15 rules, Spring Modulith acyclic with the 22nd module, Checkstyle 0
+violations. **This closes the 8x block;** phases 9–15 are structural/UX/observability/E2E/IdP/stack
+cross-cutting work.
 
 ---
 

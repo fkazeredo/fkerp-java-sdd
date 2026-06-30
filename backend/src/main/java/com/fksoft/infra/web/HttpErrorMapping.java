@@ -5,6 +5,11 @@ import static java.util.Map.entry;
 import com.fksoft.domain.accounts.AccountDocumentDuplicateException;
 import com.fksoft.domain.accounts.AccountDocumentInvalidException;
 import com.fksoft.domain.accounts.AccountNotFoundException;
+import com.fksoft.domain.admin.AdminContractInvalidException;
+import com.fksoft.domain.admin.AdminExpenseDuplicateException;
+import com.fksoft.domain.admin.AdminExpenseInvalidException;
+import com.fksoft.domain.admin.AdminSupplierInvalidException;
+import com.fksoft.domain.admin.AdminSupplierNotFoundException;
 import com.fksoft.domain.aftersales.SupportCaseInvalidException;
 import com.fksoft.domain.aftersales.SupportCaseNotFoundException;
 import com.fksoft.domain.aftersales.SupportCaseRefundDuplicateException;
@@ -199,7 +204,12 @@ public class HttpErrorMapping {
           entry(CertificateUnavailableException.class, HttpStatus.SERVICE_UNAVAILABLE),
           entry(JobNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(JobLockedException.class, HttpStatus.CONFLICT),
-          entry(InvalidCredentialsException.class, HttpStatus.UNAUTHORIZED));
+          entry(InvalidCredentialsException.class, HttpStatus.UNAUTHORIZED),
+          entry(AdminSupplierNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(AdminSupplierInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(AdminContractInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(AdminExpenseInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(AdminExpenseDuplicateException.class, HttpStatus.CONFLICT));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {

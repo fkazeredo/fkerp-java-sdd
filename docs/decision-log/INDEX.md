@@ -88,6 +88,16 @@ conforme `docs/RUN-PHASE.md`.
 > KMS/HSM real muda só o adaptador, mas exige **re-cifrar/migrar segredo real** — por isso a reversão é
 > Cara, ainda que o domínio fique intacto.
 
+> _Nota Fase 8l (Admin — SPEC-0025):_ DL-0084 (módulo próprio + registro enxuto, procurement = comprar,
+> Alta/Moderada), DL-0085 (mapa `kind`→`EntryType`→documento, aditivo, Média/Barata), DL-0086 (integração
+> Finance/Compliance por fachada/porta, idempotente, acíclico, Alta/Moderada), DL-0087 (alerta de contrato
+> a vencer por relógio controlado, Média/Barata) e DL-0088 (escritas exigem ROLE_FINANCE + auditoria,
+> Média/Barata). **Nenhuma** entra no destaque (Baixa/Cara): a Open Question de procurement foi fechada
+> pela própria spec (comprar se exigido — fronteira), e o resto segue padrões já validados do projeto
+> (genérico enxuto como Assets/Finance; relógio controlado; gate HTTP + `system_audit`). As reversões são
+> baratas/moderadas e localizadas no módulo `admin` (o mapa `kind`→`EntryType` é função pura + seed; o
+> papel é um matcher). O 8x encerra aqui.
+
 ## Todas as decisões
 
 | DL | Fase | Título | Conf. | Rev. |
@@ -175,3 +185,8 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0081](DL-0081-identity-graduate-stub-behind-profile-keep-tests-green.md) | 8k | Gradua o stub: porta intacta; `JwtUserContextProvider` em prod/default; stub permissivo atrás de profile `dev`/`test`; `TestSecurityConfig` mantém os 434 testes verdes com a segurança montada (não removida) | Alta | Barata |
 | [DL-0082](DL-0082-identity-role-permission-model-and-sensitive-action-mapping.md) | 8k | Modelo papel→permissão (catálogo fechado) + mapa das ações sensíveis (DIRECTIVE→DIRECTOR, NF→FINANCE, job→IT); enforcement HTTP (Spring Security) + reafirma a checagem de domínio (DL-0038) | Média | Moderada |
 | [DL-0083](DL-0083-identity-access-audit-reuses-platform-system-audit.md) | 8k | Auditoria de acesso reusa `system_audit` (Platform/8j): `AUTH_LOGIN`/`ACCESS_DENIED`; `GET /access-audit` é leitura focada; sem tabela nova (Regra Zero) | Alta | Moderada |
+| [DL-0084](DL-0084-admin-new-module-lean-registry-no-procurement.md) | 8l | Admin é módulo Modulith próprio (22º), registro enxuto; procurement completo = comprar (fronteira) | Alta | Moderada |
+| [DL-0085](DL-0085-admin-expense-kind-to-entrytype-and-document-map.md) | 8l | Mapa despesa `kind`→`EntryType`→documento (UTILITY→UTILITY_EXPENSE/UTILITY_BILL; autônomo→AUTONOMOUS_SERVICE/RPA; PJ→SERVICE/NFSE; OTHER→OTHER_EXPENSE/—); `EntryType` +SERVICE/+OTHER_EXPENSE (aditivo); seed Compliance aditivo (sem editar V8) | Média | Barata |
+| [DL-0086](DL-0086-admin-finance-compliance-integration-via-facades-acyclic.md) | 8l | Admin posta lançamento por **chamada síncrona** à fachada `FinanceService.register`; idempotência por UNIQUE `(supplier, period, kind)`; documentos exigidos via nova porta de leitura `DocumentRequirementDirectory` (Compliance); módulo folha, grafo acíclico | Alta | Moderada |
+| [DL-0087](DL-0087-admin-contract-expiring-controlled-clock-alert.md) | 8l | `AdminContractExpiring` por job de **relógio controlado** (horizonte 30d, idempotente por `expiry_signaled_at`, alerta — não bloqueia); padrão Portfolio/Assets | Média | Barata |
+| [DL-0088](DL-0088-admin-sensitive-endpoints-gated-by-role-finance-and-audited.md) | 8l | Escritas do Admin exigem **ROLE_FINANCE** (negação 403 + auditoria); alteração de fornecedor/contrato/despesa auditada via `system_audit` (`ADMIN_CHANGE`, metadados only) | Média | Barata |

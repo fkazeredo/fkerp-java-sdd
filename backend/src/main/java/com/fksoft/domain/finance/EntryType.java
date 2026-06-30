@@ -17,5 +17,15 @@ public enum EntryType {
   /**
    * A tax to remit (e.g. ISS/withholdings from an issued commission invoice — SPEC-0016, DL-0047).
    */
-  TAX_PAYABLE
+  TAX_PAYABLE,
+  /**
+   * A recurring administrative service expense from a PJ provider (software/service — SPEC-0025,
+   * DL-0085); the Compliance requires its NFS-e at registration.
+   */
+  SERVICE,
+  /**
+   * A generic administrative expense with no standardized supporting document at registration
+   * (SPEC-0025, DL-0085); the operator attaches whatever is applicable.
+   */
+  OTHER_EXPENSE
 }

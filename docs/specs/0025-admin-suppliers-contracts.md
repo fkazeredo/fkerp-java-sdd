@@ -47,6 +47,24 @@ BR4  Admin MUST NOT impor a regra de documento nem fechar período — apenas **
      **referenciar** o documento; o veto/fechamento é Finance+Compliance.
 BR5  Contrato a vencer MUST publicar AdminContractExpiring (alerta — não bloqueia).
 BR6  Toda alteração de fornecedor/contrato MUST ser auditada.
+BR7  ASSUMIDO (ver DL-0084). Admin é **módulo Modulith próprio** (22º), entregue como **registro
+     enxuto** (genérico). **Procurement completo** (cotação/aprovação/ordem de compra) fica **fora de
+     escopo** — comprar se exigido; este módulo permanece cadastro/seam que alimenta Finance/Compliance.
+BR8  ASSUMIDO (ver DL-0085). O `kind` da despesa (`AdminExpenseKind`: UTILITY | AUTONOMOUS_SERVICE |
+     SERVICE | OTHER) mapeia para o `EntryType` do Finance e (via Compliance) para os documentos:
+     UTILITY→UTILITY_EXPENSE (UTILITY_BILL); AUTONOMOUS_SERVICE→AUTONOMOUS_SERVICE (RPA);
+     SERVICE→SERVICE (NFSE); OTHER→OTHER_EXPENSE (nenhum no registro). O catálogo do Finance ganha
+     `SERVICE`/`OTHER_EXPENSE` (aditivo) e o seed do Compliance ganha o `SERVICE` (V30, sem editar a V8).
+BR9  ASSUMIDO (ver DL-0086). O lançamento é criado por **chamada síncrona** à fachada
+     `FinanceService.register` (sem FK); idempotência por UNIQUE `(supplier, period, kind)` + pré-check
+     (despesa duplicada → `admin.expense.duplicate`); os documentos exigidos vêm da **porta de leitura**
+     `DocumentRequirementDirectory` (Compliance). Admin é **folha**; grafo Modulith acíclico.
+BR10 ASSUMIDO (ver DL-0087). `AdminContractExpiring` é publicado por **job de relógio controlado**
+     (horizonte 30d, idempotente por `expiry_signaled_at`), governado pelo Platform (GovernedJobs); é
+     **alerta, nunca bloqueio**.
+BR11 ASSUMIDO (ver DL-0088). As **escritas** do Admin (fornecedor/contrato/despesa/varredura) exigem
+     **ROLE_FINANCE** (negação 403 + auditoria); cada alteração é auditada no `system_audit`
+     (`ADMIN_CHANGE`, metadados only — identificador CNPJ/CPF mascarado).
 ```
 
 ## Input/Output Examples
@@ -131,9 +149,16 @@ i18n em `messages_pt_BR.properties`.
 
 ## Open Questions
 
-- **Procurement completo** (cotação/aprovação de compra) — se exigido, **comprar**; este módulo fica como
-  cadastro/seam — decisão do dono.
-- Mapa final **tipo de despesa → entryType → DocumentRequirement** — compartilhado com Finance/Compliance.
+> As Open Questions abaixo foram resolvidas em modo autônomo no 8l (ver Business Rules BR7–BR11 e os
+> DLs citados). Permanecem listadas para o dono **confirmar/trocar** — são decisões assumidas, não
+> definitivas.
+
+- ~~**Procurement completo** (cotação/aprovação de compra)~~ → **ASSUMIDO (ver DL-0084)**: **fora de
+  escopo**; comprar se exigido; este módulo fica como cadastro/seam (ver BR7). Decisão do dono **quando**
+  o procurement for exigido.
+- ~~Mapa final **tipo de despesa → entryType → DocumentRequirement**~~ → **ASSUMIDO (ver DL-0085)**:
+  mapa `kind`→`EntryType`→documento fixado (ver BR8); confirmar com a contabilidade do cliente (a
+  extensão é só nova migração de seed). Confiança=Média.
 
 ## Out of Scope
 

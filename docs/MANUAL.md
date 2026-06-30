@@ -4,7 +4,7 @@
 > hoje**. É atualizado **a cada fatia entregue** (ver o comando *User manual* no `CLAUDE.md`).
 > Versão em inglês (espelho, mantida em sincronia): `docs/MANUAL.en-US.md`.
 >
-> **Versão do sistema:** 0.19.0 · **Fase atual:** 8k (Identidade — login, papéis e auditoria de acesso)
+> **Versão do sistema:** 0.20.0 · **Fase atual:** 8l (Admin — fornecedores e contratos administrativos)
 
 ## 1. O que é o sistema
 
@@ -427,6 +427,49 @@ Como funciona, na prática:
 > (auditoria de acesso). Em produção é obrigatório configurar a chave secreta do token; os usuários de
 > exemplo (um por papel) existem **só** no ambiente de desenvolvimento.
 
+### Fase 8 — Fornecedores e contratos administrativos (luz, água, telefone, software)
+
+Esta versão entrega o **balcão administrativo**: um cadastro **simples** dos **fornecedores
+administrativos** da empresa (conta de luz, água, telefone, mensalidade de software/serviço) e dos
+**contratos** que os sustentam — de modo que cada **despesa** caia no **lançamento certo** das Contas
+a Pagar e **aponte o documento** que o fechamento do mês exige (a fatura, o RPA do autônomo, a NFS-e do
+serviço). **Não** confundir com os **fornecedores de turismo/marcas** (esses ficam no "Portfólio").
+
+Como funciona, na prática:
+
+- **Cadastrar um fornecedor administrativo.** Informe o **tipo** (Concessionária de consumo, Software,
+  Serviço ou Outros), o **nome** e, quando houver, o **CNPJ/CPF**. O fornecedor nasce **ativo**.
+- **Registrar um contrato.** Para um fornecedor, registre a **vigência** (início e, se houver, fim), a
+  **recorrência** (ex.: mensal), o **valor** e o **documento do contrato** (que já está guardado no
+  cofre de documentos). Uma vigência incoerente (fim antes do início) é recusada.
+- **Lançar uma despesa do mês.** Informe o **fornecedor**, o **mês** (ex.: 2026-06), o **valor** e o
+  **tipo** da despesa. O sistema **cria automaticamente** o lançamento em **Contas a Pagar** e **diz
+  quais documentos** você precisa anexar para o mês fechar:
+  - **conta de consumo** (luz/água/telefone) → exige a **fatura** (e o comprovante na hora de pagar);
+  - **serviço de autônomo** (pessoa física) → exige o **RPA**;
+  - **software/serviço de empresa (PJ)** → exige a **NFS-e**;
+  - **outros** → sem documento obrigatório no registro.
+  Se você tentar lançar **a mesma despesa duas vezes** (mesmo fornecedor, mês e tipo), o sistema
+  **recusa** (não duplica o lançamento).
+- **A regra de ouro vale aqui também.** Enquanto a **fatura/documento** não estiver anexada, aquele
+  lançamento **impede o mês de fechar** — exatamente como qualquer outra conta. O Admin **não** fecha o
+  mês nem dispensa documento: ele só **gera o lançamento** e **aponta o documento**; quem trava é o
+  Financeiro+Compliance.
+- **Aviso de contrato a vencer.** O sistema **avisa** quando um contrato administrativo está perto do
+  vencimento (até 30 dias antes) — é só um **alerta** para você renegociar/renovar, **nunca** bloqueia
+  nada.
+- **Quem pode mexer.** Como uma despesa administrativa vira uma obrigação financeira, **cadastrar
+  fornecedor/contrato e lançar despesa** exigem o papel **Financeiro**; sem ele, o sistema **recusa** e
+  **registra** a tentativa. Toda alteração fica **auditada** (o CNPJ/CPF nunca aparece inteiro nessa
+  trilha — é dado pessoal).
+
+> Para quem é de TI: `POST /api/admin/suppliers` (cadastrar fornecedor), `GET /api/admin/suppliers?type=&status=`
+> (listar), `POST /api/admin/suppliers/{id}/contracts` (registrar contrato), `POST /api/admin/expenses`
+> (lançar despesa → devolve o id do lançamento e os documentos exigidos), `POST /api/admin/contracts/flag-expiring`
+> (varrer contratos a vencer). As escritas exigem o papel **Financeiro**. Compras completas
+> (cotação/ordem de compra) **não** fazem parte deste módulo — se forem exigidas, **compra-se** um
+> sistema de compras.
+
 ## 4. Glossário
 
 - **Backend / servidor:** a parte do sistema que processa as regras e fala com o banco de dados.
@@ -507,6 +550,7 @@ Como funciona, na prática:
 | 0.17.0 | 8 — Pessoas (People) | RH mínimo sobre o ponto: cadastrar **colaborador** (identificador único, admissão, **jornada contratada** HH:mm, situação ativo/afastado/desligado); **processar a jornada** de um período a partir do espelho operacional e calcular o **banco de horas** (saldo = trabalhado − contratado; extras/faltas, saldo negativo permitido) — só **mede**, não é folha; **consultar** jornada e banco de horas; **divergências** (marcação ímpar/faltante/jornada incoerente) viram **aviso** numa fila de tratamento, **sem correção automática**; **arquivar o holerite** no cofre (folha, retenção 5 anos, dado pessoal). Folha pesada (eSocial/FGTS/13º) = comprar/integrar. |
 | 0.18.0 | 8 — Plataforma (Platform) | Infra de TI: **custódia do certificado e-CNPJ** com o material **cifrado** (a chave/senha nunca aparece) — a tela mostra **só metadados** (titular, validade, dias para vencer, situação) e o sistema **alerta** quando o certificado está a vencer (30 dias); **governança de jobs** — catálogo e **histórico** das rotinas automáticas, **disparo manual** (só uma execução por vez = 409 se já roda; sem duplicar no período), e a falha aparece **como falha** (nunca disfarçada de sucesso); **auditoria de sistema** somente-anexação de eventos de segurança/integração/jobs (quem/o quê/quando), filtrável, **só metadados** (nunca o segredo). |
 | 0.19.0 | 8 — Identidade (Identity) | **Login de verdade**: entrar com **usuário e senha** (tela "Entrar"), nome e "Sair" no topo; erro **genérico** sem revelar se o usuário existe. **Papéis e permissões** (Diretor/Financeiro/Operacional/TI/Curador/Leitor): as **ações sensíveis exigem o papel** (emitir NF e fechar o mês → Financeiro; disparar job/custódia do certificado → TI; diretiva → Diretor) — sem o papel, **acesso negado** registrado. **Auditoria de acesso** (login e recusas; quem/ação/quando, **sem senha/token**). O **servidor é a autoridade** — a tela só reflete. Login único corporativo (provedor externo) = próxima etapa (Fase 13). |
+| 0.20.0 | 8 — Admin (fornecedores/contratos administrativos) | **Balcão administrativo**: cadastro **enxuto** de **fornecedores administrativos** (luz, água, telefone, software/serviço, autônomo) e seus **contratos** (vigência, recorrência, valor, documento). **Lançar a despesa do mês** cria automaticamente o lançamento em **Contas a Pagar** com o tipo certo e **aponta os documentos exigidos** (conta de consumo → fatura; autônomo → RPA; serviço PJ → NFS-e); **idempotente** (não duplica). **A regra de ouro vale aqui**: despesa **sem o documento impede o mês de fechar**. **Aviso de contrato a vencer** (até 30 dias, só alerta). **Cadastrar/lançar exige o papel Financeiro**; toda alteração **auditada** (CNPJ/CPF nunca aparece inteiro). Compras completas (cotação/ordem) = comprar se exigido. **Fim do bloco 8x.** |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.
