@@ -125,6 +125,12 @@ public class SecurityConfig {
                     // Machine-to-machine ACL webhooks/inbound — authenticated by HMAC, not by user.
                     .requestMatchers("/api/webhooks/**", "/api/integration/**")
                     .permitAll()
+                    // Operational telemetry is for IT only (SPEC-0027/DL-0095): the Prometheus
+                    // scrape and the metrics catalogue require ROLE_IT. health/info/version stay
+                    // public (publicMatchers). Anonymous → 401; token without ROLE_IT → 403.
+                    .requestMatchers(
+                        "/actuator/prometheus", "/actuator/metrics", "/actuator/metrics/**")
+                    .hasRole("IT")
                     // Sensitive actions require the corresponding role (DL-0082).
                     .requestMatchers(
                         org.springframework.http.HttpMethod.POST, "/api/billing/invoices/*/issue")
@@ -172,6 +178,7 @@ public class SecurityConfig {
   private static String[] publicMatchers() {
     return Stream.of(
             "/api/system/health",
+            "/api/version", // build metadata only — no secret (SPEC-0027/DL-0097)
             "/api/identity/login",
             "/v3/api-docs/**",
             "/swagger-ui/**",

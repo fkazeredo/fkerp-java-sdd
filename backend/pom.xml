@@ -59,6 +59,12 @@
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
 
+    <!-- Observability (SPEC-0027): Micrometer Prometheus registry backs /actuator/prometheus -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+    </dependency>
+
     <!-- Modular monolith boundaries -->
     <dependency>
       <groupId>org.springframework.modulith</groupId>
@@ -152,6 +158,25 @@
   </dependencies>
 
   <build>
+    <!-- Filter only application.yml so Maven resolves @project.version@ at build time (SPEC-0027/
+         DL-0097): app.version follows the pom (ADR 0015 source of truth). The Spring Boot parent
+         sets the @...@ resource delimiter; all other resources stay unfiltered (binary-safe). -->
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>application.yml</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <excludes>
+          <exclude>application.yml</exclude>
+        </excludes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.springframework.boot</groupId>
@@ -163,6 +188,44 @@
               <artifactId>lombok</artifactId>
             </exclude>
           </excludes>
+        </configuration>
+        <!-- Observability (SPEC-0027/DL-0097): generate META-INF/build-info.properties so
+             BuildProperties (version/build time) backs /api/version and /actuator/info. -->
+        <executions>
+          <execution>
+            <id>build-info</id>
+            <goals>
+              <goal>build-info</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Observability (SPEC-0027/DL-0097): generate git.properties so GitProperties (commit id)
+           backs /api/version. Tolerant of trees without .git (CI tarball/shallow) so the build
+           never fails on missing git info — the endpoint degrades gracefully to "unknown". -->
+      <plugin>
+        <groupId>io.github.git-commit-id</groupId>
+        <artifactId>git-commit-id-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>get-the-git-infos</id>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+            <phase>initialize</phase>
+          </execution>
+        </executions>
+        <configuration>
+          <failOnNoGitDirectory>false</failOnNoGitDirectory>
+          <failOnUnableToExtractRepoInfo>false</failOnUnableToExtractRepoInfo>
+          <generateGitPropertiesFile>true</generateGitPropertiesFile>
+          <includeOnlyProperties>
+            <includeOnlyProperty>^git.commit.id.abbrev$</includeOnlyProperty>
+            <includeOnlyProperty>^git.commit.id.full$</includeOnlyProperty>
+            <includeOnlyProperty>^git.commit.time$</includeOnlyProperty>
+            <includeOnlyProperty>^git.branch$</includeOnlyProperty>
+          </includeOnlyProperties>
         </configuration>
       </plugin>
 
