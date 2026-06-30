@@ -16,7 +16,13 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('./core/layout/shell').then((m) => m.Shell),
     children: [
-      { path: '', redirectTo: 'accounts', pathMatch: 'full' },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/dashboard/dashboard-page').then((m) => m.DashboardPage),
+        canActivate: [authGuard],
+      },
       {
         path: 'accounts',
         loadComponent: () => import('./features/accounts/accounts-page').then((m) => m.AccountsPage),

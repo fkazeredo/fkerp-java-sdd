@@ -62,6 +62,15 @@ export const TRANSLATIONS: Record<string, Record<string, Record<string, string>>
       'help.palette': 'Abrir a paleta de comandos',
       'help.thisHelp': 'Mostrar esta ajuda',
     },
+    dashboard: {
+      title: 'Painel',
+      accountsActive: 'Ativas',
+      bookingsPending: 'Pendentes',
+      bookingsConfirmed: 'Confirmadas',
+      reconOpen: 'Abertos',
+      reconDiscrepancy: 'Divergência',
+      reconExpectedSpread: 'Spread esperado',
+    },
     health: {
       title: 'Saúde do sistema',
       loading: 'Verificando…',
@@ -222,6 +231,15 @@ export const TRANSLATIONS: Record<string, Record<string, Record<string, string>>
       'help.title': 'Keyboard shortcuts',
       'help.palette': 'Open the command palette',
       'help.thisHelp': 'Show this help',
+    },
+    dashboard: {
+      title: 'Dashboard',
+      accountsActive: 'Active',
+      bookingsPending: 'Pending',
+      bookingsConfirmed: 'Confirmed',
+      reconOpen: 'Open',
+      reconDiscrepancy: 'Discrepancy',
+      reconExpectedSpread: 'Expected spread',
     },
     health: {
       title: 'System health',
