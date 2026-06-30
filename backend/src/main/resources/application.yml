@@ -76,6 +76,12 @@ platform:
       initial-delay-ms: ${PLATFORM_CERT_EXPIRY_INITIAL_DELAY_MS:600000}
       sweep-interval-ms: ${PLATFORM_CERT_EXPIRY_INTERVAL_MS:86400000} # daily
 
+# Representation-expiry sweep (SPEC-0020/DL-0063), now driven as a governed Platform job (DL-0076).
+portfolio:
+  representation:
+    initial-delay-ms: ${PORTFOLIO_REPRESENTATION_INITIAL_DELAY_MS:600000}
+    sweep-interval-ms: ${PORTFOLIO_REPRESENTATION_INTERVAL_MS:86400000} # daily
+
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{correlationId:-}] %logger{36} - %msg%n"
