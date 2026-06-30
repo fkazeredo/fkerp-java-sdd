@@ -4,7 +4,7 @@
 > already does today**. Updated **on every delivered slice** (see the *User manual* command in
 > `CLAUDE.md`). Portuguese version: `docs/MANUAL.md` (kept in sync).
 >
-> **System version:** 0.19.0 · **Current phase:** 8k (Identity — login, roles and access audit)
+> **System version:** 0.20.0 · **Current phase:** 8l (Admin — administrative suppliers and contracts)
 
 ## 1. What the system is
 
@@ -425,6 +425,49 @@ How it works, in practice:
 > In production the token secret MUST be configured; the sample users (one per role) exist **only** in
 > the development environment.
 
+### Phase 8 — Administrative suppliers and contracts (utilities, software)
+
+This version delivers the **administrative desk**: a **simple** registry of the company's
+**administrative suppliers** (power, water, telephone, software/service subscriptions) and the
+**contracts** that sustain them — so that each **expense** lands in the right **Accounts Payable**
+entry and **points at the document** the monthly close requires (the bill, the self-employed's RPA,
+the PJ service's NFS-e). **Not** to be confused with the **tourism brands/suppliers** (those live in
+"Portfolio").
+
+How it works in practice:
+
+- **Register an administrative supplier.** Provide the **type** (Utility, Software, Service or Other),
+  the **name** and, where applicable, the **CNPJ/CPF**. The supplier is born **active**.
+- **Register a contract.** For a supplier, record the **validity** (start and, if any, end), the
+  **recurrence** (e.g. monthly), the **amount** and the **contract document** (already kept in the
+  document vault). An inconsistent validity window (end before start) is rejected.
+- **Record a month's expense.** Provide the **supplier**, the **month** (e.g. 2026-06), the **amount**
+  and the expense **kind**. The system **automatically creates** the **Accounts Payable** entry and
+  **tells you which documents** you must attach for the month to close:
+  - **utility** (power/water/telephone) → requires the **bill** (and the proof of payment when paying);
+  - **self-employed service** (individual) → requires the **RPA**;
+  - **company (PJ) software/service** → requires the **NFS-e**;
+  - **other** → no mandatory document at registration.
+  Recording **the same expense twice** (same supplier, month and kind) is **rejected** (no double
+  posting).
+- **The golden rule applies here too.** While the **bill/document** is not attached, that entry
+  **blocks the month from closing** — exactly like any other bill. Admin **does not** close the month
+  nor waive a document: it only **generates the entry** and **points at the document**; Finance+
+  Compliance are what hold the close.
+- **Contract-expiry alert.** The system **warns** when an administrative contract is approaching expiry
+  (up to 30 days before) — just an **alert** so you can renegotiate/renew; it **never** blocks anything.
+- **Who can act.** Because an administrative expense becomes a financial obligation, **registering a
+  supplier/contract and recording an expense** require the **Finance** role; without it, the system
+  **denies** and **records** the attempt. Every change is **audited** (the CNPJ/CPF never appears in
+  full in that trail — it is personal data).
+
+> For the technically minded: `POST /api/admin/suppliers` (register supplier),
+> `GET /api/admin/suppliers?type=&status=` (list), `POST /api/admin/suppliers/{id}/contracts` (register
+> contract), `POST /api/admin/expenses` (record expense → returns the entry id and the required
+> documents), `POST /api/admin/contracts/flag-expiring` (sweep expiring contracts). Writes require the
+> **Finance** role. Full procurement (quotation/purchase order) is **not** part of this module — buy a
+> procurement system if required.
+
 ## 4. Glossary
 
 - **Backend / server:** the part of the system that processes the rules and talks to the database.
@@ -505,6 +548,7 @@ How it works, in practice:
 | 0.17.0 | 8 — People | Minimal HR on top of the time clock: register a **collaborator** (unique identifier, admission, **contracted journey** HH:mm, status active/on-leave/terminated); **process the period journey** from the operational mirror and compute the **time-bank** (balance = worked − contracted; overtime/shortfall, negative allowed) — it only **measures**, it is not payroll; **read** the journey and time-bank; **discrepancies** (odd/missing punch, incoherent journal) become an **alert** in a treatment queue, **no auto-correction**; **archive the payslip** in the vault (payroll, 5-year retention, personal data). Heavy payroll (eSocial/FGTS/13th) = buy/integrate. |
 | 0.18.0 | 8 — Platform | IT infrastructure: **e-CNPJ certificate custody** with the material **encrypted** (the key/password never appears) — the screen shows **only metadata** (holder, validity, days-to-expiry, status) and the system **alerts** when the certificate is about to expire (30 days); **job governance** — catalog and **history** of the automatic routines, **manual trigger** (only one run at a time = 409 if already running; no duplication within the window), and a failure shows up **as a failure** (never masked as success); **append-only system audit** of security/integration/job events (who/what/when), filterable, **metadata only** (never the secret). |
 | 0.19.0 | 8 — Identity | **Real login**: sign in with **username and password** ("Sign in" screen), name and "Sign out" at the top; **generic** error that never reveals whether the user exists. **Roles and permissions** (Director/Finance/Operations/IT/Policy Admin/Viewer): **sensitive actions require the role** (issue NF and close the month → Finance; trigger job/custody certificate → IT; directive → Director) — without the role, **access denied**, recorded. **Access audit** (logins and denials; who/action/when, **no password/token**). The **backend is the authority** — the screen only mirrors. Corporate single sign-on (external provider) = next step (Phase 13). |
+| 0.20.0 | 8 — Admin (administrative suppliers/contracts) | **Administrative desk**: a **lean** registry of **administrative suppliers** (power, water, telephone, software/service, self-employed) and their **contracts** (validity, recurrence, amount, document). **Recording a month's expense** automatically creates the **Accounts Payable** entry with the right kind and **points at the required documents** (utility → bill; self-employed → RPA; PJ service → NFS-e); **idempotent** (no duplicates). **The golden rule applies here**: an expense **without its document blocks the month from closing**. **Contract-expiry alert** (up to 30 days, alert only). **Registering/recording requires the Finance role**; every change is **audited** (CNPJ/CPF never shown in full). Full procurement (quotation/order) = buy if required. **End of the 8x block.** |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of

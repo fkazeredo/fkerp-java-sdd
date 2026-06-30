@@ -116,7 +116,25 @@ public class OpenApiConfig {
                         + " recorded in the Platform append-only system_audit (AUTH_LOGIN/ACCESS_DENIED),"
                         + " never a token/secret. Endpoints: POST /api/identity/login,"
                         + " GET /api/identity/me, GET /api/identity/roles,"
-                        + " GET /api/identity/access-audit?actor=&type=&from=&to=.")
-                .version("0.19.0"));
+                        + " GET /api/identity/access-audit?actor=&type=&from=&to=."
+                        + " Admin (SPEC-0025) is the administrative desk: a lean registry of"
+                        + " administrative suppliers (utilities, software/service PJ, self-employed) and"
+                        + " their contracts, which feeds expense entries into the Finance ledger and"
+                        + " references the supporting documents in the Compliance vault (full procurement"
+                        + " is out of scope — buy it if required). Registering a recurring expense posts a"
+                        + " PAYABLE entry through the Finance facade (the entry type mapped from the kind:"
+                        + " UTILITY->UTILITY_EXPENSE/UTILITY_BILL, autonomous->AUTONOMOUS_SERVICE/RPA,"
+                        + " PJ service->SERVICE/NFSE, other->OTHER_EXPENSE) and lists the required"
+                        + " documents; it is idempotent per (supplier, period, kind). Admin only"
+                        + " generates the entry and references the document — it never imposes the"
+                        + " document rule nor closes a period (the veto stays Finance+Compliance). Writes"
+                        + " require ROLE_FINANCE and every change is audited. A contract-expiry alert runs"
+                        + " on a controlled-clock governed job (alert, never a block). Endpoints:"
+                        + " POST /api/admin/suppliers, GET /api/admin/suppliers/{id},"
+                        + " GET /api/admin/suppliers?type=&status=,"
+                        + " POST /api/admin/suppliers/{id}/contracts,"
+                        + " GET /api/admin/suppliers/{id}/contracts, POST /api/admin/expenses,"
+                        + " POST /api/admin/contracts/flag-expiring.")
+                .version("0.20.0"));
   }
 }
