@@ -418,12 +418,10 @@ How it works, in practice:
 - **Access audit.** Every **login** and every **access denial** is recorded (who, which action, when) —
   **never** storing the password or the token. It is the trail IT/management consults to follow access.
 
-> For the technically minded: authentication today is **in-house** (the system mints and verifies its
-> own access token) — integrating an **external identity provider** (corporate single sign-on) is the
-> **next step** (Phase 13). API: `POST /api/identity/login` (sign in), `GET /api/identity/me` (who am I),
-> `GET /api/identity/roles` (role/permission catalog), `GET /api/identity/access-audit` (access audit).
-> In production the token secret MUST be configured; the sample users (one per role) exist **only** in
-> the development environment.
+> **Updated in Phase 13:** the **in-house** authentication described above (username/password inside the
+> system) was **replaced** by **corporate single sign-on (SSO) via an external identity provider** — see
+> the *"Phase 13 — Sign in with SSO"* section below. Roles, permissions and the access audit **stay the
+> same**; only **the way you sign in changed**.
 
 ### Phase 8 — Administrative suppliers and contracts (utilities, software)
 
@@ -477,9 +475,9 @@ the system a professional ERP feel. What you now see and use:
   the password field. After signing in you land on the **Dashboard**. If your session has expired and
   you try to open a screen directly, the system sends you to login and, once you sign in, **takes you
   back to the screen you wanted**.
-- **A session that stays.** When you reload the page, the system **silently revalidates your session**
-  with the server (no re-typing the password while the access is still valid). When the access truly
-  expires, it asks you to sign in again. (Corporate single sign-on remains the next step — Phase 13.)
+- **A session that stays.** When you reload the page, the system keeps you signed in while the access is
+  still valid, and otherwise asks you to sign in again. (Since Phase 13 this is **corporate single
+  sign-on with real silent token renewal** — see *"Phase 13 — Sign in with SSO"*.)
 - **SaaS layout (sidebar + top bar).** On the **left**, the navigation menu (Dashboard, Accounts,
   Exchange, Quotes, Bookings, Reconciliation, Health) highlighting the current screen. On the **top**,
   the command search, the **theme button** and your name with **"Sign out"**. On small screens (mobile)
@@ -534,6 +532,39 @@ observability foundation (metrics, logs and monitoring dashboards).
 > For IT: so Prometheus can scrape the protected metrics endpoint, generate a **token** for a user with
 > the **IT** role and point it at `infra/prometheus/scrape-token` (see `infra/prometheus/README.md`).
 > The monitoring stack is **config/infra** — it is not part of the backend build/tests.
+
+### Phase 13 — Sign in with SSO (corporate single sign-on)
+
+This release swaps the login for **SSO (corporate single sign-on)**: instead of typing a username and
+password **inside** the ERP, you sign in with your **corporate account**, on the **identity provider's
+page** (the system uses **Keycloak** in development). It is the same "sign in with your company account"
+pattern you already see in many systems. **Roles, permissions and the access audit did not change** —
+only **the way you sign in changed** (and it is safer: the ERP **no longer stores your password**).
+
+How it works in practice:
+
+- **Sign in.** Open the **"Sign in"** screen and click **"Sign in with SSO"**. You are taken to the
+  **provider's login page** (the company account); enter your **username and password there**. On
+  success you come back to the system **already authenticated**, on the **Dashboard**, with your name and
+  **"Sign out"** at the top. If the password is wrong, the **provider itself** shows a generic error and
+  you **do not get in**.
+- **A session that stays valid (silent renewal).** While you use the system, it **renews your access on
+  its own**, in the background — no re-login every few minutes. When the session truly ends, you are
+  taken back to the login. (Before, the session was only **revalidated**; now it is **truly renewed**.)
+- **Sign out.** The **"Sign out"** button ends the session **in the system and at the provider** (single
+  sign-on) and returns to the sign-in screen.
+- **Roles and permissions (unchanged).** Still in force: **Director, Finance, Operations, IT, Policy
+  Admin and Viewer**; sensitive actions require the right role (issue NF/close the month → Finance;
+  trigger job/custody certificate → IT; directive → Director). Without the role, **access denied** and
+  the attempt **stays in the audit**. The **backend is still the authority** — the screen only mirrors.
+
+> For the technically minded: the backend became an **OAuth2 Resource Server** that validates the
+> **external provider's token (OIDC)** via **JWKS** (with key rotation). The in-house login endpoint
+> (`POST /api/identity/login`) was **removed** — login now happens at the provider.
+> `GET /api/identity/me`, `GET /api/identity/roles` and `GET /api/identity/access-audit` remain. The
+> identity provider **in production** is the owner's decision (the shipped Keycloak serves dev/E2E, with
+> a ready realm: roles, the web app and sample users — **development only**). It comes up with
+> `docker compose up`.
 
 ## 4. Glossary
 
@@ -626,6 +657,7 @@ observability foundation (metrics, logs and monitoring dashboards).
 | 0.20.0 | 8 — Admin (administrative suppliers/contracts) | **Administrative desk**: a **lean** registry of **administrative suppliers** (power, water, telephone, software/service, self-employed) and their **contracts** (validity, recurrence, amount, document). **Recording a month's expense** automatically creates the **Accounts Payable** entry with the right kind and **points at the required documents** (utility → bill; self-employed → RPA; PJ service → NFS-e); **idempotent** (no duplicates). **The golden rule applies here**: an expense **without its document blocks the month from closing**. **Contract-expiry alert** (up to 30 days, alert only). **Registering/recording requires the Finance role**; every change is **audited** (CNPJ/CPF never shown in full). Full procurement (quotation/order) = buy if required. **End of the 8x block.** |
 | 0.21.0 | 10 — UX & professional frontend | **New experience** (no rule changes): **SaaS layout** (sidebar + top bar + mobile drawer); **light/dark theme** with the choice saved; **command palette `Ctrl/Cmd+K`** + shortcuts (`g`+key, `?` help); renewed **login** with **silent session revalidation** (returns to the intended screen); **unsaved-changes warning** when leaving a form; **real states** (loading/empty/error/permission) on every screen; a **Dashboard** with Accounts/Bookings/Reconciliation/Exchange KPIs computed in the browser. Screens built with **PrimeNG 21 + Tailwind v4** on Angular 22; **no new server endpoint**. Graduates DL-0003. |
 | 0.22.0 | 11 — Observability & monitoring | **Monitoring and version (for operations/IT)**, with no business-rule change: **`/api/version`** (open) returns version/commit/build date; **health probes** (`/actuator/health`) stay open; **metrics** (`/actuator/prometheus`) — technical (memory/CPU/requests) and **business** (bookings/quotes/invoices/logins) — **restricted to the IT role**; a **monitoring stack** (Prometheus + Loki + Grafana) that comes up via `docker compose`, with the "Acme Travel ERP — Backend Overview" dashboard and centralized logs; **JSON logs** with the correlation id and **no** secret/personal data. |
+| 0.23.0 | 13 — Professional Identity/AuthZ (graduates SPEC-0024) | **Corporate single sign-on (SSO)**: signing in now goes through the **company account** on the **identity provider's** page (Keycloak in dev), with the **"Sign in with SSO"** button and **real silent session renewal**; the ERP **no longer stores passwords**. **Roles, permissions and the access audit stay the same** — only the way you sign in changed. **Breaking change:** the old in-house login (`POST /api/identity/login`) was **removed** (login is now at the provider). |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of
