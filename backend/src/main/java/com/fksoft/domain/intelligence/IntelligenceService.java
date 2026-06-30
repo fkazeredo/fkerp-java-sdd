@@ -1,11 +1,5 @@
 package com.fksoft.domain.intelligence;
 
-import com.fksoft.domain.intelligence.internal.AgencyFxAccrual;
-import com.fksoft.domain.intelligence.internal.AgencyFxAccrualRepository;
-import com.fksoft.domain.intelligence.internal.BookingAttribution;
-import com.fksoft.domain.intelligence.internal.BookingAttributionRepository;
-import com.fksoft.domain.intelligence.internal.Insight;
-import com.fksoft.domain.intelligence.internal.InsightRepository;
 import com.fksoft.domain.money.Money;
 import java.math.BigDecimal;
 import java.time.Clock;

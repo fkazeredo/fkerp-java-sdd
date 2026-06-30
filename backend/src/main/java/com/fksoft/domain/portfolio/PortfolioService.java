@@ -1,16 +1,6 @@
 package com.fksoft.domain.portfolio;
 
 import com.fksoft.domain.money.Money;
-import com.fksoft.domain.portfolio.internal.BrandGoal;
-import com.fksoft.domain.portfolio.internal.BrandGoalRepository;
-import com.fksoft.domain.portfolio.internal.BrandRealized;
-import com.fksoft.domain.portfolio.internal.BrandRealizedRepository;
-import com.fksoft.domain.portfolio.internal.BrandSaleAttribution;
-import com.fksoft.domain.portfolio.internal.BrandSaleAttributionRepository;
-import com.fksoft.domain.portfolio.internal.RepresentationContract;
-import com.fksoft.domain.portfolio.internal.RepresentationContractRepository;
-import com.fksoft.domain.portfolio.internal.RepresentedBrand;
-import com.fksoft.domain.portfolio.internal.RepresentedBrandRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
@@ -193,8 +183,8 @@ public class PortfolioService {
    * evaluation instant is a parameter (controlled clock, like {@code
    * AfterSalesService.markBreaches} and {@code BookingService.expirePendingBookings}), so the rule
    * is deterministically testable. A contract is "expiring" when its {@code validUntil} is within
-   * {@value com.fksoft.domain.portfolio.internal.RepresentationContract#EXPIRY_WARNING_DAYS} days
-   * of {@code now} (or already past). Non-blocking; idempotent per contract.
+   * {@value com.fksoft.domain.portfolio.RepresentationContract#EXPIRY_WARNING_DAYS} days of {@code
+   * now} (or already past). Non-blocking; idempotent per contract.
    *
    * @param now the evaluation instant (UTC)
    * @return how many contracts were newly flagged as expiring

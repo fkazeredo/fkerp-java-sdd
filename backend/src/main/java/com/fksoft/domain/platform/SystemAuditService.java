@@ -1,7 +1,5 @@
 package com.fksoft.domain.platform;
 
-import com.fksoft.domain.platform.internal.SystemAuditEntry;
-import com.fksoft.domain.platform.internal.SystemAuditRepository;
 import jakarta.persistence.criteria.Predicate;
 import java.time.Clock;
 import java.time.Instant;

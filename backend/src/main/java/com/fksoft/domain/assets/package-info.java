@@ -7,9 +7,9 @@
  * separate context from {@code Portfolio} (the commercial representation, SPEC-0020) — two distinct
  * contexts (Q2, DL-0064/DL-0060).
  *
- * <p><strong>Asset</strong> ({@link com.fksoft.domain.assets.internal.Asset}) is the aggregate root
- * (BR1): a type (EQUIPMENT | SOFTWARE_LICENSE | OTHER), an identifier, an ACTIVE/RETIRED status,
- * the acquisition date and cost ({@code Money}), and — for a SOFTWARE_LICENSE — a mandatory {@code
+ * <p><strong>Asset</strong> ({@link com.fksoft.domain.assets.Asset}) is the aggregate root (BR1): a
+ * type (EQUIPMENT | SOFTWARE_LICENSE | OTHER), an identifier, an ACTIVE/RETIRED status, the
+ * acquisition date and cost ({@code Money}), and — for a SOFTWARE_LICENSE — a mandatory {@code
  * expiresAt}. The acquisition may reference the Compliance document and the Finance cost entry by
  * <strong>value</strong> ({@code documentId}/{@code financeEntryId}, never an FK — BR2). Retiring
  * an asset is audited (who/when/reason) and terminal (DL-0068). A license whose {@code expiresAt}
@@ -21,8 +21,10 @@
  * producer (DL-0067): it publishes {@link com.fksoft.domain.assets.AssetRegistered} and {@link
  * com.fksoft.domain.assets.AssetLicenseExpiring} in-process but depends on <em>no</em> other
  * business module — only the {@code money} and {@code error} kernels — so the module graph stays
- * <strong>acyclic</strong> (Spring Modulith verify). The {@code internal} sub-package (the
- * aggregate and its repository) is module-private.
+ * <strong>acyclic</strong> (Spring Modulith verify). The implementation types (the aggregate and
+ * its repository) live in this same package marked {@link com.fksoft.domain.ModuleInternal} and
+ * must never be reached from other modules — encapsulation is enforced by ArchUnit (Phase 9 / ADR
+ * 0016).
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Assets")
 package com.fksoft.domain.assets;

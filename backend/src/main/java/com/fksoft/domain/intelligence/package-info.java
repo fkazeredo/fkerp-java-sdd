@@ -24,9 +24,10 @@
  * com.fksoft.domain.intelligence.InsightDecided}), the {@link
  * com.fksoft.domain.intelligence.InsightNarrator} port and the business exceptions ({@link
  * com.fksoft.domain.intelligence.InsightNotFoundException}, {@link
- * com.fksoft.domain.intelligence.InsightDecisionInvalidException}). The {@code internal}
- * sub-package (entities, repositories, the event listeners, the rule-based narrator) is
- * module-private.
+ * com.fksoft.domain.intelligence.InsightDecisionInvalidException}). The implementation types
+ * (entities, repositories, the event listeners, the rule-based narrator) live in this same package
+ * marked {@link com.fksoft.domain.ModuleInternal} and must never be reached from other modules —
+ * encapsulation is enforced by ArchUnit (Phase 9 / ADR 0016).
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Intelligence")
 package com.fksoft.domain.intelligence;

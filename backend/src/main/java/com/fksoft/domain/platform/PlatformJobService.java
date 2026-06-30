@@ -1,10 +1,5 @@
 package com.fksoft.domain.platform;
 
-import com.fksoft.domain.platform.internal.JobRun;
-import com.fksoft.domain.platform.internal.JobRunRecorder;
-import com.fksoft.domain.platform.internal.JobRunRepository;
-import com.fksoft.domain.platform.internal.ScheduledJob;
-import com.fksoft.domain.platform.internal.ScheduledJobRepository;
 import java.time.Clock;
 import java.util.List;
 import java.util.Locale;
