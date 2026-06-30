@@ -23,6 +23,14 @@ public enum AuditType {
   /** A generic security event surfaced by another module (e.g. an access/auth fact). */
   SECURITY_EVENT,
 
+  /**
+   * A successful login (Identity/SPEC-0024 access audit, DL-0083) — never carries a token/secret.
+   */
+  AUTH_LOGIN,
+
+  /** An access denial — insufficient role for a sensitive action (Identity/SPEC-0024, DL-0083). */
+  ACCESS_DENIED,
+
   /** A generic integration event surfaced by an adapter. */
   INTEGRATION_EVENT
 }

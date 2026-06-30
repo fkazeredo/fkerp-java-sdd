@@ -65,6 +65,22 @@
       <artifactId>spring-modulith-starter-core</artifactId>
     </dependency>
 
+    <!-- Security: real authentication/authorization (SPEC-0024). The ERP is a Resource Server of its
+         own in-house JWT issuer (DL-0079); Nimbus (oauth2-jose) signs/verifies the HS256 token. The
+         live external OIDC IdP is Phase 13. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-oauth2-jose</artifactId>
+    </dependency>
+
     <!-- Migrations -->
     <dependency>
       <groupId>org.flywaydb</groupId>
@@ -100,6 +116,11 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-test</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
