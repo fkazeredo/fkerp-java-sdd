@@ -4,7 +4,7 @@
 > hoje**. É atualizado **a cada fatia entregue** (ver o comando *User manual* no `CLAUDE.md`).
 > Versão em inglês (espelho, mantida em sincronia): `docs/MANUAL.en-US.md`.
 >
-> **Versão do sistema:** 0.18.0 · **Fase atual:** 8j (Plataforma — certificado e-CNPJ, jobs, auditoria)
+> **Versão do sistema:** 0.19.0 · **Fase atual:** 8k (Identidade — login, papéis e auditoria de acesso)
 
 ## 1. O que é o sistema
 
@@ -394,6 +394,39 @@ O que o operador de TI faz:
 > custodiado de fato (cofre de nuvem/HSM) e se é A1 (arquivo) ou A3 (token) é decisão de infra do dono;
 > hoje o material fica cifrado (AES-256-GCM) com a chave guardada **fora do banco**.
 
+### Fase 8 — Entrar no sistema (login), papéis e auditoria de acesso
+
+A partir desta versão o sistema tem **login de verdade**: cada pessoa entra com **usuário e senha**, e
+**o que cada uma pode fazer depende do seu papel**. Antes, o sistema usava um "usuário de
+desenvolvimento" com acesso a tudo — agora a segurança é real e **o servidor é a autoridade**: ele
+confere o papel a cada ação (a tela nunca decide sozinha).
+
+Como funciona, na prática:
+
+- **Entrar (login).** Abra a tela **"Entrar"**, informe **usuário** e **senha** e confirme. Se estiver
+  certo, você entra e seu nome aparece no topo, com o botão **"Sair"**. Se o usuário ou a senha
+  estiverem errados, aparece uma mensagem **genérica** ("usuário ou senha inválidos") — de propósito, o
+  sistema **não diz** se foi o usuário ou a senha que errou (segurança).
+- **Sair.** O botão **"Sair"** no topo encerra a sessão e volta para a tela de login.
+- **Papéis (o que cada um pode fazer).** Cada usuário tem um ou mais **papéis**: **Diretor**,
+  **Financeiro**, **Operacional**, **TI**, **Curador de Políticas** e **Leitor**. As **ações sensíveis**
+  exigem o papel certo, por exemplo:
+  - **emitir nota fiscal de comissão** e **fechar o mês** → papel **Financeiro**;
+  - **disparar uma rotina (job) / custodiar o certificado** → papel **TI**;
+  - **emitir uma diretiva comercial** → papel **Diretor** (regra de política → Diretor ou Curador).
+  Se você tentar uma ação sem o papel necessário, o sistema **recusa** (mensagem "acesso negado") e
+  **registra a tentativa** na auditoria.
+- **Auditoria de acesso.** Cada **login** e cada **recusa de acesso** ficam registrados (quem, qual
+  ação, quando) — **sem nunca** guardar a senha ou o token. É a trilha que o time de TI/diretoria
+  consulta para acompanhar acessos.
+
+> Para o time técnico: a autenticação hoje é **própria** (o sistema emite e confere o seu próprio token
+> de acesso) — a integração com um **provedor de identidade externo** (login único corporativo) é a
+> **próxima etapa** (Fase 13). Para quem é de TI: `POST /api/identity/login` (entrar), `GET /api/identity/me`
+> (quem sou eu), `GET /api/identity/roles` (catálogo de papéis/permissões), `GET /api/identity/access-audit`
+> (auditoria de acesso). Em produção é obrigatório configurar a chave secreta do token; os usuários de
+> exemplo (um por papel) existem **só** no ambiente de desenvolvimento.
+
 ## 4. Glossário
 
 - **Backend / servidor:** a parte do sistema que processa as regras e fala com o banco de dados.
@@ -473,6 +506,7 @@ O que o operador de TI faz:
 | 0.16.0 | 8 — Patrimônio (Assets) | Registro do **patrimônio interno** (equipamentos, licenças de software, outros bens): cadastrar com **tipo/identificação/data/custo** e vínculos por valor ao **documento** (cofre) e ao **lançamento** (financeiro); licença de software exige **data de vencimento**; **baixa** auditada e definitiva (com motivo); listar/filtrar por tipo/situação e por **licenças a vencer**; **aviso** (uma vez por licença) de licença a vencer (até 30 dias). É patrimônio, não produto — não entra em preço/venda; gestão plena de ativos = comprar. |
 | 0.17.0 | 8 — Pessoas (People) | RH mínimo sobre o ponto: cadastrar **colaborador** (identificador único, admissão, **jornada contratada** HH:mm, situação ativo/afastado/desligado); **processar a jornada** de um período a partir do espelho operacional e calcular o **banco de horas** (saldo = trabalhado − contratado; extras/faltas, saldo negativo permitido) — só **mede**, não é folha; **consultar** jornada e banco de horas; **divergências** (marcação ímpar/faltante/jornada incoerente) viram **aviso** numa fila de tratamento, **sem correção automática**; **arquivar o holerite** no cofre (folha, retenção 5 anos, dado pessoal). Folha pesada (eSocial/FGTS/13º) = comprar/integrar. |
 | 0.18.0 | 8 — Plataforma (Platform) | Infra de TI: **custódia do certificado e-CNPJ** com o material **cifrado** (a chave/senha nunca aparece) — a tela mostra **só metadados** (titular, validade, dias para vencer, situação) e o sistema **alerta** quando o certificado está a vencer (30 dias); **governança de jobs** — catálogo e **histórico** das rotinas automáticas, **disparo manual** (só uma execução por vez = 409 se já roda; sem duplicar no período), e a falha aparece **como falha** (nunca disfarçada de sucesso); **auditoria de sistema** somente-anexação de eventos de segurança/integração/jobs (quem/o quê/quando), filtrável, **só metadados** (nunca o segredo). |
+| 0.19.0 | 8 — Identidade (Identity) | **Login de verdade**: entrar com **usuário e senha** (tela "Entrar"), nome e "Sair" no topo; erro **genérico** sem revelar se o usuário existe. **Papéis e permissões** (Diretor/Financeiro/Operacional/TI/Curador/Leitor): as **ações sensíveis exigem o papel** (emitir NF e fechar o mês → Financeiro; disparar job/custódia do certificado → TI; diretiva → Diretor) — sem o papel, **acesso negado** registrado. **Auditoria de acesso** (login e recusas; quem/ação/quando, **sem senha/token**). O **servidor é a autoridade** — a tela só reflete. Login único corporativo (provedor externo) = próxima etapa (Fase 13). |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.

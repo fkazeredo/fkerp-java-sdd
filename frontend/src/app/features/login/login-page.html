@@ -1,0 +1,32 @@
+<section class="page">
+  <h1 class="page__title">{{ 'login.title' | translate }}</h1>
+
+  <form class="card form" (ngSubmit)="submit()" #f="ngForm">
+    <label>
+      {{ 'login.username' | translate }}
+      <input name="username" [(ngModel)]="username" required autocomplete="username" />
+    </label>
+    <label>
+      {{ 'login.password' | translate }}
+      <input
+        type="password"
+        name="password"
+        [(ngModel)]="password"
+        required
+        autocomplete="current-password"
+      />
+    </label>
+
+    @if (errorCode()) {
+      <p class="form__error" role="alert">{{ errorCode() | translate }}</p>
+    }
+
+    <button type="submit" [disabled]="submitting() || f.invalid">
+      @if (submitting()) {
+        {{ 'login.submitting' | translate }}
+      } @else {
+        {{ 'login.submit' | translate }}
+      }
+    </button>
+  </form>
+</section>
