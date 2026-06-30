@@ -71,6 +71,8 @@ import com.fksoft.domain.people.PointSnapshotInvalidException;
 import com.fksoft.domain.people.PointSnapshotNotFoundException;
 import com.fksoft.domain.platform.CertificateNotFoundException;
 import com.fksoft.domain.platform.CertificateUnavailableException;
+import com.fksoft.domain.platform.JobLockedException;
+import com.fksoft.domain.platform.JobNotFoundException;
 import com.fksoft.domain.portfolio.BrandDuplicateException;
 import com.fksoft.domain.portfolio.BrandGoalInvalidException;
 import com.fksoft.domain.portfolio.BrandInvalidException;
@@ -193,7 +195,9 @@ public class HttpErrorMapping {
           entry(LicenseExpiryRequiredException.class, HttpStatus.BAD_REQUEST),
           entry(AssetAlreadyRetiredException.class, HttpStatus.CONFLICT),
           entry(CertificateNotFoundException.class, HttpStatus.NOT_FOUND),
-          entry(CertificateUnavailableException.class, HttpStatus.SERVICE_UNAVAILABLE));
+          entry(CertificateUnavailableException.class, HttpStatus.SERVICE_UNAVAILABLE),
+          entry(JobNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(JobLockedException.class, HttpStatus.CONFLICT));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {
