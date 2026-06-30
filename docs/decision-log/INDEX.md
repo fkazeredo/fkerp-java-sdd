@@ -19,6 +19,7 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0049](DL-0049-payout-foreign-settlement-rate-and-brl-baixa.md) | Payout: liquidação do fornecedor com `settlementRate` (USD) + baixa em **BRL** | **Baixa** | **Cara** | Fluxo de câmbio real (remessa vs BRL) é Open Question; a tese de câmbio é compartilhada por Payout/Reconciliation/Exchange |
 | [DL-0058](DL-0058-marketing-lgpd-erasure-preserves-revocation-and-metrics-as-logs.md) | Marketing: exclusão LGPD apaga PII mas preserva tombstone de revogação (anonimizado) | **Baixa** | **Cara** | **Alcance do apagamento × dever de prova/supressão só o DPO/jurídico fecha**; expurgo é destrutivo (PII não volta) |
 | [DL-0062](DL-0062-portfolio-brand-sale-attribution-intake-and-realized-projection.md) | Portfolio: realizado por marca via **intake próprio** (reserva→marca) + projeção de eventos, sem alterar o evento do Booking | **Baixa** | Moderada | **Qual campo identifica a marca na venda é incógnita de negócio** (só o dono fecha); intake explícito + seam rastreável |
+| [DL-0074](DL-0074-platform-certificate-encryption-at-rest.md) | Custódia do e-CNPJ: criptografia at-rest **AES-256-GCM** (envelope), chave fora do banco; só metadados expostos | **Baixa** | **Cara** | **Onde custodiar (KMS×HSM×secret manager) e A1×A3 é decisão de infra/segurança do dono**; troca de cofre exige re-cifrar/migrar segredo real |
 
 > _Nota Fase 8e:_ DL-0052/0053/0054 são **Confiança=Média / Reversibilidade=Barata–Moderada** —
 > não entram neste destaque. O "quais custos contam" do custo de servir (DL-0053) e os prazos de
@@ -63,6 +64,17 @@ conforme `docs/RUN-PHASE.md`.
 > adota o saldo mensal + janela CLT configurável (default 6 meses do acordo individual escrito,
 > art. 59). A reversão é **Moderada** (entra um sistema de folha por cima), não Cara: o
 > `JourneyCalculator` e as tabelas já são a base.
+
+> _Nota Fase 8j (Platform — SPEC-0023):_ DL-0073 (novo módulo `platform`, Alta/Moderada), DL-0075
+> (registro de jobs + advisory lock, Alta/Moderada), DL-0076 (catálogo/ligação de schedulers,
+> Média/Moderada), DL-0077 (auditoria append-only por listener, Alta/Moderada) e DL-0078
+> (`CertificateSigner` graduado, Média/Moderada) são reversões moderadas/localizadas. **DL-0074** é a do
+> destaque (**Confiança=Baixa / Reversibilidade=Cara**): **onde custodiar o e-CNPJ** (KMS de nuvem × HSM
+> × secret manager on-prem) e **A1×A3** é Open Question de infra/segurança do dono. O v1 adota o degrau
+> mais defensável — **envelope AES-256-GCM com chave mestra por ambiente, material cifrado no banco e só
+> metadados expostos**, atrás de uma porta `SecretCipher`/`CertificateSigner` trocável. Trocar para
+> KMS/HSM real muda só o adaptador, mas exige **re-cifrar/migrar segredo real** — por isso a reversão é
+> Cara, ainda que o domínio fique intacto.
 
 ## Todas as decisões
 
@@ -140,3 +152,9 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0070](DL-0070-people-timebank-monthly-balance-and-clt-compensation-window.md) | 8i | People: banco de horas = saldo mensal (extras/faltas, sinal) + janela de compensação CLT configurável (default 6 meses, art. 59) | **Baixa** | Moderada |
 | [DL-0071](DL-0071-people-discrepancy-detection-alerts-not-corrects.md) | 8i | People: divergência (ímpar/faltante/incoerente) sinaliza alerta + fila, **nunca corrige** (BR4); idempotente | Média | Barata |
 | [DL-0072](DL-0072-people-payslip-archived-in-compliance-by-value.md) | 8i | People: holerite no Compliance (PAYROLL, retenção 5a, `hasPersonalData`) via orquestrador infra; `documentId` por valor | Alta | Barata |
+| [DL-0073](DL-0073-platform-new-domain-module.md) | 8j | Novo módulo `domain.platform` (20º Modulith): contexto Platform real (custódia/jobs/auditoria); gradua o seam adiado da DL-0030 | Alta | Moderada |
+| [DL-0074](DL-0074-platform-certificate-encryption-at-rest.md) | 8j | Custódia e-CNPJ: criptografia at-rest AES-256-GCM (envelope), chave fora do banco; metadados em claro, material cifrado, nunca em log/evento/DTO | **Baixa** | **Cara** |
+| [DL-0075](DL-0075-platform-job-registry-and-postgres-advisory-lock.md) | 8j | Governança de jobs: registro `ScheduledJob`/`JobRun` + idempotência por `(job_name, window)` + advisory lock no Postgres (sem ShedLock/Quartz) | Alta | Moderada |
+| [DL-0076](DL-0076-platform-initial-job-catalog-and-scheduler-wiring.md) | 8j | Catálogo inicial = jobs já ativados (crawler/SLA/licença/representação/retenção/certificado); schedulers existentes registram `JobRun` via porta, lógica fica no dono | Média | Moderada |
+| [DL-0077](DL-0077-platform-system-audit-append-only-via-event-listener.md) | 8j | Auditoria de sistema append-only via listener de eventos in-process + fachada `record(...)`; só metadados mascarados, sem segredo | Alta | Moderada |
+| [DL-0078](DL-0078-platform-certificate-signer-graduated-from-billing-stub.md) | 8j | `CertificateSigner` graduado para o Platform; stub do Billing **delega** à custódia (mantém a porta do Billing; back-compat) | Média | Moderada |

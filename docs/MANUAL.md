@@ -4,7 +4,7 @@
 > hoje**. É atualizado **a cada fatia entregue** (ver o comando *User manual* no `CLAUDE.md`).
 > Versão em inglês (espelho, mantida em sincronia): `docs/MANUAL.en-US.md`.
 >
-> **Versão do sistema:** 0.10.0 · **Fase atual:** 8 (Finance, pleno)
+> **Versão do sistema:** 0.18.0 · **Fase atual:** 8j (Plataforma — certificado e-CNPJ, jobs, auditoria)
 
 ## 1. O que é o sistema
 
@@ -358,6 +358,42 @@ O que o operador faz:
 > cofre, vindo da exportação oficial do ponto (não desta tela). **Folha pesada** (eSocial/FGTS/13º) =
 > **comprar/integrar**.
 
+### Fase 8 — Plataforma (TI): certificado e-CNPJ, jobs e auditoria de sistema
+
+O módulo de **Plataforma** (*Platform*) é a **infraestrutura operada** que sustenta os módulos
+fiscais e de integração. Ele **não tem regra de negócio** — ele **guarda** segredos, **governa** as
+rotinas automáticas (jobs) e **registra** a auditoria do sistema. É voltado ao **time de TI**.
+
+O que o operador de TI faz:
+
+- **Acompanhar o certificado e-CNPJ:** o certificado digital (ICP-Brasil) é peça obrigatória para
+  emitir NFS-e e assinar o ponto. O sistema **guarda o certificado de forma cifrada** (o material
+  secreto — a chave privada e a senha — **nunca** aparece em tela, log ou relatório) e mostra **apenas
+  os dados públicos**: titular, validade, **dias para vencer** e situação (válido / a vencer / vencido).
+  Quando a validade se aproxima (30 dias), o sistema **gera um alerta** automaticamente — para o
+  certificado não vencer sem aviso e travar a emissão de notas.
+- **Ver o catálogo de rotinas (jobs) e o histórico:** o sistema lista as **rotinas automáticas**
+  (o robô do ponto, as varreduras de prazo de SLA, de licença a vencer, de contrato a vencer, de
+  retenção no cofre e de validade do certificado) e o **histórico de cada execução**: quando começou e
+  terminou, se **deu certo, falhou ou foi pulada** (porque já tinha rodado naquele período), e quantos
+  itens tratou. Uma falha aparece **como falha** — o sistema **nunca** disfarça falha como sucesso.
+- **Disparar uma rotina manualmente:** quando preciso, o TI pode **rodar uma rotina na hora** (por
+  exemplo, refazer a varredura de licenças a vencer). O sistema garante que **só uma execução roda por
+  vez** (se já estiver rodando, avisa que está **em execução**) e que **não duplica** o trabalho do
+  período.
+- **Consultar a auditoria de sistema:** um registro **somente-anexação** (não pode ser apagado nem
+  reescrito) dos fatos de **segurança, integração e jobs** — quem fez, o quê, quando. Pode ser filtrado
+  por **ator**, **tipo** e **período**. A auditoria guarda **só metadados** — **nunca** o material do
+  certificado.
+
+> Para quem é de TI: `GET /api/platform/certificate/status` (situação do certificado — **só
+> metadados**), `POST /api/platform/certificate` (custodiar um certificado; o material é cifrado e
+> nunca devolvido), `GET /api/platform/jobs` (catálogo), `GET /api/platform/jobs/runs?job=&status=`
+> (histórico), `POST /api/platform/jobs/{name}/trigger` (disparo manual, responde 202; já em execução
+> = 409), `GET /api/platform/audit?actor=&type=&from=&to=` (auditoria). **Onde** o certificado é
+> custodiado de fato (cofre de nuvem/HSM) e se é A1 (arquivo) ou A3 (token) é decisão de infra do dono;
+> hoje o material fica cifrado (AES-256-GCM) com a chave guardada **fora do banco**.
+
 ## 4. Glossário
 
 - **Backend / servidor:** a parte do sistema que processa as regras e fala com o banco de dados.
@@ -412,6 +448,16 @@ O que o operador faz:
   É definitiva.
 - **Licença a vencer:** uma licença de software cuja **data de vencimento** está próxima (até 30 dias)
   ou já passou; o sistema **avisa** para renovar, sem bloquear nada.
+- **Certificado e-CNPJ:** o certificado digital da empresa (ICP-Brasil), obrigatório para emitir nota
+  fiscal e assinar o ponto. O sistema **guarda cifrado** e mostra **só os dados públicos** (validade,
+  titular) — nunca a chave/senha.
+- **Custódia (de segredo):** guardar um material secreto (certificado, senha) **cifrado**, acessível
+  só pelo sistema, sem nunca expô-lo. A chave que cifra fica **fora do banco de dados**.
+- **Rotina automática (*job*):** uma tarefa que o sistema roda sozinho de tempos em tempos (o robô do
+  ponto, as varreduras de prazos). A **governança de jobs** garante que cada uma roda **uma por vez**,
+  **sem duplicar** no período, com **histórico** de cada execução.
+- **Auditoria de sistema:** o registro **somente-anexação** de fatos de segurança/integração/jobs
+  (quem, o quê, quando) — para rastreabilidade. Guarda **só metadados**, nunca segredo.
 
 ## 5. Histórico de versões do manual
 
@@ -426,6 +472,7 @@ O que o operador faz:
 | 0.15.0 | 8 — Portfólio | Representação: cadastrar/desativar/listar **marcas representadas** (identificador único); registrar **contratos de representação** (vigência + documento no cofre), com **alerta** (não bloqueio) para venda sem contrato vigente e **aviso de contrato a vencer** (até 30 dias); definir **metas por marca** (volume ou receita) e acompanhar o **realizado vs meta** a partir das **vendas confirmadas** da marca. Não mexe em preço nem comissão. |
 | 0.16.0 | 8 — Patrimônio (Assets) | Registro do **patrimônio interno** (equipamentos, licenças de software, outros bens): cadastrar com **tipo/identificação/data/custo** e vínculos por valor ao **documento** (cofre) e ao **lançamento** (financeiro); licença de software exige **data de vencimento**; **baixa** auditada e definitiva (com motivo); listar/filtrar por tipo/situação e por **licenças a vencer**; **aviso** (uma vez por licença) de licença a vencer (até 30 dias). É patrimônio, não produto — não entra em preço/venda; gestão plena de ativos = comprar. |
 | 0.17.0 | 8 — Pessoas (People) | RH mínimo sobre o ponto: cadastrar **colaborador** (identificador único, admissão, **jornada contratada** HH:mm, situação ativo/afastado/desligado); **processar a jornada** de um período a partir do espelho operacional e calcular o **banco de horas** (saldo = trabalhado − contratado; extras/faltas, saldo negativo permitido) — só **mede**, não é folha; **consultar** jornada e banco de horas; **divergências** (marcação ímpar/faltante/jornada incoerente) viram **aviso** numa fila de tratamento, **sem correção automática**; **arquivar o holerite** no cofre (folha, retenção 5 anos, dado pessoal). Folha pesada (eSocial/FGTS/13º) = comprar/integrar. |
+| 0.18.0 | 8 — Plataforma (Platform) | Infra de TI: **custódia do certificado e-CNPJ** com o material **cifrado** (a chave/senha nunca aparece) — a tela mostra **só metadados** (titular, validade, dias para vencer, situação) e o sistema **alerta** quando o certificado está a vencer (30 dias); **governança de jobs** — catálogo e **histórico** das rotinas automáticas, **disparo manual** (só uma execução por vez = 409 se já roda; sem duplicar no período), e a falha aparece **como falha** (nunca disfarçada de sucesso); **auditoria de sistema** somente-anexação de eventos de segurança/integração/jobs (quem/o quê/quando), filtrável, **só metadados** (nunca o segredo). |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.

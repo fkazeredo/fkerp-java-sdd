@@ -47,6 +47,23 @@ BR4  O system audit log MUST consolidar eventos de segurança/integração/jobs 
      correlation id — append-only.
 BR5  Expiração do certificado MUST gerar alerta (CertificateExpiring) — risco fiscal/operacional.
 BR6  Platform MUST NOT conter regra de negócio de domínio; é infra operada (orquestra, guarda, audita).
+
+BR7  ASSUMIDO (ver DL-0073): Platform é um **módulo de domínio** próprio (`com.fksoft.domain.platform`,
+     20º Modulith) — custódia, governança de jobs e auditoria; os adaptadores técnicos (cifra, lock,
+     assinatura) vivem em `com.fksoft.infra.platform` atrás de portas (ADR 0010).
+BR8  ASSUMIDO (ver DL-0074): a custódia cifra o material **at-rest com AES-256-GCM** (envelope/AEAD),
+     com a **chave mestra fora do banco** (ambiente), via porta `SecretCipher`; só metadados são
+     expostos; o material nunca em log/evento/DTO/banco em claro. KMS/HSM real e A1×A3 = troca de
+     adaptador (decisão de infra/segurança do dono — segue em aberto).
+BR9  ASSUMIDO (ver DL-0075/DL-0076): governança = registro `ScheduledJob`/`JobRun` + idempotência por
+     `(job, window)` + **lock no Postgres** (advisory lock, sem ShedLock/Quartz); catálogo inicial =
+     os jobs já ativados (crawler, SLA, licença, representação, retenção, certificado), seedados na V28;
+     os schedulers existentes registram `JobRun` via porta, sem mover a lógica do dono.
+BR10 ASSUMIDO (ver DL-0077): a auditoria de sistema é **append-only**, consolidada por listener
+     in-process dos eventos expostos do Platform + a fachada `SystemAuditService.record(...)` para
+     produtores de segurança/integração; detalhe só metadados, nunca segredo.
+BR11 ASSUMIDO (ver DL-0078): a porta `CertificateSigner` é do Platform; o stub do Billing **delega** à
+     custódia (mantém a porta `billing.CertificateSigner`, back-compat) sem expor o material.
 ```
 
 ## Input/Output Examples
@@ -128,10 +145,16 @@ expõem segredo/credencial.
 ## Open Questions
 
 - **Onde** custodiar (KMS de nuvem × HSM × secret manager on-prem) e A1 (arquivo) × A3 (token) — decisão
-  de infra/segurança do dono.
+  de infra/segurança do dono. **RESOLVIDA NO v1 (ASSUMIDO — ver DL-0074, BR8):** envelope AES-256-GCM
+  com chave mestra por ambiente, atrás de porta `SecretCipher`; KMS/HSM real e A1×A3 trocam só o
+  adaptador. **Confiança=Baixa / Reversibilidade=Cara** — segue dependendo da decisão de infra do dono.
 - Ferramenta de **locking/scheduler** (ShedLock, Quartz, lock no Postgres) — escolha de implementação.
+  **RESOLVIDA (ASSUMIDO — ver DL-0075, BR9):** `@Scheduled` + registro `JobRun` + **advisory lock no
+  Postgres**, sem ShedLock/Quartz (Regra Zero).
 - Quais jobs entram no catálogo inicial (crawler, feed de câmbio, expiração de PENDING, retenção, SLA) —
-  confirmar conforme as fatias forem ativadas.
+  confirmar conforme as fatias forem ativadas. **RESOLVIDA (ASSUMIDO — ver DL-0076, BR9):** os jobs já
+  ativados (crawler, SLA, licença, representação, retenção, certificado); feed de câmbio e expiração de
+  PENDING entram quando houver job dedicado ativado.
 
 ## Out of Scope
 

@@ -61,6 +61,27 @@ integration:
         initial-delay-ms: ${PAYMENT_MOCK_DISPATCH_INITIAL_DELAY_MS:5000}
         interval-ms: ${PAYMENT_MOCK_DISPATCH_INTERVAL_MS:2000} # how often due webhooks are delivered
 
+# Platform (SPEC-0023). The e-CNPJ certificate custody encrypts the secret material at rest with
+# AES-256-GCM (DL-0074); the master key lives OUTSIDE the database. In production set a real 32-byte
+# base64 key via PLATFORM_SECRET_KEY — the dev default is used only when unset and is NOT secure.
+# WHERE to custody (cloud KMS / HSM / secret manager) and A1×A3 is the owner's Open Question; the
+# SecretCipher port lets a real backend be plugged without touching the domain. No secret is logged.
+platform:
+  secret:
+    key: ${PLATFORM_SECRET_KEY:}                 # 32-byte base64 master key (empty → dev-only default)
+    key-alias: ${PLATFORM_SECRET_KEY_ALIAS:platform-default}
+  certificate:
+    expiry:
+      horizon-days: ${PLATFORM_CERT_EXPIRY_HORIZON_DAYS:30}  # alert this many days before expiry (BR5)
+      initial-delay-ms: ${PLATFORM_CERT_EXPIRY_INITIAL_DELAY_MS:600000}
+      sweep-interval-ms: ${PLATFORM_CERT_EXPIRY_INTERVAL_MS:86400000} # daily
+
+# Representation-expiry sweep (SPEC-0020/DL-0063), now driven as a governed Platform job (DL-0076).
+portfolio:
+  representation:
+    initial-delay-ms: ${PORTFOLIO_REPRESENTATION_INITIAL_DELAY_MS:600000}
+    sweep-interval-ms: ${PORTFOLIO_REPRESENTATION_INTERVAL_MS:86400000} # daily
+
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{correlationId:-}] %logger{36} - %msg%n"
