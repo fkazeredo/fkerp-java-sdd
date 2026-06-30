@@ -1,11 +1,15 @@
 package com.fksoft.application.api;
 
+import com.fksoft.application.api.dto.AttributeSaleRequest;
+import com.fksoft.application.api.dto.DefineGoalRequest;
 import com.fksoft.application.api.dto.RegisterBrandRequest;
 import com.fksoft.application.api.dto.RegisterContractRequest;
 import com.fksoft.domain.portfolio.BrandStatus;
 import com.fksoft.domain.portfolio.BrandView;
 import com.fksoft.domain.portfolio.ContractCoverage;
 import com.fksoft.domain.portfolio.ContractView;
+import com.fksoft.domain.portfolio.GoalProgress;
+import com.fksoft.domain.portfolio.GoalView;
 import com.fksoft.domain.portfolio.PortfolioService;
 import com.fksoft.infra.security.UserContextProvider;
 import jakarta.validation.Valid;
@@ -97,6 +101,31 @@ public class PortfolioController {
 
   /** Result of the expiry sweep: how many contracts were newly flagged. */
   public record ExpiringSweepResponse(int flagged) {}
+
+  // --- Goals + realized projection (BR3/BR4) ---
+
+  @PostMapping("/brands/{brandRef}/goals")
+  public ResponseEntity<GoalView> defineGoal(
+      @PathVariable String brandRef, @Valid @RequestBody DefineGoalRequest request) {
+    GoalView view = portfolioService.defineGoal(request.toCommand(brandRef), actor());
+    return ResponseEntity.status(HttpStatus.CREATED).body(view);
+  }
+
+  @GetMapping("/brands/{id}/goals/{period}/progress")
+  public GoalProgress goalProgress(@PathVariable UUID id, @PathVariable String period) {
+    return portfolioService.goalProgress(id, period);
+  }
+
+  @PostMapping("/brands/{brandRef}/sales")
+  public ResponseEntity<SaleAttributionResponse> attributeSale(
+      @PathVariable String brandRef, @Valid @RequestBody AttributeSaleRequest request) {
+    String attributedBrand = portfolioService.attributeSale(brandRef, request.bookingId(), actor());
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(new SaleAttributionResponse(request.bookingId(), attributedBrand));
+  }
+
+  /** The result of a sale→brand attribution intake. */
+  public record SaleAttributionResponse(UUID bookingId, String brandRef) {}
 
   private String actor() {
     return userContextProvider.currentUser().username();

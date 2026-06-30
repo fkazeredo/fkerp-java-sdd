@@ -269,12 +269,23 @@ What the operator does:
 - **Expiring-contract alert:** the system signals, **once per contract**, the contracts that are
   **about to expire** (within 30 days) or already expired, so governance can act. It is a **warning**,
   not a block.
+- **Set a goal per brand:** pick the brand, the **period** (a year `2026` or a month `2026-06`) and the
+  **metric** — **revenue** (an amount in BRL) or **volume** (a count of sales). Each brand has **one**
+  goal per period and metric.
+- **Attribute a sale to a brand:** record that a **booking** belongs to a represented brand. It is this
+  link that lets the system tally the sale under the right brand.
+- **Track realized vs goal:** the system shows, for a brand and period, **how much was realized** and
+  the **attainment percentage**. The realized comes from the brand's **confirmed sales** (volume) and
+  their **realized spread** (revenue) — computed from the sales events, **without changing** the sale.
+  Sales with no attributed brand count toward no goal.
 
 > For IT: `POST /api/portfolio/brands`, `GET /brands/{id}`, `GET /brands?status=`,
 > `DELETE /brands/{id}` (deactivate); `POST /brands/{brandRef}/contracts`,
 > `GET /brands/{brandRef}/contract-coverage?on=`; `POST /contracts/flag-expiring` (triggers the expiry
-> alert). Identifiers from other contexts (document, booking) are **values**, no FK; no price/commission
-> lives here.
+> alert); `POST /brands/{brandRef}/goals`, `GET /brands/{id}/goals/{period}/progress`,
+> `POST /brands/{brandRef}/sales` (sale→brand intake). Identifiers from other contexts (document,
+> booking, case) are **values**, no FK; no price/commission lives here — the realized is just a
+> read-model projection of the sales events.
 
 ## 4. Glossary
 
