@@ -29,6 +29,30 @@ services:
       retries: 12
     networks: [acme-e2e]
 
+  # Dev IdP for the E2E stack (SPEC-0024 Phase 13 / DL-0103). Same `acme` realm import as the dev
+  # stack (roles, public SPA client, seed users — password dev12345, E2E ONLY). Exposed on host port
+  # 8089 (the dev stack uses 8088) so both stacks can run side by side. The browser and the E2E
+  # backend both reach it at http://localhost:8089/realms/acme so the token `iss` matches.
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: ["start-dev", "--import-realm", "--http-port=8089"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: http://localhost:8089
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+    volumes:
+      - ./infra/keycloak/realm-acme.json:/opt/keycloak/data/import/realm-acme.json:ro
+    ports:
+      - "8089:8089"
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8089 && echo -e 'GET /realms/acme HTTP/1.0\\r\\n\\r\\n' >&3 && cat <&3 | head -1 | grep -q '200'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    networks: [acme-e2e]
+
   app:
     build:
       context: ./backend
@@ -37,15 +61,18 @@ services:
       DB_USERNAME: acme
       DB_PASSWORD: acme
       SERVER_PORT: "8080"
-      # dev profile so the DevUserSeeder creates the test users (one per role, password dev12345 —
-      # dev/test ONLY, never production; SPEC-0024 BR6 / DL-0101 / BR6) so the E2E login has credentials.
-      SPRING_PROFILES_ACTIVE: dev
-      # Insecure, well-known test secret — E2E only, never a production credential.
-      IDENTITY_JWT_SECRET: e2e-insecure-jwt-secret-please-change-0123456789-abcdef
+      # Validate the E2E Keycloak realm's JWTs by JWKS (SPEC-0024 Phase 13 / DL-0104). The issuer URL
+      # matches what the browser uses so the token `iss` lines up; `extra_hosts` lets the app container
+      # reach `localhost:8089` on the host. Seed users (password dev12345) live in the realm — E2E ONLY.
+      OIDC_ISSUER_URI: http://localhost:8089/realms/acme
+    extra_hosts:
+      - "localhost:host-gateway"
     ports:
       - "8081:8080"
     depends_on:
       db:
+        condition: service_healthy
+      keycloak:
         condition: service_healthy
     networks: [acme-e2e]
 

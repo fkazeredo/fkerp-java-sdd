@@ -21,6 +21,31 @@ services:
       retries: 12
     networks: [acme]
 
+  # Dev IdP (SPEC-0024 Phase 13 / DL-0103). Keycloak with the `acme` realm imported (roles, the
+  # public SPA client `acme-erp-web` with PKCE + refresh, and seed users — one per role + `dev`,
+  # password dev12345, DEV ONLY). The browser and the backend both reach it at http://localhost:8088
+  # so the token `iss` matches what the resource server validates (the app container resolves
+  # `localhost` to the host gateway — see `extra_hosts` on `app`). Not for production.
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: ["start-dev", "--import-realm", "--http-port=8088"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_HOSTNAME: http://localhost:8088
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+    volumes:
+      - ./infra/keycloak/realm-acme.json:/opt/keycloak/data/import/realm-acme.json:ro
+    ports:
+      - "${KEYCLOAK_PORT:-8088}:8088"
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8088 && echo -e 'GET /realms/acme HTTP/1.0\\r\\n\\r\\n' >&3 && cat <&3 | head -1 | grep -q '200'"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    networks: [acme]
+
   app:
     build:
       context: ./backend
@@ -29,14 +54,22 @@ services:
       DB_USERNAME: ${DB_USERNAME:-acme}
       DB_PASSWORD: ${DB_PASSWORD:-acme}
       SERVER_PORT: "8080"
+      # Security (SPEC-0024 Phase 13 / DL-0104): validate the dev Keycloak realm's JWTs by JWKS. The
+      # issuer URL matches what the browser uses (http://localhost:8088/realms/acme) so the token
+      # `iss` lines up; `extra_hosts` lets the app container reach `localhost:8088` on the host.
+      OIDC_ISSUER_URI: ${OIDC_ISSUER_URI:-http://localhost:8088/realms/acme}
       # Observability (SPEC-0027/DL-0096): in the container, emit structured JSON logs (ECS) so
       # Grafana Alloy can ship them to Loki. Dev/local runs keep the human-readable console
       # (logging.pattern.console) — this override only applies to the containerized app.
       LOGGING_STRUCTURED_FORMAT_CONSOLE: ${LOGGING_STRUCTURED_FORMAT_CONSOLE:-ecs}
+    extra_hosts:
+      - "localhost:host-gateway"
     ports:
       - "${APP_PORT:-8080}:8080"
     depends_on:
       db:
+        condition: service_healthy
+      keycloak:
         condition: service_healthy
     networks: [acme]
 
