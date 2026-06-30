@@ -114,6 +114,18 @@ conforme `docs/RUN-PHASE.md`.
 > Fase 10 é Confiança=Baixa nem Reversibilidade=Cara: o stack-alvo já estava no ADR 0008 e o ROADMAP
 > recomenda explicitamente o conjunto adotado.
 
+> _Nota Fase 11 (Observabilidade & monitoramento — SPEC-0027):_ DL-0095 (exposição do Actuator:
+> `health`/`info`/`version` públicos, `prometheus`/`metrics` atrás de **ROLE_IT**; `env`/`beans`/
+> `heapdump` não expostos — Média/Barata), DL-0096 (logs JSON pelo **logging estruturado nativo** do
+> Spring Boot + higiene de não-logar segredo/PII, sem encoder custom — Alta/Barata), DL-0097
+> (`GET /api/version` por **build-info + git** com degradação graciosa — Alta/Barata) e DL-0098
+> (métricas de **negócio sobre eventos JÁ publicados**, por listener em **infra**; o `domain` não
+> conhece Micrometer — ADR 0012, regra ArchUnit nova — Alta/Barata). **Nenhuma** entra no destaque
+> (Baixa/Cara): a tarefa traz a stack pronta do fkerp-poc e as Recomendações/fontes oficiais
+> (Spring Boot Actuator/Micrometer/Prometheus/Grafana) fecham as escolhas; instrumenta-se **só o que
+> existe** (Regra Zero), sem novo comportamento de negócio, schema ou contrato versionado. As
+> reversões são localizadas em config/`SecurityConfig`/um listener de infra.
+
 ## Todas as decisões
 
 | DL | Fase | Título | Conf. | Rev. |
@@ -212,3 +224,7 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0092](DL-0092-silent-refresh-via-me-validation-no-refresh-token.md) | 10 | Silent refresh = revalidação silenciosa via `GET /api/identity/me` (boot + perto da expiração); **sem refresh token** (o backend não oferece; refresh real fica p/ Fase 13/OIDC) | Média | Moderada |
 | [DL-0093](DL-0093-command-palette-and-keyboard-shortcuts.md) | 10 | Paleta `Ctrl/Cmd+K` própria (Dialog+CDK, sem lib) + `CommandRegistry`/`ShortcutService` central; atalhos ignoram campos editáveis; `?` lista atalhos da mesma fonte | Alta | Barata |
 | [DL-0094](DL-0094-dashboard-kpis-client-side-from-existing-endpoints.md) | 10 | Dashboard KPIs **calculados no cliente** dos endpoints de lista existentes (accounts/bookings/reconciliation/exchange); **sem endpoint/migração novos** (preferir frontend-only) | Alta | Barata |
+| [DL-0095](DL-0095-actuator-exposure-and-security-role-it.md) | 11 | Actuator: expor só `health`/`info`/`prometheus`/`metrics`; `health`/`info`/`/api/version` públicos; `prometheus`/`metrics` atrás de **ROLE_IT**; `env`/`beans`/`heapdump` não expostos | Média | Barata |
+| [DL-0096](DL-0096-json-logging-native-spring-boot-and-masking.md) | 11 | Logs JSON pelo **logging estruturado nativo** do Spring Boot (`ecs`, ligado no container), correlation id via MDC; mascaramento = higiene de não-logar segredo/PII (sem encoder custom) | Alta | Barata |
+| [DL-0097](DL-0097-api-version-from-build-info-and-git.md) | 11 | `GET /api/version` = `{version, gitCommit, buildTime}` por **build-info** (Spring Boot) + `git-commit-id-maven-plugin`, beans opcionais com **degradação graciosa**; público | Alta | Barata |
+| [DL-0098](DL-0098-business-metrics-via-infra-event-listener.md) | 11 | Métricas de **negócio** sobre eventos **já publicados**, por listener `BusinessMetrics` em **infra** (`@TransactionalEventListener` AFTER_COMMIT); `domain` não importa Micrometer (ArchUnit) | Alta | Barata |
