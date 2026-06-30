@@ -45,4 +45,24 @@ class ArchitectureRulesHaveTeethTest {
         .isInstanceOf(AssertionError.class)
         .hasMessageContaining("intelligence must advise, never command");
   }
+
+  /**
+   * Proves the "Platform orchestrates, never owns domain rules" rule (SPEC-0023 BR6) has teeth. The
+   * fixture {@code archfixture.platform.CommandingPlatform} deliberately depends on another
+   * module's command facade ({@code BookingService}); checking the production rule (re-pointed at
+   * the fixture's source package) against it must fail.
+   */
+  @Test
+  void platformRuleFailsWhenPlatformDependsOnACommandFacade() {
+    JavaClasses fixture =
+        new ClassFileImporter().importPackages("archfixture.platform", "com.fksoft.domain.booking");
+
+    assertThatThrownBy(
+            () ->
+                ArchitectureTest.platformOrchestratesNeverOwnsDomainRulesForSource(
+                        "archfixture.platform..")
+                    .check(fixture))
+        .isInstanceOf(AssertionError.class)
+        .hasMessageContaining("platform must orchestrate, never own domain rules");
+  }
 }

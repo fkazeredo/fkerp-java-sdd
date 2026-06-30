@@ -1,35 +1,46 @@
 package com.fksoft.infra.integration.nfse;
 
-import com.fksoft.domain.billing.CertificateSigner;
+import com.fksoft.domain.platform.CertificateCustodyService;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
- * Traceable stub of the e-CNPJ {@link CertificateSigner} (SPEC-0016 BR3; DL-0046). The real
- * ICP-Brasil certificate custody belongs to the Platform (SPEC-0023); until then, this stub "signs"
- * by appending a deterministic detached marker (a hash) to the payload — enough to prove the
- * ACL/issuance seam end to end without holding a real key. It is the explicit, traceable stand-in
- * for the live signer ({@code simulation-and-mocking.md}), not fake business logic shipped to
- * users. It NEVER logs the certificate/credentials (security.md) — there is no key here to leak.
+ * Billing's e-CNPJ signer adapter ({@code com.fksoft.domain.billing.CertificateSigner}; SPEC-0016
+ * BR3, DL-0046). Since the Platform now owns the real certificate custody (SPEC-0023, DL-0078),
+ * this adapter <strong>delegates</strong> to the Platform {@link
+ * com.fksoft.domain.platform.CertificateSigner} when a certificate is custodied — so the NFS-e
+ * signing seam reaches the real, encrypted-at-rest custody — and falls back to the deterministic
+ * stub marker only when none is custodied (dev/empty custody). Keeping the Billing port lets the
+ * Billing domain stay unchanged (back-compat). It NEVER logs the certificate/credentials
+ * (security.md) — the material stays inside the Platform custody.
  */
 @Slf4j
 @Component
-public class StubECnpjCertificateSigner implements CertificateSigner {
+@RequiredArgsConstructor
+public class StubECnpjCertificateSigner implements com.fksoft.domain.billing.CertificateSigner {
+
+  private final CertificateCustodyService custodyService;
+  private final com.fksoft.domain.platform.CertificateSigner platformSigner;
 
   @Override
   public byte[] sign(byte[] payload) {
-    // Deterministic, traceable "signature": payload + a hash marker. The real signer is SPEC-0023.
+    if (custodyService.hasCertificate()) {
+      // DL-0078: reach the real Platform custody (material never leaves it, never logged).
+      return platformSigner.sign(payload);
+    }
+    // No certificate custodied (dev/empty): deterministic, traceable stub marker — no key to leak.
     String marker = "\n<!--e-CNPJ-sig:" + sha256(payload) + "-->";
     byte[] markerBytes = marker.getBytes(StandardCharsets.UTF_8);
     byte[] signed = new byte[payload.length + markerBytes.length];
     System.arraycopy(payload, 0, signed, 0, payload.length);
     System.arraycopy(markerBytes, 0, signed, payload.length, markerBytes.length);
     log.info(
-        "NfsePayloadSigned bytes={} (stub e-CNPJ — SPEC-0023 owns real custody)", signed.length);
+        "NfsePayloadSigned bytes={} (stub e-CNPJ — no certificate custodied yet)", signed.length);
     return signed;
   }
 
