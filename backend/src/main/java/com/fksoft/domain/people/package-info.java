@@ -23,6 +23,16 @@
  * {@code internal} sub-package (entities, repositories) is module-private (Spring Modulith verify).
  * It is a leaf module — nothing depends on it except the infra crawler — so it forms no dependency
  * cycle.
+ *
+ * <p><strong>HR side (SPEC-0022).</strong> The module also owns the minimal HR capability built on
+ * top of that operational snapshot: the {@link com.fksoft.domain.people.PeopleService} registers
+ * collaborators ({@code Employee}, BR1), processes the period {@code Journey} and time-bank balance
+ * from the operational snapshot (consumed by value via {@code snapshotRef}, never as a legal
+ * document — BR2/BR3/BR6, DL-0069/DL-0070) and raises {@link
+ * com.fksoft.domain.people.JourneyDiscrepancy} alerts for odd/missing punches without ever
+ * auto-correcting (BR4/DL-0071). The processed payslip is archived in the Compliance vault
+ * (PAYROLL, retention 5 years) referenced by value (DL-0072). Folha pesada (eSocial/FGTS/13o) is
+ * out of scope — buy/integrate.
  */
 @org.springframework.modulith.ApplicationModule(displayName = "People")
 package com.fksoft.domain.people;
