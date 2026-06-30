@@ -20,7 +20,8 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0058](DL-0058-marketing-lgpd-erasure-preserves-revocation-and-metrics-as-logs.md) | Marketing: exclusão LGPD apaga PII mas preserva tombstone de revogação (anonimizado) | **Baixa** | **Cara** | **Alcance do apagamento × dever de prova/supressão só o DPO/jurídico fecha**; expurgo é destrutivo (PII não volta) |
 | [DL-0062](DL-0062-portfolio-brand-sale-attribution-intake-and-realized-projection.md) | Portfolio: realizado por marca via **intake próprio** (reserva→marca) + projeção de eventos, sem alterar o evento do Booking | **Baixa** | Moderada | **Qual campo identifica a marca na venda é incógnita de negócio** (só o dono fecha); intake explícito + seam rastreável |
 | [DL-0074](DL-0074-platform-certificate-encryption-at-rest.md) | Custódia do e-CNPJ: criptografia at-rest **AES-256-GCM** (envelope), chave fora do banco; só metadados expostos | **Baixa** | **Cara** | **Onde custodiar (KMS×HSM×secret manager) e A1×A3 é decisão de infra/segurança do dono**; troca de cofre exige re-cifrar/migrar segredo real |
-| [DL-0079](DL-0079-identity-inhouse-jwt-resource-server-idp-boundary.md) | Identity: auth real **in-house** (Spring Security + JWT HS256) no 8k; **OIDC externo vivo fica para a Fase 13** | **Baixa** | **Cara** | **Comprar/qual IdP é decisão do dono (Open Question)**; trocar emissor in-house por IdP externo vivo (Fase 13) é refator amplo (JWKS/rotação/login/gestão de usuários), ainda que a porta `UserContextProvider` e o modelo de papéis sejam preservados |
+| [DL-0079](DL-0079-identity-inhouse-jwt-resource-server-idp-boundary.md) | Identity: auth real **in-house** (Spring Security + JWT HS256) no 8k; **OIDC externo vivo fica para a Fase 13** — **RESOLVIDO na Fase 13 (ver DL-0103/0104/0105)** | **Baixa** | **Cara** | **Comprar/qual IdP é decisão do dono (Open Question)**; trocar emissor in-house por IdP externo vivo (Fase 13) é refator amplo (JWKS/rotação/login/gestão de usuários), ainda que a porta `UserContextProvider` e o modelo de papéis sejam preservados |
+| [DL-0103](DL-0103-identity-dev-idp-keycloak-realm-clients-roles.md) | Identity (Fase 13): **IdP de dev = Keycloak** (realm `acme` importado + client SPA PKCE + papéis + usuários seed) | **Baixa** | **Cara** | **Qual IdP em produção é decisão do dono**; trocar de IdP reprovisiona realm/client/usuários (o contrato OIDC, porém, é padrão e muda só por config) |
 
 > _Nota Fase 8e:_ DL-0052/0053/0054 são **Confiança=Média / Reversibilidade=Barata–Moderada** —
 > não entram neste destaque. O "quais custos contam" do custo de servir (DL-0053) e os prazos de
@@ -136,6 +137,20 @@ conforme `docs/RUN-PHASE.md`.
 > comportamento de negócio, schema ou contrato muda (Regra Zero); as reversões são uma linha de config
 > ou a remoção de um arquivo isolado.
 
+> _Nota Fase 13 (Identity/AuthZ profissional — gradua SPEC-0024):_ a fase **resolve as duas dívidas
+> diferidas** do 8k/Fase 10: **DL-0079** (IdP externo vivo) e **DL-0092** (silent-refresh real) — ambas
+> marcadas **RESOLVIDO** nos seus arquivos. O ERP deixou de ser Resource Server do próprio emissor HS256
+> e passou a validar JWTs de um **Keycloak** vivo por **JWKS/RS256 com rotação** (DL-0104), com login
+> **OIDC code+PKCE** e **silent-refresh por refresh token** no frontend (DL-0106). **DL-0103** (Keycloak
+> como dev IdP) é a do destaque (**Baixa/Cara**): *qual IdP em produção* segue decisão do dono — Keycloak
+> é o degrau de dev/E2E mais defensável e o realm export documenta o que um Entra/Cognito espelharia.
+> **DL-0104** (Resource Server por JWKS + `realm_access.roles`→papéis, Média/Moderada), **DL-0105**
+> (caminho de teste com JWKS local + remoção de `POST /login`, Média/Moderada — **breaking destacado em
+> 0.23.0**), **DL-0106** (frontend OIDC + silent-refresh real, Média/Moderada) e **DL-0107** (catálogo
+> papel→permissão permanece local; store de usuários aposentado, V31, Alta/Moderada) são localizadas. A
+> porta `UserContextProvider` e o modelo de papéis (DL-0082) **sobrevivem** à troca — só muda a *fonte*
+> do token (IdP externo).
+
 ## Todas as decisões
 
 | DL | Fase | Título | Conf. | Rev. |
@@ -218,7 +233,7 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0076](DL-0076-platform-initial-job-catalog-and-scheduler-wiring.md) | 8j | Catálogo inicial = jobs já ativados (crawler/SLA/licença/representação/retenção/certificado); schedulers existentes registram `JobRun` via porta, lógica fica no dono | Média | Moderada |
 | [DL-0077](DL-0077-platform-system-audit-append-only-via-event-listener.md) | 8j | Auditoria de sistema append-only via listener de eventos in-process + fachada `record(...)`; só metadados mascarados, sem segredo | Alta | Moderada |
 | [DL-0078](DL-0078-platform-certificate-signer-graduated-from-billing-stub.md) | 8j | `CertificateSigner` graduado para o Platform; stub do Billing **delega** à custódia (mantém a porta do Billing; back-compat) | Média | Moderada |
-| [DL-0079](DL-0079-identity-inhouse-jwt-resource-server-idp-boundary.md) | 8k | Identity: auth real in-house (Spring Security + JWT HS256) no 8k; OIDC externo vivo na Fase 13; porta `UserContextProvider` é o seam | **Baixa** | **Cara** |
+| [DL-0079](DL-0079-identity-inhouse-jwt-resource-server-idp-boundary.md) | 8k | Identity: auth real in-house (Spring Security + JWT HS256) no 8k; OIDC externo vivo na Fase 13; porta `UserContextProvider` é o seam — **RESOLVIDO na Fase 13** | **Baixa** | **Cara** |
 | [DL-0080](DL-0080-identity-new-domain-module-and-local-user-store.md) | 8k | Novo módulo `domain.identity` (21º) + tabela local mínima de usuários/papéis (V29); auditoria reusa `system_audit` | Alta | Moderada |
 | [DL-0081](DL-0081-identity-graduate-stub-behind-profile-keep-tests-green.md) | 8k | Gradua o stub: porta intacta; `JwtUserContextProvider` em prod/default; stub permissivo atrás de profile `dev`/`test`; `TestSecurityConfig` mantém os 434 testes verdes com a segurança montada (não removida) | Alta | Barata |
 | [DL-0082](DL-0082-identity-role-permission-model-and-sensitive-action-mapping.md) | 8k | Modelo papel→permissão (catálogo fechado) + mapa das ações sensíveis (DIRECTIVE→DIRECTOR, NF→FINANCE, job→IT); enforcement HTTP (Spring Security) + reafirma a checagem de domínio (DL-0038) | Média | Moderada |
@@ -231,7 +246,7 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0089](DL-0089-flatten-internal-encapsulation-by-module-internal-marker.md) | 9 | Pós-achatamento do `internal`: encapsulação por marcador de tipo **`@ModuleInternal`** + regra ArchUnit (nenhum outro módulo depende de tipo `@ModuleInternal`; exceção `infra` e o próprio módulo); predicados Intelligence/Portfolio/Platform trocam `.internal` pelo marcador; Modulith mantido p/ ciclos/grafo | Alta | Moderada |
 | [DL-0090](DL-0090-frontend-primeng21-aura-tailwind4-graduates-dl0003.md) | 10 | Stack de UI: **PrimeNG 21 (Aura via `@primeuix/themes`) + Tailwind v4 (camadas CSS) + @angular/cdk + primeicons**; gradua DL-0003 | Alta | Moderada |
 | [DL-0091](DL-0091-theme-toggle-darkmode-selector-and-tokens.md) | 10 | Tema claro/escuro: `ThemeService` + seletor `.app-dark` (Aura) + tokens `--app-*`; persiste em `localStorage`, default = `prefers-color-scheme` | Alta | Barata |
-| [DL-0092](DL-0092-silent-refresh-via-me-validation-no-refresh-token.md) | 10 | Silent refresh = revalidação silenciosa via `GET /api/identity/me` (boot + perto da expiração); **sem refresh token** (o backend não oferece; refresh real fica p/ Fase 13/OIDC) | Média | Moderada |
+| [DL-0092](DL-0092-silent-refresh-via-me-validation-no-refresh-token.md) | 10 | Silent refresh = revalidação silenciosa via `GET /api/identity/me` (boot + perto da expiração); **sem refresh token** (o backend não oferece; refresh real fica p/ Fase 13/OIDC) — **RESOLVIDO na Fase 13 (ver DL-0106)** | Média | Moderada |
 | [DL-0093](DL-0093-command-palette-and-keyboard-shortcuts.md) | 10 | Paleta `Ctrl/Cmd+K` própria (Dialog+CDK, sem lib) + `CommandRegistry`/`ShortcutService` central; atalhos ignoram campos editáveis; `?` lista atalhos da mesma fonte | Alta | Barata |
 | [DL-0094](DL-0094-dashboard-kpis-client-side-from-existing-endpoints.md) | 10 | Dashboard KPIs **calculados no cliente** dos endpoints de lista existentes (accounts/bookings/reconciliation/exchange); **sem endpoint/migração novos** (preferir frontend-only) | Alta | Barata |
 | [DL-0095](DL-0095-actuator-exposure-and-security-role-it.md) | 11 | Actuator: expor só `health`/`info`/`prometheus`/`metrics`; `health`/`info`/`/api/version` públicos; `prometheus`/`metrics` atrás de **ROLE_IT**; `env`/`beans`/`heapdump` não expostos | Média | Barata |
@@ -242,3 +257,8 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0100](DL-0100-vitest-frontend-coverage-threshold.md) | 12 | Cobertura frontend como portão: Vitest/v8 com `coverageThresholds` no `angular.json` (statements/lines 65, functions 48, branches 55); `ng test` é o gate | Alta | Barata |
 | [DL-0101](DL-0101-e2e-isolated-ephemeral-stack.md) | 12 | Isolamento do stack E2E: `compose.e2e.yaml` com Postgres **efêmero/tmpfs** (sem volume), portas 4201/8081, perfil `dev` p/ seed; dev DB provado intacto | Alta | Barata |
 | [DL-0102](DL-0102-playwright-journeys-sadpaths-ci.md) | 12 | Playwright (chromium/headless/`E2E_BASE_URL`) + jornadas críticas e caminhos tristes (401/403/vazio/não-salvos) + job de E2E no CI (`if: always()`) | Alta | Barata |
+| [DL-0103](DL-0103-identity-dev-idp-keycloak-realm-clients-roles.md) | 13 | Identity: **IdP de dev = Keycloak** (realm `acme` importado + client SPA público PKCE + papéis base + usuários seed); resolve a Open Question "qual IdP" para dev/E2E | **Baixa** | **Cara** |
+| [DL-0104](DL-0104-identity-resource-server-jwks-realm-roles-mapping.md) | 13 | Identity: backend é Resource Server validando JWT do IdP por **JWKS (RS256/rotação)**; `realm_access.roles`→autoridades + `SCOPE_*` expostos; `UserContextProvider` intacto | Média | Moderada |
+| [DL-0105](DL-0105-identity-test-jwks-local-keypair-and-login-contract-removal.md) | 13 | Identity: testes mintam **RS256 com JWKS local de teste** (sem IdP na internet); `POST /api/identity/login` in-house **removido** (login move ao IdP — breaking em 0.23.0) | Média | Moderada |
+| [DL-0106](DL-0106-identity-frontend-oidc-code-pkce-real-silent-refresh.md) | 13 | Identity (frontend): login **OIDC Authorization Code + PKCE** (`angular-oauth2-oidc`) + **silent-refresh real** (refresh token); gradua DL-0092 | Média | Moderada |
+| [DL-0107](DL-0107-identity-role-catalogue-retained-local-user-store-retired.md) | 13 | Identity: catálogo papel→permissão **permanece local** (fonte do enforcement, BR5); store local de **usuários** aposentado (V31, usuários vivem no IdP) | Alta | Moderada |

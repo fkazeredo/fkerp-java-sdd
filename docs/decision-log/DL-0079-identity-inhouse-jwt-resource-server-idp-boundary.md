@@ -6,9 +6,22 @@
 - **ADR relacionado:** `architecture/security.md` (Spring Security é o padrão; backend é a autoridade
   final); ROADMAP Fase 13 (OAuth2 Resource Server JWT profissional)
 - **Data:** 2026-06-30
-- **Status:** ASSUMIDO
+- **Status:** RESOLVIDO na Fase 13 (ver "Atualização de status" abaixo)
 - **Confiança:** Baixa
 - **Reversibilidade:** Cara
+
+## Atualização de status (Fase 13 — 2026-06-30)
+
+**RESOLVIDO.** A fronteira que esta DL registrou ("OIDC externo vivo fica para a Fase 13") foi
+**fechada** na Fase 13: o ERP deixou de ser Resource Server do **próprio** emissor HS256 e passou a
+validar JWTs de um **IdP externo OIDC vivo (Keycloak)** por **JWKS com rotação** (RS256). O emissor
+in-house (`JwtIssuer`/HS256) e o `POST /api/identity/login` foram **aposentados**; o login passou ao
+IdP (code+PKCE). A porta `UserContextProvider` e o modelo de papéis sobreviveram à troca, como previsto
+no "Como reverter". Decisões da graduação: **DL-0103** (Keycloak como dev IdP + realm/clients/roles),
+**DL-0104** (Resource Server por JWKS + `realm_access.roles`→papéis), **DL-0105** (caminho de teste com
+JWKS local + remoção de `/login`), **DL-0106** (frontend OIDC + silent-refresh real) e **DL-0107**
+(catálogo papel→permissão permanece local; store de usuários aposentado). Esta DL deixa de ser uma
+dívida diferida.
 
 ## Lacuna
 
