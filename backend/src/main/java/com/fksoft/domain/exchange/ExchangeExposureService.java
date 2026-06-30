@@ -1,7 +1,5 @@
 package com.fksoft.domain.exchange;
 
-import com.fksoft.domain.exchange.internal.FxPosition;
-import com.fksoft.domain.exchange.internal.FxPositionRepository;
 import com.fksoft.domain.money.Money;
 import java.math.BigDecimal;
 import java.math.RoundingMode;

@@ -24,8 +24,8 @@ import org.springframework.stereotype.Component;
  * Central coordinator that runs each catalog job through the Platform governance (SPEC-0023
  * BR2/BR3; DL-0076). It maps every job name to its work (the call the owner module already exposes)
  * and executes it via {@link PlatformJobService#runWithGovernance} — applying the lock, the {@code
- * (job, window)} idempotency and the {@link com.fksoft.domain.platform.internal.JobRun} history.
- * The job's LOGIC still lives in its owner module; this only adds governance and a single place the
+ * (job, window)} idempotency and the {@link com.fksoft.domain.platform.JobRun} history. The job's
+ * LOGIC still lives in its owner module; this only adds governance and a single place the
  * schedulers and the manual-trigger endpoint share.
  *
  * <p>Sweeps that re-publish the same facts (retention, license, representation, certificate, SLA)

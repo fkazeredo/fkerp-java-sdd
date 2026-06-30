@@ -1,7 +1,5 @@
 package com.fksoft.domain.assets;
 
-import com.fksoft.domain.assets.internal.Asset;
-import com.fksoft.domain.assets.internal.AssetRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;

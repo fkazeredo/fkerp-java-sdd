@@ -26,8 +26,10 @@
  * com.fksoft.domain.admin.AdminSupplierRegistered}/{@link
  * com.fksoft.domain.admin.AdminContractRegistered}/{@link
  * com.fksoft.domain.admin.AdminExpenseRegistered}/{@link
- * com.fksoft.domain.admin.AdminContractExpiring}) and the business exceptions. The {@code internal}
- * sub-package (the aggregates and their repositories) is module-private.
+ * com.fksoft.domain.admin.AdminContractExpiring}) and the business exceptions. The implementation
+ * types (the aggregates and their repositories) live in this same package marked {@link
+ * com.fksoft.domain.ModuleInternal} and must never be reached from other modules — encapsulation is
+ * enforced by ArchUnit (Phase 9 / ADR 0016).
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Admin")
 package com.fksoft.domain.admin;

@@ -65,4 +65,26 @@ class ArchitectureRulesHaveTeethTest {
         .isInstanceOf(AssertionError.class)
         .hasMessageContaining("platform must orchestrate, never own domain rules");
   }
+
+  /**
+   * Proves the "module-internal types are not visible across modules" rule (Phase 9 / ADR 0016 /
+   * DL-0089) has teeth. After the {@code internal} sub-packages were flattened, this rule is what
+   * keeps a module's {@code @ModuleInternal} implementation types hidden from other modules. The
+   * fixture {@code archfixture.moduleb.ForeignConsumer} (fixture "module b") deliberately depends
+   * on {@code archfixture.modulea.SecretInternal} (a {@code @ModuleInternal} type of fixture
+   * "module a"); checking the production rule, re-pointed at the {@code archfixture.} root, must
+   * fail.
+   */
+  @Test
+  void moduleInternalRuleFailsWhenAnotherModuleDependsOnAModuleInternalType() {
+    JavaClasses fixture =
+        new ClassFileImporter().importPackages("archfixture.modulea", "archfixture.moduleb");
+
+    assertThatThrownBy(
+            () ->
+                ArchitectureTest.moduleInternalNotVisibleAcrossModulesFor("archfixture.")
+                    .check(fixture))
+        .isInstanceOf(AssertionError.class)
+        .hasMessageContaining("must not be accessed from another domain module");
+  }
 }

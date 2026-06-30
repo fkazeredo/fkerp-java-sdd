@@ -5,6 +5,8 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
 
+import com.fksoft.domain.ModuleInternal;
+import com.tngtech.archunit.core.domain.Dependency;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -43,6 +45,22 @@ class ArchitectureTest {
           .resideInAnyPackage("..application..", "..infra..")
           .as("the domain must not depend on application (delivery) or infra")
           .allowEmptyShould(true);
+
+  /**
+   * Module encapsulation after the Phase 9 flatten (ADR 0016 / DL-0089). The {@code internal}
+   * sub-packages were removed, so Spring Modulith no longer auto-hides a module's implementation
+   * types — the boundary now lives on the {@link ModuleInternal} type marker. This rule re-creates,
+   * for all domain modules, exactly what the {@code internal} sub-package used to grant Modulith: a
+   * type marked {@code @ModuleInternal} (a module's implementation) must never be depended upon by
+   * a class belonging to <em>another</em> domain module. The owning module itself (including its
+   * tests, which share the {@code …<module>} package segment) and the {@code infra} layer (which
+   * may operate a module's persistence — ADR 0010/0012) are exempt. Planting a cross-module
+   * dependency on a {@code @ModuleInternal} type makes this fail (see {@link
+   * ArchitectureRulesHaveTeethTest}).
+   */
+  @ArchTest
+  static final ArchRule MODULE_INTERNAL_TYPES_ARE_NOT_VISIBLE_ACROSS_MODULES =
+      moduleInternalNotVisibleAcrossModules();
 
   /** Infra (driven adapters) must not depend on delivery (ADR 0012). */
   @ArchTest
@@ -298,7 +316,8 @@ class ArchitectureTest {
         if (!pkg.startsWith("com.fksoft.domain.") || pkg.startsWith(ownModulePrefix)) {
           return false;
         }
-        boolean otherInternal = pkg.contains(".internal");
+        boolean otherInternal =
+            pkg.contains(".internal") || target.isAnnotatedWith(ModuleInternal.class);
         boolean commandFacade = target.getSimpleName().endsWith("Service");
         return otherInternal || commandFacade;
       }
@@ -333,11 +352,94 @@ class ArchitectureTest {
             || pkg.startsWith("com.fksoft.domain.intelligence")) {
           return false;
         }
-        boolean otherInternal = pkg.contains(".internal");
+        boolean otherInternal =
+            pkg.contains(".internal") || target.isAnnotatedWith(ModuleInternal.class);
         boolean commandFacade = target.getSimpleName().endsWith("Service");
         return otherInternal || commandFacade;
       }
     };
+  }
+
+  /**
+   * Builds the "module-internal types are not visible across modules" rule. A type annotated {@link
+   * ModuleInternal} (a module's implementation, formerly its {@code internal} sub-package) must not
+   * be depended upon by a class belonging to another domain module. Origins outside {@code
+   * com.fksoft.domain} (the {@code application} and {@code infra} layers) are governed by their own
+   * layer rules and are not flagged here — in particular {@code infra} may operate a module's
+   * persistence (ADR 0010/0012). Test classes are excluded from analysis by the {@code
+   * DoNotIncludeTests} import option, so a module's own tests reaching its internals never trip it.
+   */
+  static ArchRule moduleInternalNotVisibleAcrossModules() {
+    return moduleInternalNotVisibleAcrossModulesFor("com.fksoft.domain.");
+  }
+
+  /**
+   * Builds the rule for a given domain root prefix. Production uses {@code com.fksoft.domain.}; the
+   * teeth test re-points it at the fixture root ({@code archfixture.}) to prove the rule actually
+   * fails when a class of one fixture module depends on a {@code @ModuleInternal} type of another.
+   */
+  static ArchRule moduleInternalNotVisibleAcrossModulesFor(String domainRootPrefix) {
+    return classes()
+        .that()
+        .areAnnotatedWith(ModuleInternal.class)
+        .should(notBeAccessedFromAnotherDomainModule(domainRootPrefix))
+        .as(
+            "a @ModuleInternal type must not be accessed from another domain module "
+                + "(Phase 9 / ADR 0016 — encapsulation moved from the internal sub-package to the marker)")
+        .allowEmptyShould(true);
+  }
+
+  private static ArchCondition<JavaClass> notBeAccessedFromAnotherDomainModule(
+      String domainRootPrefix) {
+    return new ArchCondition<>("not be accessed from another domain module") {
+      @Override
+      public void check(JavaClass target, ConditionEvents events) {
+        String targetModule = domainModuleOf(target.getPackageName(), domainRootPrefix);
+        if (targetModule == null) {
+          return; // marker misapplied outside a domain module — nothing to enforce here
+        }
+        for (Dependency dependency : target.getDirectDependenciesToSelf()) {
+          JavaClass origin = dependency.getOriginClass();
+          String originModule = domainModuleOf(origin.getPackageName(), domainRootPrefix);
+          // Only flag origins that are themselves in a domain module other than the target's.
+          // application/infra origins (originModule == null) are out of scope (own layer rules).
+          if (originModule != null && !originModule.equals(targetModule)) {
+            events.add(
+                SimpleConditionEvent.violated(
+                    target,
+                    origin.getName()
+                        + " (module "
+                        + originModule
+                        + ") depends on @ModuleInternal "
+                        + target.getName()
+                        + " of module "
+                        + targetModule));
+          }
+        }
+      }
+    };
+  }
+
+  /**
+   * The domain-module segment of a package under {@code domainRootPrefix}, or {@code null} if the
+   * package is not under it (e.g. the {@code application}/{@code infra} layers, or the {@code
+   * domain.error}/{@code domain.money}/{@code domain} kernel itself, which have no module segment).
+   */
+  private static String domainModuleOf(String packageName, String domainRootPrefix) {
+    if (!packageName.startsWith(domainRootPrefix)) {
+      return null;
+    }
+    String rest = packageName.substring(domainRootPrefix.length());
+    if (rest.isEmpty()) {
+      return null;
+    }
+    int dot = rest.indexOf('.');
+    String segment = dot < 0 ? rest : rest.substring(0, dot);
+    // error/money are non-module kernels, not business modules.
+    if (segment.equals("error") || segment.equals("money")) {
+      return null;
+    }
+    return segment;
   }
 
   private static ArchCondition<JavaClass> notExposeLombokGeneratedMutators() {

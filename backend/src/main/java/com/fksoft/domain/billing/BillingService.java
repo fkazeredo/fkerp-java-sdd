@@ -1,7 +1,5 @@
 package com.fksoft.domain.billing;
 
-import com.fksoft.domain.billing.internal.CommissionInvoice;
-import com.fksoft.domain.billing.internal.CommissionInvoiceRepository;
 import com.fksoft.domain.money.Money;
 import java.time.Clock;
 import java.time.Instant;

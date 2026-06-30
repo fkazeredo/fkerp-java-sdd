@@ -19,8 +19,10 @@
  * com.fksoft.domain.exchange.CurrencyPair} value object, the views, the events ({@link
  * com.fksoft.domain.exchange.RatePinned}, {@link com.fksoft.domain.exchange.RateSubsidyAccrued},
  * {@link com.fksoft.domain.exchange.BookPositionDrifted}, {@link
- * com.fksoft.domain.exchange.FxPositionClosed}) and the business exceptions. The {@code internal}
- * sub-package (entities, repositories) is module-private.
+ * com.fksoft.domain.exchange.FxPositionClosed}) and the business exceptions. The implementation
+ * types (entities, repositories) live in this same package marked {@link
+ * com.fksoft.domain.ModuleInternal} and must never be reached from other modules — encapsulation is
+ * enforced by ArchUnit (Phase 9 / ADR 0016).
  *
  * <p>The FX position is opened/closed by Reconciliation (SPEC-0007), which holds the frozen quote
  * provenance and calls {@link com.fksoft.domain.exchange.FxPositionService} with the foreign cost

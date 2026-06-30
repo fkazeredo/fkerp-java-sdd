@@ -1,13 +1,5 @@
 package com.fksoft.domain.people;
 
-import com.fksoft.domain.people.internal.Employee;
-import com.fksoft.domain.people.internal.EmployeeRepository;
-import com.fksoft.domain.people.internal.Journey;
-import com.fksoft.domain.people.internal.JourneyDiscrepancyRecord;
-import com.fksoft.domain.people.internal.JourneyDiscrepancyRepository;
-import com.fksoft.domain.people.internal.JourneyRepository;
-import com.fksoft.domain.people.internal.PointSnapshot;
-import com.fksoft.domain.people.internal.PointSnapshotRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.UUID;

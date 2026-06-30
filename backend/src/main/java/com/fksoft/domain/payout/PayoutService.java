@@ -1,8 +1,6 @@
 package com.fksoft.domain.payout;
 
 import com.fksoft.domain.money.Money;
-import com.fksoft.domain.payout.internal.Payout;
-import com.fksoft.domain.payout.internal.PayoutRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.UUID;

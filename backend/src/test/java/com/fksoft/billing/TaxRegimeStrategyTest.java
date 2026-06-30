@@ -3,11 +3,11 @@ package com.fksoft.billing;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fksoft.domain.billing.MunicipalIssRateProvider;
+import com.fksoft.domain.billing.SimplesNacionalTaxStrategy;
 import com.fksoft.domain.billing.TaxAssessment;
 import com.fksoft.domain.billing.TaxRegime;
 import com.fksoft.domain.billing.TaxRegimeStrategy;
 import com.fksoft.domain.billing.WithholdingKind;
-import com.fksoft.domain.billing.internal.SimplesNacionalTaxStrategy;
 import com.fksoft.domain.money.Money;
 import java.math.BigDecimal;
 import java.util.List;

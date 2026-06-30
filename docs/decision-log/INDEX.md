@@ -98,6 +98,11 @@ conforme `docs/RUN-PHASE.md`.
 > baratas/moderadas e localizadas no módulo `admin` (o mapa `kind`→`EntryType` é função pura + seed; o
 > papel é um matcher). O 8x encerra aqui.
 
+> _Nota Fase 9 (Limpeza estrutural — ADR 0016):_ DL-0089 (encapsulação pós-achatamento via marcador
+> `@ModuleInternal` + regra ArchUnit, mantendo o Spring Modulith para ciclos/grafo) é **Alta/Moderada**
+> — **não** entra no destaque. É refactor estrutural sem mudança de contrato; a reversão é mecânica
+> (regenerar `internal/`, mover de volta, restaurar predicados) e protegida pelos testes + gates.
+
 ## Todas as decisões
 
 | DL | Fase | Título | Conf. | Rev. |
@@ -190,3 +195,4 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0086](DL-0086-admin-finance-compliance-integration-via-facades-acyclic.md) | 8l | Admin posta lançamento por **chamada síncrona** à fachada `FinanceService.register`; idempotência por UNIQUE `(supplier, period, kind)`; documentos exigidos via nova porta de leitura `DocumentRequirementDirectory` (Compliance); módulo folha, grafo acíclico | Alta | Moderada |
 | [DL-0087](DL-0087-admin-contract-expiring-controlled-clock-alert.md) | 8l | `AdminContractExpiring` por job de **relógio controlado** (horizonte 30d, idempotente por `expiry_signaled_at`, alerta — não bloqueia); padrão Portfolio/Assets | Média | Barata |
 | [DL-0088](DL-0088-admin-sensitive-endpoints-gated-by-role-finance-and-audited.md) | 8l | Escritas do Admin exigem **ROLE_FINANCE** (negação 403 + auditoria); alteração de fornecedor/contrato/despesa auditada via `system_audit` (`ADMIN_CHANGE`, metadados only) | Média | Barata |
+| [DL-0089](DL-0089-flatten-internal-encapsulation-by-module-internal-marker.md) | 9 | Pós-achatamento do `internal`: encapsulação por marcador de tipo **`@ModuleInternal`** + regra ArchUnit (nenhum outro módulo depende de tipo `@ModuleInternal`; exceção `infra` e o próprio módulo); predicados Intelligence/Portfolio/Platform trocam `.internal` pelo marcador; Modulith mantido p/ ciclos/grafo | Alta | Moderada |

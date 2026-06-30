@@ -1,7 +1,5 @@
 package com.fksoft.domain.platform;
 
-import com.fksoft.domain.platform.internal.PlatformCertificate;
-import com.fksoft.domain.platform.internal.PlatformCertificateRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;

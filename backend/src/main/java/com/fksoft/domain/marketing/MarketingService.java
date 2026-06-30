@@ -1,15 +1,5 @@
 package com.fksoft.domain.marketing;
 
-import com.fksoft.domain.marketing.internal.Attribution;
-import com.fksoft.domain.marketing.internal.AttributionRepository;
-import com.fksoft.domain.marketing.internal.Campaign;
-import com.fksoft.domain.marketing.internal.CampaignRepository;
-import com.fksoft.domain.marketing.internal.CampaignSend;
-import com.fksoft.domain.marketing.internal.CampaignSendRepository;
-import com.fksoft.domain.marketing.internal.Consent;
-import com.fksoft.domain.marketing.internal.ConsentRepository;
-import com.fksoft.domain.marketing.internal.Segment;
-import com.fksoft.domain.marketing.internal.SegmentRepository;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

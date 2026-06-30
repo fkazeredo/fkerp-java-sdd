@@ -1,7 +1,5 @@
 package com.fksoft.domain.aftersales;
 
-import com.fksoft.domain.aftersales.internal.SupportCase;
-import com.fksoft.domain.aftersales.internal.SupportCaseRepository;
 import com.fksoft.domain.booking.BookingService;
 import com.fksoft.domain.commercialpolicy.CommercialPolicyService;
 import com.fksoft.domain.commercialpolicy.ParameterKey;

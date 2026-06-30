@@ -5,9 +5,9 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 /**
- * Public read view of a {@link com.fksoft.domain.commercialpolicy.internal.ParameterRule}
- * (SPEC-0014 API: rules listing for audit/curation). Entity-free projection — the entity never
- * leaves the module (modules-and-apis.md).
+ * Public read view of a {@link com.fksoft.domain.commercialpolicy.ParameterRule} (SPEC-0014 API:
+ * rules listing for audit/curation). Entity-free projection — the entity never leaves the module
+ * (modules-and-apis.md).
  *
  * @param id the rule id
  * @param key the parameter key

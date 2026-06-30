@@ -135,6 +135,6 @@ public class OpenApiConfig {
                         + " POST /api/admin/suppliers/{id}/contracts,"
                         + " GET /api/admin/suppliers/{id}/contracts, POST /api/admin/expenses,"
                         + " POST /api/admin/contracts/flag-expiring.")
-                .version("0.20.0"));
+                .version("0.20.1"));
   }
 }

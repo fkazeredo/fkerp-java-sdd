@@ -1,8 +1,8 @@
 package com.fksoft.domain.commercialpolicy;
 
 /**
- * Governance layer of a {@link com.fksoft.domain.commercialpolicy.internal.ParameterRule}
- * (SPEC-0014 BR1/BR2). The precedence is fixed: {@code DIRECTIVE > PROMOTION > CONTRACT > POLICY >
+ * Governance layer of a {@link com.fksoft.domain.commercialpolicy.ParameterRule} (SPEC-0014
+ * BR1/BR2). The precedence is fixed: {@code DIRECTIVE > PROMOTION > CONTRACT > POLICY >
  * SYSTEM_DEFAULT} (redesign 7.3). The {@link #rank()} encodes that order — a lower rank wins — so
  * the resolution engine can sort deterministically (BR2, DL-0037). The order of the enum constants
  * is the precedence order, so {@code rank()} is just the ordinal; keeping a named accessor makes

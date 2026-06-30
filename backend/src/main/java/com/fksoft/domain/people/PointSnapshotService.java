@@ -1,9 +1,5 @@
 package com.fksoft.domain.people;
 
-import com.fksoft.domain.people.internal.PointCrawlRun;
-import com.fksoft.domain.people.internal.PointCrawlRunRepository;
-import com.fksoft.domain.people.internal.PointSnapshot;
-import com.fksoft.domain.people.internal.PointSnapshotRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.UUID;

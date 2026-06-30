@@ -12,9 +12,11 @@
  * {@link com.fksoft.domain.compliance.FileStorage} port), views, the {@link
  * com.fksoft.domain.compliance.DocumentAttached}/{@link
  * com.fksoft.domain.compliance.RequirementUnmet}/{@link
- * com.fksoft.domain.compliance.RetentionExpiring} events and the business exceptions. The {@code
- * internal} sub-package (entities, repositories, the Finance {@code CloseGuard} implementation) is
- * module-private (Spring Modulith verify).
+ * com.fksoft.domain.compliance.RetentionExpiring} events and the business exceptions. The
+ * implementation types (entities, repositories, the Finance {@code CloseGuard} implementation) live
+ * in this same package marked {@link com.fksoft.domain.ModuleInternal} and must never be reached
+ * from other modules — encapsulation is enforced by ArchUnit (Phase 9 / ADR 0016), the module graph
+ * stays acyclic (Spring Modulith verify).
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Compliance")
 package com.fksoft.domain.compliance;
