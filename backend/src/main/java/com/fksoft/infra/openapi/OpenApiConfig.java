@@ -146,7 +146,11 @@ public class OpenApiConfig {
                         + " structured logs with the correlation id, a docker-compose monitoring stack"
                         + " (Prometheus + Loki + Grafana Alloy + Grafana) under infra/, business metrics"
                         + " derived from already-published domain events, and a public GET /api/version"
-                        + " returning { version, gitCommit, buildTime } (build metadata only).")
-                .version("0.22.0"));
+                        + " returning { version, gitCommit, buildTime } (build metadata only)."
+                        + " Phase 12 (SPEC-0028) is internal quality tooling only: backend coverage"
+                        + " gate (JaCoCo), frontend coverage gate (Vitest/v8), an isolated ephemeral"
+                        + " Playwright E2E stack (port 4201) and a CI E2E job — it adds no API endpoint"
+                        + " and changes no contract.")
+                .version("0.22.1"));
   }
 }
