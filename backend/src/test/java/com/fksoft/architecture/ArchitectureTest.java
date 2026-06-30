@@ -255,6 +255,36 @@ class ArchitectureTest {
           .allowEmptyShould(true);
 
   /**
+   * The Platform module is operated INFRA — it orchestrates, guards and audits, but it MUST NOT
+   * contain business-domain rules nor reach into any other business module (SPEC-0023 BR6). This
+   * rule proves the principle structurally: {@code platform} must not depend on any other domain
+   * module's {@code *Service} (the command facades) nor reach into any other module's {@code
+   * internal} package. It may still depend on the exposed events/views/value objects (it consumes
+   * other modules' events for the audit), the {@code money} kernel and the error kernel. Planting a
+   * dependency on, say, {@code BookingService} or {@code billing.internal} makes this fail.
+   */
+  @ArchTest
+  static final ArchRule PLATFORM_ORCHESTRATES_NEVER_OWNS_DOMAIN_RULES =
+      platformOrchestratesNeverOwnsDomainRulesForSource("..domain.platform..");
+
+  /**
+   * Builds the "Platform orchestrates, never owns domain rules" rule for a given source package.
+   * Production uses {@code ..domain.platform..}; the teeth test re-points it at the fixture package
+   * to prove the rule actually fails when a platform-side type touches a command facade.
+   */
+  static ArchRule platformOrchestratesNeverOwnsDomainRulesForSource(String sourcePackage) {
+    return noClasses()
+        .that()
+        .resideInAPackage(sourcePackage)
+        .should()
+        .dependOnClassesThat(isForeignCommandFacadeOrInternal("com.fksoft.domain.platform"))
+        .as(
+            "platform must orchestrate, never own domain rules: no dependency on another module's "
+                + "*Service or internal package (SPEC-0023 BR6)")
+        .allowEmptyShould(true);
+  }
+
+  /**
    * Predicate: a target type that is another domain module's {@code *Service} command facade or
    * sits in another module's {@code internal} package (relative to {@code ownModulePrefix}).
    */
