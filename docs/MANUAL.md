@@ -287,6 +287,37 @@ O que o operador faz:
 > reserva, caso) são **valores**, sem FK; nenhum preço/comissão mora aqui — o realizado é só uma
 > projeção (read-model) dos eventos de venda.
 
+### Fase 8 — Patrimônio interno (equipamentos, licenças e outros bens)
+
+O **patrimônio interno** (*Assets*) registra os **bens da própria Acme** — equipamentos, **licenças de
+software** e outros bens —, com o **custo** de aquisição e os vínculos ao **documento** (no cofre de
+documentos / Compliance) e ao **lançamento financeiro** correspondentes. É um registro **enxuto**: serve
+para amarrar custo↔documento e **avisar quando uma licença está para vencer**; **não** é um sistema
+completo de gestão de ativos (não calcula depreciação, não controla manutenção/chamados de TI, não é
+estoque de revenda). É **patrimônio, não produto**: não entra em preço nem em venda.
+
+O que o operador faz:
+
+- **Cadastrar um bem:** escolhe o **tipo** (equipamento, licença de software ou outro), informa a
+  **identificação** (ex.: "JetBrains All Products Pack"), a **data** e o **custo** de aquisição e, se
+  quiser, o **fornecedor**, o **documento** (nota/contrato já guardado no cofre) e o **lançamento de
+  custo** (no financeiro) — estes dois são referenciados por **identificador**, sem duplicar o dado. O bem
+  nasce **ativo**. Para uma **licença de software**, a **data de vencimento é obrigatória**.
+- **Consultar/listar bens:** ver um bem pelo identificador, ou listar filtrando por **tipo** e/ou
+  **situação** (ativo/baixado). Pode também pedir as **licenças a vencer** nos próximos **N** dias.
+- **Dar baixa em um bem:** quando o bem sai de uso, registra-se a **baixa** com o **motivo**; o sistema
+  guarda **quem** baixou e **quando** (auditoria). A baixa é **definitiva** — um bem já baixado não pode
+  ser baixado de novo.
+- **Aviso de licença a vencer:** o sistema sinaliza, **uma vez por licença**, as licenças que **estão a
+  vencer** (até 30 dias) ou já venceram, para a TI/governança renovar a tempo. É **aviso**, não bloqueio.
+
+> Para quem é de TI: `POST /api/assets`, `GET /assets/{id}`,
+> `GET /assets?type=&status=&expiringWithinDays=`, `POST /assets/{id}/retire` (baixa com motivo),
+> `POST /assets/flag-expiring` (dispara o aviso de vencimento). Os identificadores de documento
+> (Compliance) e lançamento (Finance) são **valores**, sem FK; nenhum preço de venda mora aqui. Se o
+> negócio precisar de **gestão plena de ativos** (depreciação, manutenção), a recomendação é **comprar**
+> um sistema dedicado e usar este módulo como registro/integração.
+
 ## 4. Glossário
 
 - **Backend / servidor:** a parte do sistema que processa as regras e fala com o banco de dados.
@@ -331,6 +362,12 @@ O que o operador faz:
   reserva é confirmada, vira uma **conversão** (sinal de retorno da campanha para a Inteligência).
 - **Exclusão LGPD (erasure):** atender o pedido do titular de apagar seus **dados de marketing**,
   preservando a **prova de revogação** (para não reincluí-lo) e o que **outra lei** manda guardar.
+- **Patrimônio interno (*Assets*):** os bens da própria empresa (equipamentos, licenças de software,
+  outros bens), com custo, documento e ciclo de vida (ativo/baixado). É registro, não produto.
+- **Baixa de um bem (*retire*):** marcar um bem como fora de uso, com motivo e auditoria (quem/quando).
+  É definitiva.
+- **Licença a vencer:** uma licença de software cuja **data de vencimento** está próxima (até 30 dias)
+  ou já passou; o sistema **avisa** para renovar, sem bloquear nada.
 
 ## 5. Histórico de versões do manual
 
@@ -343,6 +380,7 @@ O que o operador faz:
 | 0.13.0 | 8 — AfterSales | Pós-venda: chamados (reclamação/alteração/cancelamento/reembolso/informação) ligados à reserva; prazos de **SLA governados** (24h/72h/48h, ajustáveis por diretiva) com alerta de violação que **não trava**; resolução que **encaminha** reembolso ao Payout (uma vez, sem cancelar a obrigação do fornecedor) e cancelamento à reserva; "custo de servir" por chamado. |
 | 0.14.0 | 8 — Marketing | Marketing B2B com **consentimento LGPD** obrigatório: registrar/revogar/consultar consentimento (histórico preservado); **segmento** por dados existentes com **prévia** de alcance; **campanha** que **só envia para quem consentiu** (suprimidos contados, sem envio duplicado) via provedor de newsletter; **atribuição** código→reserva que vira **sinal de conversão** para o DSS; **exclusão LGPD** que apaga o dado de marketing mas preserva a prova de revogação. |
 | 0.15.0 | 8 — Portfólio | Representação: cadastrar/desativar/listar **marcas representadas** (identificador único); registrar **contratos de representação** (vigência + documento no cofre), com **alerta** (não bloqueio) para venda sem contrato vigente e **aviso de contrato a vencer** (até 30 dias); definir **metas por marca** (volume ou receita) e acompanhar o **realizado vs meta** a partir das **vendas confirmadas** da marca. Não mexe em preço nem comissão. |
+| 0.16.0 | 8 — Patrimônio (Assets) | Registro do **patrimônio interno** (equipamentos, licenças de software, outros bens): cadastrar com **tipo/identificação/data/custo** e vínculos por valor ao **documento** (cofre) e ao **lançamento** (financeiro); licença de software exige **data de vencimento**; **baixa** auditada e definitiva (com motivo); listar/filtrar por tipo/situação e por **licenças a vencer**; **aviso** (uma vez por licença) de licença a vencer (até 30 dias). É patrimônio, não produto — não entra em preço/venda; gestão plena de ativos = comprar. |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.
