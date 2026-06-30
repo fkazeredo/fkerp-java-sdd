@@ -1,18 +1,22 @@
 package com.fksoft.infra.security;
 
 import java.util.Set;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
  * Development stub for {@link UserContextProvider} that returns a fixed user.
  *
- * <p><strong>STUB (traceable, replaceable):</strong> real authentication (login, roles, OIDC) is
- * owned by the Identity spec <strong>SPEC-0024</strong>. This stand-in exists only so the
- * foundation has a working {@code UserContextProvider}; it is replaced by the real adapter when
- * SPEC-0024 is implemented (simulation-and-mocking.md). It must never ship as the production
- * identity source.
+ * <p><strong>STUB (traceable, behind a profile — graduated by SPEC-0024/DL-0081):</strong> real
+ * authentication is now owned by the Identity module; the production/default adapter is {@link
+ * JwtUserContextProvider} (reads the verified token). This stand-in is kept <strong>only for the
+ * {@code dev} profile</strong> so a developer can run the app locally without logging in. It is
+ * <strong>not</strong> a bean in production (no {@code dev} profile) — BR6. The {@code test}
+ * profile uses the real {@code JwtUserContextProvider} over a {@code TestSecurityConfig} actor, so
+ * the security layer stays mounted (not removed) and the existing tests stay green.
  */
 @Component
+@Profile("dev")
 public class DevStubUserContextProvider implements UserContextProvider {
 
   // Roles include ROLE_DIRECTOR/ROLE_POLICY_ADMIN so CommercialPolicy's runtime self-service
