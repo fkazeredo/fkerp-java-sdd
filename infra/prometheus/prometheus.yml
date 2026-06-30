@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Scrapes the ERP backend's Micrometer Prometheus registry (SPEC-0027/DL-0095). The endpoint is
+  # role-gated (ROLE_IT), so Prometheus authenticates with a Bearer token of an IT user, read from a
+  # credentials file mounted into the container. Generate it once and drop it at
+  # infra/prometheus/scrape-token (NOT versioned — see infra/prometheus/README.md):
+  #   curl -s localhost:8080/api/identity/login -H 'Content-Type: application/json' \
+  #     -d '{"username":"it","password":"dev12345"}' | jq -r .token > infra/prometheus/scrape-token
+  # Without the token the target shows as "down" in Grafana — secure by default (no anonymous scrape).
+  - job_name: acme-travel-erp
+    metrics_path: /actuator/prometheus
+    authorization:
+      type: Bearer
+      credentials_file: /etc/prometheus/scrape-token
+    static_configs:
+      - targets: ['app:8080']
+        labels:
+          application: acme-travel-erp

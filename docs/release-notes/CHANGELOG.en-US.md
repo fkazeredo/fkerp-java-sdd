@@ -1,12 +1,42 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.21.0.md`](0.21.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.22.0.md`](0.22.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.22.0 — Phase 11 · Observability & monitoring
+
+**MINOR, new retro-compatible capability — no business-rule change, no migration.** The ERP's
+observability foundation, brought from the sibling fkerp-poc and adapted to this project's layers
+(ADR 0012) and role model (SPEC-0024); it instruments and exposes what already exists (Rule Zero):
+
+- **Added:** `micrometer-registry-prometheus`; deliberate Actuator exposure
+  (`health,info,prometheus,metrics`) — `env`/`beans`/`heapdump`/etc. are **not** exposed (DL-0095).
+- **Added:** endpoint security — `health`/`info`/`/api/version` **public**; `prometheus`/`metrics`
+  require **ROLE_IT** (401 anonymous, 403 without the role, 200 for IT) (DL-0095).
+- **Added:** `GET /api/version` → `{ version, gitCommit, buildTime }` from Spring Boot **build-info** +
+  the git-commit-id plugin, with **graceful degradation** (absent fields → `"unknown"`) (DL-0097).
+- **Added:** **structured JSON logs** (ECS) in the container via `LOGGING_STRUCTURED_FORMAT_CONSOLE`;
+  the MDC **correlation id** becomes a JSON field; dev/local keeps the human console. No secret/PII is
+  logged (DL-0096).
+- **Added:** an `infra/` monitoring stack (mirrors the POC): Prometheus + Loki + Grafana Alloy +
+  Grafana via docker-compose, with provisioned datasources and the **"Acme Travel ERP — Backend
+  Overview"** dashboard.
+- **Added:** **business metrics** (`BusinessMetrics` in `infra.observability`) derived from
+  already-published domain events — confirmed/cancelled bookings, composed/overridden quotes, issued
+  commission invoices, closed periods, logins (DL-0098); a new ArchUnit rule keeps the domain free of
+  Micrometer/Actuator.
+- **Changed:** `NoResourceFoundException` now maps to **404** (unknown URL / unexposed actuator
+  endpoint) instead of 500; project version 0.21.0 → 0.22.0.
+- **No migration, no business-contract change.** `./mvnw verify` green: **477 tests** (was 468);
+  ArchUnit (17 rules)/Modulith/Spotless/Checkstyle green. The monitoring stack is config/infra — not
+  part of `./mvnw verify`.
 
 ---
 

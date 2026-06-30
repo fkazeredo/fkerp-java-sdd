@@ -1,0 +1,35 @@
+// Grafana Alloy: collects the logs of every Docker container and ships them to Loki (SPEC-0027).
+// Requires the Docker socket mounted at /var/run/docker.sock. The ERP backend logs JSON (ECS) in the
+// container (LOGGING_STRUCTURED_FORMAT_CONSOLE=ecs), so each line ships as structured JSON to Loki.
+
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "containers" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+}
+
+loki.source.docker "containers" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.containers.output
+  labels     = { job = "docker" }
+  forward_to = [loki.write.default.receiver]
+}
+
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

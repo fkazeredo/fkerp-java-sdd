@@ -139,7 +139,14 @@ public class OpenApiConfig {
                         + " PrimeNG/Tailwind, command palette, light/dark theme, login with silent session"
                         + " revalidation via GET /api/identity/me, real loading/empty/error/permission"
                         + " states and a KPI dashboard composed client-side from the existing list"
-                        + " endpoints) — it adds no new API endpoints and changes no contract.")
-                .version("0.21.0"));
+                        + " endpoints) — it adds no new API endpoints and changes no contract."
+                        + " Phase 11 (SPEC-0027) adds observability: Micrometer + Spring Boot Actuator"
+                        + " with a Prometheus registry (GET /actuator/prometheus and /actuator/metrics"
+                        + " require ROLE_IT; /actuator/health and /actuator/info stay public), JSON"
+                        + " structured logs with the correlation id, a docker-compose monitoring stack"
+                        + " (Prometheus + Loki + Grafana Alloy + Grafana) under infra/, business metrics"
+                        + " derived from already-published domain events, and a public GET /api/version"
+                        + " returning { version, gitCommit, buildTime } (build metadata only).")
+                .version("0.22.0"));
   }
 }

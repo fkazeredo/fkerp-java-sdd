@@ -16,6 +16,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
  * Single global error handler (ADR 0011): translates exceptions into the stable {@link
@@ -86,6 +87,19 @@ public class GlobalExceptionHandler {
         List.of(new ApiErrorResponse.FieldViolation(ex.getName(), "invalid"));
     return ResponseEntity.badRequest()
         .body(new ApiErrorResponse("request.parameter-invalid", message, fields));
+  }
+
+  /**
+   * An unknown URL (no controller and no actuator endpoint mapped — e.g. a deliberately unexposed
+   * actuator endpoint like {@code /actuator/env}) maps to {@code 404}, not {@code 500}. Without
+   * this the catch-all below would turn Spring MVC's {@link NoResourceFoundException} into a server
+   * error.
+   */
+  @ExceptionHandler(NoResourceFoundException.class)
+  public ResponseEntity<ApiErrorResponse> handleNoResource(NoResourceFoundException ex) {
+    String message = resolve("resource.not-found", new Object[0]);
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .body(ApiErrorResponse.of("resource.not-found", message));
   }
 
   /** Last-resort handler: never leaks internal details; logs the cause for diagnosis. */

@@ -18,11 +18,20 @@ spring:
 server:
   port: ${SERVER_PORT:8080}
 
+# Application metadata (SPEC-0027/DL-0097). app.version is filtered from the pom at build time
+# (@project.version@ → e.g. 0.22.0), the SemVer source of truth (ADR 0015). It is the fallback for
+# GET /api/version when BuildProperties (the packaged build-info) is absent (dev/test runs).
+app:
+  version: @project.version@
+
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        # Observability (SPEC-0027/DL-0095): expose ONLY these. Sensitive endpoints that leak internals
+        # (env, beans, heapdump, threaddump, loggers, configprops, mappings, …) are deliberately NOT
+        # exposed. Of these, health/info are public; prometheus/metrics require ROLE_IT (SecurityConfig).
+        include: health,info,prometheus,metrics
   endpoint:
     health:
       probes:
@@ -30,6 +39,10 @@ management:
       group:
         readiness:
           include: readinessState,db
+  metrics:
+    tags:
+      # Common tag on every meter (SPEC-0027 AC8) so Prometheus/Grafana can scope by application.
+      application: ${spring.application.name}
 
 springdoc:
   swagger-ui:
@@ -94,5 +107,10 @@ identity:
     issuer: ${IDENTITY_JWT_ISSUER:acme-travel-erp}
 
 logging:
+  # Dev/local default: human-readable console with the correlation id from the MDC. In the container
+  # the structured (JSON/ECS) format is enabled via LOGGING_STRUCTURED_FORMAT_CONSOLE (SPEC-0027/
+  # DL-0096); when that is set, Spring Boot uses the structured layout instead of this pattern and
+  # serializes the MDC — so the correlationId stays present, now as a JSON field, with no secret/PII
+  # logged (BR5). Set logging.structured.format.console to ecs to preview the JSON locally.
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{correlationId:-}] %logger{36} - %msg%n"
