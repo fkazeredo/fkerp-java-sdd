@@ -1,0 +1,54 @@
+<p-dialog
+  [(visible)]="open"
+  [modal]="true"
+  [dismissableMask]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [showHeader]="false"
+  [style]="{ width: '36rem', maxWidth: '92vw' }"
+  styleClass="command-palette"
+>
+  <div class="command-palette__box">
+    <span class="command-palette__search">
+      <i class="pi pi-search" aria-hidden="true"></i>
+      <input
+        #searchInput
+        type="text"
+        class="command-palette__input"
+        [ngModel]="query()"
+        (ngModelChange)="onQueryChange($event)"
+        (keydown)="onKeydown($event)"
+        [attr.aria-label]="'command.searchPlaceholder' | translate"
+        [placeholder]="'command.searchPlaceholder' | translate"
+        role="combobox"
+        aria-expanded="true"
+        aria-controls="command-palette-list"
+      />
+    </span>
+
+    <ul id="command-palette-list" class="command-palette__list" role="listbox">
+      @for (command of filtered(); track command.id; let i = $index) {
+        <li
+          class="command-palette__item"
+          [class.command-palette__item--active]="i === activeIndex()"
+          role="option"
+          tabindex="-1"
+          [attr.aria-selected]="i === activeIndex()"
+          (click)="runCommand(command)"
+          (keydown.enter)="runCommand(command)"
+          (mouseenter)="activeIndex.set(i)"
+        >
+          @if (command.icon) {
+            <i [class]="command.icon" aria-hidden="true"></i>
+          }
+          <span class="command-palette__label">{{ command.labelKey | translate }}</span>
+          @if (command.hint) {
+            <kbd class="command-palette__hint">{{ command.hint }}</kbd>
+          }
+        </li>
+      } @empty {
+        <li class="command-palette__empty">{{ 'command.empty' | translate }}</li>
+      }
+    </ul>
+  </div>
+</p-dialog>

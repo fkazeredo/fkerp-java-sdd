@@ -102,6 +102,40 @@
   display: none;
 }
 
+.shell__palette-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  color: var(--app-muted);
+  border-radius: 8px;
+  padding: 0.4rem 0.7rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-left: 0.25rem;
+}
+
+.shell__palette-btn:hover {
+  border-color: var(--app-primary);
+  color: var(--app-text);
+}
+
+.shell__palette-btn kbd {
+  font-size: 0.7rem;
+  border: 1px solid var(--app-border);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+}
+
+@media (max-width: 640px) {
+  .shell__palette-btn span,
+  .shell__palette-btn kbd {
+    display: none;
+  }
+}
+
 .shell__content {
   flex: 1;
   overflow-y: auto;
