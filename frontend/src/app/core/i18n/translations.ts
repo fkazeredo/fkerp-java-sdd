@@ -6,6 +6,7 @@
 export const TRANSLATIONS: Record<string, Record<string, Record<string, string>>> = {
   'pt-BR': {
     nav: {
+      dashboard: 'Painel',
       accounts: 'Contas',
       exchange: 'Câmbio',
       quotes: 'Cotações',
@@ -14,6 +15,14 @@ export const TRANSLATIONS: Record<string, Record<string, Record<string, string>>
       health: 'Saúde',
       login: 'Entrar',
       logout: 'Sair',
+    },
+    shell: {
+      brand: 'Acme Travel ERP',
+      primaryNav: 'Navegação principal',
+      toggleMenu: 'Abrir/fechar menu',
+      toggleTheme: 'Alternar tema claro/escuro',
+      skipToContent: 'Pular para o conteúdo',
+      openPalette: 'Abrir paleta de comandos',
     },
     login: {
       title: 'Entrar',
@@ -143,6 +152,7 @@ export const TRANSLATIONS: Record<string, Record<string, Record<string, string>>
   },
   en: {
     nav: {
+      dashboard: 'Dashboard',
       accounts: 'Accounts',
       exchange: 'Exchange',
       quotes: 'Quotes',
@@ -151,6 +161,14 @@ export const TRANSLATIONS: Record<string, Record<string, Record<string, string>>
       health: 'Health',
       login: 'Sign in',
       logout: 'Sign out',
+    },
+    shell: {
+      brand: 'Acme Travel ERP',
+      primaryNav: 'Primary navigation',
+      toggleMenu: 'Toggle menu',
+      toggleTheme: 'Toggle light/dark theme',
+      skipToContent: 'Skip to content',
+      openPalette: 'Open command palette',
     },
     login: {
       title: 'Sign in',
