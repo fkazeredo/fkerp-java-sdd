@@ -69,7 +69,22 @@ public class OpenApiConfig {
                         + " there is no depreciation/maintenance here (buy a full asset-management system if"
                         + " needed). Endpoints: POST /api/assets, GET /assets/{id},"
                         + " GET /assets?type=&status=&expiringWithinDays=, POST /assets/{id}/retire,"
-                        + " POST /assets/flag-expiring.")
-                .version("0.16.0"));
+                        + " POST /assets/flag-expiring."
+                        + " People (SPEC-0022) adds the minimal HR context built on the operational"
+                        + " point snapshot (SPEC-0012, same module): collaborators (Employee — unique"
+                        + " identifier, admission, contracted journey HH:mm, ACTIVE/ON_LEAVE/TERMINATED,"
+                        + " contract document by value), the processed period Journey and time-bank"
+                        + " balance computed from the operational snapshot consumed by value (worked minus"
+                        + " contracted minutes; positive extras, negative faltas — the snapshot is never a"
+                        + " legal document, BR6/DL-0069/DL-0070), and journey discrepancies"
+                        + " (ODD_PUNCH/MISSING_PUNCH/INCOHERENT_JOURNAL) raised as non-blocking alerts in a"
+                        + " treatment queue without auto-correcting (BR4/DL-0071); the processed payslip is"
+                        + " archived in the Compliance vault (PAYROLL, 5-year retention, personal data)"
+                        + " referenced by value (DL-0072). Heavy payroll (eSocial/FGTS/13o) is out of scope"
+                        + " — buy/integrate. Endpoints: POST /api/people/employees, GET /employees/{id},"
+                        + " GET /employees?status=, POST /employees/{id}/journey,"
+                        + " GET /employees/{id}/journey?period=, GET /employees/{id}/timebank?period=,"
+                        + " GET /api/people/discrepancies, POST /employees/{id}/payslip.")
+                .version("0.17.0"));
   }
 }
