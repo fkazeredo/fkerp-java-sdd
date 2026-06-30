@@ -1,6 +1,5 @@
-package com.fksoft.domain.booking.internal;
+package com.fksoft.domain.booking;
 
-import com.fksoft.domain.booking.PenaltyWindow;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;

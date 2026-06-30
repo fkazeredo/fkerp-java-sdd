@@ -1,10 +1,5 @@
-package com.fksoft.domain.finance.internal;
+package com.fksoft.domain.finance;
 
-import com.fksoft.domain.finance.EntryType;
-import com.fksoft.domain.finance.FinanceService;
-import com.fksoft.domain.finance.LedgerDirection;
-import com.fksoft.domain.finance.Party;
-import com.fksoft.domain.finance.PartyType;
 import com.fksoft.domain.payout.AgentCommissionPaid;
 import com.fksoft.domain.payout.RefundExecuted;
 import com.fksoft.domain.payout.SupplierSettled;

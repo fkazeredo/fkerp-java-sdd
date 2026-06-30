@@ -1,15 +1,10 @@
-package com.fksoft.domain.finance.internal;
+package com.fksoft.domain.finance;
 
 import com.fksoft.domain.booking.CancellationCharged;
 import com.fksoft.domain.booking.Charge;
 import com.fksoft.domain.booking.ChargeKind;
 import com.fksoft.domain.booking.MerchantObligationIncurred;
 import com.fksoft.domain.booking.NoShowCharged;
-import com.fksoft.domain.finance.EntryType;
-import com.fksoft.domain.finance.FinanceService;
-import com.fksoft.domain.finance.LedgerDirection;
-import com.fksoft.domain.finance.Party;
-import com.fksoft.domain.finance.PartyType;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;

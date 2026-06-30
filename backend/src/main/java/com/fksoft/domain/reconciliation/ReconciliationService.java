@@ -3,8 +3,6 @@ package com.fksoft.domain.reconciliation;
 import com.fksoft.domain.exchange.FxPositionService;
 import com.fksoft.domain.quoting.QuoteDirectory;
 import com.fksoft.domain.quoting.QuoteSnapshot;
-import com.fksoft.domain.reconciliation.internal.ReconciliationCase;
-import com.fksoft.domain.reconciliation.internal.ReconciliationCaseRepository;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;

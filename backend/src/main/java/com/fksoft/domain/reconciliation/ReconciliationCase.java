@@ -1,10 +1,8 @@
-package com.fksoft.domain.reconciliation.internal;
+package com.fksoft.domain.reconciliation;
 
+import com.fksoft.domain.ModuleInternal;
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.quoting.QuoteSnapshot;
-import com.fksoft.domain.reconciliation.CaseStatus;
-import com.fksoft.domain.reconciliation.ReconciliationCaseView;
-import com.fksoft.domain.reconciliation.SettlementInput;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -28,6 +26,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "reconciliation_cases")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class ReconciliationCase {
 
   private static final int MONEY_SCALE = 2;

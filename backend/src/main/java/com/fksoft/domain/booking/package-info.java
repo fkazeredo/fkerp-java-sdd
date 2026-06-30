@@ -20,8 +20,10 @@
  * com.fksoft.domain.booking.Locator}), the cancellation value types, views, the {@code
  * BookingConfirmed}/{@code BookingCancelled}/{@code BookingNoShow}/{@code
  * CancellationCharged}/{@code MerchantObligationIncurred}/{@code NoShowCharged} events and the
- * business exceptions. It validates the quote through the Quoting facade ({@code QuoteDirectory});
- * the {@code internal} sub-package is module-private.
+ * business exceptions. It validates the quote through the Quoting facade ({@code QuoteDirectory}).
+ * The implementation types (aggregates, repositories, the penalty-windows codec) live in this same
+ * package marked {@link com.fksoft.domain.ModuleInternal} and must never be reached from other
+ * modules — encapsulation is enforced by ArchUnit (Phase 9 / ADR 0016).
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Booking")
 package com.fksoft.domain.booking;

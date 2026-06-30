@@ -1,5 +1,6 @@
-package com.fksoft.domain.compliance.internal;
+package com.fksoft.domain.compliance;
 
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -18,6 +19,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "document_attachments")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class DocumentAttachment {
 
   @Id private UUID id;

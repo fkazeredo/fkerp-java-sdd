@@ -7,8 +7,10 @@
  * (copying the frozen provenance from the Quoting facade), cancels it on {@code BookingCancelled},
  * and records the realized settlement. It is read/derivation over facts and MUST NOT alter
  * Booking/Quote/Commissioning (BR8). Public API: {@link
- * com.fksoft.domain.reconciliation.ReconciliationService}, views, events and exceptions; the {@code
- * internal} sub-package (entity, repository, the booking-event listener) is module-private.
+ * com.fksoft.domain.reconciliation.ReconciliationService}, views, events and exceptions; the
+ * implementation types (entity, repository, the booking-event listener) live in this same package
+ * marked {@link com.fksoft.domain.ModuleInternal} and must never be reached from other modules —
+ * encapsulation is enforced by ArchUnit (Phase 9 / ADR 0016).
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Reconciliation")
 package com.fksoft.domain.reconciliation;

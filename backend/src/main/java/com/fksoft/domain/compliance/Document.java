@@ -1,10 +1,6 @@
-package com.fksoft.domain.compliance.internal;
+package com.fksoft.domain.compliance;
 
-import com.fksoft.domain.compliance.ComplianceRetentionNotExpiredException;
-import com.fksoft.domain.compliance.DocumentType;
-import com.fksoft.domain.compliance.DocumentView;
-import com.fksoft.domain.compliance.RetentionPolicy;
-import com.fksoft.domain.compliance.SignedFormat;
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -28,6 +24,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "documents")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class Document {
 
   @Id private UUID id;

@@ -3,8 +3,6 @@ package com.fksoft.domain.finance;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.fksoft.domain.finance.internal.AccountingPeriod;
-import com.fksoft.domain.finance.internal.LedgerEntry;
 import com.fksoft.domain.money.Money;
 import java.math.BigDecimal;
 import java.time.Instant;

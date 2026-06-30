@@ -1,5 +1,6 @@
-package com.fksoft.domain.finance.internal;
+package com.fksoft.domain.finance;
 
+import com.fksoft.domain.ModuleInternal;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -8,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * idempotency pre-check (DL-0041) is {@link #existsBySourceRefAndChargeKind}; the UNIQUE {@code
  * (source_ref, charge_kind)} backs it against concurrent double-posts.
  */
+@ModuleInternal
 public interface PostedEventEntryRepository extends JpaRepository<PostedEventEntry, UUID> {
 
   /**

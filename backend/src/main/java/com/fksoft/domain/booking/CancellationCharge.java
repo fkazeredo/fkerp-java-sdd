@@ -1,8 +1,6 @@
-package com.fksoft.domain.booking.internal;
+package com.fksoft.domain.booking;
 
-import com.fksoft.domain.booking.Charge;
-import com.fksoft.domain.booking.ChargeKind;
-import com.fksoft.domain.booking.CostBearer;
+import com.fksoft.domain.ModuleInternal;
 import com.fksoft.domain.money.Money;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -25,6 +23,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "cancellation_charges")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class CancellationCharge {
 
   @Id private UUID id;

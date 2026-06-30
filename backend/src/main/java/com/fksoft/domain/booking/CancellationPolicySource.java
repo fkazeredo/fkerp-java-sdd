@@ -1,10 +1,6 @@
-package com.fksoft.domain.booking.internal;
+package com.fksoft.domain.booking;
 
-import com.fksoft.domain.booking.CancellationPolicy;
-import com.fksoft.domain.booking.CancellationPolicyView;
-import com.fksoft.domain.booking.CancellationType;
-import com.fksoft.domain.booking.CostBearer;
-import com.fksoft.domain.booking.NoShowPolicy;
+import com.fksoft.domain.ModuleInternal;
 import com.fksoft.domain.money.Money;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -29,6 +25,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "cancellation_policies")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class CancellationPolicySource {
 
   @Id private UUID id;

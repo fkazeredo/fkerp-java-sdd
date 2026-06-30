@@ -1,7 +1,5 @@
-package com.fksoft.domain.compliance.internal;
+package com.fksoft.domain.compliance;
 
-import com.fksoft.domain.compliance.CloseCheckView;
-import com.fksoft.domain.compliance.ComplianceService;
 import com.fksoft.domain.finance.AccountingPeriodId;
 import com.fksoft.domain.finance.CloseDecision;
 import com.fksoft.domain.finance.CloseGuard;

@@ -1,11 +1,5 @@
 package com.fksoft.domain.compliance;
 
-import com.fksoft.domain.compliance.internal.Document;
-import com.fksoft.domain.compliance.internal.DocumentAttachment;
-import com.fksoft.domain.compliance.internal.DocumentAttachmentRepository;
-import com.fksoft.domain.compliance.internal.DocumentRepository;
-import com.fksoft.domain.compliance.internal.DocumentRequirement;
-import com.fksoft.domain.compliance.internal.DocumentRequirementRepository;
 import com.fksoft.domain.finance.LedgerDirectory;
 import com.fksoft.domain.finance.LedgerEntrySnapshot;
 import com.fksoft.domain.finance.PendingEntry;

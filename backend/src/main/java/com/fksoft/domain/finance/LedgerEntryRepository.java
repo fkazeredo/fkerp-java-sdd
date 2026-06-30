@@ -1,7 +1,6 @@
-package com.fksoft.domain.finance.internal;
+package com.fksoft.domain.finance;
 
-import com.fksoft.domain.finance.EntryStatus;
-import com.fksoft.domain.finance.LedgerDirection;
+import com.fksoft.domain.ModuleInternal;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -11,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 /** Repository for {@link LedgerEntry}. Module-internal: only the Finance module uses it. */
+@ModuleInternal
 public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, UUID> {
 
   /** All entries of a period, any status (used by the close-check via the LedgerDirectory). */

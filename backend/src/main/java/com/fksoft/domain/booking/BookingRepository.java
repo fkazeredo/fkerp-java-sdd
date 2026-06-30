@@ -1,7 +1,6 @@
-package com.fksoft.domain.booking.internal;
+package com.fksoft.domain.booking;
 
-import com.fksoft.domain.booking.BookingStatus;
-import com.fksoft.domain.booking.LocatorOrigin;
+import com.fksoft.domain.ModuleInternal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -14,6 +13,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * (locator_origin, locator_code)} is the authoritative duplicate guard (BR3). The PENDING-timeout
  * sweep selects bookings that entered PENDING before a cutoff (BR4).
  */
+@ModuleInternal
 public interface BookingRepository extends JpaRepository<Booking, UUID> {
 
   /** Whether a booking already exists with the given locator. */

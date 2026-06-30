@@ -1,10 +1,6 @@
-package com.fksoft.domain.booking.internal;
+package com.fksoft.domain.booking;
 
-import com.fksoft.domain.booking.BookingStatus;
-import com.fksoft.domain.booking.BookingTransitionInvalidException;
-import com.fksoft.domain.booking.BookingView;
-import com.fksoft.domain.booking.Locator;
-import com.fksoft.domain.booking.LocatorOrigin;
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -27,6 +23,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "bookings")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class Booking {
 
   @Id private UUID id;

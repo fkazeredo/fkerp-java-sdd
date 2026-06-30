@@ -1,12 +1,6 @@
-package com.fksoft.domain.finance.internal;
+package com.fksoft.domain.finance;
 
-import com.fksoft.domain.finance.EntryStatus;
-import com.fksoft.domain.finance.EntryType;
-import com.fksoft.domain.finance.FinanceEntryTransitionInvalidException;
-import com.fksoft.domain.finance.LedgerDirection;
-import com.fksoft.domain.finance.LedgerEntryView;
-import com.fksoft.domain.finance.Party;
-import com.fksoft.domain.finance.PartyType;
+import com.fksoft.domain.ModuleInternal;
 import com.fksoft.domain.money.Money;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -32,6 +26,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "ledger_entries")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class LedgerEntry {
 
   @Id private UUID id;
