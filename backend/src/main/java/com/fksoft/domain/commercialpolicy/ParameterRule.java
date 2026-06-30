@@ -1,12 +1,6 @@
-package com.fksoft.domain.commercialpolicy.internal;
+package com.fksoft.domain.commercialpolicy;
 
-import com.fksoft.domain.commercialpolicy.ParameterKey;
-import com.fksoft.domain.commercialpolicy.ParameterLayer;
-import com.fksoft.domain.commercialpolicy.ParameterRuleView;
-import com.fksoft.domain.commercialpolicy.ParameterScope;
-import com.fksoft.domain.commercialpolicy.ParameterValueType;
-import com.fksoft.domain.commercialpolicy.Provenance;
-import com.fksoft.domain.commercialpolicy.ResolvedParameter;
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -35,6 +29,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "parameter_rules")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class ParameterRule {
 
   @Id private UUID id;

@@ -1,8 +1,7 @@
-package com.fksoft.domain.exchange.internal;
+package com.fksoft.domain.exchange;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fksoft.domain.exchange.FxPositionStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;

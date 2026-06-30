@@ -1,10 +1,7 @@
-package com.fksoft.domain.sourcing.internal;
+package com.fksoft.domain.sourcing;
 
+import com.fksoft.domain.ModuleInternal;
 import com.fksoft.domain.money.Money;
-import com.fksoft.domain.sourcing.IntegrationLevel;
-import com.fksoft.domain.sourcing.OfferOrigin;
-import com.fksoft.domain.sourcing.SourcedOfferInvalidException;
-import com.fksoft.domain.sourcing.SourcedOfferView;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -28,6 +25,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "sourced_offers")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class SourcedOffer {
 
   @Id private UUID id;

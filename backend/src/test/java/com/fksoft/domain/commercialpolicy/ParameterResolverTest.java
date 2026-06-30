@@ -1,11 +1,7 @@
-package com.fksoft.domain.commercialpolicy.internal;
+package com.fksoft.domain.commercialpolicy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fksoft.domain.commercialpolicy.ParameterKey;
-import com.fksoft.domain.commercialpolicy.ParameterLayer;
-import com.fksoft.domain.commercialpolicy.ParameterScope;
-import com.fksoft.domain.commercialpolicy.ParameterValueType;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;

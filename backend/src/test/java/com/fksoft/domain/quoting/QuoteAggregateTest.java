@@ -1,15 +1,10 @@
-package com.fksoft.domain.quoting.internal;
+package com.fksoft.domain.quoting;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fksoft.domain.exchange.CurrencyPair;
 import com.fksoft.domain.money.Money;
-import com.fksoft.domain.quoting.PriceOrigin;
-import com.fksoft.domain.quoting.QuoteOverrideCurrencyMismatchException;
-import com.fksoft.domain.quoting.QuoteOverrideNotApplicableException;
-import com.fksoft.domain.quoting.QuoteOverrideReasonRequiredException;
-import com.fksoft.domain.quoting.QuoteStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;

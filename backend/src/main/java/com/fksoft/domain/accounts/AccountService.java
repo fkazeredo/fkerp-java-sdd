@@ -1,7 +1,5 @@
 package com.fksoft.domain.accounts;
 
-import com.fksoft.domain.accounts.internal.Account;
-import com.fksoft.domain.accounts.internal.AccountRepository;
 import java.time.Clock;
 import java.util.Optional;
 import java.util.UUID;

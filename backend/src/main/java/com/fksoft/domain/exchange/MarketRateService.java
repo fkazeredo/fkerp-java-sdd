@@ -1,7 +1,5 @@
 package com.fksoft.domain.exchange;
 
-import com.fksoft.domain.exchange.internal.MarketRate;
-import com.fksoft.domain.exchange.internal.MarketRateRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;

@@ -1,6 +1,6 @@
-package com.fksoft.domain.exchange.internal;
+package com.fksoft.domain.exchange;
 
-import com.fksoft.domain.exchange.FxPositionStatus;
+import com.fksoft.domain.ModuleInternal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +14,7 @@ import org.springframework.data.repository.query.Param;
  * opening idempotent per booking (BR2); the queries feed the exposure read-models (BR6): the open
  * book and the positions opened within a reporting period.
  */
+@ModuleInternal
 public interface FxPositionRepository extends JpaRepository<FxPosition, UUID> {
 
   /** Whether a position already exists for the booking (idempotent open). */

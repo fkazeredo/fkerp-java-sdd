@@ -1,6 +1,6 @@
-package com.fksoft.domain.commercialpolicy.internal;
+package com.fksoft.domain.commercialpolicy;
 
-import com.fksoft.domain.commercialpolicy.ParameterLayer;
+import com.fksoft.domain.ModuleInternal;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * key (a small set per key) and applies the precedence/specificity/tie-break in memory (DL-0037),
  * where the deterministic ordering is unit-tested; the listing query supports audit/curation.
  */
+@ModuleInternal
 public interface ParameterRuleRepository extends JpaRepository<ParameterRule, UUID> {
 
   /** All rules for a key (across layers/scopes) — the candidate set for resolution. */

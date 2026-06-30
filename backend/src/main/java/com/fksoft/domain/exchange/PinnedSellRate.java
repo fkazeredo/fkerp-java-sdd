@@ -1,7 +1,6 @@
-package com.fksoft.domain.exchange.internal;
+package com.fksoft.domain.exchange;
 
-import com.fksoft.domain.exchange.CurrencyPair;
-import com.fksoft.domain.exchange.PinnedSellRateView;
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -22,6 +21,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "pinned_sell_rates")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class PinnedSellRate {
 
   @Id private UUID id;

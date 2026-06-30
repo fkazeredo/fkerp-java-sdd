@@ -1,10 +1,7 @@
-package com.fksoft.domain.accounts.internal;
+package com.fksoft.domain.accounts;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fksoft.domain.accounts.AccountStatus;
-import com.fksoft.domain.accounts.Document;
-import com.fksoft.domain.accounts.LegalType;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
 

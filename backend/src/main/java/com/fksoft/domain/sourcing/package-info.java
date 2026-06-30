@@ -13,7 +13,10 @@
  * objects/enums, views, the {@link com.fksoft.domain.sourcing.OfferSourced}/{@link
  * com.fksoft.domain.sourcing.IntegratedQuoteCreated} events and the business exceptions. It
  * collaborates with Accounts and Quoting <strong>only through their public facades</strong>; the
- * {@code internal} sub-package (entities, repositories) is module-private (Spring Modulith verify).
+ * implementation types (entities, repositories) live in this same package marked {@link
+ * com.fksoft.domain.ModuleInternal} and must never be reached from other modules — encapsulation is
+ * enforced by ArchUnit (Phase 9 / ADR 0016), the module graph stays acyclic (Spring Modulith
+ * verify).
  */
 @org.springframework.modulith.ApplicationModule(displayName = "Sourcing")
 package com.fksoft.domain.sourcing;
