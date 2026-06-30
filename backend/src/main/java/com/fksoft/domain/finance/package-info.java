@@ -10,8 +10,11 @@
  * com.fksoft.domain.finance.LedgerDirectory} read port (consumed by Compliance), the {@link
  * com.fksoft.domain.finance.CloseGuard} port (consumed here, implemented by Compliance), value
  * objects, views, the {@link com.fksoft.domain.finance.LedgerEntryRegistered}/{@link
- * com.fksoft.domain.finance.PeriodClosed} events and the business exceptions. The {@code internal}
- * sub-package (entities, repositories) is module-private (Spring Modulith verify).
+ * com.fksoft.domain.finance.PeriodClosed} events and the business exceptions. The implementation
+ * types (entities, repositories) live in this same package marked {@link
+ * com.fksoft.domain.ModuleInternal} and must never be reached from other modules — encapsulation is
+ * enforced by ArchUnit (Phase 9 / ADR 0016), the module graph stays acyclic (Spring Modulith
+ * verify).
  *
  * <p>Event-driven AP/AR posting (SPEC-0015 BR5, DL-0041): Finance is a <strong>leaf
  * consumer</strong> of the Booking module's charge events ({@code CancellationCharged}, {@code

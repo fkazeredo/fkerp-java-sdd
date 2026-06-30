@@ -1,12 +1,7 @@
-package com.fksoft.domain.finance.internal;
+package com.fksoft.domain.finance;
 
 import com.fksoft.domain.billing.CommissionInvoiceIssued;
 import com.fksoft.domain.billing.Withholding;
-import com.fksoft.domain.finance.EntryType;
-import com.fksoft.domain.finance.FinanceService;
-import com.fksoft.domain.finance.LedgerDirection;
-import com.fksoft.domain.finance.Party;
-import com.fksoft.domain.finance.PartyType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;

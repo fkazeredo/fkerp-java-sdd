@@ -1,8 +1,7 @@
-package com.fksoft.domain.reconciliation.internal;
+package com.fksoft.domain.reconciliation;
 
 import com.fksoft.domain.booking.BookingCancelled;
 import com.fksoft.domain.booking.BookingConfirmed;
-import com.fksoft.domain.reconciliation.ReconciliationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;

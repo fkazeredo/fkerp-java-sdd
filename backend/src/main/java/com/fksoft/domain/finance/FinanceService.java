@@ -1,11 +1,5 @@
 package com.fksoft.domain.finance;
 
-import com.fksoft.domain.finance.internal.AccountingPeriod;
-import com.fksoft.domain.finance.internal.AccountingPeriodRepository;
-import com.fksoft.domain.finance.internal.LedgerEntry;
-import com.fksoft.domain.finance.internal.LedgerEntryRepository;
-import com.fksoft.domain.finance.internal.PostedEventEntry;
-import com.fksoft.domain.finance.internal.PostedEventEntryRepository;
 import com.fksoft.domain.money.Money;
 import java.math.BigDecimal;
 import java.time.Clock;

@@ -1,13 +1,10 @@
-package com.fksoft.domain.reconciliation.internal;
+package com.fksoft.domain.reconciliation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.quoting.QuoteSnapshot;
-import com.fksoft.domain.reconciliation.CaseStatus;
-import com.fksoft.domain.reconciliation.ReconciliationCurrencyMismatchException;
-import com.fksoft.domain.reconciliation.SettlementInput;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;

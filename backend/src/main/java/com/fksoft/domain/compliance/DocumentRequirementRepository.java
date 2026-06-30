@@ -1,12 +1,13 @@
-package com.fksoft.domain.compliance.internal;
+package com.fksoft.domain.compliance;
 
-import com.fksoft.domain.compliance.RequirementPhase;
+import com.fksoft.domain.ModuleInternal;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * Repository for the seeded {@link DocumentRequirement} policy rows. Module-internal, read-only.
  */
+@ModuleInternal
 public interface DocumentRequirementRepository
     extends JpaRepository<DocumentRequirement, DocumentRequirement.Key> {
 

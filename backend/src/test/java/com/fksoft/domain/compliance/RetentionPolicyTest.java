@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.fksoft.domain.compliance.internal.Document;
 import java.time.Instant;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;

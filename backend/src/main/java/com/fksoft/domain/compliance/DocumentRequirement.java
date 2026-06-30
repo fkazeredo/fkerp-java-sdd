@@ -1,6 +1,6 @@
-package com.fksoft.domain.compliance.internal;
+package com.fksoft.domain.compliance;
 
-import com.fksoft.domain.compliance.RequirementPhase;
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -22,6 +22,7 @@ import lombok.NoArgsConstructor;
 @IdClass(DocumentRequirement.Key.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class DocumentRequirement {
 
   @Id private String entryType;

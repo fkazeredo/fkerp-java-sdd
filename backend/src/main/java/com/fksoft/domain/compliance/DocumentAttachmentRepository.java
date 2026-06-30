@@ -1,10 +1,12 @@
-package com.fksoft.domain.compliance.internal;
+package com.fksoft.domain.compliance;
 
+import com.fksoft.domain.ModuleInternal;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /** Repository for {@link DocumentAttachment}. Module-internal. */
+@ModuleInternal
 public interface DocumentAttachmentRepository extends JpaRepository<DocumentAttachment, UUID> {
 
   /** Whether this document is already attached to this entry (idempotent attach, BR5). */

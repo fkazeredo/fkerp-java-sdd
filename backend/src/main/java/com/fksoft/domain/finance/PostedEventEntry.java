@@ -1,5 +1,6 @@
-package com.fksoft.domain.finance.internal;
+package com.fksoft.domain.finance;
 
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -21,6 +22,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "posted_event_entries")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class PostedEventEntry {
 
   @Id private UUID id;

@@ -1,6 +1,6 @@
-package com.fksoft.domain.finance.internal;
+package com.fksoft.domain.finance;
 
-import com.fksoft.domain.finance.PeriodStatus;
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -22,6 +22,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "accounting_periods")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class AccountingPeriod {
 
   @Id private String period;

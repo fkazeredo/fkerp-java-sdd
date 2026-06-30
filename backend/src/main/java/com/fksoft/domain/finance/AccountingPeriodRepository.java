@@ -1,5 +1,6 @@
-package com.fksoft.domain.finance.internal;
+package com.fksoft.domain.finance;
 
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.LockModeType;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,6 +13,7 @@ import org.springframework.data.repository.query.Param;
  * transition, so it loads the period with a pessimistic write lock (persistence.md; SPEC-0015
  * "locking pessimista no período").
  */
+@ModuleInternal
 public interface AccountingPeriodRepository extends JpaRepository<AccountingPeriod, String> {
 
   /** Loads a period for update with a pessimistic write lock (close transition). */

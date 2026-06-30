@@ -1,6 +1,6 @@
-package com.fksoft.domain.reconciliation.internal;
+package com.fksoft.domain.reconciliation;
 
-import com.fksoft.domain.reconciliation.CaseStatus;
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.LockModeType;
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -17,6 +17,7 @@ import org.springframework.data.repository.query.Param;
  * makes case opening idempotent (BR1); settlement loads with a pessimistic write lock (a financial
  * transition, persistence.md); listing is ordered by discrepancy (the prioritization read-model).
  */
+@ModuleInternal
 public interface ReconciliationCaseRepository extends JpaRepository<ReconciliationCase, UUID> {
 
   /** Whether a case already exists for the booking (idempotent open). */

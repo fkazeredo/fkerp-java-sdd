@@ -1,13 +1,5 @@
 package com.fksoft.domain.booking;
 
-import com.fksoft.domain.booking.internal.Booking;
-import com.fksoft.domain.booking.internal.BookingCancellationSnapshot;
-import com.fksoft.domain.booking.internal.BookingCancellationSnapshotRepository;
-import com.fksoft.domain.booking.internal.BookingRepository;
-import com.fksoft.domain.booking.internal.CancellationCharge;
-import com.fksoft.domain.booking.internal.CancellationChargeRepository;
-import com.fksoft.domain.booking.internal.CancellationPolicySource;
-import com.fksoft.domain.booking.internal.CancellationPolicySourceRepository;
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.quoting.QuoteDirectory;
 import com.fksoft.domain.quoting.QuoteSnapshot;
