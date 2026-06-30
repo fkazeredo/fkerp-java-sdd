@@ -24,12 +24,13 @@
 
 .login__title {
   font-size: 1.3rem;
-  margin: 0 0 1.25rem;
+  margin: 0 0 0.5rem;
 }
 
-.login__error {
-  display: block;
-  margin-bottom: 0.75rem;
+.login__hint {
+  margin: 0 0 1.25rem;
+  color: var(--app-text-muted, #6b7280);
+  font-size: 0.9rem;
 }
 
 .login__submit {

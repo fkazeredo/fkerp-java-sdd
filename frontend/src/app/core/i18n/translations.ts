@@ -26,10 +26,10 @@ export const TRANSLATIONS: Record<string, Record<string, Record<string, string>>
     },
     login: {
       title: 'Entrar',
-      username: 'Usuário',
-      password: 'Senha',
       submit: 'Entrar',
       submitting: 'Entrando…',
+      ssoHint: 'Use sua conta corporativa para acessar o sistema.',
+      ssoSubmit: 'Entrar com SSO',
     },
     identity: {
       'credentials.invalid': 'Usuário ou senha inválidos.',
@@ -196,10 +196,10 @@ export const TRANSLATIONS: Record<string, Record<string, Record<string, string>>
     },
     login: {
       title: 'Sign in',
-      username: 'Username',
-      password: 'Password',
       submit: 'Sign in',
       submitting: 'Signing in…',
+      ssoHint: 'Use your corporate account to access the system.',
+      ssoSubmit: 'Sign in with SSO',
     },
     identity: {
       'credentials.invalid': 'Invalid username or password.',
