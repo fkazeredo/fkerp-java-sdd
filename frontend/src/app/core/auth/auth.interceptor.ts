@@ -14,6 +14,12 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
+  // Never attach the backend bearer to a cross-origin call (e.g. the OIDC IdP endpoints) — only to
+  // the app's own API (DL-0106).
+  if (isCrossOrigin(req.url)) {
+    return next(req);
+  }
+
   const token = auth.token();
   const request = token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
 
@@ -30,3 +36,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     }),
   );
 };
+
+/** Whether the URL is an absolute cross-origin URL (a different origin than the app). */
+function isCrossOrigin(url: string): boolean {
+  if (!/^https?:\/\//i.test(url)) {
+    return false; // relative URL → same origin (the backend via /api)
+  }
+  try {
+    return new URL(url).origin !== globalThis.location.origin;
+  } catch {
+    return false;
+  }
+}

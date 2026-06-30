@@ -45,6 +45,20 @@
       "fullScopeAllowed": true,
       "defaultClientScopes": ["web-origins", "profile", "roles", "email"],
       "optionalClientScopes": ["offline_access"]
+    },
+    {
+      "clientId": "acme-e2e-cli",
+      "name": "Acme Travel ERP — E2E direct-grant client (TEST ONLY)",
+      "description": "Public client with direct access grants, used ONLY by the Playwright API tests to mint tokens for role checks. NEVER enable in production.",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "defaultClientScopes": ["profile", "roles", "email"]
     }
   ],
   "users": [

@@ -29,7 +29,9 @@ export function buildAuthConfig(location: Location = window.location): AuthConfi
     postLogoutRedirectUri: location.origin + '/',
     clientId: 'acme-erp-web',
     responseType: 'code',
-    scope: 'openid profile offline_access',
+    // Standard refresh tokens (issued for the code flow) drive silent-refresh; no offline_access
+    // (long-lived offline tokens) is requested — the SPA renews while the session is active.
+    scope: 'openid profile',
     // PKCE is on by default for code flow; be explicit and never use the deprecated implicit flow.
     requireHttps: false, // dev/E2E run over http://localhost — production must serve the IdP over https
     useSilentRefresh: false, // refresh-token rotation (offline_access) drives silent renewal
