@@ -21,6 +21,14 @@ frontend/coverage/
 npm-debug.log*
 yarn-error.log*
 
+# ---- Playwright E2E (SPEC-0028): reports/traces/results and downloaded browser binaries — never
+#      commit these (the browsers are installed by `npx playwright install` in dev/CI). ----
+frontend/playwright-report/
+frontend/test-results/
+frontend/blob-report/
+frontend/.playwright/
+**/.cache/ms-playwright/
+
 # ---- Env / secrets ----
 .env
 *.local

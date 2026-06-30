@@ -13,7 +13,7 @@
 
   <groupId>com.fksoft</groupId>
   <artifactId>acme-travel-erp</artifactId>
-  <version>0.22.0</version>
+  <version>0.22.1</version>
   <name>acme-travel-erp</name>
   <description>ERP Acme Travel — modular monolith (manual commercial core + minimal compliance)</description>
 
@@ -26,6 +26,11 @@
     <spotless.version>3.7.0</spotless.version>
     <checkstyle-plugin.version>3.6.0</checkstyle-plugin.version>
     <checkstyle.version>10.21.4</checkstyle.version>
+    <jacoco.version>0.8.12</jacoco.version>
+    <!-- Coverage gate (SPEC-0028/DL-0099): minimum INSTRUCTION coverage enforced by jacoco:check at
+         verify. A defensible floor the current code already passes — a real drop below it FAILS the
+         build (BR2). Not a cosmetic 100% bar (testing.md: coverage is a signal, not the goal). -->
+    <jacoco.min.instruction.ratio>0.80</jacoco.min.instruction.ratio>
   </properties>
 
   <dependencyManagement>
@@ -280,6 +285,63 @@
             <goals>
               <goal>check</goal>
             </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Gate: JaCoCo coverage (SPEC-0028/DL-0099). prepare-agent instruments the test JVM; report
+           emits HTML/XML/CSV under target/site/jacoco; check enforces a minimum INSTRUCTION ratio at
+           verify and FAILS the build when coverage drops below the floor (BR2). The floor is a
+           defensible non-regression bar the current code already passes — not a 100% bar. Excludes
+           code with no meaningful logic to test (Spring Boot main, generated/aspect helpers,
+           package-info, request/response DTOs and config) so the ratio reflects real branches. -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco.version}</version>
+        <configuration>
+          <excludes>
+            <exclude>com/fksoft/FkErpApplication.class</exclude>
+            <exclude>**/*Application.class</exclude>
+            <exclude>**/package-info.class</exclude>
+            <exclude>**/dto/**</exclude>
+            <exclude>**/config/**</exclude>
+          </excludes>
+        </configuration>
+        <executions>
+          <execution>
+            <id>jacoco-prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>jacoco-report</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>jacoco-check</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <rule>
+                  <element>BUNDLE</element>
+                  <limits>
+                    <limit>
+                      <counter>INSTRUCTION</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>${jacoco.min.instruction.ratio}</minimum>
+                    </limit>
+                  </limits>
+                </rule>
+              </rules>
+            </configuration>
           </execution>
         </executions>
       </plugin>
