@@ -25,6 +25,9 @@ yarn-error.log*
 .env
 *.local
 
+# ---- Observability: Prometheus scrape Bearer token (SPEC-0027/DL-0095; never committed) ----
+infra/prometheus/scrape-token
+
 # ---- IDE / OS ----
 .idea/
 *.iml
