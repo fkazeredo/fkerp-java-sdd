@@ -1,14 +1,24 @@
 package com.fksoft.domain.portfolio;
 
+import com.fksoft.domain.money.Money;
+import com.fksoft.domain.portfolio.internal.BrandGoal;
+import com.fksoft.domain.portfolio.internal.BrandGoalRepository;
+import com.fksoft.domain.portfolio.internal.BrandRealized;
+import com.fksoft.domain.portfolio.internal.BrandRealizedRepository;
+import com.fksoft.domain.portfolio.internal.BrandSaleAttribution;
+import com.fksoft.domain.portfolio.internal.BrandSaleAttributionRepository;
 import com.fksoft.domain.portfolio.internal.RepresentationContract;
 import com.fksoft.domain.portfolio.internal.RepresentationContractRepository;
 import com.fksoft.domain.portfolio.internal.RepresentedBrand;
 import com.fksoft.domain.portfolio.internal.RepresentedBrandRepository;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +44,9 @@ public class PortfolioService {
 
   private final RepresentedBrandRepository brandRepository;
   private final RepresentationContractRepository contractRepository;
+  private final BrandGoalRepository goalRepository;
+  private final BrandSaleAttributionRepository saleAttributionRepository;
+  private final BrandRealizedRepository realizedRepository;
   private final Clock clock;
   private final ApplicationEventPublisher events;
 
@@ -206,5 +219,242 @@ public class PortfolioService {
       }
     }
     return flagged;
+  }
+
+  // --- Goals + realized projection (BR3/BR4/DL-0062) ---
+
+  /**
+   * Defines a goal for a brand (BR3). The brand must exist; a goal is unique per (brand, period,
+   * metric) — a duplicate surfaces as a translated business error, never a raw constraint leak.
+   *
+   * @param command the goal details (brand, period, metric, target)
+   * @param actor who defines it (audit)
+   * @return the persisted goal view
+   * @throws BrandNotFoundException when the brand does not exist
+   * @throws BrandGoalInvalidException when the data is missing/inconsistent or the goal is a
+   *     duplicate (BR3)
+   */
+  @Transactional
+  public GoalView defineGoal(DefineGoalCommand command, String actor) {
+    if (command == null || command.brandRef() == null) {
+      throw new BrandGoalInvalidException();
+    }
+    brandRepository.findByBrandRef(command.brandRef()).orElseThrow(BrandNotFoundException::new);
+    if (goalRepository.existsByBrandRefAndPeriodAndMetric(
+        command.brandRef(), command.period(), command.metric())) {
+      throw new BrandGoalInvalidException();
+    }
+    Instant now = clock.instant();
+    BrandGoal goal =
+        BrandGoal.define(
+            command.brandRef(),
+            command.period(),
+            command.metric(),
+            command.targetAmount(),
+            command.targetCount(),
+            now,
+            actor);
+    try {
+      goalRepository.saveAndFlush(goal);
+    } catch (DataIntegrityViolationException duplicate) {
+      throw new BrandGoalInvalidException();
+    }
+    log.info(
+        "BrandGoalDefined goalId={} brandRef={} period={} metric={} by={}",
+        goal.id(),
+        goal.brandRef(),
+        goal.period(),
+        goal.metric(),
+        actor);
+    return goal.toView();
+  }
+
+  /**
+   * Registers a sale→brand attribution intake (BR4/DL-0062): the carrier of the sale declares which
+   * represented brand a booking belongs to, so the realized projection can group by brand without
+   * changing the sale event. Idempotent per booking — re-registering returns the existing link. The
+   * brand must exist.
+   *
+   * @param brandRef the represented brand (value)
+   * @param bookingId the booking (value)
+   * @param actor who registers it (audit)
+   * @return the booking's attributed brand
+   * @throws BrandNotFoundException when the brand does not exist
+   */
+  @Transactional
+  public String attributeSale(String brandRef, UUID bookingId, String actor) {
+    brandRepository.findByBrandRef(brandRef).orElseThrow(BrandNotFoundException::new);
+    Optional<BrandSaleAttribution> existing = saleAttributionRepository.findByBookingId(bookingId);
+    if (existing.isPresent()) {
+      return existing.get().brandRef();
+    }
+    BrandSaleAttribution attribution =
+        BrandSaleAttribution.register(bookingId, brandRef, clock.instant());
+    saleAttributionRepository.save(attribution);
+    log.info("BrandSaleAttributed brandRef={} bookingId={} by={}", brandRef, bookingId, actor);
+    return brandRef;
+  }
+
+  /**
+   * Projects a confirmed booking onto the brand's VOLUME realized (BR4/DL-0062): if the booking was
+   * attributed to a brand, it adds a {@code +1} VOLUME contribution, idempotently per booking (the
+   * {@code (VOLUME, bookingId)} key). A booking with no attribution does nothing (no forced
+   * attribution). Called by the {@code BookingConfirmed} consumer.
+   *
+   * @param bookingId the confirmed booking (value)
+   * @param occurredAt when it was confirmed
+   */
+  @Transactional
+  public void recordSaleVolume(UUID bookingId, Instant occurredAt) {
+    saleAttributionRepository
+        .findByBookingId(bookingId)
+        .ifPresent(
+            attribution -> {
+              String sourceRef = bookingId.toString();
+              if (realizedRepository.existsByMetricAndSourceRef(GoalMetric.VOLUME, sourceRef)) {
+                return; // idempotent: this booking was already counted
+              }
+              realizedRepository.save(
+                  BrandRealized.volume(attribution.brandRef(), sourceRef, occurredAt));
+              log.info(
+                  "BrandVolumeRealized brandRef={} bookingId={}",
+                  attribution.brandRef(),
+                  bookingId);
+            });
+  }
+
+  /**
+   * Links a reconciliation case to its booking's attribution (DL-0062), so a later {@code
+   * SpreadRealized} (which carries only the caseId) can be resolved to the brand. Idempotent.
+   * Called by the {@code ReconciliationCaseOpened} consumer.
+   *
+   * @param caseId the reconciliation case (value)
+   * @param bookingId the booking the case opened for (value)
+   */
+  @Transactional
+  public void linkReconciliationCase(UUID caseId, UUID bookingId) {
+    saleAttributionRepository
+        .findByBookingId(bookingId)
+        .ifPresent(
+            attribution -> {
+              attribution.linkCase(caseId);
+              saleAttributionRepository.save(attribution);
+            });
+  }
+
+  /**
+   * Projects a realized spread onto the brand's REVENUE realized (BR4/DL-0062): if the case's
+   * booking was attributed to a brand, it adds the realized spread (BRL) as a REVENUE contribution,
+   * idempotently per case (the {@code (REVENUE, caseId)} key). A case with no attributed brand, or
+   * a spread not in BRL, does nothing. Called by the {@code SpreadRealized} consumer.
+   *
+   * @param caseId the reconciliation case (value)
+   * @param realizedSpread the realized spread (expected BRL — the Acme's revenue)
+   * @param occurredAt when it was realized
+   */
+  @Transactional
+  public void recordSaleRevenue(UUID caseId, Money realizedSpread, Instant occurredAt) {
+    if (realizedSpread == null || !BrandGoal.REVENUE_CURRENCY.equals(realizedSpread.currency())) {
+      return; // only BRL spread contributes to the BRL revenue goal (BR6: no FX here)
+    }
+    saleAttributionRepository
+        .findByCaseId(caseId)
+        .ifPresent(
+            attribution -> {
+              String sourceRef = caseId.toString();
+              if (realizedRepository.existsByMetricAndSourceRef(GoalMetric.REVENUE, sourceRef)) {
+                return; // idempotent: this case's spread was already counted
+              }
+              realizedRepository.save(
+                  BrandRealized.revenue(
+                      attribution.brandRef(), sourceRef, realizedSpread.amount(), occurredAt));
+              log.info(
+                  "BrandRevenueRealized brandRef={} caseId={} amount={}",
+                  attribution.brandRef(),
+                  caseId,
+                  realizedSpread.amount());
+            });
+  }
+
+  /**
+   * The progress of a brand's goal for a period (BR4): the target vs the realized projected from
+   * sales events, with the attainment percentage (scale 1, HALF_UP). The realized is aggregated
+   * over the {@link BrandRealized} rows of the brand+metric whose {@code occurredAt} falls in the
+   * period (computed in UTC: a {@code YYYY} period matches the whole year, a {@code YYYY-MM} the
+   * month).
+   *
+   * @param brandId the brand id
+   * @param period the period (YYYY or YYYY-MM)
+   * @return the goal progress
+   * @throws BrandNotFoundException when the brand does not exist
+   * @throws BrandGoalInvalidException when no goal exists for that brand+period
+   */
+  @Transactional(readOnly = true)
+  public GoalProgress goalProgress(UUID brandId, String period) {
+    RepresentedBrand brand =
+        brandRepository.findById(brandId).orElseThrow(BrandNotFoundException::new);
+    List<BrandGoal> goals = goalRepository.findByBrandRefAndPeriod(brand.brandRef(), period);
+    if (goals.isEmpty()) {
+      throw new BrandGoalInvalidException();
+    }
+    BrandGoal goal =
+        goals.get(0); // one goal per (brand, period, metric); first is enough per metric
+    return progressFor(goal);
+  }
+
+  /** Builds the progress read-model for a goal (BR4). */
+  private GoalProgress progressFor(BrandGoal goal) {
+    if (goal.metric() == GoalMetric.REVENUE) {
+      BigDecimal realized =
+          realizedRepository.findByBrandRefAndMetric(goal.brandRef(), GoalMetric.REVENUE).stream()
+              .filter(row -> matchesPeriod(row.occurredAt(), goal.period()))
+              .map(BrandRealized::amount)
+              .reduce(BigDecimal.ZERO, BigDecimal::add);
+      Money target = goal.targetMoney();
+      Money realizedMoney = Money.of(realized, BrandGoal.REVENUE_CURRENCY);
+      return new GoalProgress(
+          goal.brandRef(),
+          goal.period(),
+          GoalMetric.REVENUE,
+          target,
+          realizedMoney,
+          null,
+          null,
+          attainment(realized, target.amount()));
+    }
+    int realizedCount =
+        realizedRepository.findByBrandRefAndMetric(goal.brandRef(), GoalMetric.VOLUME).stream()
+            .filter(row -> matchesPeriod(row.occurredAt(), goal.period()))
+            .mapToInt(BrandRealized::countInc)
+            .sum();
+    return new GoalProgress(
+        goal.brandRef(),
+        goal.period(),
+        GoalMetric.VOLUME,
+        null,
+        null,
+        goal.targetCount(),
+        realizedCount,
+        attainment(BigDecimal.valueOf(realizedCount), BigDecimal.valueOf(goal.targetCount())));
+  }
+
+  /** The attainment percentage {@code realized / target * 100} (scale 1, HALF_UP). */
+  private static BigDecimal attainment(BigDecimal realized, BigDecimal target) {
+    if (target == null || target.signum() == 0) {
+      return BigDecimal.ZERO.setScale(1, RoundingMode.HALF_UP);
+    }
+    return realized.multiply(BigDecimal.valueOf(100)).divide(target, 1, RoundingMode.HALF_UP);
+  }
+
+  /**
+   * Whether an event instant falls in a goal period (UTC): a {@code YYYY} period matches the year,
+   * a {@code YYYY-MM} period matches the month.
+   */
+  private static boolean matchesPeriod(Instant occurredAt, String period) {
+    LocalDate date = occurredAt.atZone(ZoneOffset.UTC).toLocalDate();
+    if (period.length() == 4) {
+      return String.valueOf(date.getYear()).equals(period);
+    }
+    return String.format("%04d-%02d", date.getYear(), date.getMonthValue()).equals(period);
   }
 }

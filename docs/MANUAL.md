@@ -269,12 +269,23 @@ O que o operador faz:
   uma consulta de apoio (alerta), nunca uma trava.
 - **Alerta de contrato a vencer:** o sistema sinaliza, **uma vez por contrato**, os contratos que
   **estão a vencer** (até 30 dias) ou já venceram, para a governança agir. É **aviso**, não bloqueio.
+- **Definir uma meta por marca:** escolhe a marca, o **período** (um ano `2026` ou um mês `2026-06`) e
+  a **métrica** — **receita** (um valor em reais) ou **volume** (uma quantidade de vendas). Cada marca
+  tem **uma** meta por período e métrica.
+- **Atribuir uma venda à marca:** registra que uma **reserva** pertence a uma marca representada. É
+  esse vínculo que permite ao sistema somar a venda na marca certa.
+- **Acompanhar o realizado vs meta:** o sistema mostra, para uma marca e período, **quanto já foi
+  realizado** e o **percentual de atingimento**. O realizado vem das **vendas confirmadas** da marca
+  (volume) e do **spread realizado** delas (receita) — calculado a partir dos eventos de venda, **sem
+  alterar** a venda. Vendas sem marca atribuída não entram em nenhuma meta.
 
 > Para quem é de TI: `POST /api/portfolio/brands`, `GET /brands/{id}`, `GET /brands?status=`,
 > `DELETE /brands/{id}` (desativa); `POST /brands/{brandRef}/contracts`,
 > `GET /brands/{brandRef}/contract-coverage?on=`; `POST /contracts/flag-expiring` (dispara o alerta de
-> expiração). Identificadores de outros contextos (documento, reserva) são **valores**, sem FK;
-> nenhum preço/comissão mora aqui.
+> expiração); `POST /brands/{brandRef}/goals`, `GET /brands/{id}/goals/{period}/progress`,
+> `POST /brands/{brandRef}/sales` (intake venda→marca). Identificadores de outros contextos (documento,
+> reserva, caso) são **valores**, sem FK; nenhum preço/comissão mora aqui — o realizado é só uma
+> projeção (read-model) dos eventos de venda.
 
 ## 4. Glossário
 

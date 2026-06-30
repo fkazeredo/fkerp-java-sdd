@@ -68,16 +68,21 @@ CREATE TABLE brand_goals (
     CONSTRAINT ux_brand_goals UNIQUE (brand_ref, period, metric)
 );
 
--- Sale->brand attribution intake (DL-0062): a booking is linked to a brand at most once.
+-- Sale->brand attribution intake (DL-0062): a booking is linked to a brand at most once. The
+-- case_id is filled when ReconciliationCaseOpened arrives for an attributed booking, so the REVENUE
+-- projection (which sees SpreadRealized carrying only the caseId) can resolve case->booking->brand
+-- without a cross-context facade call or FK.
 CREATE TABLE brand_sale_attributions (
     id            uuid          PRIMARY KEY,
     booking_id    uuid          NOT NULL,           -- referenced booking (VALUE, not an FK)
     brand_ref     varchar(120)  NOT NULL,           -- attributed brand (VALUE)
+    case_id       uuid,                              -- reconciliation case (VALUE), linked on CaseOpened
     attributed_at timestamptz   NOT NULL,
     CONSTRAINT ux_brand_sale_attributions UNIQUE (booking_id)
 );
 
 CREATE INDEX ix_brand_sale_attributions_brand ON brand_sale_attributions (brand_ref);
+CREATE INDEX ix_brand_sale_attributions_case ON brand_sale_attributions (case_id);
 
 -- Realized projection over sales events (DL-0062). Idempotent per (metric, source_ref): the same
 -- BookingConfirmed (VOLUME, source_ref = bookingId) or SpreadRealized (REVENUE, source_ref = caseId)
