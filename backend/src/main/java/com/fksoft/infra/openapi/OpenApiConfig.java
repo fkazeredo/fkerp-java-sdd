@@ -147,6 +147,6 @@ public class OpenApiConfig {
                         + " (Prometheus + Loki + Grafana Alloy + Grafana) under infra/, business metrics"
                         + " derived from already-published domain events, and a public GET /api/version"
                         + " returning { version, gitCommit, buildTime } (build metadata only).")
-                .version("0.21.0"));
+                .version("0.22.0"));
   }
 }
