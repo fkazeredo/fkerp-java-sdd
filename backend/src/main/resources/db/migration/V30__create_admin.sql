@@ -82,3 +82,8 @@ CREATE UNIQUE INDEX ux_admin_expenses_supplier_period_kind
 INSERT INTO document_requirements (entry_type, required_document_type, phase) VALUES
     ('SERVICE', 'NFSE',          'AT_REGISTRATION'),
     ('SERVICE', 'PAYMENT_PROOF', 'AT_SETTLEMENT');
+
+-- DL-0087/DL-0076: register the administrative contract-expiry alert in the Platform job catalog
+-- (its LOGIC lives in AdminService; the Platform only governs idempotency/locking/history). Daily.
+INSERT INTO scheduled_jobs (name, cron, enabled, owner_module) VALUES
+    ('admin-contract-expiry', '0 0 6 * * *', true, 'admin');
