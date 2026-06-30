@@ -4,9 +4,15 @@
 - **Spec(s):** SPEC-0001 (frontend do walking skeleton)
 - **ADR relacionado:** 0008 (Frontend Stack)
 - **Data:** 2026-06-29
-- **Status:** ASSUMIDO
+- **Status:** ASSUMIDO → **GRADUADO (Fase 10, 2026-06-30 — ver DL-0090)**
 - **Confiança:** Alta
 - **Reversibilidade:** Barata
+
+> **Graduação (Fase 10, SPEC-0026):** o adiamento decidido aqui terminou. PrimeNG 21 (preset Aura via
+> `@primeuix/themes`) + primeicons + `@angular/cdk` + Tailwind v4 entraram na Fase 10, exatamente como
+> o ADR 0008 previa e como esta DL antecipava ("PrimeNG e Tailwind entram quando chegar a primeira tela
+> real"). A decisão de stack/versões e da coexistência por camadas CSS está em **DL-0090**. Esta DL
+> permanece válida como registro do escalonamento da Fase 0; nada nela foi revertido — foi concluída.
 
 ## Lacuna
 

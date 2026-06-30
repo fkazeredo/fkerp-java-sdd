@@ -1,6 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { MessageModule } from 'primeng/message';
+import { SelectModule } from 'primeng/select';
+import { TagModule } from 'primeng/tag';
 import { ApiError } from '../../core/http/api-error';
 import { BookingStatus, BookingView, LocatorOrigin } from './booking.models';
 import { BookingService } from './booking.service';
@@ -17,12 +22,21 @@ const ALLOWED: Record<BookingStatus, string[]> = {
 };
 
 /**
- * Booking screen (SPEC-0006): creates a booking from a quote and shows its current state with only
- * the lifecycle actions allowed by the state machine; cancellation asks for a reason.
+ * Booking screen (SPEC-0006, repaginated SPEC-0026): creates a booking from a quote and shows its
+ * current state with only the lifecycle actions allowed by the state machine; cancellation asks for
+ * a reason (the reason itself gates the destructive action). Built with PrimeNG.
  */
 @Component({
   selector: 'app-booking-page',
-  imports: [FormsModule, TranslatePipe],
+  imports: [
+    FormsModule,
+    TranslatePipe,
+    ButtonModule,
+    InputTextModule,
+    MessageModule,
+    SelectModule,
+    TagModule,
+  ],
   templateUrl: './booking-page.html',
 })
 export class BookingPage {
@@ -38,10 +52,32 @@ export class BookingPage {
     return current ? ALLOWED[current.status] : [];
   });
 
+  readonly origins: LocatorOrigin[] = ['EXTERNAL', 'INTERNAL'];
+
   quoteId = '';
   origin: LocatorOrigin = 'EXTERNAL';
   code = '';
   cancelReason = '';
+
+  /** PrimeNG Tag severity for a booking status. */
+  statusSeverity(status: BookingStatus): 'success' | 'danger' | 'warn' | 'info' | 'secondary' {
+    switch (status) {
+      case 'CONFIRMED':
+      case 'COMPLETED':
+        return 'success';
+      case 'CANCELLED':
+      case 'NO_SHOW':
+        return 'danger';
+      case 'PENDING':
+        return 'warn';
+      case 'QUOTED':
+      case 'ORDERED':
+      case 'CHANGED':
+        return 'info';
+      default:
+        return 'secondary';
+    }
+  }
 
   /** Creates the booking and shows its detail. */
   create(): void {

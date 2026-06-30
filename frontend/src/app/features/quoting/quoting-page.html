@@ -1,47 +1,54 @@
 <section class="page">
   <h1 class="page__title">{{ 'quoting.title' | translate }}</h1>
 
-  <form class="card form" (ngSubmit)="compose()" #f="ngForm">
-    <h2 class="card__title">{{ 'quoting.compose' | translate }}</h2>
-    <label>
-      {{ 'quoting.accountId' | translate }}
-      <input name="accountId" [(ngModel)]="accountId" required />
-    </label>
-    <div class="form__row">
-      <label>
-        {{ 'quoting.basePrice' | translate }}
-        <input type="number" step="0.01" name="baseAmount" [(ngModel)]="baseAmount" required />
-      </label>
-      <label>
-        {{ 'quoting.currency' | translate }}
-        <input name="baseCurrency" [(ngModel)]="baseCurrency" required />
-      </label>
-      <label>
-        {{ 'quoting.pair' | translate }}
-        <input name="currencyPair" [(ngModel)]="currencyPair" required />
-      </label>
+  <form class="app-card" (ngSubmit)="compose()" #f="ngForm">
+    <h2 class="app-card__title">{{ 'quoting.compose' | translate }}</h2>
+    <div class="field">
+      <label for="q-accountId">{{ 'quoting.accountId' | translate }}</label>
+      <input pInputText id="q-accountId" name="accountId" [(ngModel)]="accountId" required />
     </div>
     <div class="form__row">
-      <label>
-        {{ 'quoting.supplierPct' | translate }}
-        <input type="number" step="0.01" name="supplierPct" [(ngModel)]="supplierPct" required />
-      </label>
-      <label>
-        {{ 'quoting.agentPct' | translate }}
-        <input type="number" step="0.01" name="agentPct" [(ngModel)]="agentPct" required />
-      </label>
+      <div class="field">
+        <label for="q-baseAmount">{{ 'quoting.basePrice' | translate }}</label>
+        <p-inputnumber inputId="q-baseAmount" name="baseAmount" [(ngModel)]="baseAmount" mode="decimal" [minFractionDigits]="2" required />
+      </div>
+      <div class="field">
+        <label for="q-currency">{{ 'quoting.currency' | translate }}</label>
+        <input pInputText id="q-currency" name="baseCurrency" [(ngModel)]="baseCurrency" required />
+      </div>
+      <div class="field">
+        <label for="q-pair">{{ 'quoting.pair' | translate }}</label>
+        <input pInputText id="q-pair" name="currencyPair" [(ngModel)]="currencyPair" required />
+      </div>
+    </div>
+    <div class="form__row">
+      <div class="field">
+        <label for="q-supplierPct">{{ 'quoting.supplierPct' | translate }}</label>
+        <p-inputnumber inputId="q-supplierPct" name="supplierPct" [(ngModel)]="supplierPct" mode="decimal" [maxFractionDigits]="4" required />
+      </div>
+      <div class="field">
+        <label for="q-agentPct">{{ 'quoting.agentPct' | translate }}</label>
+        <p-inputnumber inputId="q-agentPct" name="agentPct" [(ngModel)]="agentPct" mode="decimal" [maxFractionDigits]="4" required />
+      </div>
     </div>
     @if (composeError()) {
-      <p class="form__error" data-testid="quoting-compose-error">{{ composeError() | translate }}</p>
+      <p-message severity="error" data-testid="quoting-compose-error">
+        {{ composeError() | translate }}
+      </p-message>
     }
-    <button type="submit" [disabled]="busy() || f.invalid">
-      {{ 'quoting.composeAction' | translate }}
-    </button>
+    <div class="actions">
+      <p-button
+        type="submit"
+        [disabled]="busy() || f.invalid"
+        [loading]="busy()"
+        [label]="'quoting.composeAction' | translate"
+      />
+    </div>
   </form>
 
   @if (quote(); as q) {
-    <div class="card" data-testid="quoting-result">
-      <h2 class="card__title">{{ 'quoting.result' | translate }}</h2>
+    <div class="app-card" data-testid="quoting-result">
+      <h2 class="app-card__title">{{ 'quoting.result' | translate }}</h2>
       <dl class="kv">
         <dt>{{ 'quoting.fxRate' | translate }}</dt>
         <dd>{{ q.fxRate }}</dd>
@@ -58,9 +65,10 @@
         <dt>{{ 'quoting.spread' | translate }}</dt>
         <dd>
           {{ format(q.commission.spread) }}
-          <span class="badge" [class.badge--danger]="q.commission.spreadNegative">
-            {{ (q.commission.spreadNegative ? 'quoting.negative' : 'quoting.positive') | translate }}
-          </span>
+          <p-tag
+            [value]="(q.commission.spreadNegative ? 'quoting.negative' : 'quoting.positive') | translate"
+            [severity]="q.commission.spreadNegative ? 'danger' : 'success'"
+          />
         </dd>
         <dt>{{ 'quoting.markup' | translate }}</dt>
         <dd>{{ format(q.markup.amount) }} ({{ q.markup.source }})</dd>
@@ -69,49 +77,52 @@
       </dl>
 
       @if (q.overrides.length > 0) {
-        <h3 class="card__title">{{ 'quoting.overrides' | translate }}</h3>
-        <table class="table">
-          <thead>
+        <h3 class="app-card__title">{{ 'quoting.overrides' | translate }}</h3>
+        <p-table [value]="q.overrides">
+          <ng-template #header>
             <tr>
               <th>{{ 'quoting.from' | translate }}</th>
               <th>{{ 'quoting.to' | translate }}</th>
               <th>{{ 'quoting.reason' | translate }}</th>
               <th>{{ 'quoting.by' | translate }}</th>
             </tr>
-          </thead>
-          <tbody>
-            @for (o of q.overrides; track o.performedAt) {
-              <tr>
-                <td>{{ format(o.fromAmount) }}</td>
-                <td>{{ format(o.toAmount) }}</td>
-                <td>{{ o.reason }}</td>
-                <td>{{ o.performedBy }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+          </ng-template>
+          <ng-template #body let-o>
+            <tr>
+              <td>{{ format(o.fromAmount) }}</td>
+              <td>{{ format(o.toAmount) }}</td>
+              <td>{{ o.reason }}</td>
+              <td>{{ o.performedBy }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
       }
 
-      <h3 class="card__title">{{ 'quoting.override' | translate }}</h3>
-      <form class="form" (ngSubmit)="applyOverride()" #ov="ngForm">
+      <h3 class="app-card__title">{{ 'quoting.override' | translate }}</h3>
+      <form (ngSubmit)="applyOverride()" #ov="ngForm">
         <div class="form__row">
-          <label>
-            {{ 'quoting.appliedAmount' | translate }}
-            <input type="number" step="0.01" name="appliedAmount" [(ngModel)]="appliedAmount" required />
-          </label>
-          <label>
-            {{ 'quoting.reason' | translate }}
-            <input name="reason" [(ngModel)]="reason" required />
-          </label>
+          <div class="field">
+            <label for="q-appliedAmount">{{ 'quoting.appliedAmount' | translate }}</label>
+            <p-inputnumber inputId="q-appliedAmount" name="appliedAmount" [(ngModel)]="appliedAmount" mode="decimal" [minFractionDigits]="2" required />
+          </div>
+          <div class="field">
+            <label for="q-reason">{{ 'quoting.reason' | translate }}</label>
+            <input pInputText id="q-reason" name="reason" [(ngModel)]="reason" required />
+          </div>
         </div>
         @if (overrideError()) {
-          <p class="form__error" data-testid="quoting-override-error">
+          <p-message severity="error" data-testid="quoting-override-error">
             {{ overrideError() | translate }}
-          </p>
+          </p-message>
         }
-        <button type="submit" [disabled]="busy() || ov.invalid">
-          {{ 'quoting.overrideAction' | translate }}
-        </button>
+        <div class="actions">
+          <p-button
+            type="submit"
+            [disabled]="busy() || ov.invalid"
+            [loading]="busy()"
+            [label]="'quoting.overrideAction' | translate"
+          />
+        </div>
       </form>
     </div>
   }

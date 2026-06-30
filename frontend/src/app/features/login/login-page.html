@@ -1,32 +1,48 @@
-<section class="page">
-  <h1 class="page__title">{{ 'login.title' | translate }}</h1>
+<div class="login">
+  <form class="login__card app-card" (ngSubmit)="submit()" #f="ngForm">
+    <div class="login__brand">
+      <i class="pi pi-globe" aria-hidden="true"></i>
+      <span>{{ 'shell.brand' | translate }}</span>
+    </div>
+    <h1 class="login__title">{{ 'login.title' | translate }}</h1>
 
-  <form class="card form" (ngSubmit)="submit()" #f="ngForm">
-    <label>
-      {{ 'login.username' | translate }}
-      <input name="username" [(ngModel)]="username" required autocomplete="username" />
-    </label>
-    <label>
-      {{ 'login.password' | translate }}
+    <div class="field">
+      <label for="login-username">{{ 'login.username' | translate }}</label>
       <input
-        type="password"
+        pInputText
+        id="login-username"
+        name="username"
+        [(ngModel)]="username"
+        required
+        autocomplete="username"
+      />
+    </div>
+
+    <div class="field">
+      <label for="login-password">{{ 'login.password' | translate }}</label>
+      <p-password
+        inputId="login-password"
         name="password"
         [(ngModel)]="password"
-        required
+        [feedback]="false"
+        [toggleMask]="true"
         autocomplete="current-password"
+        required
       />
-    </label>
+    </div>
 
     @if (errorCode()) {
-      <p class="form__error" role="alert">{{ errorCode() | translate }}</p>
+      <p-message severity="error" styleClass="login__error" data-testid="login-error">
+        {{ errorCode() | translate }}
+      </p-message>
     }
 
-    <button type="submit" [disabled]="submitting() || f.invalid">
-      @if (submitting()) {
-        {{ 'login.submitting' | translate }}
-      } @else {
-        {{ 'login.submit' | translate }}
-      }
-    </button>
+    <p-button
+      type="submit"
+      [disabled]="submitting() || f.invalid"
+      [loading]="submitting()"
+      styleClass="login__submit"
+      [label]="(submitting() ? 'login.submitting' : 'login.submit') | translate"
+    />
   </form>
-</section>
+</div>

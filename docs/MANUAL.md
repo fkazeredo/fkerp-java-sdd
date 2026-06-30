@@ -4,7 +4,7 @@
 > hoje**. É atualizado **a cada fatia entregue** (ver o comando *User manual* no `CLAUDE.md`).
 > Versão em inglês (espelho, mantida em sincronia): `docs/MANUAL.en-US.md`.
 >
-> **Versão do sistema:** 0.20.0 · **Fase atual:** 8l (Admin — fornecedores e contratos administrativos)
+> **Versão do sistema:** 0.21.0 · **Fase atual:** 10 (UX & Frontend profissional)
 
 ## 1. O que é o sistema
 
@@ -470,6 +470,49 @@ Como funciona, na prática:
 > (cotação/ordem de compra) **não** fazem parte deste módulo — se forem exigidas, **compra-se** um
 > sistema de compras.
 
+### Fase 10 — Nova experiência (telas profissionais, atalhos, tema e painel)
+
+Esta fase **não muda regras de negócio**: ela renova **toda a aparência e a navegação** do sistema,
+deixando-o com cara de ERP profissional. O que você passa a ver e usar:
+
+- **Tela de entrada (login) renovada.** A mesma do login da Fase 8, agora com visual limpo e o campo de
+  senha com botão para **mostrar/ocultar**. Ao entrar, você cai no **Painel**. Se a sessão tiver
+  expirado e você tentar abrir uma tela direto, o sistema leva ao login e, depois de entrar, **volta
+  para a tela que você queria**.
+- **Sessão que se mantém.** Ao recarregar a página, o sistema **revalida sua sessão em silêncio** com o
+  servidor (sem pedir senha de novo enquanto o acesso for válido). Quando o acesso expira de fato, ele
+  pede o login outra vez. (Login único corporativo segue como próxima etapa — Fase 13.)
+- **Layout SaaS (barra lateral + topo).** À **esquerda**, o menu de navegação (Painel, Contas, Câmbio,
+  Cotações, Reservas, Conciliação, Saúde) com destaque para a tela atual. No **topo**, a busca de
+  comandos, o **botão de tema** e o seu nome com **"Sair"**. Em telas pequenas (celular), o menu vira
+  uma **gaveta** que abre pelo botão de menu.
+- **Tema claro/escuro.** O botão de **sol/lua** no topo alterna entre **claro** e **escuro**. Sua
+  escolha **fica salva** no navegador; na primeira vez, o sistema segue a preferência do seu
+  computador.
+- **Paleta de comandos (`Ctrl/Cmd + K`).** Aperte **Ctrl+K** (ou **⌘+K** no Mac) **de qualquer tela**
+  para abrir uma caixa de busca: digite o nome de uma tela ou ação (ex.: "Reservas", "Tema", "Sair"),
+  use **↑/↓** para escolher e **Enter** para executar. **Esc** fecha.
+- **Atalhos de teclado.** Fora dos campos de texto, aperte **`g`** e depois a inicial de uma tela
+  (ex.: **`g`** depois **`c`** → Contas) para navegar rápido. Aperte **`?`** para abrir a **ajuda de
+  atalhos**. (Os atalhos de letra são ignorados enquanto você digita num formulário, para não atrapalhar.)
+- **Aviso de alterações não salvas.** Se você começar a preencher um formulário (ex.: nova conta, fixar
+  câmbio, override de cotação) e tentar **sair sem salvar**, o sistema **pergunta antes** se quer mesmo
+  sair — evitando perder o que foi digitado.
+- **Estados claros em todas as telas.** Cada tela mostra de forma consistente quando está
+  **carregando**, quando **não há dados** ("nada para mostrar"), quando deu **erro** (com botão
+  **"Tentar novamente"**) e quando você **não tem permissão** para ver aquilo (mensagem de permissão,
+  em vez de um erro técnico).
+- **Painel (dashboard) com indicadores.** A tela inicial agora é um **Painel** com cartões de resumo:
+  **Contas** (total e ativas), **Reservas** (total, pendentes e confirmadas), **Conciliação** (casos,
+  abertos, com divergência e o spread esperado somado) e **Câmbio** (a taxa congelada vigente).
+  Clicar num cartão **leva para a tela** correspondente. Cada cartão carrega de forma independente e
+  mostra seu próprio estado (carregando/erro/permissão).
+
+> Para o time técnico: a base de telas passou a usar **PrimeNG 21 (tema Aura)** + **Tailwind v4** sobre
+> **Angular 22**, mantendo todo texto no mecanismo de tradução (pt-BR/en). Os indicadores do Painel são
+> calculados **no próprio navegador** a partir dos endpoints de lista que já existiam — **nenhum novo
+> endpoint** foi criado no servidor.
+
 ## 4. Glossário
 
 - **Backend / servidor:** a parte do sistema que processa as regras e fala com o banco de dados.
@@ -551,6 +594,7 @@ Como funciona, na prática:
 | 0.18.0 | 8 — Plataforma (Platform) | Infra de TI: **custódia do certificado e-CNPJ** com o material **cifrado** (a chave/senha nunca aparece) — a tela mostra **só metadados** (titular, validade, dias para vencer, situação) e o sistema **alerta** quando o certificado está a vencer (30 dias); **governança de jobs** — catálogo e **histórico** das rotinas automáticas, **disparo manual** (só uma execução por vez = 409 se já roda; sem duplicar no período), e a falha aparece **como falha** (nunca disfarçada de sucesso); **auditoria de sistema** somente-anexação de eventos de segurança/integração/jobs (quem/o quê/quando), filtrável, **só metadados** (nunca o segredo). |
 | 0.19.0 | 8 — Identidade (Identity) | **Login de verdade**: entrar com **usuário e senha** (tela "Entrar"), nome e "Sair" no topo; erro **genérico** sem revelar se o usuário existe. **Papéis e permissões** (Diretor/Financeiro/Operacional/TI/Curador/Leitor): as **ações sensíveis exigem o papel** (emitir NF e fechar o mês → Financeiro; disparar job/custódia do certificado → TI; diretiva → Diretor) — sem o papel, **acesso negado** registrado. **Auditoria de acesso** (login e recusas; quem/ação/quando, **sem senha/token**). O **servidor é a autoridade** — a tela só reflete. Login único corporativo (provedor externo) = próxima etapa (Fase 13). |
 | 0.20.0 | 8 — Admin (fornecedores/contratos administrativos) | **Balcão administrativo**: cadastro **enxuto** de **fornecedores administrativos** (luz, água, telefone, software/serviço, autônomo) e seus **contratos** (vigência, recorrência, valor, documento). **Lançar a despesa do mês** cria automaticamente o lançamento em **Contas a Pagar** com o tipo certo e **aponta os documentos exigidos** (conta de consumo → fatura; autônomo → RPA; serviço PJ → NFS-e); **idempotente** (não duplica). **A regra de ouro vale aqui**: despesa **sem o documento impede o mês de fechar**. **Aviso de contrato a vencer** (até 30 dias, só alerta). **Cadastrar/lançar exige o papel Financeiro**; toda alteração **auditada** (CNPJ/CPF nunca aparece inteiro). Compras completas (cotação/ordem) = comprar se exigido. **Fim do bloco 8x.** |
+| 0.21.0 | 10 — UX & Frontend profissional | **Nova experiência** (sem mudar regras): **layout SaaS** (barra lateral + topo + gaveta no celular); **tema claro/escuro** com a escolha salva; **paleta de comandos `Ctrl/Cmd+K`** + atalhos (`g`+tecla, `?` ajuda); **login** renovado com **revalidação silenciosa da sessão** (volta para a tela pretendida); **aviso de alterações não salvas** ao sair de um formulário; **estados reais** (carregando/vazio/erro/permissão) em todas as telas; **Painel (dashboard)** com indicadores de Contas/Reservas/Conciliação/Câmbio calculados no navegador. Telas com **PrimeNG 21 + Tailwind v4** sobre Angular 22; **nenhum endpoint novo** no servidor. Gradua a DL-0003. |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.

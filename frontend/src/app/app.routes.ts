@@ -1,20 +1,61 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
-import { AccountsPage } from './features/accounts/accounts-page';
-import { BookingPage } from './features/booking/booking-page';
-import { ExchangePage } from './features/exchange/exchange-page';
-import { HealthPage } from './features/health/health-page';
-import { LoginPage } from './features/login/login-page';
-import { QuotingPage } from './features/quoting/quoting-page';
-import { ReconciliationPage } from './features/reconciliation/reconciliation-page';
+import { canDeactivateGuard } from './core/guards/can-deactivate.guard';
 
+/**
+ * App routes. The authenticated screens render inside the {@link Shell} layout route; the login
+ * screen renders standalone. Feature screens are lazy-loaded so the PrimeNG-heavy pages are split
+ * into their own chunks and the initial bundle stays small (SPEC-0026 AC1).
+ */
 export const routes: Routes = [
-  { path: '', redirectTo: 'accounts', pathMatch: 'full' },
-  { path: 'login', component: LoginPage },
-  { path: 'accounts', component: AccountsPage, canActivate: [authGuard] },
-  { path: 'exchange', component: ExchangePage, canActivate: [authGuard] },
-  { path: 'quotes', component: QuotingPage, canActivate: [authGuard] },
-  { path: 'bookings', component: BookingPage, canActivate: [authGuard] },
-  { path: 'reconciliation', component: ReconciliationPage, canActivate: [authGuard] },
-  { path: 'health', component: HealthPage },
+  {
+    path: 'login',
+    loadComponent: () => import('./features/login/login-page').then((m) => m.LoginPage),
+  },
+  {
+    path: '',
+    loadComponent: () => import('./core/layout/shell').then((m) => m.Shell),
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/dashboard/dashboard-page').then((m) => m.DashboardPage),
+        canActivate: [authGuard],
+      },
+      {
+        path: 'accounts',
+        loadComponent: () => import('./features/accounts/accounts-page').then((m) => m.AccountsPage),
+        canActivate: [authGuard],
+        canDeactivate: [canDeactivateGuard],
+      },
+      {
+        path: 'exchange',
+        loadComponent: () => import('./features/exchange/exchange-page').then((m) => m.ExchangePage),
+        canActivate: [authGuard],
+        canDeactivate: [canDeactivateGuard],
+      },
+      {
+        path: 'quotes',
+        loadComponent: () => import('./features/quoting/quoting-page').then((m) => m.QuotingPage),
+        canActivate: [authGuard],
+        canDeactivate: [canDeactivateGuard],
+      },
+      {
+        path: 'bookings',
+        loadComponent: () => import('./features/booking/booking-page').then((m) => m.BookingPage),
+        canActivate: [authGuard],
+      },
+      {
+        path: 'reconciliation',
+        loadComponent: () =>
+          import('./features/reconciliation/reconciliation-page').then((m) => m.ReconciliationPage),
+        canActivate: [authGuard],
+      },
+      {
+        path: 'health',
+        loadComponent: () => import('./features/health/health-page').then((m) => m.HealthPage),
+      },
+    ],
+  },
 ];

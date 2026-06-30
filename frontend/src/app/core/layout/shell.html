@@ -1,0 +1,107 @@
+<div class="shell" [class.shell--drawer-open]="drawerOpen()">
+  <a class="sr-only" href="#main-content">{{ 'shell.skipToContent' | translate }}</a>
+
+  <!-- Sidebar / drawer -->
+  <aside class="shell__sidebar" [attr.aria-hidden]="null">
+    <div class="shell__brand">
+      <i class="pi pi-globe" aria-hidden="true"></i>
+      <span>{{ 'shell.brand' | translate }}</span>
+    </div>
+    <nav class="shell__nav" [attr.aria-label]="'shell.primaryNav' | translate">
+      @for (item of navItems(); track item.path) {
+        <a
+          class="shell__nav-item"
+          [routerLink]="'/' + item.path"
+          routerLinkActive="shell__nav-item--active"
+          (click)="closeDrawer()"
+        >
+          <i [class]="item.icon" aria-hidden="true"></i>
+          <span>{{ item.labelKey | translate }}</span>
+        </a>
+      }
+    </nav>
+  </aside>
+
+  <!-- Backdrop for the mobile drawer -->
+  <div
+    class="shell__backdrop"
+    (click)="closeDrawer()"
+    (keydown.escape)="closeDrawer()"
+    tabindex="-1"
+    aria-hidden="true"
+  ></div>
+
+  <!-- Top bar + content -->
+  <div class="shell__main">
+    <header class="shell__topbar">
+      <button
+        type="button"
+        class="shell__menu-btn"
+        pButton
+        text
+        rounded
+        (click)="toggleDrawer()"
+        [attr.aria-label]="'shell.toggleMenu' | translate"
+        [attr.aria-expanded]="drawerOpen()"
+      >
+        <i class="pi pi-bars" aria-hidden="true"></i>
+      </button>
+
+      <button
+        type="button"
+        class="shell__palette-btn"
+        (click)="openPalette()"
+        [attr.aria-label]="'shell.openPalette' | translate"
+        data-testid="palette-trigger"
+      >
+        <i class="pi pi-search" aria-hidden="true"></i>
+        <span>{{ 'command.searchPlaceholder' | translate }}</span>
+        <kbd>Ctrl K</kbd>
+      </button>
+
+      <span class="shell__spacer"></span>
+
+      <button
+        type="button"
+        pButton
+        text
+        rounded
+        (click)="toggleTheme()"
+        [pTooltip]="'shell.toggleTheme' | translate"
+        [attr.aria-label]="'shell.toggleTheme' | translate"
+        [attr.aria-pressed]="isDark()"
+        data-testid="theme-toggle"
+      >
+        <i [class]="isDark() ? 'pi pi-sun' : 'pi pi-moon'" aria-hidden="true"></i>
+      </button>
+
+      @if (user(); as currentUser) {
+        <span class="shell__user" data-testid="shell-user">
+          <i class="pi pi-user" aria-hidden="true"></i>
+          {{ currentUser.displayName || currentUser.username }}
+        </span>
+        <button
+          type="button"
+          pButton
+          text
+          rounded
+          (click)="logout()"
+          [pTooltip]="'nav.logout' | translate"
+          [attr.aria-label]="'nav.logout' | translate"
+          data-testid="logout"
+        >
+          <i class="pi pi-sign-out" aria-hidden="true"></i>
+        </button>
+      } @else {
+        <a pButton text [routerLink]="'/login'">{{ 'nav.login' | translate }}</a>
+      }
+    </header>
+
+    <main id="main-content" class="shell__content" tabindex="-1">
+      <router-outlet />
+    </main>
+  </div>
+
+  <app-command-palette [(open)]="shortcuts.paletteOpen" />
+  <app-keyboard-help [(open)]="shortcuts.helpOpen" />
+</div>

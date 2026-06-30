@@ -1,0 +1,83 @@
+<section class="page dashboard">
+  <h1 class="page__title">{{ 'dashboard.title' | translate }}</h1>
+
+  <div class="dashboard__grid">
+    <!-- Accounts -->
+    <a class="dashboard__kpi" routerLink="/accounts" data-testid="kpi-accounts">
+      <p-card>
+        <div class="dashboard__kpi-head">
+          <i class="pi pi-users" aria-hidden="true"></i>
+          <span>{{ 'nav.accounts' | translate }}</span>
+        </div>
+        <app-screen-state [state]="accounts.state()" [errorCode]="accounts.errorCode()">
+          @if (accounts.value(); as a) {
+            <p class="dashboard__metric">{{ a.total }}</p>
+            <p class="app-muted">{{ 'dashboard.accountsActive' | translate }}: {{ a.active }}</p>
+          }
+        </app-screen-state>
+      </p-card>
+    </a>
+
+    <!-- Bookings -->
+    <a class="dashboard__kpi" routerLink="/bookings" data-testid="kpi-bookings">
+      <p-card>
+        <div class="dashboard__kpi-head">
+          <i class="pi pi-ticket" aria-hidden="true"></i>
+          <span>{{ 'nav.bookings' | translate }}</span>
+        </div>
+        <app-screen-state [state]="bookings.state()" [errorCode]="bookings.errorCode()">
+          @if (bookings.value(); as b) {
+            <p class="dashboard__metric">{{ b.total }}</p>
+            <p class="app-muted">
+              {{ 'dashboard.bookingsPending' | translate }}: {{ b.pending }} ·
+              {{ 'dashboard.bookingsConfirmed' | translate }}: {{ b.confirmed }}
+            </p>
+          }
+        </app-screen-state>
+      </p-card>
+    </a>
+
+    <!-- Reconciliation -->
+    <a class="dashboard__kpi" routerLink="/reconciliation" data-testid="kpi-reconciliation">
+      <p-card>
+        <div class="dashboard__kpi-head">
+          <i class="pi pi-sync" aria-hidden="true"></i>
+          <span>{{ 'nav.reconciliation' | translate }}</span>
+        </div>
+        <app-screen-state
+          [state]="reconciliation.state()"
+          [errorCode]="reconciliation.errorCode()"
+        >
+          @if (reconciliation.value(); as r) {
+            <p class="dashboard__metric">{{ r.total }}</p>
+            <p class="app-muted">
+              {{ 'dashboard.reconOpen' | translate }}: {{ r.open }} ·
+              {{ 'dashboard.reconDiscrepancy' | translate }}: {{ r.discrepancy }}
+            </p>
+            @if (r.expectedSpread) {
+              <p class="app-muted">
+                {{ 'dashboard.reconExpectedSpread' | translate }}: {{ format(r.expectedSpread) }}
+              </p>
+            }
+          }
+        </app-screen-state>
+      </p-card>
+    </a>
+
+    <!-- Exchange -->
+    <a class="dashboard__kpi" routerLink="/exchange" data-testid="kpi-exchange">
+      <p-card>
+        <div class="dashboard__kpi-head">
+          <i class="pi pi-dollar" aria-hidden="true"></i>
+          <span>{{ 'nav.exchange' | translate }}</span>
+        </div>
+        <app-screen-state [state]="exchange.state()" [errorCode]="exchange.errorCode()">
+          @if (exchange.value(); as x) {
+            <p class="dashboard__metric">{{ x.rate }}</p>
+            <p class="app-muted">{{ x.pair }}</p>
+          }
+        </app-screen-state>
+      </p-card>
+    </a>
+  </div>
+</section>

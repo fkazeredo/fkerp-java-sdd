@@ -6,6 +6,7 @@
 export const TRANSLATIONS: Record<string, Record<string, Record<string, string>>> = {
   'pt-BR': {
     nav: {
+      dashboard: 'Painel',
       accounts: 'Contas',
       exchange: 'Câmbio',
       quotes: 'Cotações',
@@ -14,6 +15,14 @@ export const TRANSLATIONS: Record<string, Record<string, Record<string, string>>
       health: 'Saúde',
       login: 'Entrar',
       logout: 'Sair',
+    },
+    shell: {
+      brand: 'Acme Travel ERP',
+      primaryNav: 'Navegação principal',
+      toggleMenu: 'Abrir/fechar menu',
+      toggleTheme: 'Alternar tema claro/escuro',
+      skipToContent: 'Pular para o conteúdo',
+      openPalette: 'Abrir paleta de comandos',
     },
     login: {
       title: 'Entrar',
@@ -37,6 +46,30 @@ export const TRANSLATIONS: Record<string, Record<string, Record<string, string>>
       loading: 'Carregando…',
       retry: 'Tentar novamente',
       refresh: 'Atualizar',
+      empty: 'Nada para mostrar.',
+      cancel: 'Cancelar',
+      confirm: 'Confirmar',
+      save: 'Salvar',
+      unsavedConfirm: 'Há alterações não salvas. Deseja sair mesmo assim?',
+      permissionDenied: 'Você não tem permissão para ver isto.',
+    },
+    command: {
+      searchPlaceholder: 'Buscar comando ou tela…',
+      empty: 'Nenhum comando encontrado.',
+      'group.navigation': 'Navegação',
+      'group.app': 'Aplicativo',
+      'help.title': 'Atalhos de teclado',
+      'help.palette': 'Abrir a paleta de comandos',
+      'help.thisHelp': 'Mostrar esta ajuda',
+    },
+    dashboard: {
+      title: 'Painel',
+      accountsActive: 'Ativas',
+      bookingsPending: 'Pendentes',
+      bookingsConfirmed: 'Confirmadas',
+      reconOpen: 'Abertos',
+      reconDiscrepancy: 'Divergência',
+      reconExpectedSpread: 'Spread esperado',
     },
     health: {
       title: 'Saúde do sistema',
@@ -143,6 +176,7 @@ export const TRANSLATIONS: Record<string, Record<string, Record<string, string>>
   },
   en: {
     nav: {
+      dashboard: 'Dashboard',
       accounts: 'Accounts',
       exchange: 'Exchange',
       quotes: 'Quotes',
@@ -151,6 +185,14 @@ export const TRANSLATIONS: Record<string, Record<string, Record<string, string>>
       health: 'Health',
       login: 'Sign in',
       logout: 'Sign out',
+    },
+    shell: {
+      brand: 'Acme Travel ERP',
+      primaryNav: 'Primary navigation',
+      toggleMenu: 'Toggle menu',
+      toggleTheme: 'Toggle light/dark theme',
+      skipToContent: 'Skip to content',
+      openPalette: 'Open command palette',
     },
     login: {
       title: 'Sign in',
@@ -174,6 +216,30 @@ export const TRANSLATIONS: Record<string, Record<string, Record<string, string>>
       loading: 'Loading…',
       retry: 'Retry',
       refresh: 'Refresh',
+      empty: 'Nothing to show.',
+      cancel: 'Cancel',
+      confirm: 'Confirm',
+      save: 'Save',
+      unsavedConfirm: 'You have unsaved changes. Leave anyway?',
+      permissionDenied: 'You do not have permission to view this.',
+    },
+    command: {
+      searchPlaceholder: 'Search a command or screen…',
+      empty: 'No command found.',
+      'group.navigation': 'Navigation',
+      'group.app': 'Application',
+      'help.title': 'Keyboard shortcuts',
+      'help.palette': 'Open the command palette',
+      'help.thisHelp': 'Show this help',
+    },
+    dashboard: {
+      title: 'Dashboard',
+      accountsActive: 'Active',
+      bookingsPending: 'Pending',
+      bookingsConfirmed: 'Confirmed',
+      reconOpen: 'Open',
+      reconDiscrepancy: 'Discrepancy',
+      reconExpectedSpread: 'Expected spread',
     },
     health: {
       title: 'System health',

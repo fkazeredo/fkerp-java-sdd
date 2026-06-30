@@ -1,5 +1,10 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { MessageModule } from 'primeng/message';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { TagModule } from 'primeng/tag';
 import { ApiError } from '../../core/http/api-error';
 import { SystemHealth } from './health.models';
 import { HealthService } from './health.service';
@@ -7,12 +12,13 @@ import { HealthService } from './health.service';
 type ViewState = 'loading' | 'success' | 'error';
 
 /**
- * Walking-skeleton screen (SPEC-0001): calls `GET /api/system/health` and renders loading, success
- * and error states, proving the stack end to end from the browser. Labels go through ngx-translate.
+ * Walking-skeleton screen (SPEC-0001, repaginated SPEC-0026): calls `GET /api/system/health` and
+ * renders loading, success and error states with PrimeNG, proving the stack end to end from the
+ * browser. Labels go through ngx-translate.
  */
 @Component({
   selector: 'app-health-page',
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, ButtonModule, CardModule, MessageModule, ProgressSpinnerModule, TagModule],
   templateUrl: './health-page.html',
   styleUrl: './health-page.scss',
 })
