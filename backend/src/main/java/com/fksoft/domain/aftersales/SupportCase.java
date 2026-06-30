@@ -1,12 +1,6 @@
-package com.fksoft.domain.aftersales.internal;
+package com.fksoft.domain.aftersales;
 
-import com.fksoft.domain.aftersales.CaseResolution;
-import com.fksoft.domain.aftersales.CostToServe;
-import com.fksoft.domain.aftersales.SupportCaseInvalidException;
-import com.fksoft.domain.aftersales.SupportCaseStatus;
-import com.fksoft.domain.aftersales.SupportCaseTransitionInvalidException;
-import com.fksoft.domain.aftersales.SupportCaseType;
-import com.fksoft.domain.aftersales.SupportCaseView;
+import com.fksoft.domain.ModuleInternal;
 import com.fksoft.domain.money.Money;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -37,6 +31,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "support_cases")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class SupportCase {
 
   private static final String CURRENCY = "BRL";

@@ -1,7 +1,6 @@
-package com.fksoft.domain.marketing.internal;
+package com.fksoft.domain.marketing;
 
-import com.fksoft.domain.marketing.ConsentPurpose;
-import com.fksoft.domain.marketing.SubjectType;
+import com.fksoft.domain.ModuleInternal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,6 +15,7 @@ import org.springframework.data.repository.query.Param;
  * subject+purpose is the <strong>most recent row</strong> (by {@code createdAt}, tie-broken by
  * {@code id}); the send filter (BR2) reads it row-by-row through {@link #findLatest}.
  */
+@ModuleInternal
 public interface ConsentRepository extends JpaRepository<Consent, UUID> {
 
   /**

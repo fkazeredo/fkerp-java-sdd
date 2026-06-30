@@ -1,8 +1,6 @@
-package com.fksoft.domain.payout.internal;
+package com.fksoft.domain.payout;
 
 import com.fksoft.domain.money.Money;
-import com.fksoft.domain.payout.InstallmentView;
-import com.fksoft.domain.payout.PayoutStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

@@ -1,7 +1,5 @@
-package com.fksoft.domain.billing.internal;
+package com.fksoft.domain.billing;
 
-import com.fksoft.domain.billing.Withholding;
-import com.fksoft.domain.billing.WithholdingKind;
 import com.fksoft.domain.money.Money;
 import java.math.BigDecimal;
 import java.util.ArrayList;

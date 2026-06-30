@@ -1,5 +1,6 @@
-package com.fksoft.domain.marketing.internal;
+package com.fksoft.domain.marketing;
 
+import com.fksoft.domain.ModuleInternal;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -8,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * existence check before enqueuing (a recipient already sent to) plus the composite primary key
  * make a re-issued dispatch never double-mail.
  */
+@ModuleInternal
 public interface CampaignSendRepository extends JpaRepository<CampaignSend, CampaignSend.Key> {
 
   /** Whether this recipient was already sent to for this campaign (the BR4 idempotency check). */

@@ -19,8 +19,10 @@
  * com.fksoft.domain.billing.Withholding}, {@link com.fksoft.domain.billing.TaxRegime}), the views,
  * the {@link com.fksoft.domain.billing.CommissionInvoiceIssued}/{@link
  * com.fksoft.domain.billing.CommissionInvoiceCancelled} events and the business exceptions. The
- * {@code internal} sub-package (the aggregate, repositories, the Simples strategy, the rate
- * provider) is module-private (Spring Modulith verify).
+ * implementation types (the aggregate, repositories, the Simples strategy, the rate provider) live
+ * in this same package marked {@link com.fksoft.domain.ModuleInternal} and must never be reached
+ * from other modules — encapsulation is enforced by ArchUnit (Phase 9 / ADR 0016), the module graph
+ * stays acyclic (Spring Modulith verify).
  *
  * <p>Tax regime (SPEC-0016 Q7, DL-0044): the issuer regime is parametrized (Simples/Presumido/Real)
  * behind a swappable strategy; the default is Simples Nacional and the emitter is the Acme itself.

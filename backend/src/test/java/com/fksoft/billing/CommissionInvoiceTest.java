@@ -4,10 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fksoft.domain.billing.BillingInvoiceTransitionInvalidException;
+import com.fksoft.domain.billing.CommissionInvoice;
 import com.fksoft.domain.billing.InvoiceStatus;
 import com.fksoft.domain.billing.TaxAssessment;
 import com.fksoft.domain.billing.TaxRegime;
-import com.fksoft.domain.billing.internal.CommissionInvoice;
 import com.fksoft.domain.money.Money;
 import java.math.BigDecimal;
 import java.time.Instant;

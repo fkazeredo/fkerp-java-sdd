@@ -1,11 +1,6 @@
-package com.fksoft.domain.billing.internal;
+package com.fksoft.domain.billing;
 
-import com.fksoft.domain.billing.BillingBaseInvalidException;
-import com.fksoft.domain.billing.BillingInvoiceTransitionInvalidException;
-import com.fksoft.domain.billing.CommissionInvoiceView;
-import com.fksoft.domain.billing.InvoiceStatus;
-import com.fksoft.domain.billing.TaxAssessment;
-import com.fksoft.domain.billing.TaxRegime;
+import com.fksoft.domain.ModuleInternal;
 import com.fksoft.domain.money.Money;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -33,6 +28,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "commission_invoices")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class CommissionInvoice {
 
   @Id private UUID id;

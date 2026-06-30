@@ -1,6 +1,5 @@
-package com.fksoft.domain.billing.internal;
+package com.fksoft.domain.billing;
 
-import com.fksoft.domain.billing.MunicipalIssRateProvider;
 import java.math.BigDecimal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

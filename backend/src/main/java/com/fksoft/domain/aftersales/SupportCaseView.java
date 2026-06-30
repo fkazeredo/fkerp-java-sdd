@@ -5,8 +5,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Public read view of a {@link com.fksoft.domain.aftersales.internal.SupportCase} (SPEC-0018). The
- * delivery layer returns this record, never the {@code @Entity} (backend.md: entity-free delivery).
+ * Public read view of a {@link com.fksoft.domain.aftersales.SupportCase} (SPEC-0018). The delivery
+ * layer returns this record, never the {@code @Entity} (backend.md: entity-free delivery).
  *
  * @param id the case id
  * @param bookingId the referenced booking (value)

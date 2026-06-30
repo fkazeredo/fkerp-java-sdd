@@ -1,7 +1,6 @@
-package com.fksoft.domain.payout.internal;
+package com.fksoft.domain.payout;
 
-import com.fksoft.domain.payout.PayoutKind;
-import com.fksoft.domain.payout.PayoutStatus;
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.LockModeType;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,6 +16,7 @@ import org.springframework.data.repository.query.Param;
  * never touch it (Spring Modulith). Execution is a financial transition, so it loads the aggregate
  * with a pessimistic write lock (persistence.md; SPEC-0017 BR2 "locking pessimista").
  */
+@ModuleInternal
 public interface PayoutRepository extends JpaRepository<Payout, UUID> {
 
   /** Loads a payout for update with a pessimistic write lock (the execution transition, BR2). */

@@ -1,5 +1,6 @@
-package com.fksoft.domain.marketing.internal;
+package com.fksoft.domain.marketing;
 
+import com.fksoft.domain.ModuleInternal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -10,6 +11,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * (campaignCode, bookingId)} pair is unique (idempotency); the {@code bookingId} lookup links a
  * confirmed booking back to its attribution. Module-internal.
  */
+@ModuleInternal
 public interface AttributionRepository extends JpaRepository<Attribution, UUID> {
 
   /** Finds the attribution for a campaign code and booking (idempotency check). */

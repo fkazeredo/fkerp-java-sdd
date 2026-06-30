@@ -1,11 +1,6 @@
-package com.fksoft.domain.marketing.internal;
+package com.fksoft.domain.marketing;
 
-import com.fksoft.domain.marketing.ConsentPurpose;
-import com.fksoft.domain.marketing.ConsentStatus;
-import com.fksoft.domain.marketing.ConsentView;
-import com.fksoft.domain.marketing.LegalBasis;
-import com.fksoft.domain.marketing.SubjectRef;
-import com.fksoft.domain.marketing.SubjectType;
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -33,6 +28,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "consents")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class Consent {
 
   @Id private UUID id;

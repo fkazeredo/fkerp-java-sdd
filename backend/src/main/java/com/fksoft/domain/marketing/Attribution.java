@@ -1,6 +1,6 @@
-package com.fksoft.domain.marketing.internal;
+package com.fksoft.domain.marketing;
 
-import com.fksoft.domain.marketing.AttributionView;
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "attributions")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class Attribution {
 
   @Id private UUID id;

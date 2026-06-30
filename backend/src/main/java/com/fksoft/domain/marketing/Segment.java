@@ -1,7 +1,6 @@
-package com.fksoft.domain.marketing.internal;
+package com.fksoft.domain.marketing;
 
-import com.fksoft.domain.marketing.SegmentCriteria;
-import com.fksoft.domain.marketing.SegmentView;
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -24,6 +23,7 @@ import org.hibernate.type.SqlTypes;
 @Table(name = "segments")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class Segment {
 
   @Id private UUID id;
