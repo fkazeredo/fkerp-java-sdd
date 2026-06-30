@@ -47,6 +47,25 @@ class ArchitectureTest {
           .allowEmptyShould(true);
 
   /**
+   * Observability is an infra concern (SPEC-0027/DL-0098): the pure {@code domain} must not depend
+   * on Micrometer or Spring Boot Actuator. Business metrics are instrumented at the infra boundary
+   * (the {@link com.fksoft.infra.observability.BusinessMetrics} event consumer), so a counter never
+   * leaks into a domain service. Planting an {@code io.micrometer} import in a domain class makes
+   * this fail.
+   */
+  @ArchTest
+  static final ArchRule DOMAIN_MUST_NOT_DEPEND_ON_METRICS_OR_ACTUATOR =
+      noClasses()
+          .that()
+          .resideInAPackage("..domain..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAnyPackage("io.micrometer..", "org.springframework.boot.actuate..")
+          .as(
+              "the domain must not depend on Micrometer or Actuator (observability is infra — DL-0098)")
+          .allowEmptyShould(true);
+
+  /**
    * Module encapsulation after the Phase 9 flatten (ADR 0016 / DL-0089). The {@code internal}
    * sub-packages were removed, so Spring Modulith no longer auto-hides a module's implementation
    * types — the boundary now lives on the {@link ModuleInternal} type marker. This rule re-creates,
