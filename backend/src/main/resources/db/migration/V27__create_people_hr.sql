@@ -38,7 +38,7 @@ CREATE INDEX ix_employees_status ON employees (status);
 CREATE TABLE journeys (
     id                 uuid          PRIMARY KEY,
     employee_id        uuid          NOT NULL,           -- references employees.id within the SAME module
-    period             char(7)       NOT NULL,           -- YYYY-MM
+    period             varchar(7)       NOT NULL,           -- YYYY-MM
     snapshot_ref       uuid          NOT NULL,           -- operational snapshot consumed (VALUE, DL-0069)
     worked_minutes     integer       NOT NULL,
     contracted_minutes integer       NOT NULL,           -- frozen contracted minutes for the period
@@ -50,7 +50,7 @@ CREATE TABLE journeys (
 CREATE TABLE journey_discrepancies (
     id          uuid          PRIMARY KEY,
     employee_id uuid          NOT NULL,
-    period      char(7)       NOT NULL,                  -- YYYY-MM
+    period      varchar(7)       NOT NULL,                  -- YYYY-MM
     kind        varchar(30)   NOT NULL,                  -- ODD_PUNCH | MISSING_PUNCH | INCOHERENT_JOURNAL
     status      varchar(20)   NOT NULL,                  -- OPEN | RESOLVED
     detail      varchar(300),

@@ -64,6 +64,8 @@ import com.fksoft.domain.payout.PayoutWebhookSignatureInvalidException;
 import com.fksoft.domain.people.EmployeeDuplicateException;
 import com.fksoft.domain.people.EmployeeInvalidException;
 import com.fksoft.domain.people.EmployeeNotFoundException;
+import com.fksoft.domain.people.JourneyInvalidException;
+import com.fksoft.domain.people.JourneyNotFoundException;
 import com.fksoft.domain.people.PointAfdInvalidException;
 import com.fksoft.domain.people.PointSnapshotInvalidException;
 import com.fksoft.domain.people.PointSnapshotNotFoundException;
@@ -149,6 +151,8 @@ public class HttpErrorMapping {
           entry(EmployeeNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(EmployeeDuplicateException.class, HttpStatus.CONFLICT),
           entry(EmployeeInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(JourneyNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(JourneyInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(InsightNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(InsightDecisionInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(PolicyParameterUnknownException.class, HttpStatus.NOT_FOUND),
