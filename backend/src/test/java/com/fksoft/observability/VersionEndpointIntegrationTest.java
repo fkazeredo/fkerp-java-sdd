@@ -14,9 +14,9 @@ import org.springframework.http.ResponseEntity;
 /**
  * End-to-end tests for {@code GET /api/version} (SPEC-0027 AC1, BR2/BR4): the endpoint is public
  * (no token), always returns 200 with a fully-populated payload, and the reported version matches
- * the SemVer the build filtered from the pom into {@code app.version} (ADR 0015). Whether or not the
- * packaged build-info / git.properties is present, every field is populated — never blank, never a
- * failure — which is exactly BR4's graceful degradation (absent fields fall back to {@code
+ * the SemVer the build filtered from the pom into {@code app.version} (ADR 0015). Whether or not
+ * the packaged build-info / git.properties is present, every field is populated — never blank,
+ * never a failure — which is exactly BR4's graceful degradation (absent fields fall back to {@code
  * "unknown"}).
  */
 class VersionEndpointIntegrationTest extends AbstractPostgresIntegrationTest {

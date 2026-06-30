@@ -67,6 +67,7 @@ resultado, cobertura e como reproduzir.
 | Slice 10-3 — Repaginação das telas + estados | SPEC-0026 | [slice-10-3-repaginate-screens.md](slice-10-3-repaginate-screens.md) | ✅ verde (frontend: lint + 50 testes + build; 6 telas com PrimeNG + `ScreenState` loading/empty/error/permissão; lazy routes) |
 | Slice 10-4 — Dashboard com KPIs | SPEC-0026 | [slice-10-4-dashboard.md](slice-10-4-dashboard.md) | ✅ verde (frontend: lint + 57 testes + build; KPIs no cliente dos endpoints existentes; **sem backend novo**; backend `./mvnw verify` 468 testes intacto) |
 | Fatia 11-1 — Actuator + Micrometer + Prometheus + `/api/version` | SPEC-0027 | [phase-11-1-actuator-version.md](phase-11-1-actuator-version.md) | ✅ verde (backend **474 testes**; `GET /api/version` público `{version,gitCommit,buildTime}` por build-info+git com degradação graciosa — DL-0097; Actuator expõe só `health,info,prometheus,metrics`; `health`/`info`/`version` públicos, `prometheus`/`metrics` atrás de **ROLE_IT** 401/403/200 — DL-0095; `env`/`beans` 404 via novo handler `NoResourceFoundException`; tag `application`) |
+| Fatia 11-2 — Logs estruturados em JSON | SPEC-0027 | [phase-11-2-json-logging.md](phase-11-2-json-logging.md) | ✅ verde (backend **475 testes**; logging estruturado nativo do Spring Boot (ECS) ligado no container por `LOGGING_STRUCTURED_FORMAT_CONSOLE`; correlation id no MDC vira campo JSON; regressão de higiene: login nunca loga senha/token — DL-0096/BR5) |
 
 ## Resumo por nível (Fase 0)
 
