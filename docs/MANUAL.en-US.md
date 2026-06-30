@@ -319,6 +319,46 @@ What the operator does:
 > asset management** (depreciation, maintenance), the recommendation is to **buy** a dedicated system and
 > use this module as the registry/integration point.
 
+### Phase 8 — People (HR): collaborators, journey and time-bank
+
+The **People** module is the **minimal HR** capability built **on top of the existing time clock**:
+it turns the **operational mirror** of the clock (which the clock robot collects — day-to-day data,
+**not** the legal document) into the **period journey**, the **time-bank** and **discrepancy
+alerts** for HR to treat. **It is not payroll:** it does not compute eSocial, FGTS, vacation or the
+13th salary — for that the path is to **buy/integrate** a payroll system; here live the
+**collaborator**, the **journey** and the **balance**.
+
+What the operator does:
+
+- **Register a collaborator:** provide an **identifier** (registration/code, unique), the **admission
+  date** and the **contracted daily journey** as `HH:mm` (e.g. `08:00`). The collaborator starts
+  **active** (status: active, on leave or terminated). The **employment contract** (a document kept
+  in the vault) can be referenced by value, without duplicating the data.
+- **Process a period journey:** for a collaborator and a month (`YYYY-MM`), the system builds the
+  **journey** from the already-collected operational mirror and computes the **time-bank**:
+  **balance = worked hours − contracted hours** for the period. A **positive** balance is **overtime**;
+  a **negative** one is **shortfall** (a negative bank is allowed by law). The calculation **measures**
+  the balance — it does **not** pay overtime nor grant time off (that is payroll).
+- **Read the journey and time-bank:** see the built period journey and the **time-bank** (worked
+  hours, contracted hours, signed balance `+`/`−`, and how many discrepancies the period has). E.g.
+  worked `176:20`, contracted `176:00` → balance `+00:20`.
+- **Treat discrepancies:** when the clock has an **odd punch** (an entry without its exit), a
+  **missing punch** or an **incoherent journal**, the system **opens an alert** (discrepancy) in a
+  **human-treatment queue** — and **never auto-corrects**. The queue can be filtered by **period** and
+  by **status** (open/resolved).
+- **Archive the payslip:** the processed payslip/mirror is **stored in the document vault**
+  (Compliance) as a **payroll** document, with a **5-year retention** and flagged as **personal data**
+  (audited access — LGPD). HR attaches the file; the system handles the retention deadline.
+
+> For the technically minded: `POST /api/people/employees` (register), `GET /employees/{id}`,
+> `GET /employees?status=`, `POST /employees/{id}/journey` (process the period journey),
+> `GET /employees/{id}/journey?period=`, `GET /employees/{id}/timebank?period=`,
+> `GET /api/people/discrepancies?period=&status=` (discrepancy queue),
+> `POST /employees/{id}/payslip` (archive the payslip in the vault). The **clock mirror** is always
+> treated as **operational, non-legal** data — the legally binding document (the signed AFD/AEJ)
+> lives in the vault, coming from the clock's official export (not from this screen). **Heavy
+> payroll** (eSocial/FGTS/13th) = **buy/integrate**.
+
 ## 4. Glossary
 
 - **Backend / server:** the part of the system that processes the rules and talks to the database.
@@ -364,6 +404,10 @@ What the operator does:
 - **LGPD erasure:** honouring the subject's request to delete their **marketing data**, while keeping
   the **revocation proof** (so they are not re-included) and whatever **another law** requires to keep.
 - **Internal patrimony (*Assets*):** the company's own goods (equipment, software licenses, other
+- **Time-bank:** the balance of a period = worked hours − contracted hours; positive is overtime, negative is shortfall (a negative balance is allowed by law). Here the system **measures** the balance; paying overtime or granting time off is payroll work.
+- **Journey (of the period):** the hours the collaborator actually fulfilled in the month, built from the clock operational mirror.
+- **Clock discrepancy:** an alert for an odd/missing punch or an incoherent journal, opened for HR to treat — the system never auto-corrects.
+- **Payslip:** the pay statement; here it is stored in the vault (payroll) with a 5-year retention and treated as personal data.
   goods), with cost, document and a lifecycle (active/retired). It is a registry, not a product.
 - **Retiring a good (*retire*):** marking a good as out of use, with a reason and an audit (who/when).
   It is final.
@@ -382,6 +426,7 @@ What the operator does:
 | 0.14.0 | 8 — Marketing | B2B marketing with mandatory **LGPD consent**: record/revoke/look up consent (history preserved); **segment** over existing data with a reach **preview**; **campaign** that **sends only to those who consented** (suppressed are counted, no double-send) via a newsletter provider; **attribution** code→booking that becomes a **conversion signal** for the DSS; **LGPD erasure** that deletes marketing data but preserves the revocation proof. |
 | 0.15.0 | 8 — Portfolio | Representation: register/deactivate/list **represented brands** (unique identifier); register **representation contracts** (validity + a vault document), with an **alert** (not a block) for selling without an in-force contract and an **expiring-contract warning** (within 30 days); set **goals per brand** (volume or revenue) and track **realized vs goal** from the brand's **confirmed sales**. It touches no price or commission. |
 | 0.16.0 | 8 — Patrimony (Assets) | Registry of **internal patrimony** (equipment, software licenses, other goods): register with **type/identification/date/cost** and value links to the **document** (vault) and the **finance entry**; a software license requires an **expiry date**; an audited, **final retirement** (with a reason); list/filter by type/status and by **expiring licenses**; a **warning** (once per license) for licenses expiring within 30 days. It is patrimony, not a product — no price/sale; full asset management = buy. |
+| 0.17.0 | 8 — People | Minimal HR on top of the time clock: register a **collaborator** (unique identifier, admission, **contracted journey** HH:mm, status active/on-leave/terminated); **process the period journey** from the operational mirror and compute the **time-bank** (balance = worked − contracted; overtime/shortfall, negative allowed) — it only **measures**, it is not payroll; **read** the journey and time-bank; **discrepancies** (odd/missing punch, incoherent journal) become an **alert** in a treatment queue, **no auto-correction**; **archive the payslip** in the vault (payroll, 5-year retention, personal data). Heavy payroll (eSocial/FGTS/13th) = buy/integrate. |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of

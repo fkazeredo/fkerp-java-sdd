@@ -39,8 +39,9 @@ BR1  Employee MUST ter identifier, admissionDate, contractedJourney (ex.: 8h/dia
      ACTIVE/ON_LEAVE/TERMINATED. O contrato de trabalho é documento no Compliance (retenção indeterminada).
 BR2  Ao receber PointSnapshotCollected (operationalOnly=true), People MUST montar a jornada do período
      por colaborador (a partir das marcações operacionais) — tratando o snapshot como **não-legal**.
-BR3  TimeBank: saldo do período = horas trabalhadas − jornada contratada; acumula extras/faltas conforme
-     política (parâmetro governado/legislação — a confirmar).
+BR3  TimeBank: saldo do período = horas trabalhadas − jornada contratada (em minutos, com sinal:
+     positivo=extras, negativo=faltas); banco negativo admitido (CLT art. 59). Janela de compensação
+     configurável, default 6 meses (acordo individual escrito). ASSUMIDO (ver DL-0070).
 BR4  Divergência (marcação ímpar/faltante, jornada incoerente) MUST gerar JourneyDiscrepancy (alerta)
      para tratamento humano — NÃO corrige sozinho.
 BR5  Holerite/espelho processado MUST ser arquivável no Compliance (PAYROLL) com retenção de 5 anos.
@@ -121,13 +122,26 @@ acesso/trilha.
 - Marcação inconsistente vira divergência para tratamento humano.
 - `./mvnw verify` verde.
 
+## Business Rules — decididas em modo autônomo (Fase 8i)
+
+- **Jornada/banco como serviço de domínio puro sobre o snapshot operacional** (não reescreve o
+  crawler; `snapshotRef` por valor; minutos trabalhados/dias úteis são entrada operacional) —
+  **ASSUMIDO (ver DL-0069)**.
+- **Política de banco de horas** — ~~em aberto~~ → **ASSUMIDO (ver DL-0070)**: saldo mensal em minutos
+  (extras/faltas, banco negativo); janela de compensação configurável, default **6 meses** (acordo
+  individual escrito, CLT art. 59). **Confiança=Baixa** — limites/acordo coletivo só o RH/jurídico
+  fecha; o v1 mede o saldo, não liquida folga nem paga +50%.
+- **Divergências** (`ODD_PUNCH`/`MISSING_PUNCH`/`INCOHERENT_JOURNAL`) **sinalizam alerta** + fila,
+  nunca corrigem (BR4) — **ASSUMIDO (ver DL-0071)**.
+- **Holerite arquivado no Compliance** (PAYROLL, 5 anos, `hasPersonalData`) por orquestrador `infra`;
+  `documentId` por valor — **ASSUMIDO (ver DL-0072)**.
+
 ## Open Questions
 
 - **Comprar vs. construir folha:** se o cliente exige folha/eSocial/FGTS completos, **integrar/comprar**
-  e usar este módulo como colaborador+jornada — decisão do dono.
-- **Política de banco de horas** (limites, compensação, acordo coletivo) — depende de regra
-  trabalhista/negocial — **em aberto**.
-- Q6 (tipo de REP) afeta o que o snapshot traz (SPEC-0012) e, por tabela, a jornada.
+  e usar este módulo como colaborador+jornada — decisão do dono. **Em aberto.**
+- Q6 (tipo de REP) afeta o que o snapshot traz (SPEC-0012) e, por tabela, a jornada. **Em aberto**
+  (ver DL-0029).
 
 ## Out of Scope
 

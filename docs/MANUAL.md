@@ -318,6 +318,46 @@ O que o operador faz:
 > negócio precisar de **gestão plena de ativos** (depreciação, manutenção), a recomendação é **comprar**
 > um sistema dedicado e usar este módulo como registro/integração.
 
+### Fase 8 — Pessoas (RH): colaboradores, jornada e banco de horas
+
+O módulo de **Pessoas** (*People*) é o **mínimo de RH** construído **sobre o ponto eletrônico** já
+existente: ele transforma o **espelho operacional** do ponto (que o robô do ponto coleta — dado do
+dia a dia, **não** o documento legal) em **jornada do período**, **banco de horas** e **avisos de
+divergência** para o RH tratar. **Não é folha de pagamento:** não calcula eSocial, FGTS, férias nem
+13º — para isso o caminho é **comprar/integrar** um sistema de folha; aqui ficam o **colaborador**, a
+**jornada** e o **saldo**.
+
+O que o operador faz:
+
+- **Cadastrar um colaborador:** informa um **identificador** (matrícula/código, único), a **data de
+  admissão** e a **jornada contratada** por dia no formato `HH:mm` (ex.: `08:00`). O colaborador nasce
+  **ativo** (situação: ativo, afastado ou desligado). Pode-se associar o **contrato de trabalho**
+  (documento guardado no cofre) por referência, sem duplicar o dado.
+- **Processar a jornada de um período:** para um colaborador e um mês (`AAAA-MM`), o sistema monta a
+  **jornada** a partir do espelho operacional já coletado e calcula o **banco de horas**:
+  **saldo = horas trabalhadas − horas contratadas** no período. Saldo **positivo** são **horas
+  extras**; **negativo** são **faltas** (a lei admite banco negativo). O cálculo **mede** o saldo —
+  ele **não** paga hora extra nem marca folga (isso é folha).
+- **Consultar a jornada e o banco de horas:** ver a jornada montada do período e o **banco de horas**
+  (horas trabalhadas, horas contratadas, saldo com sinal `+`/`−`, e quantas divergências o período
+  tem). Ex.: trabalhou `176:20`, contratado `176:00` → saldo `+00:20`.
+- **Tratar divergências:** quando o ponto tem **marcação ímpar** (uma entrada sem a saída), **marcação
+  faltante** ou uma **jornada incoerente**, o sistema **abre um aviso** (divergência) numa **fila para
+  tratamento humano** — e **nunca corrige sozinho**. A fila pode ser filtrada por **período** e por
+  **situação** (aberta/resolvida).
+- **Arquivar o holerite:** o holerite/espelho processado é **guardado no cofre de documentos**
+  (Compliance) como documento de **folha**, com **retenção de 5 anos** e marcado como **dado pessoal**
+  (acesso auditado — LGPD). O RH anexa o arquivo; o sistema cuida do prazo de guarda.
+
+> Para quem é de TI: `POST /api/people/employees` (cadastrar), `GET /employees/{id}`,
+> `GET /employees?status=`, `POST /employees/{id}/journey` (processar a jornada do período),
+> `GET /employees/{id}/journey?period=`, `GET /employees/{id}/timebank?period=`,
+> `GET /api/people/discrepancies?period=&status=` (fila de divergências),
+> `POST /employees/{id}/payslip` (arquivar o holerite no cofre). O **espelho do ponto** é tratado
+> sempre como **dado operacional, não legal** — o documento com fé legal (AFD/AEJ assinado) vive no
+> cofre, vindo da exportação oficial do ponto (não desta tela). **Folha pesada** (eSocial/FGTS/13º) =
+> **comprar/integrar**.
+
 ## 4. Glossário
 
 - **Backend / servidor:** a parte do sistema que processa as regras e fala com o banco de dados.
@@ -363,6 +403,10 @@ O que o operador faz:
 - **Exclusão LGPD (erasure):** atender o pedido do titular de apagar seus **dados de marketing**,
   preservando a **prova de revogação** (para não reincluí-lo) e o que **outra lei** manda guardar.
 - **Patrimônio interno (*Assets*):** os bens da própria empresa (equipamentos, licenças de software,
+- **Banco de horas:** o saldo de horas de um período = horas trabalhadas − horas contratadas; positivo são horas extras, negativo são faltas (a lei admite saldo negativo). Aqui o sistema **mede** o saldo; pagar hora extra ou marcar folga é tarefa da folha.
+- **Jornada (do período):** as horas que o colaborador efetivamente cumpriu no mês, montadas a partir do espelho operacional do ponto.
+- **Divergência de ponto:** um aviso de marcação ímpar/faltante ou jornada incoerente, aberto para o RH tratar — o sistema nunca corrige sozinho.
+- **Holerite:** o demonstrativo de pagamento; aqui ele é guardado no cofre (folha) com retenção de 5 anos e tratado como dado pessoal.
   outros bens), com custo, documento e ciclo de vida (ativo/baixado). É registro, não produto.
 - **Baixa de um bem (*retire*):** marcar um bem como fora de uso, com motivo e auditoria (quem/quando).
   É definitiva.
@@ -381,6 +425,7 @@ O que o operador faz:
 | 0.14.0 | 8 — Marketing | Marketing B2B com **consentimento LGPD** obrigatório: registrar/revogar/consultar consentimento (histórico preservado); **segmento** por dados existentes com **prévia** de alcance; **campanha** que **só envia para quem consentiu** (suprimidos contados, sem envio duplicado) via provedor de newsletter; **atribuição** código→reserva que vira **sinal de conversão** para o DSS; **exclusão LGPD** que apaga o dado de marketing mas preserva a prova de revogação. |
 | 0.15.0 | 8 — Portfólio | Representação: cadastrar/desativar/listar **marcas representadas** (identificador único); registrar **contratos de representação** (vigência + documento no cofre), com **alerta** (não bloqueio) para venda sem contrato vigente e **aviso de contrato a vencer** (até 30 dias); definir **metas por marca** (volume ou receita) e acompanhar o **realizado vs meta** a partir das **vendas confirmadas** da marca. Não mexe em preço nem comissão. |
 | 0.16.0 | 8 — Patrimônio (Assets) | Registro do **patrimônio interno** (equipamentos, licenças de software, outros bens): cadastrar com **tipo/identificação/data/custo** e vínculos por valor ao **documento** (cofre) e ao **lançamento** (financeiro); licença de software exige **data de vencimento**; **baixa** auditada e definitiva (com motivo); listar/filtrar por tipo/situação e por **licenças a vencer**; **aviso** (uma vez por licença) de licença a vencer (até 30 dias). É patrimônio, não produto — não entra em preço/venda; gestão plena de ativos = comprar. |
+| 0.17.0 | 8 — Pessoas (People) | RH mínimo sobre o ponto: cadastrar **colaborador** (identificador único, admissão, **jornada contratada** HH:mm, situação ativo/afastado/desligado); **processar a jornada** de um período a partir do espelho operacional e calcular o **banco de horas** (saldo = trabalhado − contratado; extras/faltas, saldo negativo permitido) — só **mede**, não é folha; **consultar** jornada e banco de horas; **divergências** (marcação ímpar/faltante/jornada incoerente) viram **aviso** numa fila de tratamento, **sem correção automática**; **arquivar o holerite** no cofre (folha, retenção 5 anos, dado pessoal). Folha pesada (eSocial/FGTS/13º) = comprar/integrar. |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.
