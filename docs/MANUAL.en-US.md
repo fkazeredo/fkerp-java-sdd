@@ -4,7 +4,7 @@
 > already does today**. Updated **on every delivered slice** (see the *User manual* command in
 > `CLAUDE.md`). Portuguese version: `docs/MANUAL.md` (kept in sync).
 >
-> **System version:** 0.20.0 · **Current phase:** 8l (Admin — administrative suppliers and contracts)
+> **System version:** 0.21.0 · **Current phase:** 10 (UX & professional frontend)
 
 ## 1. What the system is
 
@@ -468,6 +468,47 @@ How it works in practice:
 > **Finance** role. Full procurement (quotation/purchase order) is **not** part of this module — buy a
 > procurement system if required.
 
+### Phase 10 — A new experience (professional screens, shortcuts, theme and dashboard)
+
+This phase **does not change any business rule**: it renews the **entire look and navigation**, giving
+the system a professional ERP feel. What you now see and use:
+
+- **Renewed login screen.** The same Phase-8 login, now with a clean look and a **show/hide** toggle on
+  the password field. After signing in you land on the **Dashboard**. If your session has expired and
+  you try to open a screen directly, the system sends you to login and, once you sign in, **takes you
+  back to the screen you wanted**.
+- **A session that stays.** When you reload the page, the system **silently revalidates your session**
+  with the server (no re-typing the password while the access is still valid). When the access truly
+  expires, it asks you to sign in again. (Corporate single sign-on remains the next step — Phase 13.)
+- **SaaS layout (sidebar + top bar).** On the **left**, the navigation menu (Dashboard, Accounts,
+  Exchange, Quotes, Bookings, Reconciliation, Health) highlighting the current screen. On the **top**,
+  the command search, the **theme button** and your name with **"Sign out"**. On small screens (mobile)
+  the menu becomes a **drawer** opened by the menu button.
+- **Light/dark theme.** The **sun/moon** button on top switches between **light** and **dark**. Your
+  choice is **saved** in the browser; the first time, the system follows your computer's preference.
+- **Command palette (`Ctrl/Cmd + K`).** Press **Ctrl+K** (or **⌘+K** on Mac) **from any screen** to
+  open a search box: type a screen or action name (e.g. "Bookings", "Theme", "Sign out"), use **↑/↓**
+  to choose and **Enter** to run it. **Esc** closes it.
+- **Keyboard shortcuts.** Outside text fields, press **`g`** then the initial of a screen (e.g. **`g`**
+  then **`a`** → Accounts) to navigate quickly. Press **`?`** to open the **shortcut help**.
+  (Single-letter shortcuts are ignored while you type in a form, so they never get in the way.)
+- **Unsaved-changes warning.** If you start filling a form (e.g. a new account, pinning a rate, a quote
+  override) and try to **leave without saving**, the system **asks first** whether you really want to
+  leave — preventing the loss of what you typed.
+- **Clear states on every screen.** Each screen consistently shows when it is **loading**, when there is
+  **no data** ("nothing to show"), when an **error** happened (with a **"Retry"** button) and when you
+  **lack permission** to see something (a permission message, instead of a technical error).
+- **Dashboard with KPIs.** The landing screen is now a **Dashboard** with summary cards: **Accounts**
+  (total and active), **Bookings** (total, pending and confirmed), **Reconciliation** (cases, open,
+  in discrepancy and the summed expected spread) and **Exchange** (the prevailing frozen rate).
+  Clicking a card **takes you to** the related screen. Each card loads independently and shows its own
+  state (loading/error/permission).
+
+> For the technically minded: the screens now use **PrimeNG 21 (Aura theme)** + **Tailwind v4** on top
+> of **Angular 22**, keeping all text in the translation mechanism (pt-BR/en). The Dashboard KPIs are
+> computed **in the browser** from the list endpoints that already existed — **no new server endpoint**
+> was added.
+
 ## 4. Glossary
 
 - **Backend / server:** the part of the system that processes the rules and talks to the database.
@@ -549,6 +590,7 @@ How it works in practice:
 | 0.18.0 | 8 — Platform | IT infrastructure: **e-CNPJ certificate custody** with the material **encrypted** (the key/password never appears) — the screen shows **only metadata** (holder, validity, days-to-expiry, status) and the system **alerts** when the certificate is about to expire (30 days); **job governance** — catalog and **history** of the automatic routines, **manual trigger** (only one run at a time = 409 if already running; no duplication within the window), and a failure shows up **as a failure** (never masked as success); **append-only system audit** of security/integration/job events (who/what/when), filterable, **metadata only** (never the secret). |
 | 0.19.0 | 8 — Identity | **Real login**: sign in with **username and password** ("Sign in" screen), name and "Sign out" at the top; **generic** error that never reveals whether the user exists. **Roles and permissions** (Director/Finance/Operations/IT/Policy Admin/Viewer): **sensitive actions require the role** (issue NF and close the month → Finance; trigger job/custody certificate → IT; directive → Director) — without the role, **access denied**, recorded. **Access audit** (logins and denials; who/action/when, **no password/token**). The **backend is the authority** — the screen only mirrors. Corporate single sign-on (external provider) = next step (Phase 13). |
 | 0.20.0 | 8 — Admin (administrative suppliers/contracts) | **Administrative desk**: a **lean** registry of **administrative suppliers** (power, water, telephone, software/service, self-employed) and their **contracts** (validity, recurrence, amount, document). **Recording a month's expense** automatically creates the **Accounts Payable** entry with the right kind and **points at the required documents** (utility → bill; self-employed → RPA; PJ service → NFS-e); **idempotent** (no duplicates). **The golden rule applies here**: an expense **without its document blocks the month from closing**. **Contract-expiry alert** (up to 30 days, alert only). **Registering/recording requires the Finance role**; every change is **audited** (CNPJ/CPF never shown in full). Full procurement (quotation/order) = buy if required. **End of the 8x block.** |
+| 0.21.0 | 10 — UX & professional frontend | **New experience** (no rule changes): **SaaS layout** (sidebar + top bar + mobile drawer); **light/dark theme** with the choice saved; **command palette `Ctrl/Cmd+K`** + shortcuts (`g`+key, `?` help); renewed **login** with **silent session revalidation** (returns to the intended screen); **unsaved-changes warning** when leaving a form; **real states** (loading/empty/error/permission) on every screen; a **Dashboard** with Accounts/Bookings/Reconciliation/Exchange KPIs computed in the browser. Screens built with **PrimeNG 21 + Tailwind v4** on Angular 22; **no new server endpoint**. Graduates DL-0003. |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of

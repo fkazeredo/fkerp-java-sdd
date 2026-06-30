@@ -1,12 +1,37 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.20.1.md`](0.20.1.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.21.0.md`](0.21.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.21.0 — Phase 10 · UX & professional frontend (frontend-only)
+
+**MINOR, new retro-compatible capability — no API/contract change.** A full UX upgrade of the Angular
+frontend without touching any business rule:
+
+- **Added:** PrimeNG 21 (Aura preset via `@primeuix/themes`) + primeicons + `@angular/cdk` +
+  `@angular/animations`; Tailwind v4 (`@tailwindcss/postcss`) integrated via CSS layers (DL-0090,
+  graduating DL-0003 — the plain-CSS stack from Phase 0).
+- **Added:** a SaaS **shell** (sidebar + top bar + responsive drawer) as a layout route; **light/dark
+  theme** (`ThemeService`, `.app-dark` selector, `--app-*` tokens, persisted, OS-default — DL-0091).
+- **Added:** **command palette** `Ctrl/Cmd+K`, global shortcuts (`g`+key navigation, `?` help) that
+  ignore editable fields, and a central command registry (DL-0093).
+- **Added:** **login** with **silent session revalidation** on boot and near expiry via
+  `GET /api/identity/me` (no refresh token in this phase — DL-0092); the guard/interceptor preserve
+  the intended `returnUrl`.
+- **Added:** an unsaved-changes (`canDeactivate`) guard; a shared `ScreenState`
+  (loading/empty/error/permission) and the repagination of **every** screen with PrimeNG.
+- **Added:** a **Dashboard** with KPIs (Accounts/Bookings/Reconciliation/Exchange) computed
+  **client-side** from the existing list endpoints (DL-0094); the protected root route is the dashboard.
+- **Changed:** feature routes are lazy-loaded (lean initial bundle); project version 0.20.1 → 0.21.0.
+- **No migration, no new endpoint.** Frontend gate green (lint + 57 component tests + build); backend
+  `./mvnw verify` stays green (468 tests, untouched).
 
 ---
 

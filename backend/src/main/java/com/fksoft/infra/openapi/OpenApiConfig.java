@@ -134,7 +134,12 @@ public class OpenApiConfig {
                         + " GET /api/admin/suppliers?type=&status=,"
                         + " POST /api/admin/suppliers/{id}/contracts,"
                         + " GET /api/admin/suppliers/{id}/contracts, POST /api/admin/expenses,"
-                        + " POST /api/admin/contracts/flag-expiring.")
-                .version("0.20.1"));
+                        + " POST /api/admin/contracts/flag-expiring."
+                        + " Phase 10 (SPEC-0026) is a frontend-only UX upgrade (professional SaaS shell,"
+                        + " PrimeNG/Tailwind, command palette, light/dark theme, login with silent session"
+                        + " revalidation via GET /api/identity/me, real loading/empty/error/permission"
+                        + " states and a KPI dashboard composed client-side from the existing list"
+                        + " endpoints) — it adds no new API endpoints and changes no contract.")
+                .version("0.21.0"));
   }
 }
