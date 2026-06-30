@@ -1,0 +1,12 @@
+# Keep the build context small and reproducible: the image runs `npm ci` fresh, so the host's
+# node_modules and build/test artifacts must not be copied in (SPEC-0028).
+node_modules
+dist
+.angular
+coverage
+playwright-report
+test-results
+blob-report
+.playwright
+e2e
+playwright.config.ts
