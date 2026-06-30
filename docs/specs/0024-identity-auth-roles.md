@@ -50,6 +50,27 @@ BR5  O modelo de papéis MUST ser a única fonte de verdade de autorização int
      reimplementam regra de acesso — consomem o contexto de segurança.
 BR6  Em ambiente de dev, o stub da SPEC-0001 pode permanecer atrás de profile; em produção, MUST estar
      desativado (perfil/flag).
+BR7  ASSUMIDO (ver DL-0079). No 8k a autenticação real é **in-house**: Spring Security + emissão/
+     verificação de **JWT (HS256)** próprias (o ERP é Resource Server do seu próprio emissor). Um
+     **IdP externo OIDC vivo** (JWKS/rotação, escopos finos) é a consolidação da **Fase 13**; a porta
+     `UserContextProvider` é o seam que sobrevive à troca.
+BR8  ASSUMIDO (ver DL-0080). Novo módulo Modulith `domain.identity` (21º) é dono do modelo de papéis/
+     permissões e do **usuário local mínimo** (`identity_users`, senha BCrypt). A configuração de
+     segurança/JWT mora em `infra.security`. Usuários geridos **localmente** no v1 (migram ao IdP na 13).
+BR9  ASSUMIDO (ver DL-0081). Graduar ≠ rip-and-replace: a porta `UserContextProvider` não muda; o
+     adapter real (`JwtUserContextProvider`) vale em produção/default; o stub permissivo fica atrás dos
+     profiles `dev`/`test`. Nos testes, a segurança fica **montada** (não removida) — uma
+     `TestSecurityConfig` autentica um ator de teste com acesso total, mantendo os 434 testes verdes; os
+     testes de segurança novos sobem o caminho JWT real (401/403).
+BR10 ASSUMIDO (ver DL-0082). Papéis base: ROLE_DIRECTOR, ROLE_FINANCE, ROLE_OPERATIONS, ROLE_IT,
+     ROLE_POLICY_ADMIN, ROLE_VIEWER. Permissões nomeadas (catálogo fechado) mapeiam as ações sensíveis:
+     `policy:directive:write`→DIRECTOR; `policy:rule:write`→DIRECTOR/POLICY_ADMIN;
+     `billing:invoice:issue` e `finance:period:close`→FINANCE; `platform:job:trigger` e
+     `platform:certificate:write`→IT; `identity:role:read`/`identity:audit:read`→IT/DIRECTOR. Enforcement
+     na camada HTTP (Spring Security) + reafirma a checagem de domínio já existente (DL-0038).
+BR11 ASSUMIDO (ver DL-0083). A auditoria de acesso **reusa o `system_audit` do Platform** (8j): login →
+     `AUTH_LOGIN`, negação → `ACCESS_DENIED` (metadados only, nunca token/segredo/hash). Não há tabela
+     `access_audit` nova (Regra Zero); `GET /api/identity/access-audit` é uma leitura focada sobre o seam.
 ```
 
 ## Input/Output Examples
@@ -67,11 +88,17 @@ GET /api/identity/access-audit?actor=ana&from=2026-06-01&to=2026-06-30
 
 ## API Contracts
 
-- Autenticação via IdP (OIDC) — o ERP é **Resource Server**; não há tela de senha própria se o IdP cuidar.
-- `GET /api/identity/me` → usuário/roles do token (para o frontend).
-- `GET /api/identity/roles` / `POST .../roles` (se papéis forem geridos localmente) — autorização: admin.
-- `GET /api/identity/access-audit?actor=&action=&from=&to=&page=&size=` → auditoria de acesso.
-- OpenAPI atualizada; esquema de segurança (bearer/OIDC) documentado.
+ASSUMIDO (ver DL-0079/0083): no 8k o ERP é Resource Server do **seu próprio emissor JWT** (in-house).
+
+- `POST /api/identity/login` (público) → `{username, password}` → `{token, tokenType:"Bearer",
+  expiresIn, user:{userId, username, roles}}`. Credencial inválida → **401 genérico** (BR4).
+- `GET /api/identity/me` (autenticado) → usuário/roles do token (para o frontend).
+- `GET /api/identity/roles` → catálogo de papéis + permissões (autorização: `identity:role:read`).
+- `GET /api/identity/access-audit?actor=&action=&from=&to=&page=&size=` → auditoria de acesso, lida do
+  `system_audit` (autorização: `identity:audit:read`).
+- Endpoints sensíveis passam a exigir o papel (BR10): ex. `POST /api/billing/invoices/{id}/issue`
+  exige `ROLE_FINANCE` → 403 + auditoria sem o papel.
+- OpenAPI atualizada; esquema de segurança **bearer JWT** documentado.
 
 ## Events
 
@@ -80,20 +107,26 @@ GET /api/identity/access-audit?actor=ana&from=2026-06-01&to=2026-06-30
 
 ## Persistence Changes
 
+ASSUMIDO (ver DL-0080/0083): a migração é **V29** (não V24 — V24 já está aplicada). A auditoria de acesso
+**não** ganha tabela nova: reusa o `system_audit` do Platform (V28).
+
 ```txt
-V24__create_identity.sql
+V29__create_identity.sql
   roles( name varchar PK, description varchar null )
   role_permissions( role_name varchar not null, permission varchar not null,
                     PRIMARY KEY (role_name, permission) )
-  -- usuários NÃO ficam aqui se o IdP for a fonte; se geridos localmente, tabela mínima:
-  -- users( id uuid PK, external_subject varchar UNIQUE, display_name varchar, status varchar )
-  access_audit( id uuid PK, actor varchar null, action varchar not null, resource varchar null,
-                result varchar not null, occurred_at timestamptz not null, correlation_id varchar null )
--- seed: papéis base (ROLE_DIRECTOR, ROLE_FINANCE, ROLE_OPERATIONS, ROLE_IT, ROLE_VIEWER) + permissões
+  identity_users( id uuid PK, username varchar UNIQUE not null, password_hash varchar not null,
+                  display_name varchar, status varchar not null, created_at timestamptz not null,
+                  version bigint not null )
+  user_roles( user_id uuid not null, role_name varchar not null, PRIMARY KEY (user_id, role_name) )
+-- seed: papéis base (ROLE_DIRECTOR, ROLE_FINANCE, ROLE_OPERATIONS, ROLE_IT, ROLE_POLICY_ADMIN,
+--       ROLE_VIEWER) + permissões nomeadas (DL-0082) + usuários dev (um por papel) para login real
+-- auditoria de acesso: system_audit do Platform (V28), tipos AUTH_LOGIN / ACCESS_DENIED (DL-0083)
 ```
 
-A configuração de segurança (Spring Security) e a integração OIDC ficam em `infra` (`security.md`). O
-contexto de segurança alimenta o `UserContextProvider` real.
+A configuração de segurança (Spring Security + emissão/verificação JWT in-house, DL-0079) fica em
+`infra.security` (`security.md`). O contexto de segurança alimenta o `UserContextProvider` real
+(`JwtUserContextProvider`). A integração OIDC com IdP externo vivo é a Fase 13.
 
 ## Validation Rules
 
@@ -127,10 +160,18 @@ auditado). Sem código que vaze existência de usuário (BR4). i18n em `messages
 
 ## Open Questions
 
-- **Comprar/usar IdP** (Keycloak/Entra/Cognito) × IAM próprio — **recomendado IdP**; decisão do dono.
-- Papéis/permissões finais e seu mapeamento exato para cada ação sensível — consolidar com o dono à
-  medida que as fatias expõem ações.
-- Usuários geridos no IdP × localmente (define se a tabela `users` existe).
+> As Open Questions abaixo foram resolvidas em modo autônomo no 8k (ver Business Rules BR7–BR11 e os
+> DLs citados). Permanecem listadas para o dono **confirmar/trocar** — são decisões assumidas, não
+> definitivas.
+
+- ~~**Comprar/usar IdP** (Keycloak/Entra/Cognito) × IAM próprio~~ → **ASSUMIDO (DL-0079):** auth real
+  in-house (JWT HS256) no 8k; **IdP externo OIDC vivo fica para a Fase 13**. **Decisão do dono: qual
+  IdP** (Confiança=Baixa).
+- ~~Papéis/permissões finais e mapeamento exato~~ → **ASSUMIDO (DL-0082):** 6 papéis base + catálogo
+  fechado de permissões mapeando as ações sensíveis já citadas. Consolidar o resto à medida que novas
+  ações surgirem (Confiança=Média).
+- ~~Usuários no IdP × localmente~~ → **ASSUMIDO (DL-0080):** localmente no v1 (`identity_users`); migram
+  ao IdP na Fase 13.
 
 ## Out of Scope
 
