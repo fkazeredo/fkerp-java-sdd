@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideTranslateLoader, provideTranslateService } from '@ngx-translate/core';
 import { Subject, of, throwError } from 'rxjs';
 import { InMemoryTranslateLoader } from '../../core/i18n/in-memory-translate.loader';
@@ -10,6 +11,7 @@ function configure(healthService: Partial<HealthService>): void {
   TestBed.configureTestingModule({
     imports: [HealthPage],
     providers: [
+      provideNoopAnimations(),
       provideTranslateService({
         lang: 'pt-BR',
         fallbackLang: 'pt-BR',

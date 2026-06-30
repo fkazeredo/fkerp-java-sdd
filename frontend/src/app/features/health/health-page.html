@@ -1,24 +1,35 @@
-<section class="health">
-  <h1 class="health__title">{{ 'health.title' | translate }}</h1>
+<section class="page">
+  <h1 class="page__title">{{ 'health.title' | translate }}</h1>
 
   @if (state() === 'loading') {
-    <p class="health__loading" data-testid="health-loading">{{ 'health.loading' | translate }}</p>
+    <div class="health__loading" data-testid="health-loading">
+      <p-progress-spinner [attr.aria-label]="'health.loading' | translate" />
+      <p class="app-muted">{{ 'health.loading' | translate }}</p>
+    </div>
   }
 
   @if (state() === 'success') {
-    <div class="health__card health__card--up" data-testid="health-success">
-      <p class="health__ok">{{ 'health.ok' | translate }}</p>
-      <p>{{ 'health.status' | translate }}: <strong>{{ health()?.status }}</strong></p>
-      <p>{{ 'health.db' | translate }}: <strong>{{ health()?.db }}</strong></p>
-    </div>
+    <p-card data-testid="health-success" styleClass="health__card">
+      <p-message severity="success" styleClass="health__ok">{{ 'health.ok' | translate }}</p-message>
+      <dl class="kv health__kv">
+        <dt>{{ 'health.status' | translate }}</dt>
+        <dd><p-tag [value]="health()?.status ?? ''" severity="success" /></dd>
+        <dt>{{ 'health.db' | translate }}</dt>
+        <dd><p-tag [value]="health()?.db ?? ''" severity="success" /></dd>
+      </dl>
+    </p-card>
   }
 
   @if (state() === 'error') {
-    <div class="health__card health__card--down" data-testid="health-error">
-      <p class="health__error">{{ 'health.error' | translate }}</p>
-      <button type="button" class="health__retry" (click)="load()">
-        {{ 'health.retry' | translate }}
-      </button>
-    </div>
+    <p-card data-testid="health-error" styleClass="health__card">
+      <p-message severity="error">{{ 'health.error' | translate }}</p-message>
+      <div class="actions">
+        <p-button
+          [label]="'health.retry' | translate"
+          icon="pi pi-refresh"
+          (onClick)="load()"
+        />
+      </div>
+    </p-card>
   }
 </section>

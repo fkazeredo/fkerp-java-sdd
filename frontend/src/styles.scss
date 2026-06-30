@@ -143,6 +143,19 @@ body {
   margin-top: 0.5rem;
 }
 
+.list__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.list__header .field {
+  margin-bottom: 0;
+}
+
 .kv {
   display: grid;
   grid-template-columns: max-content 1fr;

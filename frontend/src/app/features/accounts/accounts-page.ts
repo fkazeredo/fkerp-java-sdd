@@ -1,33 +1,59 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { MessageModule } from 'primeng/message';
+import { SelectModule } from 'primeng/select';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
 import { ApiError } from '../../core/http/api-error';
+import { FormLeaveGuard } from '../../core/guards/can-deactivate.guard';
+import { ScreenState, ScreenStateKind } from '../../shared/screen-state/screen-state';
 import { AccountResponse, AccountStatus, LegalType } from './accounts.models';
 import { AccountsService } from './accounts.service';
 
-type ViewState = 'loading' | 'success' | 'error';
-
 /**
- * Accounts screen (SPEC-0002): a creation form plus a list filtered by status, with the
- * loading/empty/error states required by the acceptance criteria. Errors are shown by their stable
- * backend code (e.g. {@code account.document.duplicate}).
+ * Accounts screen (SPEC-0002, repaginated SPEC-0026): a creation form plus a list filtered by
+ * status, with the loading/empty/error/permission states (BR8) via {@link ScreenState}. Errors are
+ * shown by their stable backend code (e.g. {@code account.document.duplicate}). Implements
+ * {@link FormLeaveGuard} so leaving with a half-filled, unsubmitted form asks for confirmation (BR9).
  */
 @Component({
   selector: 'app-accounts-page',
-  imports: [FormsModule, TranslatePipe],
+  imports: [
+    FormsModule,
+    TranslatePipe,
+    ButtonModule,
+    InputTextModule,
+    MessageModule,
+    SelectModule,
+    TableModule,
+    TagModule,
+    ScreenState,
+  ],
   templateUrl: './accounts-page.html',
 })
-export class AccountsPage implements OnInit {
+export class AccountsPage implements OnInit, FormLeaveGuard {
   private readonly accountsService = inject(AccountsService);
 
   readonly legalTypes: LegalType[] = ['CNPJ', 'MEI', 'CPF'];
   readonly statuses: AccountStatus[] = ['ACTIVE', 'SUSPENDED', 'INACTIVE'];
 
-  readonly state = signal<ViewState>('loading');
+  readonly state = signal<'loading' | 'success' | 'error'>('loading');
   readonly accounts = signal<AccountResponse[]>([]);
   readonly errorCode = signal<string | null>(null);
   readonly submitting = signal(false);
   readonly submitError = signal<string | null>(null);
+
+  /** The state passed to the shared ScreenState (success collapses to empty when the list is empty). */
+  readonly listState = computed<ScreenStateKind>(() => {
+    const s = this.state();
+    if (s === 'success') {
+      return this.accounts().length === 0 ? 'empty' : 'success';
+    }
+    return s;
+  });
 
   filter: AccountStatus | '' = '';
   legalType: LegalType = 'CNPJ';
@@ -38,6 +64,11 @@ export class AccountsPage implements OnInit {
 
   ngOnInit(): void {
     this.load();
+  }
+
+  /** Whether the creation form holds unsaved input (SPEC-0026 BR9). */
+  isDirty(): boolean {
+    return !this.submitting() && (!!this.documentNumber || !!this.displayName);
   }
 
   /** (Re)loads the list using the current status filter. */
@@ -81,5 +112,13 @@ export class AccountsPage implements OnInit {
           this.submitError.set(error?.code ?? 'error.internal');
         },
       });
+  }
+
+  /** PrimeNG Tag severity for an account status. */
+  statusSeverity(status: AccountStatus): 'success' | 'warn' | 'secondary' {
+    if (status === 'ACTIVE') {
+      return 'success';
+    }
+    return status === 'SUSPENDED' ? 'warn' : 'secondary';
   }
 }
