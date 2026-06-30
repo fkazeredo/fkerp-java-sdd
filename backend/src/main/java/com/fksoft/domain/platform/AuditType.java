@@ -32,5 +32,11 @@ public enum AuditType {
   ACCESS_DENIED,
 
   /** A generic integration event surfaced by an adapter. */
-  INTEGRATION_EVENT
+  INTEGRATION_EVENT,
+
+  /**
+   * An administrative supplier/contract/expense change (Admin/SPEC-0025 BR6, DL-0088) — metadata
+   * only, with personal identifiers (a self-employed's CPF) masked, never logged in full.
+   */
+  ADMIN_CHANGE
 }
