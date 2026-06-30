@@ -58,7 +58,18 @@ public class OpenApiConfig {
                         + " POST /api/portfolio/brands, GET /brands/{id}, GET /brands, DELETE /brands/{id},"
                         + " POST /brands/{brandRef}/contracts, GET /brands/{brandRef}/contract-coverage,"
                         + " POST /contracts/flag-expiring, POST /brands/{brandRef}/goals,"
-                        + " GET /brands/{id}/goals/{period}/progress, POST /brands/{brandRef}/sales.")
-                .version("0.15.0"));
+                        + " GET /brands/{id}/goals/{period}/progress, POST /brands/{brandRef}/sales."
+                        + " Assets (SPEC-0021) adds the internal-patrimony context: a lean registry of the"
+                        + " Acme's own equipment, software licenses and other goods (type EQUIPMENT |"
+                        + " SOFTWARE_LICENSE | OTHER; a license requires an expiresAt), with a basic"
+                        + " lifecycle (ACTIVE/RETIRED, retirement audited), the acquisition document"
+                        + " (Compliance) and cost ledger entry (Finance) referenced by value (never an FK),"
+                        + " and a controlled-clock alert that publishes AssetLicenseExpiring once per"
+                        + " expiring license — it is patrimony, not a product (it never prices a sale), and"
+                        + " there is no depreciation/maintenance here (buy a full asset-management system if"
+                        + " needed). Endpoints: POST /api/assets, GET /assets/{id},"
+                        + " GET /assets?type=&status=&expiringWithinDays=, POST /assets/{id}/retire,"
+                        + " POST /assets/flag-expiring.")
+                .version("0.16.0"));
   }
 }
