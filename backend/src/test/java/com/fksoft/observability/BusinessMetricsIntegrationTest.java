@@ -7,8 +7,8 @@ import com.fksoft.system.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.micrometer.metrics.test.autoconfigure.AutoConfigureMetrics;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -21,10 +21,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * com.fksoft.infra.observability.BusinessMetrics} consumer turns into the Micrometer counter {@code
  * acme.identity.logins}; the test then scrapes {@code /actuator/prometheus} (as ROLE_IT) and
  * asserts the exported series {@code acme_identity_logins_total} is present, carries the common
- * {@code application} tag (AC8) and reflects the login. {@code @AutoConfigureObservability}
- * re-enables metrics export under {@code @SpringBootTest}.
+ * {@code application} tag (AC8) and reflects the login. {@code @AutoConfigureMetrics} re-enables
+ * metrics export under {@code @SpringBootTest}.
  */
-@AutoConfigureObservability
+@AutoConfigureMetrics
 class BusinessMetricsIntegrationTest extends AbstractPostgresIntegrationTest {
 
   @Autowired private TestRestTemplate restTemplate;

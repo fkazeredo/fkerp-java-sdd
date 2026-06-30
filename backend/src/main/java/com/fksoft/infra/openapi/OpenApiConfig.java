@@ -175,6 +175,6 @@ public class OpenApiConfig {
                         + " JWKS and maps realm roles to authorities. BREAKING: POST /api/identity/login"
                         + " is removed (login moves to the IdP); the security scheme is now an OIDC"
                         + " bearer token.")
-                .version("0.23.0"));
+                .version("0.23.1"));
   }
 }

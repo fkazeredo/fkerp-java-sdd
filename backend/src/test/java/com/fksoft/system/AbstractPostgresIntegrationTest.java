@@ -1,6 +1,7 @@
 package com.fksoft.system;
 
 import com.fksoft.security.TestSecurityConfig;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Import;
@@ -25,6 +26,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
  * Security tests that send a token exercise the genuine 401/403 paths.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureTestRestTemplate
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
 public abstract class AbstractPostgresIntegrationTest {
