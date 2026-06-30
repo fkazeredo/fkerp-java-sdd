@@ -4,7 +4,7 @@
 > already does today**. Updated **on every delivered slice** (see the *User manual* command in
 > `CLAUDE.md`). Portuguese version: `docs/MANUAL.md` (kept in sync).
 >
-> **System version:** 0.10.0 · **Current phase:** 8 (Finance, full)
+> **System version:** 0.18.0 · **Current phase:** 8j (Platform — e-CNPJ certificate, jobs, audit)
 
 ## 1. What the system is
 
@@ -359,6 +359,40 @@ What the operator does:
 > lives in the vault, coming from the clock's official export (not from this screen). **Heavy
 > payroll** (eSocial/FGTS/13th) = **buy/integrate**.
 
+### Phase 8 — Platform (IT): e-CNPJ certificate, jobs and system audit
+
+The **Platform** module is the **operated infrastructure** that underpins the fiscal and integration
+modules. It holds **no business rule** — it **guards** secrets, **governs** the automatic routines
+(jobs) and **records** the system audit. It is aimed at the **IT team**.
+
+What the IT operator does:
+
+- **Monitor the e-CNPJ certificate:** the digital certificate (ICP-Brasil) is mandatory to issue
+  NFS-e and sign the time clock. The system **keeps the certificate encrypted** (the secret material —
+  the private key and password — **never** appears on screen, in a log or a report) and shows **only
+  the public data**: holder, validity, **days to expiry** and status (valid / expiring / expired).
+  When validity approaches (30 days) the system **raises an alert** automatically — so the certificate
+  never expires unnoticed and blocks invoice issuance.
+- **See the job catalog and history:** the system lists the **automatic routines** (the time-clock
+  crawler, the sweeps for SLA deadlines, expiring licenses, expiring contracts, vault retention and
+  certificate validity) and the **history of each run**: when it started and finished, whether it
+  **succeeded, failed or was skipped** (because it had already run for that window), and how many items
+  it handled. A failure shows up **as a failure** — the system **never** masks a failure as success.
+- **Trigger a routine manually:** when needed, IT can **run a routine on demand** (e.g. re-run the
+  expiring-license sweep). The system guarantees **only one run at a time** (if it is already running,
+  it reports it as **running/locked**) and that it **does not duplicate** the window's work.
+- **Query the system audit:** an **append-only** record (it cannot be deleted or rewritten) of
+  **security, integration and job** facts — who did what, when. It can be filtered by **actor**,
+  **type** and **time window**. The audit keeps **metadata only** — **never** the certificate material.
+
+> For the technically minded: `GET /api/platform/certificate/status` (certificate status — **metadata
+> only**), `POST /api/platform/certificate` (custody a certificate; the material is encrypted and never
+> returned), `GET /api/platform/jobs` (catalog), `GET /api/platform/jobs/runs?job=&status=` (history),
+> `POST /api/platform/jobs/{name}/trigger` (manual trigger, replies 202; already running = 409),
+> `GET /api/platform/audit?actor=&type=&from=&to=` (audit). **Where** the certificate is actually
+> custodied (cloud vault/HSM) and whether it is A1 (file) or A3 (token) is the owner's infra decision;
+> today the material is encrypted (AES-256-GCM) with the key held **outside the database**.
+
 ## 4. Glossary
 
 - **Backend / server:** the part of the system that processes the rules and talks to the database.
@@ -413,6 +447,16 @@ What the operator does:
   It is final.
 - **Expiring license:** a software license whose **expiry date** is near (within 30 days) or has passed;
   the system **warns** so it can be renewed, without blocking anything.
+- **e-CNPJ certificate:** the company's digital certificate (ICP-Brasil), mandatory to issue invoices
+  and sign the time clock. The system **keeps it encrypted** and shows **only the public data**
+  (validity, holder) — never the key/password.
+- **Secret custody:** keeping a secret material (certificate, password) **encrypted**, reachable only
+  by the system, never exposed. The encryption key lives **outside the database**.
+- **Automatic routine (*job*):** a task the system runs by itself on a schedule (the clock crawler, the
+  deadline sweeps). **Job governance** guarantees each runs **one at a time**, **without duplicating**
+  the window, with a **history** of every run.
+- **System audit:** the **append-only** record of security/integration/job facts (who, what, when) for
+  traceability. It keeps **metadata only**, never a secret.
 
 ## 5. Manual version history
 
@@ -427,6 +471,7 @@ What the operator does:
 | 0.15.0 | 8 — Portfolio | Representation: register/deactivate/list **represented brands** (unique identifier); register **representation contracts** (validity + a vault document), with an **alert** (not a block) for selling without an in-force contract and an **expiring-contract warning** (within 30 days); set **goals per brand** (volume or revenue) and track **realized vs goal** from the brand's **confirmed sales**. It touches no price or commission. |
 | 0.16.0 | 8 — Patrimony (Assets) | Registry of **internal patrimony** (equipment, software licenses, other goods): register with **type/identification/date/cost** and value links to the **document** (vault) and the **finance entry**; a software license requires an **expiry date**; an audited, **final retirement** (with a reason); list/filter by type/status and by **expiring licenses**; a **warning** (once per license) for licenses expiring within 30 days. It is patrimony, not a product — no price/sale; full asset management = buy. |
 | 0.17.0 | 8 — People | Minimal HR on top of the time clock: register a **collaborator** (unique identifier, admission, **contracted journey** HH:mm, status active/on-leave/terminated); **process the period journey** from the operational mirror and compute the **time-bank** (balance = worked − contracted; overtime/shortfall, negative allowed) — it only **measures**, it is not payroll; **read** the journey and time-bank; **discrepancies** (odd/missing punch, incoherent journal) become an **alert** in a treatment queue, **no auto-correction**; **archive the payslip** in the vault (payroll, 5-year retention, personal data). Heavy payroll (eSocial/FGTS/13th) = buy/integrate. |
+| 0.18.0 | 8 — Platform | IT infrastructure: **e-CNPJ certificate custody** with the material **encrypted** (the key/password never appears) — the screen shows **only metadata** (holder, validity, days-to-expiry, status) and the system **alerts** when the certificate is about to expire (30 days); **job governance** — catalog and **history** of the automatic routines, **manual trigger** (only one run at a time = 409 if already running; no duplication within the window), and a failure shows up **as a failure** (never masked as success); **append-only system audit** of security/integration/job events (who/what/when), filterable, **metadata only** (never the secret). |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of
