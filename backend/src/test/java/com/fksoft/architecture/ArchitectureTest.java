@@ -234,6 +234,48 @@ class ArchitectureTest {
       intelligenceAdvisesNeverCommandsForSource("..domain.intelligence..");
 
   /**
+   * The Portfolio module REFERENCES brands and PROJECTS the realized from sales events; it MUST NOT
+   * price nor command the sale (SPEC-0020 BR6/DL-0061/DL-0062). This rule proves the principle
+   * structurally — {@code portfolio} must not depend on any other domain module's {@code *Service}
+   * (the command facades, e.g. {@code BookingService}/{@code ReconciliationService}) nor reach into
+   * any other module's {@code internal} package. It may still depend on the exposed events/views/
+   * value objects, the {@code money} kernel and the error kernel. Planting a dependency on, say,
+   * {@code BookingService} makes this fail.
+   */
+  @ArchTest
+  static final ArchRule PORTFOLIO_REFERENCES_NEVER_COMMANDS_THE_SALE =
+      noClasses()
+          .that()
+          .resideInAPackage("..domain.portfolio..")
+          .should()
+          .dependOnClassesThat(isForeignCommandFacadeOrInternal("com.fksoft.domain.portfolio"))
+          .as(
+              "portfolio must reference, never command the sale: no dependency on another module's "
+                  + "*Service or internal package (SPEC-0020 BR6)")
+          .allowEmptyShould(true);
+
+  /**
+   * Predicate: a target type that is another domain module's {@code *Service} command facade or
+   * sits in another module's {@code internal} package (relative to {@code ownModulePrefix}).
+   */
+  private static com.tngtech.archunit.base.DescribedPredicate<JavaClass>
+      isForeignCommandFacadeOrInternal(String ownModulePrefix) {
+    return new com.tngtech.archunit.base.DescribedPredicate<>(
+        "another domain module's *Service command facade or internal package") {
+      @Override
+      public boolean test(JavaClass target) {
+        String pkg = target.getPackageName();
+        if (!pkg.startsWith("com.fksoft.domain.") || pkg.startsWith(ownModulePrefix)) {
+          return false;
+        }
+        boolean otherInternal = pkg.contains(".internal");
+        boolean commandFacade = target.getSimpleName().endsWith("Service");
+        return otherInternal || commandFacade;
+      }
+    };
+  }
+
+  /**
    * Builds the "advises, never commands" rule for a given source package. Production uses {@code
    * ..domain.intelligence..}; the teeth test re-points it at the fixture package to prove the rule
    * actually fails when an intelligence-side type touches a command facade.

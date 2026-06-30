@@ -18,6 +18,7 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0048](DL-0048-payout-payment-gateway-acl-async-webhook.md) | Payout: gateway de pagamento como porta + **mock rastreável com webhook assíncrono** (ADR 0006) | **Baixa** | Moderada | Meio de pagamento real é Open Question da SPEC-0017; só o dono fecha (o mock prova o contrato) |
 | [DL-0049](DL-0049-payout-foreign-settlement-rate-and-brl-baixa.md) | Payout: liquidação do fornecedor com `settlementRate` (USD) + baixa em **BRL** | **Baixa** | **Cara** | Fluxo de câmbio real (remessa vs BRL) é Open Question; a tese de câmbio é compartilhada por Payout/Reconciliation/Exchange |
 | [DL-0058](DL-0058-marketing-lgpd-erasure-preserves-revocation-and-metrics-as-logs.md) | Marketing: exclusão LGPD apaga PII mas preserva tombstone de revogação (anonimizado) | **Baixa** | **Cara** | **Alcance do apagamento × dever de prova/supressão só o DPO/jurídico fecha**; expurgo é destrutivo (PII não volta) |
+| [DL-0062](DL-0062-portfolio-brand-sale-attribution-intake-and-realized-projection.md) | Portfolio: realizado por marca via **intake próprio** (reserva→marca) + projeção de eventos, sem alterar o evento do Booking | **Baixa** | Moderada | **Qual campo identifica a marca na venda é incógnita de negócio** (só o dono fecha); intake explícito + seam rastreável |
 
 > _Nota Fase 8e:_ DL-0052/0053/0054 são **Confiança=Média / Reversibilidade=Barata–Moderada** —
 > não entram neste destaque. O "quais custos contam" do custo de servir (DL-0053) e os prazos de
@@ -36,6 +37,13 @@ conforme `docs/RUN-PHASE.md`.
 > Reversibilidade=Moderada** (porta de newsletter trocável; consent log; intake de atribuição;
 > critério jsonb validado) — reversões localizadas. **DL-0058** é a única do destaque (Baixa/Cara):
 > o apagamento LGPD é destrutivo e seu alcance exato é decisão de DPO/jurídico.
+
+> _Nota Fase 8g (Portfolio — SPEC-0020):_ DL-0060 (dois contextos, Alta/Moderada), DL-0061 (vender
+> sem contrato vigente apenas alerta, Média/Barata) e DL-0063 (alerta de expiração por relógio
+> controlado, Média/Barata) são reversões baratas/localizadas. **DL-0062** é a do destaque
+> (Confiança=Baixa): **qual campo identifica a marca na venda** é incógnita de negócio — só o dono
+> fecha. A reversão é Moderada (trocar a fonte do casamento no listener quando a marca for nativa na
+> venda), não Cara: o intake próprio + seam rastreável (espelha DL-0057) protege o contrato de metas.
 
 ## Todas as decisões
 
@@ -100,3 +108,7 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0057](DL-0057-marketing-attribution-intake-and-campaign-converted.md) | 8f | Marketing: atribuição por **intake próprio** (`code→booking`, UNIQUE) + confirmação na `BookingConfirmed` → publica `CampaignConverted`; **não** altera o evento do Booking; grafo acíclico | Média | Moderada |
 | [DL-0058](DL-0058-marketing-lgpd-erasure-preserves-revocation-and-metrics-as-logs.md) | 8f | Marketing: exclusão LGPD remove PII de marketing mas **preserva tombstone de revogação** (anonimizado) p/ supressão futura; `attributions`/métricas sem PII permanecem | **Baixa** | **Cara** |
 | [DL-0059](DL-0059-marketing-segment-criteria-json-and-crm-buy-vs-build.md) | 8f | Marketing: `Segment` com `criteria_json` **validado** (catálogo fechado, minimização BR3); fronteira **"não é CRM"** (CRM pleno = comprar, este módulo = consentimento/atribuição) | Média | Moderada |
+| [DL-0060](DL-0060-portfolio-separate-context-from-assets.md) | 8g | Portfolio é contexto **separado** de Assets (Q2: dois contextos, não um); 17º módulo Modulith | Alta | Moderada |
+| [DL-0061](DL-0061-portfolio-sell-without-active-contract-alerts-not-blocks.md) | 8g | Portfolio: vender marca **sem contrato vigente** apenas **alerta** (v1), não bloqueia; cobertura de contrato exposta como leitura | Média | Barata |
+| [DL-0062](DL-0062-portfolio-brand-sale-attribution-intake-and-realized-projection.md) | 8g | Portfolio: realizado por marca via **intake próprio** (`booking→brandRef`, UNIQUE) + projeção idempotente de `BookingConfirmed` (VOLUME) e `SpreadRealized` (REVENUE); **não** altera o evento da venda | **Baixa** | Moderada |
+| [DL-0063](DL-0063-portfolio-representation-expiring-controlled-clock-alert.md) | 8g | Portfolio: `RepresentationExpiring` por **job de relógio controlado** (antecedência 30d, idempotente, alerta — não bloqueio) | Média | Barata |

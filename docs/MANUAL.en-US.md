@@ -245,6 +245,48 @@ What the operator does:
 > `(campaign, recipient)`; the newsletter provider is an ACL (traceable mock). Errors never leak
 > personal data.
 
+### Phase 8 — Portfolio (represented brands, contracts and goals)
+
+The **portfolio** records **what the Acme represents** commercially: the **brands/suppliers** it sells
+on behalf of third parties (the Acme is a representative/GSA), the **representation contracts** that
+grant that right and the **goals per brand**. It does **not** touch prices or commission — it is the
+**reference** ("which brand") for quoting, commission and the Intelligence, and it helps governance
+track contracts and goals.
+
+What the operator does:
+
+- **Register a brand:** provides the brand **identifier** (e.g. `ALAMO`) and the **display name**. The
+  brand starts **active**. Two brands cannot share the same identifier.
+- **Deactivate a brand:** when the representation ends, the brand becomes **inactive** (kept for history,
+  but no longer actively represented).
+- **List/look up brands:** see all, or filter by **active/inactive**.
+- **Register a representation contract:** provides the **validity** (from/to), the **contract document**
+  (already stored in the document vault — Compliance) and, optionally, **reference conditions** (not
+  prices). Selling a brand **without an in-force contract** is **not blocked** — the system only
+  **signals** (alerts), and whoever makes the sale decides.
+- **Check contract coverage:** ask whether a brand has an **in-force contract** on a date — a support
+  lookup (alert), never a block.
+- **Expiring-contract alert:** the system signals, **once per contract**, the contracts that are
+  **about to expire** (within 30 days) or already expired, so governance can act. It is a **warning**,
+  not a block.
+- **Set a goal per brand:** pick the brand, the **period** (a year `2026` or a month `2026-06`) and the
+  **metric** — **revenue** (an amount in BRL) or **volume** (a count of sales). Each brand has **one**
+  goal per period and metric.
+- **Attribute a sale to a brand:** record that a **booking** belongs to a represented brand. It is this
+  link that lets the system tally the sale under the right brand.
+- **Track realized vs goal:** the system shows, for a brand and period, **how much was realized** and
+  the **attainment percentage**. The realized comes from the brand's **confirmed sales** (volume) and
+  their **realized spread** (revenue) — computed from the sales events, **without changing** the sale.
+  Sales with no attributed brand count toward no goal.
+
+> For IT: `POST /api/portfolio/brands`, `GET /brands/{id}`, `GET /brands?status=`,
+> `DELETE /brands/{id}` (deactivate); `POST /brands/{brandRef}/contracts`,
+> `GET /brands/{brandRef}/contract-coverage?on=`; `POST /contracts/flag-expiring` (triggers the expiry
+> alert); `POST /brands/{brandRef}/goals`, `GET /brands/{id}/goals/{period}/progress`,
+> `POST /brands/{brandRef}/sales` (sale→brand intake). Identifiers from other contexts (document,
+> booking, case) are **values**, no FK; no price/commission lives here — the realized is just a
+> read-model projection of the sales events.
+
 ## 4. Glossary
 
 - **Backend / server:** the part of the system that processes the rules and talks to the database.
@@ -300,6 +342,7 @@ What the operator does:
 | 0.10.0 | 8 — Finance (full) | Accounts Payable/Receivable and the monthly close with the "golden rule" (no close without the invoice); **automatic entries** from booking cancellations and no-shows (exactly once, no duplication); per-currency trial balance for the period. |
 | 0.13.0 | 8 — AfterSales | After-sales: support cases (complaint/change/cancellation/refund/info) tied to a booking; **governed SLA deadlines** (24h/72h/48h, tightenable by directive) with a non-blocking breach alert; resolution that **forwards** a refund to Payout (once, without cancelling the supplier obligation) and a cancellation to the booking; per-case "cost to serve". |
 | 0.14.0 | 8 — Marketing | B2B marketing with mandatory **LGPD consent**: record/revoke/look up consent (history preserved); **segment** over existing data with a reach **preview**; **campaign** that **sends only to those who consented** (suppressed are counted, no double-send) via a newsletter provider; **attribution** code→booking that becomes a **conversion signal** for the DSS; **LGPD erasure** that deletes marketing data but preserves the revocation proof. |
+| 0.15.0 | 8 — Portfolio | Representation: register/deactivate/list **represented brands** (unique identifier); register **representation contracts** (validity + a vault document), with an **alert** (not a block) for selling without an in-force contract and an **expiring-contract warning** (within 30 days); set **goals per brand** (volume or revenue) and track **realized vs goal** from the brand's **confirmed sales**. It touches no price or commission. |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of

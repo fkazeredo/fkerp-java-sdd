@@ -246,6 +246,47 @@ O que o operador faz:
 > `(campanha, destinatário)`; o provedor de newsletter é uma ACL (mock rastreável). Erros não vazam
 > dado pessoal.
 
+### Fase 8 — Portfólio (marcas representadas, contratos e metas)
+
+O **portfólio** registra **o que a Acme representa** comercialmente: as **marcas/fornecedores** que ela
+vende em nome de terceiros (a Acme é uma representante/GSA), os **contratos de representação** que dão
+esse direito e as **metas por marca**. Ele **não** mexe em preço nem em comissão — serve de
+**referência** ("qual marca") para a cotação, a comissão e a Inteligência, e ajuda a governança a
+acompanhar contratos e metas.
+
+O que o operador faz:
+
+- **Cadastrar uma marca:** informa o **identificador** da marca (ex.: `ALAMO`) e o **nome** de exibição.
+  A marca nasce **ativa**. Não se cadastram duas marcas com o mesmo identificador.
+- **Desativar uma marca:** quando a representação termina, a marca fica **inativa** (continua no
+  histórico, mas não é mais representada ativamente).
+- **Listar/consultar marcas:** ver todas, ou filtrar por **ativas/inativas**.
+- **Registrar um contrato de representação:** informa a **vigência** (de/até), o **documento do
+  contrato** (que já está guardado no cofre de documentos — Compliance) e, se quiser, **condições de
+  referência** (não são preços). Vender uma marca **sem contrato vigente** **não é bloqueado** — o
+  sistema apenas **sinaliza** (alerta), e quem faz a venda decide.
+- **Conferir a cobertura do contrato:** perguntar se uma marca tem **contrato vigente** numa data — é
+  uma consulta de apoio (alerta), nunca uma trava.
+- **Alerta de contrato a vencer:** o sistema sinaliza, **uma vez por contrato**, os contratos que
+  **estão a vencer** (até 30 dias) ou já venceram, para a governança agir. É **aviso**, não bloqueio.
+- **Definir uma meta por marca:** escolhe a marca, o **período** (um ano `2026` ou um mês `2026-06`) e
+  a **métrica** — **receita** (um valor em reais) ou **volume** (uma quantidade de vendas). Cada marca
+  tem **uma** meta por período e métrica.
+- **Atribuir uma venda à marca:** registra que uma **reserva** pertence a uma marca representada. É
+  esse vínculo que permite ao sistema somar a venda na marca certa.
+- **Acompanhar o realizado vs meta:** o sistema mostra, para uma marca e período, **quanto já foi
+  realizado** e o **percentual de atingimento**. O realizado vem das **vendas confirmadas** da marca
+  (volume) e do **spread realizado** delas (receita) — calculado a partir dos eventos de venda, **sem
+  alterar** a venda. Vendas sem marca atribuída não entram em nenhuma meta.
+
+> Para quem é de TI: `POST /api/portfolio/brands`, `GET /brands/{id}`, `GET /brands?status=`,
+> `DELETE /brands/{id}` (desativa); `POST /brands/{brandRef}/contracts`,
+> `GET /brands/{brandRef}/contract-coverage?on=`; `POST /contracts/flag-expiring` (dispara o alerta de
+> expiração); `POST /brands/{brandRef}/goals`, `GET /brands/{id}/goals/{period}/progress`,
+> `POST /brands/{brandRef}/sales` (intake venda→marca). Identificadores de outros contextos (documento,
+> reserva, caso) são **valores**, sem FK; nenhum preço/comissão mora aqui — o realizado é só uma
+> projeção (read-model) dos eventos de venda.
+
 ## 4. Glossário
 
 - **Backend / servidor:** a parte do sistema que processa as regras e fala com o banco de dados.
@@ -301,6 +342,7 @@ O que o operador faz:
 | 0.10.0 | 8 — Finance (full) | Contas a Pagar/Receber e o fechamento mensal com a "regra de ouro" (não fecha sem a nota); **lançamentos automáticos** a partir de cancelamentos e no-show das reservas (uma vez só, sem duplicar); balancete do período por moeda. |
 | 0.13.0 | 8 — AfterSales | Pós-venda: chamados (reclamação/alteração/cancelamento/reembolso/informação) ligados à reserva; prazos de **SLA governados** (24h/72h/48h, ajustáveis por diretiva) com alerta de violação que **não trava**; resolução que **encaminha** reembolso ao Payout (uma vez, sem cancelar a obrigação do fornecedor) e cancelamento à reserva; "custo de servir" por chamado. |
 | 0.14.0 | 8 — Marketing | Marketing B2B com **consentimento LGPD** obrigatório: registrar/revogar/consultar consentimento (histórico preservado); **segmento** por dados existentes com **prévia** de alcance; **campanha** que **só envia para quem consentiu** (suprimidos contados, sem envio duplicado) via provedor de newsletter; **atribuição** código→reserva que vira **sinal de conversão** para o DSS; **exclusão LGPD** que apaga o dado de marketing mas preserva a prova de revogação. |
+| 0.15.0 | 8 — Portfólio | Representação: cadastrar/desativar/listar **marcas representadas** (identificador único); registrar **contratos de representação** (vigência + documento no cofre), com **alerta** (não bloqueio) para venda sem contrato vigente e **aviso de contrato a vencer** (até 30 dias); definir **metas por marca** (volume ou receita) e acompanhar o **realizado vs meta** a partir das **vendas confirmadas** da marca. Não mexe em preço nem comissão. |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.

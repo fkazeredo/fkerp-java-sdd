@@ -60,6 +60,11 @@ import com.fksoft.domain.payout.PayoutWebhookSignatureInvalidException;
 import com.fksoft.domain.people.PointAfdInvalidException;
 import com.fksoft.domain.people.PointSnapshotInvalidException;
 import com.fksoft.domain.people.PointSnapshotNotFoundException;
+import com.fksoft.domain.portfolio.BrandDuplicateException;
+import com.fksoft.domain.portfolio.BrandGoalInvalidException;
+import com.fksoft.domain.portfolio.BrandInvalidException;
+import com.fksoft.domain.portfolio.BrandNotFoundException;
+import com.fksoft.domain.portfolio.RepresentationContractInvalidException;
 import com.fksoft.domain.quoting.QuoteAccountNotFoundException;
 import com.fksoft.domain.quoting.QuoteNotFoundException;
 import com.fksoft.domain.quoting.QuoteOverrideCurrencyMismatchException;
@@ -161,7 +166,12 @@ public class HttpErrorMapping {
           entry(SegmentInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(CampaignInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(CampaignNotFoundException.class, HttpStatus.NOT_FOUND),
-          entry(NewsletterException.class, HttpStatus.BAD_GATEWAY));
+          entry(NewsletterException.class, HttpStatus.BAD_GATEWAY),
+          entry(BrandNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(BrandDuplicateException.class, HttpStatus.CONFLICT),
+          entry(BrandInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(RepresentationContractInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(BrandGoalInvalidException.class, HttpStatus.BAD_REQUEST));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {
