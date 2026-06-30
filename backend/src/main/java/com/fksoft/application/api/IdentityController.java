@@ -1,18 +1,14 @@
 package com.fksoft.application.api;
 
-import com.fksoft.application.api.dto.LoginRequest;
-import com.fksoft.application.api.dto.LoginResponse;
 import com.fksoft.application.api.dto.MeResponse;
-import com.fksoft.domain.identity.AuthenticatedUser;
 import com.fksoft.domain.identity.IdentityService;
 import com.fksoft.domain.identity.RoleView;
 import com.fksoft.domain.platform.AuditType;
 import com.fksoft.domain.platform.SystemAuditService;
 import com.fksoft.domain.platform.SystemAuditView;
-import com.fksoft.infra.security.JwtIssuer;
+import com.fksoft.infra.security.UserContext;
 import com.fksoft.infra.security.UserContextProvider;
 import com.fksoft.infra.web.PageResponse;
-import jakarta.validation.Valid;
 import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -22,19 +18,27 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST endpoints for the Identity module (SPEC-0024). {@code POST /login} (public) authenticates a
- * local user and returns a bearer JWT; {@code GET /me} returns the current principal from the
- * verified token; {@code GET /roles} lists the role/permission catalogue; {@code GET /access-audit}
- * reads the access trail (login/denial) from the Platform's append-only {@code system_audit}
- * (DL-0083). The delivery layer mints the token from the authenticated user; the backend is the
- * authorization authority (security.md).
+ * REST endpoints for the Identity module (SPEC-0024 — graduated to the external IdP in Phase 13,
+ * DL-0104/0105). Login now happens at the external OIDC IdP (Keycloak, Authorization Code + PKCE);
+ * the in-house {@code POST /login} of the 8k was removed (breaking — BR14). What remains:
+ *
+ * <ul>
+ *   <li>{@code GET /me} — the current principal resolved from the verified IdP token; it is the
+ *       frontend's post-login session bootstrap, so it records the {@code AUTH_LOGIN} access audit
+ *       (DL-0083) once per login.
+ *   <li>{@code GET /roles} — the local role/permission catalogue (the source of truth of internal
+ *       authorization — BR16).
+ *   <li>{@code GET /access-audit} — the access trail (login/denial) read from the Platform's
+ *       append-only {@code system_audit}.
+ * </ul>
+ *
+ * <p>The backend is the authorization authority (security.md); the frontend only mirrors the
+ * token's user/roles for display and routing.
  */
 @RestController
 @RequestMapping("/api/identity")
@@ -42,22 +46,21 @@ import org.springframework.web.bind.annotation.RestController;
 public class IdentityController {
 
   private final IdentityService identityService;
-  private final JwtIssuer jwtIssuer;
   private final UserContextProvider userContextProvider;
   private final SystemAuditService auditService;
 
-  /** Authenticates and returns a bearer token (public). Invalid credentials → generic 401 (BR4). */
-  @PostMapping("/login")
-  public LoginResponse login(@Valid @RequestBody LoginRequest request) {
-    AuthenticatedUser user = identityService.login(request.username(), request.password());
-    String token = jwtIssuer.issue(user);
-    return new LoginResponse(token, "Bearer", jwtIssuer.ttlSeconds(), MeResponse.from(user));
-  }
-
-  /** The current principal resolved from the verified token (BR1). */
+  /**
+   * The current principal resolved from the verified IdP token (BR1). As the frontend's post-login
+   * identity bootstrap, it records the {@code AUTH_LOGIN} access audit (BR3/DL-0083) for the
+   * authenticated actor; anonymous calls are not audited.
+   */
   @GetMapping("/me")
   public MeResponse me() {
-    return MeResponse.from(userContextProvider.currentUser());
+    UserContext context = userContextProvider.currentUser();
+    if (context.userId() != null || !"anonymous".equals(context.username())) {
+      identityService.recordLogin(context.username(), context.userId());
+    }
+    return MeResponse.from(context);
   }
 
   /** The role/permission catalogue (authorization: {@code identity:role:read}). */

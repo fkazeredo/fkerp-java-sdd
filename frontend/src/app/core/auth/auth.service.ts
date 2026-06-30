@@ -1,100 +1,78 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Observable, catchError, of, tap } from 'rxjs';
+import { OAuthService } from 'angular-oauth2-oidc';
+import { Observable, catchError, map, of } from 'rxjs';
 import { API_BASE_URL } from '../config/api';
-import { AuthUser, LoginCommand, LoginResult } from './auth.models';
-
-const TOKEN_KEY = 'acme.erp.token';
-const USER_KEY = 'acme.erp.user';
-/** Revalidate this many seconds before the token expires (DL-0092). */
-const REVALIDATE_LEAD_SECONDS = 60;
+import { AuthUser } from './auth.models';
+import { buildAuthConfig } from './oidc.config';
 
 /**
- * Holds the authentication state on the client (SPEC-0024). It calls `POST /api/identity/login`,
- * persists the bearer token and the resolved user in localStorage (so a refresh keeps the session),
- * and exposes the current user as a signal for the shell/guard. The backend remains the single
- * authorization authority — this state is only mirrored for display and routing; it never decides
- * access on its own.
- *
- * <p>Silent session revalidation (SPEC-0026 BR7, DL-0092): there is no refresh token in this phase,
- * so "silent refresh" means revalidating the stored token against the backend via `GET /me` — on
- * boot and shortly before expiry. A 401 clears the session quietly. A real token refresh arrives
- * with the external OIDC issuer in Phase 13.
+ * Holds the authentication state on the client (SPEC-0024 — graduated to OIDC in Phase 13, DL-0106).
+ * It delegates the login to the external IdP (Keycloak) via Authorization Code + PKCE
+ * (`angular-oauth2-oidc`) and renews the access token through a refresh token (real silent-refresh,
+ * graduating the `/me`-revalidation stopgap of DL-0092). The backend remains the single authorization
+ * authority — this state is only mirrored (from the verified token's claims, confirmed by `GET /me`)
+ * for display and routing; it never decides access on its own.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private readonly oauth = inject(OAuthService);
   private readonly http = inject(HttpClient);
 
-  private readonly userSignal = signal<AuthUser | null>(readStoredUser());
-  private tokenValue: string | null = readStoredToken();
-  private revalidateTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly userSignal = signal<AuthUser | null>(null);
 
   /** The current user, or null when logged out. */
   readonly user = this.userSignal.asReadonly();
-  /** Whether a user is authenticated. */
+  /** Whether a user is authenticated (a valid access token resolved into a user). */
   readonly isAuthenticated = computed(() => this.userSignal() !== null);
 
-  /** The current bearer token (used by the auth interceptor), or null. */
+  /** The current bearer access token (used by the auth interceptor), or null. */
   token(): string | null {
-    return this.tokenValue;
-  }
-
-  /** Authenticates and stores the session; surfaces the normalized ApiError on failure. */
-  login(command: LoginCommand): Observable<LoginResult> {
-    return this.http.post<LoginResult>(`${API_BASE_URL}/identity/login`, command).pipe(
-      tap((result) => {
-        this.tokenValue = result.token;
-        localStorage.setItem(TOKEN_KEY, result.token);
-        localStorage.setItem(USER_KEY, JSON.stringify(result.user));
-        this.userSignal.set(result.user);
-        this.scheduleRevalidation(result.expiresIn);
-      }),
-    );
+    return this.oauth.getAccessToken() || null;
   }
 
   /**
-   * Called once at app startup (DL-0092). If a token is stored, revalidate it silently against the
-   * backend so the mirrored user comes from the verified token, not from localStorage; otherwise
-   * there is nothing to do. Never throws — a failure just clears the session.
+   * Configures the OIDC client and completes the login if the browser is returning from the IdP with
+   * an authorization code. Runs once at app startup (app.config). Real silent-refresh is enabled so
+   * the access token is renewed via the refresh token before it expires. Resolves to the current user
+   * (or null). Never throws — a failure leaves the session logged out.
    */
-  bootstrapSession(): void {
-    if (!this.tokenValue) {
-      return;
+  async bootstrapSession(): Promise<AuthUser | null> {
+    this.oauth.configure(buildAuthConfig());
+    try {
+      await this.oauth.loadDiscoveryDocumentAndTryLogin();
+    } catch {
+      this.userSignal.set(null);
+      return null;
     }
-    this.verifySession().subscribe();
-  }
-
-  /**
-   * Revalidates the current token via `GET /me`. On 200, refreshes the mirrored user from the
-   * backend's verified response and (re)schedules the next revalidation. On any error (e.g. 401),
-   * clears the session. Emits the resolved user or null. Safe to call repeatedly.
-   */
-  verifySession(): Observable<AuthUser | null> {
-    if (!this.tokenValue) {
-      return of(null);
+    if (this.oauth.hasValidAccessToken()) {
+      this.oauth.setupAutomaticSilentRefresh();
+      // Confirm the token with the backend (the single authority) and record the AUTH_LOGIN audit.
+      return new Promise((resolve) => this.verifySession().subscribe((u) => resolve(u)));
     }
-    return this.http.get<AuthUser>(`${API_BASE_URL}/identity/me`).pipe(
-      tap((user) => {
-        localStorage.setItem(USER_KEY, JSON.stringify(user));
-        this.userSignal.set(user);
-      }),
-      catchError(() => {
-        this.logout();
-        return of(null);
-      }),
-    );
-  }
-
-  /** Clears the local session and cancels any pending revalidation. */
-  logout(): void {
-    if (this.revalidateTimer) {
-      clearTimeout(this.revalidateTimer);
-      this.revalidateTimer = null;
-    }
-    this.tokenValue = null;
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
     this.userSignal.set(null);
+    return null;
+  }
+
+  /** Starts the OIDC login (redirects to the IdP). `returnUrl` is preserved as router state. */
+  login(returnUrl?: string): void {
+    this.oauth.initLoginFlow(returnUrl ?? '/');
+  }
+
+  /** Logs out locally and at the IdP (ends the SSO session), then returns to the app root. */
+  logout(): void {
+    this.userSignal.set(null);
+    this.oauth.logOut();
+  }
+
+  /**
+   * Clears the local session WITHOUT redirecting to the IdP (used by the 401 handler): drops the
+   * tokens and the mirrored user so the guard sends the user to the login screen, where a fresh
+   * OIDC login can start. Avoids an aggressive IdP round-trip on a transient 401.
+   */
+  clearLocalSession(): void {
+    this.userSignal.set(null);
+    this.oauth.logOut(true); // noRedirectToLogoutUrl = true → local-only token revocation
   }
 
   /** Whether the current user holds the given role. */
@@ -102,36 +80,26 @@ export class AuthService {
     return this.userSignal()?.roles.includes(role) ?? false;
   }
 
-  /** Schedules a silent `/me` revalidation shortly before the token expires (DL-0092). */
-  private scheduleRevalidation(expiresInSeconds: number): void {
-    if (this.revalidateTimer) {
-      clearTimeout(this.revalidateTimer);
-      this.revalidateTimer = null;
+  /**
+   * Validates the current session against the backend via `GET /me` (the backend is the authority).
+   * On 200 it mirrors the verified user; on any error it clears the session. Emits the resolved user
+   * or null. It is also the post-login identity bootstrap, so the backend records the AUTH_LOGIN
+   * audit on this call.
+   */
+  verifySession(): Observable<AuthUser | null> {
+    if (!this.token()) {
+      this.userSignal.set(null);
+      return of(null);
     }
-    const delaySeconds = Math.max(expiresInSeconds - REVALIDATE_LEAD_SECONDS, 1);
-    // Guard against absurd values (and tests that run with fake timers won't schedule real work).
-    if (!Number.isFinite(delaySeconds)) {
-      return;
-    }
-    this.revalidateTimer = setTimeout(() => {
-      this.verifySession().subscribe();
-    }, delaySeconds * 1000);
-  }
-}
-
-function readStoredToken(): string | null {
-  try {
-    return localStorage.getItem(TOKEN_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function readStoredUser(): AuthUser | null {
-  try {
-    const raw = localStorage.getItem(USER_KEY);
-    return raw ? (JSON.parse(raw) as AuthUser) : null;
-  } catch {
-    return null;
+    return this.http.get<AuthUser>(`${API_BASE_URL}/identity/me`).pipe(
+      map((user) => {
+        this.userSignal.set(user);
+        return user as AuthUser | null;
+      }),
+      catchError(() => {
+        this.userSignal.set(null);
+        return of(null);
+      }),
+    );
   }
 }

@@ -1,48 +1,21 @@
 <div class="login">
-  <form class="login__card app-card" (ngSubmit)="submit()" #f="ngForm">
+  <div class="login__card app-card">
     <div class="login__brand">
       <i class="pi pi-globe" aria-hidden="true"></i>
       <span>{{ 'shell.brand' | translate }}</span>
     </div>
     <h1 class="login__title">{{ 'login.title' | translate }}</h1>
-
-    <div class="field">
-      <label for="login-username">{{ 'login.username' | translate }}</label>
-      <input
-        pInputText
-        id="login-username"
-        name="username"
-        [(ngModel)]="username"
-        required
-        autocomplete="username"
-      />
-    </div>
-
-    <div class="field">
-      <label for="login-password">{{ 'login.password' | translate }}</label>
-      <p-password
-        inputId="login-password"
-        name="password"
-        [(ngModel)]="password"
-        [feedback]="false"
-        [toggleMask]="true"
-        autocomplete="current-password"
-        required
-      />
-    </div>
-
-    @if (errorCode()) {
-      <p-message severity="error" styleClass="login__error" data-testid="login-error">
-        {{ errorCode() | translate }}
-      </p-message>
-    }
+    <p class="login__hint">{{ 'login.ssoHint' | translate }}</p>
 
     <p-button
-      type="submit"
-      [disabled]="submitting() || f.invalid"
+      type="button"
+      icon="pi pi-sign-in"
+      [disabled]="submitting()"
       [loading]="submitting()"
       styleClass="login__submit"
-      [label]="(submitting() ? 'login.submitting' : 'login.submit') | translate"
+      data-testid="login-sso"
+      [label]="(submitting() ? 'login.submitting' : 'login.ssoSubmit') | translate"
+      (onClick)="signIn()"
     />
-  </form>
+  </div>
 </div>

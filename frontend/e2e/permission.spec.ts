@@ -1,20 +1,15 @@
 import { test, expect } from '@playwright/test';
+import { tokenFor } from './helpers';
 
 /**
- * Permission sad path (SPEC-0028 AC4 family / SPEC-0024 DL-0082). The backend is the single
- * authorization authority: a sensitive action requires the corresponding role, and a token without it
- * is denied with 403 — proven end-to-end through the same-origin /api proxy on the isolated stack.
+ * Permission sad path (SPEC-0028 AC4 family / SPEC-0024 DL-0082; OIDC tokens — Phase 13). The backend
+ * is the single authorization authority: a sensitive action requires the corresponding role, and a
+ * token without it is denied with 403 — proven end-to-end against the IdP-issued token.
  *
- * `viewer` (ROLE_VIEWER) and `director` (ROLE_DIRECTOR) are dev-seed users (DL-0101). Issuing a
- * commercial-policy directive requires ROLE_DIRECTOR (SecurityConfig).
+ * `viewer` (ROLE_VIEWER) and `director` (ROLE_DIRECTOR) are Keycloak realm seed users (DL-0103). The
+ * token is minted via the IdP's token endpoint (direct-grant E2E client). Issuing a commercial-policy
+ * directive requires ROLE_DIRECTOR (SecurityConfig).
  */
-async function tokenFor(request: import('@playwright/test').APIRequestContext, username: string) {
-  const res = await request.post('/api/identity/login', {
-    data: { username, password: 'dev12345' },
-  });
-  expect(res.ok()).toBeTruthy();
-  return (await res.json()).token as string;
-}
 
 test('a viewer is denied (403) when issuing a director-only directive', async ({ request }) => {
   const token = await tokenFor(request, 'viewer');

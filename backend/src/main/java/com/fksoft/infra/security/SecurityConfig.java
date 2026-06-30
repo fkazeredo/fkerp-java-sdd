@@ -1,11 +1,10 @@
 package com.fksoft.infra.security;
 
-import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
-import javax.crypto.spec.SecretKeySpec;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -13,80 +12,87 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * The real Spring Security configuration (SPEC-0024/DL-0079/DL-0081/DL-0082). The ERP authenticates
- * in-house and is the Resource Server of its own HS256 JWT issuer; this wires the encoder/decoder
- * from the configured secret, maps the {@code roles} claim to authorities, opens the public
- * endpoints, and requires the corresponding role on the sensitive actions the specs cite. Denials
- * return the stable error contract (401 generic / 403 audited) — security stays the final authority
- * on the backend (security.md), never the frontend.
+ * The real Spring Security configuration (SPEC-0024 — graduated in Phase 13, DL-0104). The ERP is
+ * an OAuth2 <strong>Resource Server</strong> that validates JWTs minted by an <strong>external OIDC
+ * IdP (Keycloak)</strong> <strong>via JWKS</strong> (RS256, automatic key rotation): the {@code
+ * JwtDecoder} is auto-configured from {@code spring.security.oauth2.resourceserver.jwt.issuer-uri}
+ * (production/dev) and the public keys are fetched/cached from the IdP's JWK set. This replaces the
+ * in-house HS256 issuer of the 8k delivery; the {@code UserContextProvider} port survives the swap.
  *
- * <p>This config is active in every profile (including {@code test}); in {@code test} the {@code
- * TestSecurityConfig} provides an authenticated actor so the existing suite stays green with the
- * security layer <strong>mounted, not removed</strong> (DL-0081).
+ * <p>It maps the IdP's <strong>{@code realm_access.roles}</strong> (Keycloak realm roles) to Spring
+ * authorities — preserving the {@code ROLE_} prefix so {@code hasRole(...)} keeps working — and
+ * also exposes the {@code scope} claim as {@code SCOPE_*} authorities for future fine-grained
+ * checks; the current enforcement stays by role (the closed catalogue of DL-0082). The backend is
+ * the single authorization authority (security.md) — never the frontend. Denials return the stable
+ * contract (401 generic / 403 audited).
+ *
+ * <p>In the {@code test} profile the decoder is provided by a local test JWK set (DL-0105) so the
+ * suite validates the genuine JWKS/RS256 path without an internet IdP; the {@code
+ * TestSecurityConfig} still authenticates a full-access actor when no {@code Authorization} header
+ * is present, keeping the pre-existing suite green with the security layer <strong>mounted, not
+ * removed</strong> (DL-0081).
  */
 @Configuration
-@EnableConfigurationProperties(SecurityProperties.class)
 public class SecurityConfig {
 
-  private final SecurityProperties properties;
+  /**
+   * Keycloak's realm-roles claim, e.g. {@code {"realm_access":{"roles":["ROLE_FINANCE", ...]}}}.
+   */
+  static final String REALM_ACCESS_CLAIM = "realm_access";
 
-  public SecurityConfig(SecurityProperties properties) {
-    this.properties = properties;
-  }
-
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
-  }
-
-  private SecretKeySpec signingKey() {
-    return new SecretKeySpec(
-        properties.getJwt().getSecret().getBytes(java.nio.charset.StandardCharsets.UTF_8),
-        "HmacSHA256");
-  }
-
-  @Bean
-  public JwtEncoder jwtEncoder() {
-    return new NimbusJwtEncoder(new ImmutableSecret<>(signingKey()));
-  }
-
-  @Bean
-  public JwtDecoder jwtDecoder() {
-    return NimbusJwtDecoder.withSecretKey(signingKey()).macAlgorithm(MacAlgorithm.HS256).build();
-  }
+  static final String ROLES_CLAIM = "roles";
 
   /**
-   * Maps the JWT {@code roles} claim to Spring authorities (kept as-is, e.g. {@code ROLE_FINANCE},
-   * so {@code hasRole}/{@code hasAuthority} both work), and uses {@code preferred_username} as the
-   * principal name.
+   * Converts a verified JWT into Spring authorities: the realm roles from {@code
+   * realm_access.roles} (kept verbatim, so {@code ROLE_FINANCE} works with both {@code hasRole} and
+   * {@code hasAuthority}) plus the OAuth2 {@code scope}/{@code scp} as {@code SCOPE_*} authorities.
+   * The principal name is {@code preferred_username}. Shared by production and the test chain so
+   * both run the same mapping.
    */
   @Bean
   public JwtAuthenticationConverter jwtAuthenticationConverter() {
-    JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
-    authorities.setAuthoritiesClaimName(SecurityPrincipals.ROLES_CLAIM);
-    authorities.setAuthorityPrefix("");
+    JwtGrantedAuthoritiesConverter scopes = new JwtGrantedAuthoritiesConverter();
     JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
     converter.setPrincipalClaimName(SecurityPrincipals.USERNAME_CLAIM);
     converter.setJwtGrantedAuthoritiesConverter(
         jwt -> {
-          Collection<GrantedAuthority> granted = authorities.convert(jwt);
-          // Also expose each role's permissions? Not needed: hasRole(...) is enough for the
-          // sensitive-action gate (DL-0082). Permissions are documented in GET /roles.
-          return granted == null ? List.of() : granted;
+          Collection<GrantedAuthority> authorities = new ArrayList<>();
+          // OAuth2 scopes → SCOPE_* (Spring default mapping), available for future fine-grained
+          // authorization (the ROADMAP's "scopes → profiles"); enforcement today stays by role.
+          Collection<GrantedAuthority> scoped = scopes.convert(jwt);
+          if (scoped != null) {
+            authorities.addAll(scoped);
+          }
+          // Keycloak realm roles → authorities kept verbatim (ROLE_* — DL-0104).
+          authorities.addAll(realmRoles(jwt));
+          return authorities;
         });
     return converter;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Collection<GrantedAuthority> realmRoles(Jwt jwt) {
+    Object realmAccess = jwt.getClaims().get(REALM_ACCESS_CLAIM);
+    if (!(realmAccess instanceof Map<?, ?> map)) {
+      return List.of();
+    }
+    Object roles = ((Map<String, Object>) map).get(ROLES_CLAIM);
+    if (!(roles instanceof Collection<?> roleList)) {
+      return List.of();
+    }
+    return roleList.stream()
+        .filter(String.class::isInstance)
+        .map(String.class::cast)
+        .map(SimpleGrantedAuthority::new)
+        .map(GrantedAuthority.class::cast)
+        .toList();
   }
 
   @Bean
@@ -104,9 +110,9 @@ public class SecurityConfig {
 
   /**
    * Applies the shared security configuration: stateless, public matchers, role-gated sensitive
-   * actions (DL-0082), JWT resource server and the audited 401/403 handlers. Reused by the test
-   * filter chain ({@code TestSecurityConfig}) so the test path runs the <strong>same real
-   * authorization</strong> (security mounted, not removed — DL-0081).
+   * actions (DL-0082), JWT resource server (validated by JWKS — DL-0104) and the audited 401/403
+   * handlers. Reused by the test filter chain ({@code TestSecurityConfig}) so the test path runs
+   * the <strong>same real authorization</strong> (security mounted, not removed — DL-0081).
    */
   public static HttpSecurity configure(
       HttpSecurity http,
@@ -119,7 +125,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(
             auth ->
                 auth
-                    // Public: health, login, API docs, actuator health.
+                    // Public: health, API docs, actuator health, version.
                     .requestMatchers(publicMatchers())
                     .permitAll()
                     // Machine-to-machine ACL webhooks/inbound — authenticated by HMAC, not by user.
@@ -179,7 +185,6 @@ public class SecurityConfig {
     return Stream.of(
             "/api/system/health",
             "/api/version", // build metadata only — no secret (SPEC-0027/DL-0097)
-            "/api/identity/login",
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",

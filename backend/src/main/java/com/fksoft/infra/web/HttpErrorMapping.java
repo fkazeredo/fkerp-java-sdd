@@ -50,7 +50,6 @@ import com.fksoft.domain.finance.FinancePartyInvalidException;
 import com.fksoft.domain.finance.FinancePeriodCannotCloseException;
 import com.fksoft.domain.finance.FinancePeriodClosedException;
 import com.fksoft.domain.finance.FinancePeriodInvalidException;
-import com.fksoft.domain.identity.InvalidCredentialsException;
 import com.fksoft.domain.intelligence.InsightDecisionInvalidException;
 import com.fksoft.domain.intelligence.InsightNotFoundException;
 import com.fksoft.domain.marketing.CampaignInvalidException;
@@ -204,7 +203,6 @@ public class HttpErrorMapping {
           entry(CertificateUnavailableException.class, HttpStatus.SERVICE_UNAVAILABLE),
           entry(JobNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(JobLockedException.class, HttpStatus.CONFLICT),
-          entry(InvalidCredentialsException.class, HttpStatus.UNAUTHORIZED),
           entry(AdminSupplierNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(AdminSupplierInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(AdminContractInvalidException.class, HttpStatus.BAD_REQUEST),

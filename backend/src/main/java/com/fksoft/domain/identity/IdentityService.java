@@ -13,58 +13,44 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Application service for the Identity module (SPEC-0024). It authenticates a local user against
- * the BCrypt hash ({@link #login}) — the single place credentials are checked — lists the
- * role/permission catalogue ({@link #listRoles}), and records the access audit (login) reusing the
- * Platform's append-only {@code system_audit} (DL-0083).
+ * Application service for the Identity module (SPEC-0024 — graduated to the external IdP in Phase
+ * 13, DL-0104/0107). Authentication now happens at the external OIDC IdP (Keycloak); this service
+ * no longer verifies credentials. It lists the role/permission catalogue ({@link #listRoles}, the
+ * local source of truth of internal authorization — BR5/BR16) and records the access audit (login
+ * first touch and denials) reusing the Platform's append-only {@code system_audit} (DL-0083).
  *
- * <p><strong>Security (BR4):</strong> a failed login (unknown user / wrong password / disabled
- * account) raises the same generic {@link InvalidCredentialsException}; no message reveals whether
- * the user exists. No password/hash/token is ever logged or carried in an event/audit detail.
+ * <p><strong>Security (BR4):</strong> no token/secret is ever logged or carried in an event/audit
+ * detail; only metadata (actor, action, resource).
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class IdentityService {
 
-  private final IdentityUserRepository userRepository;
   private final RoleRepository roleRepository;
-  private final PasswordHasher passwordHasher;
   private final SystemAuditService auditService;
   private final ApplicationEventPublisher events;
   private final Clock clock;
 
   /**
-   * Authenticates a user by login + raw password (SPEC-0024 BR1). On success, publishes {@link
-   * UserAuthenticated} and records an {@code AUTH_LOGIN} audit line; on any failure raises the
-   * generic {@link InvalidCredentialsException} (BR4) — the caller maps it to a generic 401.
+   * Records the access audit of an authenticated user's first touch (SPEC-0024 BR3/DL-0083): an
+   * {@code AUTH_LOGIN} line in the Platform's append-only {@code system_audit} and the {@link
+   * UserAuthenticated} event (which backs the {@code acme.identity.logins} metric — DL-0098). Since
+   * the login itself happens at the IdP (Phase 13), this is invoked once per session on the first
+   * authenticated call ({@code GET /me}). Metadata only — never a token/secret (BR4).
    *
-   * @param username the login
-   * @param rawPassword the submitted password
-   * @return the verified principal (whose roles a JWT will carry)
-   * @throws InvalidCredentialsException on unknown user, wrong password or disabled account
+   * @param actor the username (from the verified token), or {@code null} when unresolved
+   * @param userId the stable user id (IdP subject), or {@code null}
    */
   @Transactional
-  public AuthenticatedUser login(String username, String rawPassword) {
-    if (username == null || rawPassword == null || username.isBlank()) {
-      throw new InvalidCredentialsException();
-    }
-    IdentityUser user =
-        userRepository
-            .findByUsername(username.trim())
-            .filter(IdentityUser::isActive)
-            .filter(u -> passwordHasher.matches(rawPassword, u.passwordHash()))
-            .orElseThrow(InvalidCredentialsException::new);
-
+  public void recordLogin(String actor, String userId) {
     Instant now = clock.instant();
     auditService.record(
         AuditType.AUTH_LOGIN,
-        user.username(),
-        "{\"event\":\"LOGIN_SUCCESS\",\"userId\":\"" + user.id() + "\"}");
-    events.publishEvent(new UserAuthenticated(user.id(), user.username(), now));
-    log.info("identity.login user={} result=SUCCESS", user.username());
-
-    return new AuthenticatedUser(user.id(), user.username(), user.displayName(), user.roleNames());
+        actor,
+        "{\"event\":\"LOGIN_SUCCESS\",\"userId\":\"" + safe(userId) + "\"}");
+    events.publishEvent(new UserAuthenticated(userId, actor, now));
+    log.info("identity.login user={} result=SUCCESS", actor);
   }
 
   /**

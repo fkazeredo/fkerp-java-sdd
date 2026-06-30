@@ -2,8 +2,7 @@ package com.fksoft.observability;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fksoft.application.api.dto.LoginRequest;
-import com.fksoft.application.api.dto.LoginResponse;
+import com.fksoft.security.TestJwtTokens;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -17,13 +16,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * End-to-end proof that business metrics are derived from already-published domain events
- * (SPEC-0027 AC7/AC8, BR6/BR7, DL-0098). A real login publishes {@code UserAuthenticated}, which
- * the infra {@link com.fksoft.infra.observability.BusinessMetrics} consumer turns into the
- * Micrometer counter {@code acme.identity.logins}; the test then scrapes {@code
- * /actuator/prometheus} (as ROLE_IT) and asserts the exported series {@code
- * acme_identity_logins_total} is present, carries the common {@code application} tag (AC8) and
- * reflects the login. {@code @AutoConfigureObservability} re-enables metrics export under
- * {@code @SpringBootTest}.
+ * (SPEC-0027 AC7/AC8, BR6/BR7, DL-0098). A user's first authenticated touch ({@code GET /me})
+ * publishes {@code UserAuthenticated}, which the infra {@link
+ * com.fksoft.infra.observability.BusinessMetrics} consumer turns into the Micrometer counter {@code
+ * acme.identity.logins}; the test then scrapes {@code /actuator/prometheus} (as ROLE_IT) and
+ * asserts the exported series {@code acme_identity_logins_total} is present, carries the common
+ * {@code application} tag (AC8) and reflects the login. {@code @AutoConfigureObservability}
+ * re-enables metrics export under {@code @SpringBootTest}.
  */
 @AutoConfigureObservability
 class BusinessMetricsIntegrationTest extends AbstractPostgresIntegrationTest {
@@ -38,8 +37,10 @@ class BusinessMetricsIntegrationTest extends AbstractPostgresIntegrationTest {
 
   @Test
   void aLoginIncrementsTheBusinessCounterExposedInPrometheus() {
-    // Trigger the business fact: a successful login publishes UserAuthenticated.
-    String itToken = login("it");
+    // Trigger the business fact: the first authenticated touch (/me) publishes UserAuthenticated.
+    String itToken = TestJwtTokens.mint("it", "ROLE_IT");
+    restTemplate.exchange(
+        "/api/identity/me", HttpMethod.GET, new HttpEntity<>(bearer(itToken)), String.class);
 
     // Scrape the Prometheus exposition as ROLE_IT and read the business counter.
     String scrape =
@@ -72,16 +73,6 @@ class BusinessMetricsIntegrationTest extends AbstractPostgresIntegrationTest {
       }
     }
     return total;
-  }
-
-  private String login(String username) {
-    LoginResponse body =
-        restTemplate
-            .postForEntity(
-                "/api/identity/login", new LoginRequest(username, "dev12345"), LoginResponse.class)
-            .getBody();
-    assertThat(body).isNotNull();
-    return body.token();
   }
 
   private static HttpHeaders bearer(String token) {

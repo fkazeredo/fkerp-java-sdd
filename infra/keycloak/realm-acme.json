@@ -1,0 +1,143 @@
+{
+  "realm": "acme",
+  "enabled": true,
+  "displayName": "Acme Travel ERP",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "roles": {
+    "realm": [
+      { "name": "ROLE_DIRECTOR", "description": "Diretor — emite diretivas comerciais e governa parâmetros" },
+      { "name": "ROLE_FINANCE", "description": "Financeiro — emite NF de comissão e fecha período" },
+      { "name": "ROLE_OPERATIONS", "description": "Operacional — opera reservas, cotações e pós-venda" },
+      { "name": "ROLE_IT", "description": "TI — dispara jobs/crawler e custodia certificado" },
+      { "name": "ROLE_POLICY_ADMIN", "description": "Curador de políticas — define regras governadas" },
+      { "name": "ROLE_VIEWER", "description": "Leitor — somente consulta" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "acme-erp-web",
+      "name": "Acme Travel ERP — Web SPA",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "rootUrl": "http://localhost:4200",
+      "baseUrl": "http://localhost:4200",
+      "redirectUris": [
+        "http://localhost:4200/*",
+        "http://localhost:4201/*"
+      ],
+      "webOrigins": [
+        "http://localhost:4200",
+        "http://localhost:4201"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:4200/*##http://localhost:4201/*"
+      },
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "defaultClientScopes": ["web-origins", "profile", "roles", "email"],
+      "optionalClientScopes": ["offline_access"]
+    },
+    {
+      "clientId": "acme-e2e-cli",
+      "name": "Acme Travel ERP — E2E direct-grant client (TEST ONLY)",
+      "description": "Public client with direct access grants, used ONLY by the Playwright API tests to mint tokens for role checks. NEVER enable in production.",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "defaultClientScopes": ["profile", "roles", "email"]
+    }
+  ],
+  "users": [
+    {
+      "username": "director",
+      "enabled": true,
+      "firstName": "Diana",
+      "lastName": "Diretora",
+      "email": "director@acme.local",
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "dev12345", "temporary": false }],
+      "realmRoles": ["ROLE_DIRECTOR"]
+    },
+    {
+      "username": "finance",
+      "enabled": true,
+      "firstName": "Fabio",
+      "lastName": "Financeiro",
+      "email": "finance@acme.local",
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "dev12345", "temporary": false }],
+      "realmRoles": ["ROLE_FINANCE"]
+    },
+    {
+      "username": "ops",
+      "enabled": true,
+      "firstName": "Olivia",
+      "lastName": "Operacional",
+      "email": "ops@acme.local",
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "dev12345", "temporary": false }],
+      "realmRoles": ["ROLE_OPERATIONS"]
+    },
+    {
+      "username": "it",
+      "enabled": true,
+      "firstName": "Ivo",
+      "lastName": "TI",
+      "email": "it@acme.local",
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "dev12345", "temporary": false }],
+      "realmRoles": ["ROLE_IT"]
+    },
+    {
+      "username": "policy",
+      "enabled": true,
+      "firstName": "Paula",
+      "lastName": "Curadora",
+      "email": "policy@acme.local",
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "dev12345", "temporary": false }],
+      "realmRoles": ["ROLE_POLICY_ADMIN"]
+    },
+    {
+      "username": "viewer",
+      "enabled": true,
+      "firstName": "Vera",
+      "lastName": "Leitora",
+      "email": "viewer@acme.local",
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "dev12345", "temporary": false }],
+      "realmRoles": ["ROLE_VIEWER"]
+    },
+    {
+      "username": "dev",
+      "enabled": true,
+      "firstName": "Dev",
+      "lastName": "Admin",
+      "email": "dev@acme.local",
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "dev12345", "temporary": false }],
+      "realmRoles": [
+        "ROLE_DIRECTOR",
+        "ROLE_FINANCE",
+        "ROLE_OPERATIONS",
+        "ROLE_IT",
+        "ROLE_POLICY_ADMIN",
+        "ROLE_VIEWER"
+      ]
+    }
+  ]
+}

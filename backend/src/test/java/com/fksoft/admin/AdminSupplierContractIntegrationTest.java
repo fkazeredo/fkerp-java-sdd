@@ -3,8 +3,6 @@ package com.fksoft.admin;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.fksoft.application.api.dto.LoginRequest;
-import com.fksoft.application.api.dto.LoginResponse;
 import com.fksoft.domain.admin.AdminContractInvalidException;
 import com.fksoft.domain.admin.AdminContractRegistered;
 import com.fksoft.domain.admin.AdminContractView;
@@ -19,6 +17,7 @@ import com.fksoft.domain.admin.RegisterContractCommand;
 import com.fksoft.domain.admin.RegisterSupplierCommand;
 import com.fksoft.domain.money.Money;
 import com.fksoft.infra.web.ApiErrorResponse;
+import com.fksoft.security.TestJwtTokens;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -169,7 +168,7 @@ class AdminSupplierContractIntegrationTest extends AbstractPostgresIntegrationTe
   @Test
   void registeringASupplierWithoutFinanceRoleIsForbiddenAndAudited() {
     // 'director' has ROLE_DIRECTOR but NOT ROLE_FINANCE — the administrative write must be denied.
-    String token = login("director");
+    String token = TestJwtTokens.mint("director", "ROLE_DIRECTOR");
 
     ResponseEntity<ApiErrorResponse> denied =
         restTemplate.exchange(
@@ -191,7 +190,7 @@ class AdminSupplierContractIntegrationTest extends AbstractPostgresIntegrationTe
 
   @Test
   void registeringASupplierWithFinanceRoleSucceeds() {
-    String token = login("finance");
+    String token = TestJwtTokens.mint("finance", "ROLE_FINANCE");
 
     ResponseEntity<AdminSupplierView> created =
         restTemplate.exchange(
@@ -208,16 +207,6 @@ class AdminSupplierContractIntegrationTest extends AbstractPostgresIntegrationTe
   private static String supplierBody() {
     return "{\"type\":\"UTILITY\",\"identifier\":\"61695227000193\","
         + "\"displayName\":\"Companhia de Energia\"}";
-  }
-
-  private String login(String username) {
-    LoginResponse body =
-        restTemplate
-            .postForEntity(
-                "/api/identity/login", new LoginRequest(username, "dev12345"), LoginResponse.class)
-            .getBody();
-    assertThat(body).isNotNull();
-    return body.token();
   }
 
   private static HttpHeaders jsonBearer(String token) {

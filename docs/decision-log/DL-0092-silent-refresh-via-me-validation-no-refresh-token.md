@@ -4,9 +4,19 @@
 - **Spec(s):** SPEC-0026; SPEC-0024 (auth real, 8k)
 - **ADR relacionado:** 0005 (JWT)
 - **Data:** 2026-06-30
-- **Status:** ASSUMIDO
+- **Status:** RESOLVIDO na Fase 13 (ver "Atualização de status" abaixo)
 - **Confiança:** Média
 - **Reversibilidade:** Moderada
+
+## Atualização de status (Fase 13 — 2026-06-30)
+
+**RESOLVIDO.** O stopgap desta DL ("silent refresh = revalidação por `GET /me`, sem refresh token")
+foi **graduado** na Fase 13 para **silent-refresh real**: com o IdP externo (Keycloak) vivo, o frontend
+passou a usar **Authorization Code + PKCE** (`angular-oauth2-oidc`) e **renova o access token por
+refresh token** antes da expiração (silent-refresh de verdade), conforme previsto no item 3 desta DL e
+em "Confiança Média". A revalidação por `/me` deixou de ser o mecanismo de sessão. Decisão da
+graduação: **DL-0106** (frontend OIDC + silent-refresh real), apoiada por **DL-0103/DL-0104** (IdP +
+Resource Server por JWKS). Esta DL deixa de ser uma dívida diferida.
 
 ## Lacuna
 

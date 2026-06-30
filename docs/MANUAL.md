@@ -420,12 +420,10 @@ Como funciona, na prática:
   ação, quando) — **sem nunca** guardar a senha ou o token. É a trilha que o time de TI/diretoria
   consulta para acompanhar acessos.
 
-> Para o time técnico: a autenticação hoje é **própria** (o sistema emite e confere o seu próprio token
-> de acesso) — a integração com um **provedor de identidade externo** (login único corporativo) é a
-> **próxima etapa** (Fase 13). Para quem é de TI: `POST /api/identity/login` (entrar), `GET /api/identity/me`
-> (quem sou eu), `GET /api/identity/roles` (catálogo de papéis/permissões), `GET /api/identity/access-audit`
-> (auditoria de acesso). Em produção é obrigatório configurar a chave secreta do token; os usuários de
-> exemplo (um por papel) existem **só** no ambiente de desenvolvimento.
+> **Atualizado na Fase 13:** a autenticação **própria** descrita acima (usuário/senha no próprio
+> sistema) foi **substituída** pelo **login único corporativo (SSO) via provedor de identidade externo**
+> — ver a seção *"Fase 13 — Entrar com SSO"* mais adiante. Os papéis, as permissões e a auditoria de
+> acesso **continuam iguais**; só **mudou a forma de entrar**.
 
 ### Fase 8 — Fornecedores e contratos administrativos (luz, água, telefone, software)
 
@@ -539,6 +537,39 @@ observabilidade do ERP (métricas, logs e painéis de monitoramento).
 > usuário com papel **TI** e aponte-o no `infra/prometheus/scrape-token` (ver `infra/prometheus/README.md`).
 > A stack de monitoramento é **configuração/infra** — não faz parte do build/test do backend.
 
+### Fase 13 — Entrar com SSO (login único corporativo)
+
+Esta versão troca o login por **SSO (login único corporativo)**: em vez de digitar usuário e senha
+**dentro** do ERP, você entra pela **conta corporativa**, na **tela do provedor de identidade** (o
+sistema usa o **Keycloak** no ambiente de desenvolvimento). É o mesmo padrão de "entrar com a conta da
+empresa" que você já vê em muitos sistemas. **Os papéis, as permissões e a auditoria de acesso não
+mudaram** — só **mudou a forma de entrar** (mais segura: o ERP **não guarda mais a sua senha**).
+
+Como funciona, na prática:
+
+- **Entrar.** Abra a tela **"Entrar"** e clique em **"Entrar com SSO"**. Você é levado à **tela de login
+  do provedor** (a conta da empresa); informe **usuário e senha lá**. Dando certo, você volta ao sistema
+  **já autenticado**, no **Painel**, com seu nome e o botão **"Sair"** no topo. Se a senha estiver errada,
+  o **próprio provedor** mostra o erro (genérico) e você **não entra**.
+- **Sessão sempre válida (renovação silenciosa).** Enquanto você usa o sistema, ele **renova sozinho**,
+  em segundo plano, o seu acesso — sem pedir login de novo a cada pouco. Quando a sessão realmente
+  termina, você é levado de volta ao login. (Antes, a sessão só era **revalidada**; agora ela é
+  **renovada de verdade**.)
+- **Sair.** O botão **"Sair"** encerra a sessão **no sistema e no provedor** (login único) e volta para a
+  tela de entrar.
+- **Papéis e permissões (iguais).** Continua valendo: **Diretor, Financeiro, Operacional, TI, Curador de
+  Políticas e Leitor**; as ações sensíveis exigem o papel certo (emitir NF/fechar o mês → Financeiro;
+  disparar rotina/custódia do certificado → TI; diretiva → Diretor). Sem o papel, **acesso negado** e a
+  tentativa **fica na auditoria**. O **servidor continua sendo a autoridade** — a tela só reflete.
+
+> Para o time técnico: o backend virou um **Resource Server OAuth2** que valida o **token do provedor
+> externo (OIDC)** por **JWKS** (com rotação de chave). O endpoint próprio de login (`POST
+> /api/identity/login`) foi **removido** — o login agora é no provedor. Seguem disponíveis
+> `GET /api/identity/me`, `GET /api/identity/roles` e `GET /api/identity/access-audit`. O provedor de
+> identidade **em produção** é decisão do dono (o Keycloak entregue serve dev/E2E, com um realm pronto:
+> papéis, o aplicativo web e usuários de exemplo — **só** em desenvolvimento). Sobe junto com
+> `docker compose up`.
+
 ## 4. Glossário
 
 - **Backend / servidor:** a parte do sistema que processa as regras e fala com o banco de dados.
@@ -630,6 +661,7 @@ observabilidade do ERP (métricas, logs e painéis de monitoramento).
 | 0.20.0 | 8 — Admin (fornecedores/contratos administrativos) | **Balcão administrativo**: cadastro **enxuto** de **fornecedores administrativos** (luz, água, telefone, software/serviço, autônomo) e seus **contratos** (vigência, recorrência, valor, documento). **Lançar a despesa do mês** cria automaticamente o lançamento em **Contas a Pagar** com o tipo certo e **aponta os documentos exigidos** (conta de consumo → fatura; autônomo → RPA; serviço PJ → NFS-e); **idempotente** (não duplica). **A regra de ouro vale aqui**: despesa **sem o documento impede o mês de fechar**. **Aviso de contrato a vencer** (até 30 dias, só alerta). **Cadastrar/lançar exige o papel Financeiro**; toda alteração **auditada** (CNPJ/CPF nunca aparece inteiro). Compras completas (cotação/ordem) = comprar se exigido. **Fim do bloco 8x.** |
 | 0.21.0 | 10 — UX & Frontend profissional | **Nova experiência** (sem mudar regras): **layout SaaS** (barra lateral + topo + gaveta no celular); **tema claro/escuro** com a escolha salva; **paleta de comandos `Ctrl/Cmd+K`** + atalhos (`g`+tecla, `?` ajuda); **login** renovado com **revalidação silenciosa da sessão** (volta para a tela pretendida); **aviso de alterações não salvas** ao sair de um formulário; **estados reais** (carregando/vazio/erro/permissão) em todas as telas; **Painel (dashboard)** com indicadores de Contas/Reservas/Conciliação/Câmbio calculados no navegador. Telas com **PrimeNG 21 + Tailwind v4** sobre Angular 22; **nenhum endpoint novo** no servidor. Gradua a DL-0003. |
 | 0.22.0 | 11 — Observabilidade & monitoramento | **Monitoramento e versão (para a operação/TI)**, sem mudar regras de negócio: endereço **`/api/version`** (aberto) com versão/commit/data do build; **sondas de saúde** (`/actuator/health`) abertas; **métricas** (`/actuator/prometheus`) — técnicas (memória/CPU/requisições) e de **negócio** (reservas/cotações/NF/logins) — **restritas ao papel TI**; **stack de monitoramento** (Prometheus + Loki + Grafana) que sobe junto via `docker compose`, com painel "Acme Travel ERP — Backend Overview" e logs centralizados; **logs em JSON** com número de correlação e **sem** segredo/dado pessoal. |
+| 0.23.0 | 13 — Identidade/AuthZ profissional (gradua a SPEC-0024) | **Login único corporativo (SSO)**: entrar passa a ser pela **conta da empresa** na tela do **provedor de identidade** (Keycloak no dev), com o botão **"Entrar com SSO"** e **renovação silenciosa de sessão de verdade**; o ERP **não guarda mais senha**. **Papéis, permissões e auditoria de acesso continuam iguais** — só mudou a forma de entrar. **Mudança incompatível:** o login próprio antigo (`POST /api/identity/login`) foi **removido** (login agora é no provedor). |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.

@@ -6,9 +6,10 @@ import { test, expect } from '@playwright/test';
  * a UX convenience — the backend still enforces real authorization on every API call.
  */
 test('a protected route without a session redirects to /login with returnUrl', async ({ page }) => {
-  // No login performed: localStorage has no token, so the guard must bounce us to /login.
+  // No login performed: there is no OIDC session, so the guard must bounce us to /login.
   await page.goto('/accounts');
   await expect(page).toHaveURL(/\/login(\?|$)/);
   await expect(page).toHaveURL(/returnUrl=%2Faccounts/);
-  await expect(page.locator('#login-username')).toBeVisible();
+  // The login screen now shows the SSO sign-in button (OIDC — Phase 13/DL-0106).
+  await expect(page.getByTestId('login-sso')).toBeVisible();
 });

@@ -1,7 +1,7 @@
 # 0024 - Identity (Autenticação, Papéis e Auditoria de Acesso)
 
-Status: Approved
-Related ADRs: 0011, 0012, 0014
+Status: Approved — **graduado na Fase 13 (OIDC externo vivo; ver seção "Graduação — Fase 13")**
+Related ADRs: 0011, 0012, 0014, 0015
 
 > Convenções herdadas da **SPEC-0001** (que entregou o `UserContextProvider` **stub de dev**). Esta spec
 > **gradua** esse stub em autenticação real. **Subdomínio genérico** (redesenho linha 136: "avaliar
@@ -71,7 +71,52 @@ BR10 ASSUMIDO (ver DL-0082). Papéis base: ROLE_DIRECTOR, ROLE_FINANCE, ROLE_OPE
 BR11 ASSUMIDO (ver DL-0083). A auditoria de acesso **reusa o `system_audit` do Platform** (8j): login →
      `AUTH_LOGIN`, negação → `ACCESS_DENIED` (metadados only, nunca token/segredo/hash). Não há tabela
      `access_audit` nova (Regra Zero); `GET /api/identity/access-audit` é uma leitura focada sobre o seam.
+BR12 ASSUMIDO (ver DL-0103). **GRADUAÇÃO Fase 13 — IdP externo vivo.** A autenticação real passa a ser
+     delegada a um **IdP OIDC externo (Keycloak)**; o emissor JWT in-house (HS256) e o `POST
+     /api/identity/login` são **aposentados**. Em dev/E2E o Keycloak roda em contêiner com um realm
+     `acme` importado (papéis base + client SPA público PKCE + usuários seed). **Qual IdP em produção
+     segue decisão do dono** (Confiança=Baixa); o contrato OIDC é padrão e a troca é por configuração.
+BR13 ASSUMIDO (ver DL-0104). O backend é **Resource Server** validando o JWT do IdP **por JWKS** (RS256,
+     rotação de chave automática via `issuer-uri`/`jwk-set-uri`). Os **papéis vêm de
+     `realm_access.roles`** e são mapeados às autoridades Spring preservando o prefixo `ROLE_`; o claim
+     `scope` é exposto como `SCOPE_*` para refino futuro. O **enforcement continua por papel** (catálogo
+     fechado da BR10/DL-0082) — só muda a *fonte* dos papéis. A porta `UserContextProvider` (BR1/BR9)
+     **não muda**.
+BR14 ASSUMIDO (ver DL-0105). O caminho de **teste/dev-CI** valida o JWT com um **JWKS local (par RSA de
+     teste)**, sem IdP na internet: os testes de segurança mintam tokens RS256 determinísticos no formato
+     do Keycloak (`realm_access.roles`) e exercitam o decoder JWKS real (401/403); a `TestSecurityConfig`
+     (BR9/DL-0081) segue autenticando o ator full-access quando não há header `Authorization`. **Breaking
+     change:** `POST /api/identity/login` é removido (login move ao IdP) — destacado no release 0.23.0.
+BR15 ASSUMIDO (ver DL-0106). O **frontend** faz login **OIDC Authorization Code + PKCE**
+     (`angular-oauth2-oidc`) e **silent-refresh real** (renovação por refresh token antes da expiração),
+     graduando a revalidação por `/me` da Fase 10 (DL-0092). O backend continua a única autoridade de
+     autorização (BR5); o frontend só espelha papéis para UI/rotas.
+BR16 ASSUMIDO (ver DL-0107). O **catálogo papel→permissão permanece local** (`roles`/`role_permissions`)
+     como única fonte de verdade do enforcement interno (BR5); o **store local de usuários**
+     (`identity_users`/`user_roles`, hash BCrypt) é **aposentado** (migração V31), pois os usuários e suas
+     senhas passam a viver no IdP — o ERP deixa de custodiar senha.
 ```
+
+## Graduação — Fase 13 (OIDC externo vivo)
+
+A Fase 13 consolida a fronteira que o 8k havia registrado (DL-0079) e fecha a dívida de silent-refresh
+da Fase 10 (DL-0092). O que mudou, em uma frase: **o ERP deixou de ser Resource Server do próprio
+emissor HS256 e passou a validar JWTs de um IdP OIDC externo (Keycloak) por JWKS/RS256.**
+
+| Aspecto | 8k (antes) | Fase 13 (agora) |
+|---|---|---|
+| Emissor do token | in-house (`JwtIssuer`, HS256) | **IdP externo (Keycloak), RS256** |
+| Verificação | segredo HS256 compartilhado | **JWKS por `issuer-uri` (rotação de chave)** |
+| Login | `POST /api/identity/login` (form) | **OIDC Authorization Code + PKCE no IdP** (endpoint in-house removido) |
+| Silent-refresh | revalidação por `GET /me` (DL-0092) | **refresh token real** (`angular-oauth2-oidc`) |
+| Papéis | claim `roles` do emissor próprio | **`realm_access.roles` do IdP** → mesmas autoridades `ROLE_*` |
+| Usuários/senhas | `identity_users` (BCrypt) local | **no IdP** (store local aposentado, V31) |
+| Catálogo papel→permissão | local (`roles`/`role_permissions`) | **local (inalterado — fonte do enforcement, BR5)** |
+| Porta `UserContextProvider` | inalterada | **inalterada (seam preservado)** |
+
+Decisões: DL-0103 (Keycloak dev IdP), DL-0104 (Resource Server por JWKS + mapeamento de papéis),
+DL-0105 (JWKS local de teste + remoção de `/login`), DL-0106 (frontend OIDC + silent-refresh real),
+DL-0107 (catálogo local mantido; store de usuários aposentado). **DL-0079 e DL-0092 ficam RESOLVIDOS.**
 
 ## Input/Output Examples
 
@@ -88,22 +133,27 @@ GET /api/identity/access-audit?actor=ana&from=2026-06-01&to=2026-06-30
 
 ## API Contracts
 
-ASSUMIDO (ver DL-0079/0083): no 8k o ERP é Resource Server do **seu próprio emissor JWT** (in-house).
+ASSUMIDO (ver DL-0104/0105): na **Fase 13** o ERP é Resource Server de um **IdP OIDC externo (Keycloak)**;
+o login ocorre no IdP (code+PKCE). O `POST /api/identity/login` in-house do 8k foi **removido**
+(breaking — BR14).
 
-- `POST /api/identity/login` (público) → `{username, password}` → `{token, tokenType:"Bearer",
-  expiresIn, user:{userId, username, roles}}`. Credencial inválida → **401 genérico** (BR4).
-- `GET /api/identity/me` (autenticado) → usuário/roles do token (para o frontend).
-- `GET /api/identity/roles` → catálogo de papéis + permissões (autorização: `identity:role:read`).
-- `GET /api/identity/access-audit?actor=&action=&from=&to=&page=&size=` → auditoria de acesso, lida do
+- ~~`POST /api/identity/login`~~ → **REMOVIDO na Fase 13** (login no IdP). Breaking change destacado em
+  0.23.0 (ADR 0015 §4).
+- `GET /api/identity/me` (autenticado) → usuário/roles resolvidos do token do IdP (para o frontend).
+- `GET /api/identity/roles` → catálogo de papéis + permissões **local** (autorização:
+  `identity:role:read`; papéis `ROLE_DIRECTOR`/`ROLE_IT`).
+- `GET /api/identity/access-audit?actor=&type=&from=&to=&page=&size=` → auditoria de acesso, lida do
   `system_audit` (autorização: `identity:audit:read`).
-- Endpoints sensíveis passam a exigir o papel (BR10): ex. `POST /api/billing/invoices/{id}/issue`
+- Endpoints sensíveis exigem o papel (BR10): ex. `POST /api/billing/invoices/{id}/issue`
   exige `ROLE_FINANCE` → 403 + auditoria sem o papel.
-- OpenAPI atualizada; esquema de segurança **bearer JWT** documentado.
+- OpenAPI atualizada; esquema de segurança **OIDC/bearer (JWKS do IdP)** documentado.
 
 ## Events
 
-- `UserAuthenticated` — `{userId, at}` (auditoria). Produtor: `identity`.
 - `AccessDenied` — `{userId, action, resource, at}`. Consumidor: segurança/auditoria.
+- (Fase 13) O evento `UserAuthenticated` do 8k foi removido junto com o `/login` in-house: como o login
+  ocorre no IdP, a auditoria `AUTH_LOGIN` é registrada no **primeiro toque autenticado** (`/me`) via
+  `system_audit` (BR3/DL-0083), sem evento de domínio dedicado.
 
 ## Persistence Changes
 
@@ -124,9 +174,15 @@ V29__create_identity.sql
 -- auditoria de acesso: system_audit do Platform (V28), tipos AUTH_LOGIN / ACCESS_DENIED (DL-0083)
 ```
 
-A configuração de segurança (Spring Security + emissão/verificação JWT in-house, DL-0079) fica em
+A configuração de segurança (Spring Security + emissão/verificação JWT in-house, DL-0079) ficou em
 `infra.security` (`security.md`). O contexto de segurança alimenta o `UserContextProvider` real
-(`JwtUserContextProvider`). A integração OIDC com IdP externo vivo é a Fase 13.
+(`JwtUserContextProvider`).
+
+**GRADUAÇÃO Fase 13 (DL-0104/0105/0107):** a verificação passa a ser **por JWKS contra o IdP externo**
+(`spring.security.oauth2.resourceserver.jwt.issuer-uri`); o emissor in-house (`JwtIssuer`/HS256) e o
+`POST /login` são removidos. Migração **V31__retire_local_user_store.sql** dropa `user_roles` e
+`identity_users` (mantém `roles`/`role_permissions` — catálogo do enforcement, BR16). O
+`UserContextProvider` (`JwtUserContextProvider`) **não muda** — só a fonte do token.
 
 ## Validation Rules
 
@@ -146,11 +202,16 @@ auditado). Sem código que vaze existência de usuário (BR4). i18n em `messages
 
 ## Tests Required
 
-- **Integração (Testcontainers + IdP/JWT fake):** requisição sem papel → 403 + auditoria; com papel →
-  permitido; token inválido → 401 genérico; `UserContextProvider` real resolve roles do token.
-- **Regressão (fronteira de segurança):** uma ação sensível citada em outra spec (ex.: emitir NF) passa
-  a exigir o papel certo (falha antes — stub deixava passar —, passa depois).
-- **Arquitetura:** o stub de dev está atrás de profile e desativado em produção.
+- **Integração (Testcontainers + JWKS local de teste — BR14):** requisição sem papel → 403 + auditoria;
+  com papel → permitido; token inválido/assinatura errada → 401 genérico; `UserContextProvider` real
+  resolve os papéis de `realm_access.roles`. Os tokens são mintados em RS256 com a chave de teste
+  (formato Keycloak) e validados pelo Resource Server por JWKS.
+- **Regressão (fronteira de segurança):** uma ação sensível citada em outra spec (ex.: emitir NF) exige
+  o papel certo (403 sem o papel, passa com o papel).
+- **Arquitetura:** ArchUnit/Modulith verdes após a remoção do emissor in-house; o `UserContextProvider`
+  segue sendo o único ponto que toca o `SecurityContextHolder`.
+- **E2E (Fase 13):** login real no Keycloak (form do IdP → redirect) leva ao dashboard; sad path
+  (credenciais erradas no IdP) não autentica; rota protegida sem sessão → login.
 
 ## Acceptance Criteria
 
@@ -164,14 +225,16 @@ auditado). Sem código que vaze existência de usuário (BR4). i18n em `messages
 > DLs citados). Permanecem listadas para o dono **confirmar/trocar** — são decisões assumidas, não
 > definitivas.
 
-- ~~**Comprar/usar IdP** (Keycloak/Entra/Cognito) × IAM próprio~~ → **ASSUMIDO (DL-0079):** auth real
-  in-house (JWT HS256) no 8k; **IdP externo OIDC vivo fica para a Fase 13**. **Decisão do dono: qual
-  IdP** (Confiança=Baixa).
+- ~~**Comprar/usar IdP** (Keycloak/Entra/Cognito) × IAM próprio~~ → **RESOLVIDO na Fase 13 (DL-0103):**
+  IdP externo OIDC vivo = **Keycloak** (dev/E2E, realm importado). **Qual IdP em produção** segue
+  decisão do dono (Confiança=Baixa) — o contrato OIDC é padrão e a troca é por configuração.
 - ~~Papéis/permissões finais e mapeamento exato~~ → **ASSUMIDO (DL-0082):** 6 papéis base + catálogo
-  fechado de permissões mapeando as ações sensíveis já citadas. Consolidar o resto à medida que novas
-  ações surgirem (Confiança=Média).
-- ~~Usuários no IdP × localmente~~ → **ASSUMIDO (DL-0080):** localmente no v1 (`identity_users`); migram
-  ao IdP na Fase 13.
+  fechado de permissões mapeando as ações sensíveis. Na Fase 13 os papéis vêm de `realm_access.roles`
+  do IdP (DL-0104); o catálogo papel→permissão permanece local (BR16).
+- ~~Usuários no IdP × localmente~~ → **RESOLVIDO na Fase 13 (DL-0107):** usuários migram ao **IdP**; o
+  store local (`identity_users`) é aposentado (V31). O ERP deixa de custodiar senha.
+- ~~**Silent-refresh real** (Fase 13)~~ → **RESOLVIDO (DL-0106):** OIDC code+PKCE + renovação por refresh
+  token no frontend; fecha o stopgap DL-0092.
 
 ## Out of Scope
 

@@ -10,6 +10,7 @@ import { provideRouter } from '@angular/router';
 import { providePrimeNG } from 'primeng/config';
 import Aura from '@primeuix/themes/aura';
 import { provideTranslateLoader, provideTranslateService } from '@ngx-translate/core';
+import { provideOAuthClient } from 'angular-oauth2-oidc';
 import { routes } from './app.routes';
 import { AuthService } from './core/auth/auth.service';
 import { authInterceptor } from './core/auth/auth.interceptor';
@@ -25,6 +26,12 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withInterceptors([correlationIdInterceptor, authInterceptor, errorInterceptor]),
     ),
+    // OIDC client (SPEC-0024 Phase 13 / DL-0106). The bearer header is attached by the app's own
+    // authInterceptor, so the library's resource-server token injection stays off (sendAccessToken
+    // false) to avoid double-attaching.
+    provideOAuthClient({
+      resourceServer: { allowedUrls: ['/api'], sendAccessToken: false },
+    }),
     provideAnimationsAsync(),
     providePrimeNG({
       theme: {
@@ -43,10 +50,9 @@ export const appConfig: ApplicationConfig = {
       fallbackLang: DEFAULT_LANG,
       loader: provideTranslateLoader(() => new InMemoryTranslateLoader()),
     }),
-    // Silent session revalidation on boot (SPEC-0026 BR7, DL-0092): if a token is stored, verify it
-    // against the backend (`GET /me`); a 401 clears the session quietly.
-    provideAppInitializer(() => {
-      inject(AuthService).bootstrapSession();
-    }),
+    // OIDC session bootstrap (SPEC-0024 Phase 13, DL-0106): configure the IdP client, complete the
+    // login if returning from the IdP with a code, enable real silent-refresh (refresh token) and
+    // confirm the session against the backend (`GET /me`). Returns the promise so Angular waits for it.
+    provideAppInitializer(() => inject(AuthService).bootstrapSession()),
   ],
 };

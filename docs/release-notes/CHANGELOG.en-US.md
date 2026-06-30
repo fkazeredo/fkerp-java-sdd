@@ -10,6 +10,44 @@ detailed source; this file is the stakeholder-facing en-US mirror. Versioning fo
 
 ---
 
+## 0.23.0 — Phase 13 · Professional Identity/AuthZ (graduates SPEC-0024)
+
+**MINOR — graduates SPEC-0024 to a live external OIDC IdP. Contains a BREAKING change (highlighted per
+ADR 0015 §4): the in-house `POST /api/identity/login` is removed — login moves to the provider.**
+
+The ERP becomes an **OAuth2 Resource Server** validating the **external OIDC IdP's (Keycloak) JWTs via
+JWKS** (RS256, key rotation), mapping the realm roles (`realm_access.roles`) to Spring authorities — the
+role model and the `UserContextProvider` port survive the swap, only the token's *source* changes. This
+**resolves the two deferred debts**: **DL-0079** (live external IdP) and **DL-0092** (real
+silent-refresh).
+
+- **Added:** Resource Server by **JWKS** (`issuer-uri` + `jwk-set-uri`) validating the external token
+  (RS256 signature, `iss`, `exp`) with automatic key rotation (DL-0104).
+- **Added:** **`realm_access.roles` → `ROLE_*`** mapping (keeps the SPEC-0024 role catalogue) plus
+  `scope` exposed as `SCOPE_*` for future fine-grained checks (DL-0104).
+- **Added:** dev **Keycloak** IdP in `docker-compose.yml` and `compose.e2e.yaml` with an imported `acme`
+  realm (`infra/keycloak/realm-acme.json`): 6 roles, a **public SPA client (PKCE + refresh)**, an E2E
+  direct-grant client (test only), and **seed users** (one per role + `dev`, password `dev12345` —
+  dev/E2E only) (DL-0103).
+- **Added:** **frontend OIDC** via `angular-oauth2-oidc` — the **"Sign in with SSO"** button
+  (code+PKCE) and **real silent-refresh** by refresh token (graduates DL-0092/DL-0106); the
+  correlation-id and auth interceptors now skip cross-origin calls (IdP CORS).
+- **Added:** **local test JWKS path** (`TestJwtTokens`, a test RSA keypair) — tests mint RS256 tokens in
+  the Keycloak shape and exercise the genuine JWKS decoder **without an internet IdP** (DL-0105);
+  `TestSecurityConfig` keeps the full-access actor when no `Authorization` header is present.
+- **Changed:** `GET /api/identity/me` records the **`AUTH_LOGIN`** first-touch audit (login audit moves
+  off the removed `/login`); OpenAPI security scheme → **OIDC bearer (JWKS)**; version 0.22.1 → 0.23.0.
+- **Removed (breaking):** `POST /api/identity/login`, the in-house issuer (`JwtIssuer`/HS256), the
+  **local user store** (`identity_users`/`user_roles`, BCrypt), the dev seeder/stub and the password
+  hasher (DL-0105/DL-0107). The ERP **no longer custodies passwords**.
+- **Migration:** **V31** drops `user_roles`/`identity_users` (idempotent); keeps `roles`/
+  `role_permissions` (the role→permission catalogue stays local — the enforcement source, DL-0107).
+- **Gates:** `./mvnw verify` green (476 backend tests; ArchUnit/Modulith/Spotless/Checkstyle/JaCoCo);
+  frontend lint + 56 tests + coverage above thresholds + build; **11 Playwright E2E green** against the
+  real Keycloak OIDC flow.
+
+---
+
 ## 0.22.1 — Phase 12 · Quality & E2E
 
 **PATCH, test/CI/coverage tooling only — no contract change, no migration, nothing user-facing

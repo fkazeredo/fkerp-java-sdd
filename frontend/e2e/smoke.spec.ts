@@ -7,10 +7,10 @@ import { test, expect } from '@playwright/test';
  */
 test('the app serves the login screen on the isolated stack', async ({ page }) => {
   await page.goto('/login');
-  // The login renders the brand and the "Entrar" title (real i18n labels), so the SPA bundle loaded.
+  // The login renders the brand and the SSO sign-in button (real i18n labels), so the SPA bundle
+  // loaded. Login is delegated to the IdP now (OIDC — Phase 13/DL-0106).
   await expect(page.getByText('Acme Travel ERP')).toBeVisible();
-  await expect(page.locator('#login-username')).toBeVisible();
-  await expect(page.locator('#login-password')).toBeVisible();
+  await expect(page.getByTestId('login-sso')).toBeVisible();
 });
 
 test('the backend health endpoint answers through the proxy (readiness)', async ({ request }) => {
