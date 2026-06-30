@@ -10,6 +10,22 @@ detailed source; this file is the stakeholder-facing en-US mirror. Versioning fo
 
 ---
 
+## 0.15.0 — Phase 8g · Portfolio (SPEC-0020)
+
+`portfolio` module (17th): the **representation** context — what the Acme represents commercially (it is
+a GSA): the **brands/suppliers**, the **representation contracts** that grant the right to sell, and the
+**goals per brand** with realized-vs-goal tracking. A brand has a unique `brandRef` (a duplicate is a
+translated 409, never a raw constraint) and an ACTIVE/INACTIVE status; a contract holds the validity
+window, the Compliance document referenced by value (never an FK) and reference terms (jsonb, not
+prices). Selling a brand **without an in-force contract only alerts**, it never blocks (DL-0061); an
+expiring contract is signalled **once per contract** by a controlled-clock job that publishes
+`RepresentationExpiring` (DL-0063). Goals are VOLUME or REVENUE (BRL), unique per (brand, period,
+metric); the **realized is a read-model projection over sales events** — `BookingConfirmed` (VOLUME) and
+`SpreadRealized` (REVENUE) matched to a brand by a Portfolio-owned sale-attribution intake, **without
+changing the sale event**, idempotent per event (DL-0062, Low-confidence: which field identifies the
+brand on a sale is a business decision). Portfolio **never prices, computes commission, nor commands the
+sale** — a new ArchUnit rule gives BR6 teeth. V25 migration. DL-0060…0063.
+
 ## 0.14.0 — Phase 8f · Marketing (SPEC-0019)
 
 `marketing` module (16th): B2B marketing with **LGPD consent as a first-class citizen**. Consent is an
