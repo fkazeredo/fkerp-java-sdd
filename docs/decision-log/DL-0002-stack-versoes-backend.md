@@ -3,9 +3,18 @@
 - **Fase:** 0 (Fundação)
 - **Spec(s):** SPEC-0001
 - **Data:** 2026-06-29
-- **Status:** ASSUMIDO
+- **Status:** ASSUMIDO → **SUPERADA na Fase 14** (ver **ADR 0017** + **DL-0108**)
 - **Confiança:** Alta
 - **Reversibilidade:** Moderada
+
+> **Atualização (Fase 14, 2026-06-30):** a decisão de fixar Spring Boot **3.5.16** + Spring Modulith
+> **1.4.12** foi **revista e superada**. A própria DL-0002 previa que a migração para 4.x seria objeto
+> de "um ADR de upgrade quando houvesse motivo concreto". A Fase 14 avaliou e **executou** o upgrade:
+> a stack passa a **Spring Boot 4.0.7 + Spring Modulith 2.0.7 + springdoc 3.0.3** (Java 21 LTS mantido,
+> Testcontainers 1.21.4, Postgres 16-alpine), com **todos os gates verdes** e **sem mudança de
+> contrato**. A autoridade sobre as versões da stack passa a ser o **ADR 0017** (decisão) + **DL-0108**
+> (sub-decisões, incl. a ponte `spring-boot-starter-classic` que mantém Jackson 2 na produção). O resto
+> deste arquivo permanece como **registro histórico** da decisão da Fase 0.
 
 ## Lacuna
 
