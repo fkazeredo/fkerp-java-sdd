@@ -1,16 +1,7 @@
-package com.fksoft.domain.payout.internal;
+package com.fksoft.domain.payout;
 
+import com.fksoft.domain.ModuleInternal;
 import com.fksoft.domain.money.Money;
-import com.fksoft.domain.payout.CreatePayoutCommand;
-import com.fksoft.domain.payout.InstallmentPlan;
-import com.fksoft.domain.payout.InstallmentView;
-import com.fksoft.domain.payout.Payee;
-import com.fksoft.domain.payout.PayeeType;
-import com.fksoft.domain.payout.PayoutAmountInvalidException;
-import com.fksoft.domain.payout.PayoutKind;
-import com.fksoft.domain.payout.PayoutRefundOriginRequiredException;
-import com.fksoft.domain.payout.PayoutStatus;
-import com.fksoft.domain.payout.PayoutView;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -51,6 +42,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "payouts")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class Payout {
 
   private static final int RATE_SCALE = 6;

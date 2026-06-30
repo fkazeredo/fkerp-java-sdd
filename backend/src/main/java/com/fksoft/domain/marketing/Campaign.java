@@ -1,8 +1,6 @@
-package com.fksoft.domain.marketing.internal;
+package com.fksoft.domain.marketing;
 
-import com.fksoft.domain.marketing.CampaignInvalidException;
-import com.fksoft.domain.marketing.CampaignStatus;
-import com.fksoft.domain.marketing.CampaignView;
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -25,6 +23,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "campaigns")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class Campaign {
 
   @Id private UUID id;

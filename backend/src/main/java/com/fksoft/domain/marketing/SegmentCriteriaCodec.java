@@ -1,10 +1,8 @@
-package com.fksoft.domain.marketing.internal;
+package com.fksoft.domain.marketing;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fksoft.domain.marketing.SegmentCriteria;
-import com.fksoft.domain.marketing.SegmentInvalidException;
 import java.util.Map;
 import java.util.TreeMap;
 

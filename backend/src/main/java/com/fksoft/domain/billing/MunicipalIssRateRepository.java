@@ -1,4 +1,4 @@
-package com.fksoft.domain.billing.internal;
+package com.fksoft.domain.billing;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

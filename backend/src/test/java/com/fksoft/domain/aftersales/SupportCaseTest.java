@@ -1,13 +1,8 @@
-package com.fksoft.domain.aftersales.internal;
+package com.fksoft.domain.aftersales;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.fksoft.domain.aftersales.CaseResolution;
-import com.fksoft.domain.aftersales.SupportCaseInvalidException;
-import com.fksoft.domain.aftersales.SupportCaseStatus;
-import com.fksoft.domain.aftersales.SupportCaseTransitionInvalidException;
-import com.fksoft.domain.aftersales.SupportCaseType;
 import com.fksoft.domain.money.Money;
 import java.math.BigDecimal;
 import java.time.Duration;

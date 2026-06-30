@@ -1,7 +1,6 @@
-package com.fksoft.domain.marketing.internal;
+package com.fksoft.domain.marketing;
 
 import com.fksoft.domain.booking.BookingConfirmed;
-import com.fksoft.domain.marketing.MarketingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;

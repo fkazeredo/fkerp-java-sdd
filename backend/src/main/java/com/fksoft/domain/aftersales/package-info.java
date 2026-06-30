@@ -2,11 +2,10 @@
  * AfterSales module (SPEC-0018): the post-sale context that registers support cases (chamados),
  * conducts changes and cancellations/refunds (delegating to the owners) and measures SLA —
  * producing the "cost to serve" the DSS uses to find the product/supplier that "sells nicely, loses
- * money" (redesign Part 8). The aggregate is {@link
- * com.fksoft.domain.aftersales.internal.SupportCase}: type ∈ {COMPLAINT, CHANGE_REQUEST,
- * CANCELLATION_REQUEST, REFUND_REQUEST, INFO}, the referenced booking (value), the status machine
- * OPEN→IN_PROGRESS→WAITING→RESOLVED→CLOSED (BR4), the governed SLA deadlines (DL-0052), the breach
- * alert flag (BR4/DL-0053) and the cost-to-serve (BR5/DL-0053).
+ * money" (redesign Part 8). The aggregate is {@link com.fksoft.domain.aftersales.SupportCase}: type
+ * ∈ {COMPLAINT, CHANGE_REQUEST, CANCELLATION_REQUEST, REFUND_REQUEST, INFO}, the referenced booking
+ * (value), the status machine OPEN→IN_PROGRESS→WAITING→RESOLVED→CLOSED (BR4), the governed SLA
+ * deadlines (DL-0052), the breach alert flag (BR4/DL-0053) and the cost-to-serve (BR5/DL-0053).
  *
  * <p>Spring Modulith application module. It <strong>orchestrates, it does not reimplement</strong>:
  * the SLA deadlines are governed parameters resolved through {@link
@@ -28,8 +27,10 @@
  * com.fksoft.domain.aftersales.CaseResolution}), the events ({@link
  * com.fksoft.domain.aftersales.SupportCaseOpened}/{@link
  * com.fksoft.domain.aftersales.SupportCaseResolved}/{@link
- * com.fksoft.domain.aftersales.SlaBreached}) and the business exceptions. The {@code internal}
- * sub-package (the aggregate and its repository) is module-private.
+ * com.fksoft.domain.aftersales.SlaBreached}) and the business exceptions. The implementation types
+ * (the aggregate and its repository) live in this same package marked {@link
+ * com.fksoft.domain.ModuleInternal} and must never be reached from other modules — encapsulation is
+ * enforced by ArchUnit (Phase 9 / ADR 0016).
  */
 @org.springframework.modulith.ApplicationModule(displayName = "AfterSales")
 package com.fksoft.domain.aftersales;

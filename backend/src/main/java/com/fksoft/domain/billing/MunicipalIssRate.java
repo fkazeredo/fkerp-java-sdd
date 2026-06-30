@@ -1,5 +1,6 @@
-package com.fksoft.domain.billing.internal;
+package com.fksoft.domain.billing;
 
+import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -18,6 +19,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "municipal_iss_rates")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ModuleInternal
 public class MunicipalIssRate {
 
   @Id private String municipality;

@@ -1,7 +1,6 @@
-package com.fksoft.domain.aftersales.internal;
+package com.fksoft.domain.aftersales;
 
-import com.fksoft.domain.aftersales.SupportCaseStatus;
-import com.fksoft.domain.aftersales.SupportCaseType;
+import com.fksoft.domain.ModuleInternal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -16,6 +15,7 @@ import org.springframework.data.repository.query.Param;
  * modules never touch it (Spring Modulith). Reads support the listing filters and the SLA breach
  * sweep (non-terminal cases whose deadline has passed and that are not yet flagged).
  */
+@ModuleInternal
 public interface SupportCaseRepository extends JpaRepository<SupportCase, UUID> {
 
   /** Lists cases with optional type/status/booking/breached filters, paged (newest first). */

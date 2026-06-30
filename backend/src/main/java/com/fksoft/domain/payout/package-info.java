@@ -2,11 +2,11 @@
  * Payout module (SPEC-0017): executes the financial outflows of the operation — the agent
  * commission repass, the supplier settlement (foreign currency, at the real settlement rate, with
  * the BRL baixa) and the customer refund — supporting installments, always with a receipt and a
- * trace (redesign Part 6/7). The aggregate is {@link com.fksoft.domain.payout.internal.Payout}:
- * kind ∈ {AGENT_COMMISSION, SUPPLIER_SETTLEMENT, REFUND}, a {@link com.fksoft.domain.payout.Payee},
- * the amount, the {@code settlementRate}/{@code settledBrl} for a foreign settlement (BR1,
- * DL-0049), the status machine PENDING→EXECUTING→EXECUTED|FAILED (BR2) and the installment plan
- * (BR6, DL-0050).
+ * trace (redesign Part 6/7). The aggregate is {@link com.fksoft.domain.payout.Payout}: kind ∈
+ * {AGENT_COMMISSION, SUPPLIER_SETTLEMENT, REFUND}, a {@link com.fksoft.domain.payout.Payee}, the
+ * amount, the {@code settlementRate}/{@code settledBrl} for a foreign settlement (BR1, DL-0049),
+ * the status machine PENDING→EXECUTING→EXECUTED|FAILED (BR2) and the installment plan (BR6,
+ * DL-0050).
  *
  * <p>Spring Modulith application module — a <strong>leaf</strong>: it depends only on the {@code
  * money}/{@code error} kernels and its own {@link com.fksoft.domain.payout.PaymentGateway} port,
@@ -16,8 +16,10 @@
  * Types in this base package are the module's public API: the {@link
  * com.fksoft.domain.payout.PayoutService} use cases, the {@link
  * com.fksoft.domain.payout.PaymentGateway} integration port (and its value objects), the commands/
- * views/value objects, the events and the business exceptions. The {@code internal} sub-package
- * (the aggregate, the installment entity and the repository) is module-private (Spring Modulith
+ * views/value objects, the events and the business exceptions. The implementation types (the
+ * aggregate, the installment entity and the repository) live in this same package marked {@link
+ * com.fksoft.domain.ModuleInternal} and must never be reached from other modules — encapsulation is
+ * enforced by ArchUnit (Phase 9 / ADR 0016), the module graph stays acyclic (Spring Modulith
  * verify).
  *
  * <p>The execution goes to the external world through an Anti-Corruption Layer: the {@link

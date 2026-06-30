@@ -5,12 +5,12 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * The validated criteria of a {@link com.fksoft.domain.marketing.internal.Segment} (SPEC-0019 BR3;
- * DL-0059): a small map of <strong>allowed field → value</strong> over data that already exists in
- * the commercial base (minimization — no new personal data is collected). The set of allowed fields
- * is a <strong>closed catalog</strong> ({@link #ALLOWED_FIELDS}); an unknown field makes the
- * criteria invalid ({@link SegmentInvalidException}), so the jsonb column never becomes a free-form
- * bag and never authorizes collecting something new.
+ * The validated criteria of a {@link com.fksoft.domain.marketing.Segment} (SPEC-0019 BR3; DL-0059):
+ * a small map of <strong>allowed field → value</strong> over data that already exists in the
+ * commercial base (minimization — no new personal data is collected). The set of allowed fields is
+ * a <strong>closed catalog</strong> ({@link #ALLOWED_FIELDS}); an unknown field makes the criteria
+ * invalid ({@link SegmentInvalidException}), so the jsonb column never becomes a free-form bag and
+ * never authorizes collecting something new.
  *
  * <p>The shape is intentionally a flat {@code Map<String,String>} (e.g. {@code
  * accountType=AGENCY}): the v1 segments are simple predicates over existing attributes. Richer

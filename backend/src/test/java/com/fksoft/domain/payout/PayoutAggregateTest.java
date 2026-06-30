@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fksoft.domain.money.Money;
-import com.fksoft.domain.payout.internal.Payout;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;

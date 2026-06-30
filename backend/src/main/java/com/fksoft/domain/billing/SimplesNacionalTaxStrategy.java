@@ -1,9 +1,6 @@
-package com.fksoft.domain.billing.internal;
+package com.fksoft.domain.billing;
 
-import com.fksoft.domain.billing.MunicipalIssRateProvider;
-import com.fksoft.domain.billing.TaxAssessment;
-import com.fksoft.domain.billing.TaxRegime;
-import com.fksoft.domain.billing.TaxRegimeStrategy;
+import com.fksoft.domain.ModuleInternal;
 import com.fksoft.domain.money.Money;
 import java.math.BigDecimal;
 import java.util.List;
@@ -21,6 +18,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
+@ModuleInternal
 public class SimplesNacionalTaxStrategy implements TaxRegimeStrategy {
 
   private final MunicipalIssRateProvider rateProvider;
