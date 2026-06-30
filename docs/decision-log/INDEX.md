@@ -103,13 +103,24 @@ conforme `docs/RUN-PHASE.md`.
 > — **não** entra no destaque. É refactor estrutural sem mudança de contrato; a reversão é mecânica
 > (regenerar `internal/`, mover de volta, restaurar predicados) e protegida pelos testes + gates.
 
+> _Nota Fase 10 (UX & Frontend profissional — SPEC-0026):_ DL-0090 (stack PrimeNG 21 Aura + Tailwind v4,
+> Alta/Moderada — **gradua DL-0003**), DL-0091 (tema claro/escuro, Alta/Barata), DL-0093 (paleta de
+> comandos + atalhos próprios, Alta/Barata) e DL-0094 (KPIs do dashboard calculados no cliente, sem
+> backend novo, Alta/Barata) são reversões baratas/moderadas e **frontend-only** — não tocam contrato,
+> schema nem os 468 testes do backend. **DL-0092** (silent refresh) é a única de **Confiança=Média**:
+> o backend do 8k **não tem refresh token**, então "silent refresh" nesta fase é **revalidação** da
+> sessão via `GET /me` (existente), não emissão de novo token — a interpretação mais defensável sem
+> inventar contrato (Regra 3); a **Fase 13 (OIDC)** graduará para refresh real. **Nenhuma** DL da
+> Fase 10 é Confiança=Baixa nem Reversibilidade=Cara: o stack-alvo já estava no ADR 0008 e o ROADMAP
+> recomenda explicitamente o conjunto adotado.
+
 ## Todas as decisões
 
 | DL | Fase | Título | Conf. | Rev. |
 |---|---|---|---|---|
 | [DL-0001](DL-0001-pacote-base-com-fksoft.md) | 0 | Manter pacote base `com.fksoft` | Alta | Cara |
 | [DL-0002](DL-0002-stack-versoes-backend.md) | 0 | Versões do stack backend (Spring Boot 3.5.16, Modulith 1.4.12, Java 21) | Alta | Moderada |
-| [DL-0003](DL-0003-stack-frontend-fase-0.md) | 0 | Stack frontend Fase 0 (Angular 22 + ngx-translate; PrimeNG/Tailwind adiados) | Alta | Barata |
+| [DL-0003](DL-0003-stack-frontend-fase-0.md) | 0 | Stack frontend Fase 0 (Angular 22 + ngx-translate; PrimeNG/Tailwind adiados) — **GRADUADO na Fase 10 (ver DL-0090)** | Alta | Barata |
 | [DL-0004](DL-0004-maven-wrapper-bootstrap.md) | 0 | Bootstrap do Maven Wrapper sem Maven no sistema | Alta | Barata |
 | [DL-0005](DL-0005-adr-0014-ausente-adiar-fase-1.md) | 0 | ADR 0014 ausente: ~~adiar~~ → **criado** a pedido do dono (ver ADR 0014) | Alta | Barata |
 | [DL-0006](DL-0006-modulith-detection-strategy.md) | 0 | Spring Modulith detection-strategy=explicitly-annotated | Alta | Barata |
@@ -196,3 +207,8 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0087](DL-0087-admin-contract-expiring-controlled-clock-alert.md) | 8l | `AdminContractExpiring` por job de **relógio controlado** (horizonte 30d, idempotente por `expiry_signaled_at`, alerta — não bloqueia); padrão Portfolio/Assets | Média | Barata |
 | [DL-0088](DL-0088-admin-sensitive-endpoints-gated-by-role-finance-and-audited.md) | 8l | Escritas do Admin exigem **ROLE_FINANCE** (negação 403 + auditoria); alteração de fornecedor/contrato/despesa auditada via `system_audit` (`ADMIN_CHANGE`, metadados only) | Média | Barata |
 | [DL-0089](DL-0089-flatten-internal-encapsulation-by-module-internal-marker.md) | 9 | Pós-achatamento do `internal`: encapsulação por marcador de tipo **`@ModuleInternal`** + regra ArchUnit (nenhum outro módulo depende de tipo `@ModuleInternal`; exceção `infra` e o próprio módulo); predicados Intelligence/Portfolio/Platform trocam `.internal` pelo marcador; Modulith mantido p/ ciclos/grafo | Alta | Moderada |
+| [DL-0090](DL-0090-frontend-primeng21-aura-tailwind4-graduates-dl0003.md) | 10 | Stack de UI: **PrimeNG 21 (Aura via `@primeuix/themes`) + Tailwind v4 (camadas CSS) + @angular/cdk + primeicons**; gradua DL-0003 | Alta | Moderada |
+| [DL-0091](DL-0091-theme-toggle-darkmode-selector-and-tokens.md) | 10 | Tema claro/escuro: `ThemeService` + seletor `.app-dark` (Aura) + tokens `--app-*`; persiste em `localStorage`, default = `prefers-color-scheme` | Alta | Barata |
+| [DL-0092](DL-0092-silent-refresh-via-me-validation-no-refresh-token.md) | 10 | Silent refresh = revalidação silenciosa via `GET /api/identity/me` (boot + perto da expiração); **sem refresh token** (o backend não oferece; refresh real fica p/ Fase 13/OIDC) | Média | Moderada |
+| [DL-0093](DL-0093-command-palette-and-keyboard-shortcuts.md) | 10 | Paleta `Ctrl/Cmd+K` própria (Dialog+CDK, sem lib) + `CommandRegistry`/`ShortcutService` central; atalhos ignoram campos editáveis; `?` lista atalhos da mesma fonte | Alta | Barata |
+| [DL-0094](DL-0094-dashboard-kpis-client-side-from-existing-endpoints.md) | 10 | Dashboard KPIs **calculados no cliente** dos endpoints de lista existentes (accounts/bookings/reconciliation/exchange); **sem endpoint/migração novos** (preferir frontend-only) | Alta | Barata |
