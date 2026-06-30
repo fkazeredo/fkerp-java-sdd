@@ -1,12 +1,37 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.22.0.md`](0.22.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.22.1.md`](0.22.1.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.22.1 — Phase 12 · Quality & E2E
+
+**PATCH, test/CI/coverage tooling only — no contract change, no migration, nothing user-facing
+(Rule Zero).** Verifiable-quality foundation brought from the sibling fkerp-poc and raised to real
+gates:
+
+- **Added:** backend coverage **gate** (JaCoCo) — `./mvnw verify` reports and **fails** below 80%
+  instruction coverage; measured 89% with the 477 tests green (DL-0099).
+- **Added:** frontend coverage **gate** (`@vitest/coverage-v8`) — `ng test` collects v8 coverage and
+  **fails** below the thresholds (statements/lines 65, functions 48, branches 55); measured 70/72/54/60
+  with the 57 tests green (DL-0100).
+- **Added:** isolated, throwaway **Playwright E2E stack** (`compose.e2e.yaml`): ephemeral tmpfs
+  Postgres + backend + Nginx frontend on dedicated ports (4201/8081), so E2E **never touches the dev
+  database** (proven: dev stack stays Exited, its volume intact) (DL-0101).
+- **Added:** **11 E2E specs** green headless (chromium) — happy path (login → dashboard → navigation →
+  account creation) and **sad paths** (invalid credentials, no-session→login redirect, empty state,
+  unsaved-changes guard, **401**, **403** by role) (DL-0102).
+- **Added:** a **CI E2E job** (`.github/workflows/e2e.yml`) — brings the isolated stack up, waits for
+  health, runs Playwright headless and **always** tears it down (`if: always()`); never touches dev
+  data. The existing `ci.yml` is unchanged and now also runs the coverage gates.
+- **No** new endpoint, DTO, JSON, published event, i18n key, or migration; OpenAPI only bumps to
+  **0.22.1**. The user manual is intentionally **unchanged** (nothing user-facing changed).
 
 ---
 

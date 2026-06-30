@@ -126,6 +126,16 @@ conforme `docs/RUN-PHASE.md`.
 > existe** (Regra Zero), sem novo comportamento de negócio, schema ou contrato versionado. As
 > reversões são localizadas em config/`SecurityConfig`/um listener de infra.
 
+> _Nota Fase 12 (Qualidade & E2E — SPEC-0028):_ DL-0099 (JaCoCo backend ≥80%, gate no `verify`),
+> DL-0100 (Vitest/v8 com thresholds no `angular.json`), DL-0101 (stack E2E isolado/efêmero, 4201/8081)
+> e DL-0102 (Playwright + caminhos tristes + job de E2E no CI) são **todas Alta/Barata** — **nenhuma**
+> entra no destaque (Baixa/Cara). É tooling de teste/CI/cobertura: a tarefa traz a abordagem pronta do
+> fkerp-poc e as fontes oficiais (JaCoCo/Vitest/Playwright/Angular) fecham as escolhas; os limiares são
+> **pisos de não-regressão** medidos (89% back, 70/72/54/60 front), não barras cosméticas; o isolamento
+> é **por construção** (projeto/rede/porta/DB efêmero distintos — dev DB provado intacto). Nenhum
+> comportamento de negócio, schema ou contrato muda (Regra Zero); as reversões são uma linha de config
+> ou a remoção de um arquivo isolado.
+
 ## Todas as decisões
 
 | DL | Fase | Título | Conf. | Rev. |
@@ -228,3 +238,7 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0096](DL-0096-json-logging-native-spring-boot-and-masking.md) | 11 | Logs JSON pelo **logging estruturado nativo** do Spring Boot (`ecs`, ligado no container), correlation id via MDC; mascaramento = higiene de não-logar segredo/PII (sem encoder custom) | Alta | Barata |
 | [DL-0097](DL-0097-api-version-from-build-info-and-git.md) | 11 | `GET /api/version` = `{version, gitCommit, buildTime}` por **build-info** (Spring Boot) + `git-commit-id-maven-plugin`, beans opcionais com **degradação graciosa**; público | Alta | Barata |
 | [DL-0098](DL-0098-business-metrics-via-infra-event-listener.md) | 11 | Métricas de **negócio** sobre eventos **já publicados**, por listener `BusinessMetrics` em **infra** (`@TransactionalEventListener` AFTER_COMMIT); `domain` não importa Micrometer (ArchUnit) | Alta | Barata |
+| [DL-0099](DL-0099-jacoco-backend-coverage-threshold.md) | 12 | Cobertura backend como portão: JaCoCo INSTRUCTION ≥ **80%** no `verify` (medido 89%); piso de não-regressão, não 100% | Alta | Barata |
+| [DL-0100](DL-0100-vitest-frontend-coverage-threshold.md) | 12 | Cobertura frontend como portão: Vitest/v8 com `coverageThresholds` no `angular.json` (statements/lines 65, functions 48, branches 55); `ng test` é o gate | Alta | Barata |
+| [DL-0101](DL-0101-e2e-isolated-ephemeral-stack.md) | 12 | Isolamento do stack E2E: `compose.e2e.yaml` com Postgres **efêmero/tmpfs** (sem volume), portas 4201/8081, perfil `dev` p/ seed; dev DB provado intacto | Alta | Barata |
+| [DL-0102](DL-0102-playwright-journeys-sadpaths-ci.md) | 12 | Playwright (chromium/headless/`E2E_BASE_URL`) + jornadas críticas e caminhos tristes (401/403/vazio/não-salvos) + job de E2E no CI (`if: always()`) | Alta | Barata |
