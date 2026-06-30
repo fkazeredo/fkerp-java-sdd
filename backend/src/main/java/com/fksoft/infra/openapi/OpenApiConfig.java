@@ -99,7 +99,24 @@ public class OpenApiConfig {
                         + " Endpoints: GET /api/platform/certificate/status, POST /api/platform/certificate,"
                         + " GET /api/platform/jobs, GET /api/platform/jobs/runs?job=&status=,"
                         + " POST /api/platform/jobs/{name}/trigger,"
-                        + " GET /api/platform/audit?actor=&type=&from=&to=.")
-                .version("0.18.0"));
+                        + " GET /api/platform/audit?actor=&type=&from=&to=."
+                        + " Identity (SPEC-0024) graduates the dev auth stub into real authentication"
+                        + " with the backend as the single authority: the ERP authenticates in-house and"
+                        + " is the Resource Server of its own HS256 JWT issuer (the live external OIDC IdP"
+                        + " is Phase 13). POST /api/identity/login (public) verifies a local user's BCrypt"
+                        + " password and returns a bearer JWT carrying the user id, username and roles;"
+                        + " send it as Authorization: Bearer <jwt>. The real UserContextProvider resolves"
+                        + " the user/roles from the verified token (the dev stub stays behind the dev"
+                        + " profile, off in production). Authorization is by role: sensitive actions"
+                        + " require the corresponding role (issue NF -> ROLE_FINANCE, close period ->"
+                        + " ROLE_FINANCE, trigger job / custody certificate -> ROLE_IT, directive ->"
+                        + " ROLE_DIRECTOR, rule -> ROLE_DIRECTOR/ROLE_POLICY_ADMIN); a denial is 403 and"
+                        + " is audited, an absent/invalid token is a generic 401, and bad credentials are"
+                        + " a generic 401 that never reveals whether the user exists. Login and denial are"
+                        + " recorded in the Platform append-only system_audit (AUTH_LOGIN/ACCESS_DENIED),"
+                        + " never a token/secret. Endpoints: POST /api/identity/login,"
+                        + " GET /api/identity/me, GET /api/identity/roles,"
+                        + " GET /api/identity/access-audit?actor=&type=&from=&to=.")
+                .version("0.19.0"));
   }
 }

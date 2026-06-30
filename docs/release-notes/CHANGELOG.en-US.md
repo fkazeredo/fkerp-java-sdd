@@ -10,6 +10,45 @@ detailed source; this file is the stakeholder-facing en-US mirror. Versioning fo
 
 ---
 
+## 0.19.0 — Phase 8k · Identity (SPEC-0024)
+
+`identity` module (the 21st Modulith module, DL-0080): it **graduates the dev auth stub** into **real
+authentication** with the backend as the **single authorization authority** (security.md). **8k-1
+(authentication + JWT login, BR1/BR4, DL-0079/0081):** Spring Security is turned on and the ERP
+authenticates **in-house** as the Resource Server of its **own HS256 JWT issuer** — `POST
+/api/identity/login` verifies a local user's **BCrypt** password and returns a **bearer JWT** carrying
+the user id, username and roles; subsequent calls send `Authorization: Bearer <jwt>` and the real
+`JwtUserContextProvider` resolves the user/roles from the verified token, **graduating the stub without
+changing the port** the modules consume. Bad credentials return a **generic 401** that never reveals
+whether the user exists (BR4). The live external **OIDC IdP** (JWKS/rotation, fine scopes) is **Phase
+13** — the `UserContextProvider` port is the seam that survives that swap. **8k-2 (roles/permissions +
+access audit, BR2/BR3/BR5, DL-0082/0083):** a `Role`/`Permission` model (closed catalogue) is the single
+source of truth of internal authorization; the **sensitive actions** the specs already cite now **require
+the matching role** (issue NF → `ROLE_FINANCE`, close period → `ROLE_FINANCE`, trigger job / custody
+certificate → `ROLE_IT`, directive → `ROLE_DIRECTOR`, rule → `ROLE_DIRECTOR`/`ROLE_POLICY_ADMIN`); a
+denial is a **403, audited**. Enforcement is at the HTTP layer (Spring Security `hasRole`) **and**
+reaffirms the existing domain check (CommercialPolicy/DL-0038), which now reads roles from the **real
+token**. **Login and denials** are recorded in the Platform's append-only `system_audit`
+(`AUTH_LOGIN`/`ACCESS_DENIED`) — never a token/secret (BR4); it reuses the 8j seam instead of a new
+`access_audit` table (Rule Zero, DL-0083). `GET /api/identity/roles` and `GET /api/identity/access-audit`
+are themselves role-protected. **8k-3 (frontend login):** an Angular **login** screen, an `AuthService`
+(stores the token, mirrors the token's user), an **interceptor** that attaches the bearer and reacts to a
+401, a route **guard** and the current user / sign-out in the shell — the backend stays the authority,
+the front only mirrors. **Not breaking the build (the phase's hardest constraint):** the 434 prior tests
+assumed a fully-authorized actor; graduating ≠ rip-and-replace, so the security layer stays **mounted,
+not removed** — under the `test` profile a `TestSecurityConfig` runs the **same real authorization** but
+authenticates a full-access test actor **only when no `Authorization` header is present**, so the old
+tests stay green without sending tokens while the new security tests exercise the **genuine 401/403** by
+sending tokens. The dev stub stays behind the `dev` profile, off in production (BR6). **V29** creates
+`roles`/`role_permissions`, `identity_users` (BCrypt hash only) and `user_roles`, seeds the six base
+roles and the named permissions; dev/test seed users are created programmatically (dev/test profiles
+only, no hardcoded hash). OpenAPI **0.19.0**; new errors `identity.credentials.invalid` (401),
+`auth.unauthenticated` (401), `access.denied` (403), i18n pt-BR + en fallback. **DL-0079** is the phase's
+single Low-confidence / Costly-reversibility decision (buy/which IdP is the owner's call; the in-house
+issuer delivers the real model now and Phase 13 consolidates the live external OIDC). `./mvnw verify`
+green: **444 tests**, ArchUnit **15 rules**, Spring Modulith acyclic with the new `identity` module;
+frontend `ng lint` + **18 tests** + `ng build` green.
+
 ## 0.18.0 — Phase 8j · Platform (SPEC-0023)
 
 `platform` module: the **operated-infra** context (the 20th Modulith module, DL-0073) that **guards**

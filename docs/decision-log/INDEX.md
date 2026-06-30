@@ -20,6 +20,7 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0058](DL-0058-marketing-lgpd-erasure-preserves-revocation-and-metrics-as-logs.md) | Marketing: exclusão LGPD apaga PII mas preserva tombstone de revogação (anonimizado) | **Baixa** | **Cara** | **Alcance do apagamento × dever de prova/supressão só o DPO/jurídico fecha**; expurgo é destrutivo (PII não volta) |
 | [DL-0062](DL-0062-portfolio-brand-sale-attribution-intake-and-realized-projection.md) | Portfolio: realizado por marca via **intake próprio** (reserva→marca) + projeção de eventos, sem alterar o evento do Booking | **Baixa** | Moderada | **Qual campo identifica a marca na venda é incógnita de negócio** (só o dono fecha); intake explícito + seam rastreável |
 | [DL-0074](DL-0074-platform-certificate-encryption-at-rest.md) | Custódia do e-CNPJ: criptografia at-rest **AES-256-GCM** (envelope), chave fora do banco; só metadados expostos | **Baixa** | **Cara** | **Onde custodiar (KMS×HSM×secret manager) e A1×A3 é decisão de infra/segurança do dono**; troca de cofre exige re-cifrar/migrar segredo real |
+| [DL-0079](DL-0079-identity-inhouse-jwt-resource-server-idp-boundary.md) | Identity: auth real **in-house** (Spring Security + JWT HS256) no 8k; **OIDC externo vivo fica para a Fase 13** | **Baixa** | **Cara** | **Comprar/qual IdP é decisão do dono (Open Question)**; trocar emissor in-house por IdP externo vivo (Fase 13) é refator amplo (JWKS/rotação/login/gestão de usuários), ainda que a porta `UserContextProvider` e o modelo de papéis sejam preservados |
 
 > _Nota Fase 8e:_ DL-0052/0053/0054 são **Confiança=Média / Reversibilidade=Barata–Moderada** —
 > não entram neste destaque. O "quais custos contam" do custo de servir (DL-0053) e os prazos de
@@ -64,6 +65,17 @@ conforme `docs/RUN-PHASE.md`.
 > adota o saldo mensal + janela CLT configurável (default 6 meses do acordo individual escrito,
 > art. 59). A reversão é **Moderada** (entra um sistema de folha por cima), não Cara: o
 > `JourneyCalculator` e as tabelas já são a base.
+
+> _Nota Fase 8k (Identity — SPEC-0024):_ DL-0080 (novo módulo `identity` 21º + usuário local mínimo,
+> Alta/Moderada), DL-0081 (gradua o stub mantendo a porta `UserContextProvider`; stub permissivo atrás
+> de profile `dev`/`test`; produção usa o JWT — Alta/Barata), DL-0082 (modelo papel→permissão + mapa das
+> ações sensíveis — Média/Moderada) e DL-0083 (auditoria de acesso reusa o `system_audit` do Platform —
+> Alta/Moderada) são reversões baratas/moderadas e localizadas. **DL-0079** é a do destaque
+> (**Confiança=Baixa / Reversibilidade=Cara**): **comprar/qual IdP é Open Question do dono**. O 8k entrega
+> o **modelo de auth real + papéis/permissões + auditoria** com emissor **JWT in-house** (Spring Security,
+> Resource Server do próprio emissor), e a **Fase 13** consolida o **OIDC externo vivo** (JWKS/rotação,
+> escopos finos). A porta `UserContextProvider` e o modelo de papéis sobrevivem à troca; o emissor/
+> verificador/login não — por isso a reversão é Cara.
 
 > _Nota Fase 8j (Platform — SPEC-0023):_ DL-0073 (novo módulo `platform`, Alta/Moderada), DL-0075
 > (registro de jobs + advisory lock, Alta/Moderada), DL-0076 (catálogo/ligação de schedulers,
@@ -158,3 +170,8 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0076](DL-0076-platform-initial-job-catalog-and-scheduler-wiring.md) | 8j | Catálogo inicial = jobs já ativados (crawler/SLA/licença/representação/retenção/certificado); schedulers existentes registram `JobRun` via porta, lógica fica no dono | Média | Moderada |
 | [DL-0077](DL-0077-platform-system-audit-append-only-via-event-listener.md) | 8j | Auditoria de sistema append-only via listener de eventos in-process + fachada `record(...)`; só metadados mascarados, sem segredo | Alta | Moderada |
 | [DL-0078](DL-0078-platform-certificate-signer-graduated-from-billing-stub.md) | 8j | `CertificateSigner` graduado para o Platform; stub do Billing **delega** à custódia (mantém a porta do Billing; back-compat) | Média | Moderada |
+| [DL-0079](DL-0079-identity-inhouse-jwt-resource-server-idp-boundary.md) | 8k | Identity: auth real in-house (Spring Security + JWT HS256) no 8k; OIDC externo vivo na Fase 13; porta `UserContextProvider` é o seam | **Baixa** | **Cara** |
+| [DL-0080](DL-0080-identity-new-domain-module-and-local-user-store.md) | 8k | Novo módulo `domain.identity` (21º) + tabela local mínima de usuários/papéis (V29); auditoria reusa `system_audit` | Alta | Moderada |
+| [DL-0081](DL-0081-identity-graduate-stub-behind-profile-keep-tests-green.md) | 8k | Gradua o stub: porta intacta; `JwtUserContextProvider` em prod/default; stub permissivo atrás de profile `dev`/`test`; `TestSecurityConfig` mantém os 434 testes verdes com a segurança montada (não removida) | Alta | Barata |
+| [DL-0082](DL-0082-identity-role-permission-model-and-sensitive-action-mapping.md) | 8k | Modelo papel→permissão (catálogo fechado) + mapa das ações sensíveis (DIRECTIVE→DIRECTOR, NF→FINANCE, job→IT); enforcement HTTP (Spring Security) + reafirma a checagem de domínio (DL-0038) | Média | Moderada |
+| [DL-0083](DL-0083-identity-access-audit-reuses-platform-system-audit.md) | 8k | Auditoria de acesso reusa `system_audit` (Platform/8j): `AUTH_LOGIN`/`ACCESS_DENIED`; `GET /access-audit` é leitura focada; sem tabela nova (Regra Zero) | Alta | Moderada |

@@ -1,7 +1,10 @@
 package com.fksoft.system;
 
+import com.fksoft.security.TestSecurityConfig;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 /**
@@ -15,8 +18,15 @@ import org.testcontainers.containers.PostgreSQLContainer;
  * <p>Deliberately <em>not</em> using {@code @Testcontainers}/{@code @Container}: that stops the
  * container after the first test class, which then breaks a second class reusing the cached context
  * ("connection has been closed").
+ *
+ * <p>Runs under the {@code test} profile with {@link TestSecurityConfig} (SPEC-0024/DL-0081): the
+ * real Spring Security chain is mounted, but unauthenticated requests are authenticated as a
+ * full-access test actor, so the existing suite stays green without weakening the security layer.
+ * Security tests that send a token exercise the genuine 401/403 paths.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
+@Import(TestSecurityConfig.class)
 public abstract class AbstractPostgresIntegrationTest {
 
   @ServiceConnection

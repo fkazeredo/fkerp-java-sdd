@@ -82,6 +82,17 @@ portfolio:
     initial-delay-ms: ${PORTFOLIO_REPRESENTATION_INITIAL_DELAY_MS:600000}
     sweep-interval-ms: ${PORTFOLIO_REPRESENTATION_INTERVAL_MS:86400000} # daily
 
+# Identity (SPEC-0024 / DL-0079). The ERP authenticates in-house and is the Resource Server of its own
+# HS256 JWT issuer; the live external OIDC IdP is Phase 13. In PRODUCTION set a real >=32-byte secret via
+# IDENTITY_JWT_SECRET — the dev default below is NOT secure and is used only when unset. The secret is
+# never logged (BR4). The dev/test seed users (one per role, password 'dev12345') exist only under the
+# dev/test profiles (DevUserSeeder), never in production.
+identity:
+  jwt:
+    secret: ${IDENTITY_JWT_SECRET:dev-identity-jwt-secret-change-me-please-32b!}
+    ttl-seconds: ${IDENTITY_JWT_TTL_SECONDS:28800}   # 8h
+    issuer: ${IDENTITY_JWT_ISSUER:acme-travel-erp}
+
 logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{correlationId:-}] %logger{36} - %msg%n"
