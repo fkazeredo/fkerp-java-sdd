@@ -1,0 +1,36 @@
+.dashboard__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.dashboard__kpi {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.dashboard__kpi:hover :host ::ng-deep .p-card,
+.dashboard__kpi:focus-visible :host ::ng-deep .p-card {
+  border-color: var(--app-primary);
+}
+
+.dashboard__kpi-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--app-muted);
+  margin-bottom: 0.5rem;
+}
+
+.dashboard__kpi-head .pi {
+  color: var(--app-primary);
+}
+
+.dashboard__metric {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0.25rem 0;
+  color: var(--app-text);
+}
