@@ -4,7 +4,7 @@
 > already does today**. Updated **on every delivered slice** (see the *User manual* command in
 > `CLAUDE.md`). Portuguese version: `docs/MANUAL.md` (kept in sync).
 >
-> **System version:** 0.18.0 · **Current phase:** 8j (Platform — e-CNPJ certificate, jobs, audit)
+> **System version:** 0.19.0 · **Current phase:** 8k (Identity — login, roles and access audit)
 
 ## 1. What the system is
 
@@ -393,6 +393,38 @@ What the IT operator does:
 > custodied (cloud vault/HSM) and whether it is A1 (file) or A3 (token) is the owner's infra decision;
 > today the material is encrypted (AES-256-GCM) with the key held **outside the database**.
 
+### Phase 8 — Signing in (login), roles and access audit
+
+From this version the system has **real login**: each person signs in with a **username and password**,
+and **what each one may do depends on their role**. Before, the system used a "development user" with
+access to everything — now security is real and **the backend is the authority**: it checks the role on
+every action (the screen never decides on its own).
+
+How it works, in practice:
+
+- **Sign in (login).** Open the **"Sign in"** screen, enter your **username** and **password** and
+  confirm. If correct, you are in and your name appears at the top with a **"Sign out"** button. If the
+  username or password is wrong, a **generic** message appears ("invalid username or password") — on
+  purpose, the system **does not say** which one was wrong (security).
+- **Sign out.** The **"Sign out"** button at the top ends the session and returns to the login screen.
+- **Roles (what each one may do).** Each user has one or more **roles**: **Director**, **Finance**,
+  **Operations**, **IT**, **Policy Admin** and **Viewer**. **Sensitive actions** require the right role,
+  for example:
+  - **issue a commission invoice** and **close the month** → **Finance** role;
+  - **trigger a routine (job) / custody the certificate** → **IT** role;
+  - **issue a commercial directive** → **Director** role (a policy rule → Director or Policy Admin).
+  If you attempt an action without the required role, the system **refuses** ("access denied") and
+  **records the attempt** in the audit.
+- **Access audit.** Every **login** and every **access denial** is recorded (who, which action, when) —
+  **never** storing the password or the token. It is the trail IT/management consults to follow access.
+
+> For the technically minded: authentication today is **in-house** (the system mints and verifies its
+> own access token) — integrating an **external identity provider** (corporate single sign-on) is the
+> **next step** (Phase 13). API: `POST /api/identity/login` (sign in), `GET /api/identity/me` (who am I),
+> `GET /api/identity/roles` (role/permission catalog), `GET /api/identity/access-audit` (access audit).
+> In production the token secret MUST be configured; the sample users (one per role) exist **only** in
+> the development environment.
+
 ## 4. Glossary
 
 - **Backend / server:** the part of the system that processes the rules and talks to the database.
@@ -472,6 +504,7 @@ What the IT operator does:
 | 0.16.0 | 8 — Patrimony (Assets) | Registry of **internal patrimony** (equipment, software licenses, other goods): register with **type/identification/date/cost** and value links to the **document** (vault) and the **finance entry**; a software license requires an **expiry date**; an audited, **final retirement** (with a reason); list/filter by type/status and by **expiring licenses**; a **warning** (once per license) for licenses expiring within 30 days. It is patrimony, not a product — no price/sale; full asset management = buy. |
 | 0.17.0 | 8 — People | Minimal HR on top of the time clock: register a **collaborator** (unique identifier, admission, **contracted journey** HH:mm, status active/on-leave/terminated); **process the period journey** from the operational mirror and compute the **time-bank** (balance = worked − contracted; overtime/shortfall, negative allowed) — it only **measures**, it is not payroll; **read** the journey and time-bank; **discrepancies** (odd/missing punch, incoherent journal) become an **alert** in a treatment queue, **no auto-correction**; **archive the payslip** in the vault (payroll, 5-year retention, personal data). Heavy payroll (eSocial/FGTS/13th) = buy/integrate. |
 | 0.18.0 | 8 — Platform | IT infrastructure: **e-CNPJ certificate custody** with the material **encrypted** (the key/password never appears) — the screen shows **only metadata** (holder, validity, days-to-expiry, status) and the system **alerts** when the certificate is about to expire (30 days); **job governance** — catalog and **history** of the automatic routines, **manual trigger** (only one run at a time = 409 if already running; no duplication within the window), and a failure shows up **as a failure** (never masked as success); **append-only system audit** of security/integration/job events (who/what/when), filterable, **metadata only** (never the secret). |
+| 0.19.0 | 8 — Identity | **Real login**: sign in with **username and password** ("Sign in" screen), name and "Sign out" at the top; **generic** error that never reveals whether the user exists. **Roles and permissions** (Director/Finance/Operations/IT/Policy Admin/Viewer): **sensitive actions require the role** (issue NF and close the month → Finance; trigger job/custody certificate → IT; directive → Director) — without the role, **access denied**, recorded. **Access audit** (logins and denials; who/action/when, **no password/token**). The **backend is the authority** — the screen only mirrors. Corporate single sign-on (external provider) = next step (Phase 13). |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of

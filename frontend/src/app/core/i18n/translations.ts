@@ -12,6 +12,24 @@ export const TRANSLATIONS: Record<string, Record<string, Record<string, string>>
       bookings: 'Reservas',
       reconciliation: 'Conciliação',
       health: 'Saúde',
+      login: 'Entrar',
+      logout: 'Sair',
+    },
+    login: {
+      title: 'Entrar',
+      username: 'Usuário',
+      password: 'Senha',
+      submit: 'Entrar',
+      submitting: 'Entrando…',
+    },
+    identity: {
+      'credentials.invalid': 'Usuário ou senha inválidos.',
+    },
+    auth: {
+      unauthenticated: 'Sessão expirada. Entre novamente.',
+    },
+    access: {
+      denied: 'Acesso negado: papel insuficiente para esta ação.',
     },
     common: {
       create: 'Criar',
@@ -131,6 +149,24 @@ export const TRANSLATIONS: Record<string, Record<string, Record<string, string>>
       bookings: 'Bookings',
       reconciliation: 'Reconciliation',
       health: 'Health',
+      login: 'Sign in',
+      logout: 'Sign out',
+    },
+    login: {
+      title: 'Sign in',
+      username: 'Username',
+      password: 'Password',
+      submit: 'Sign in',
+      submitting: 'Signing in…',
+    },
+    identity: {
+      'credentials.invalid': 'Invalid username or password.',
+    },
+    auth: {
+      unauthenticated: 'Session expired. Please sign in again.',
+    },
+    access: {
+      denied: 'Access denied: insufficient role for this action.',
     },
     common: {
       create: 'Create',

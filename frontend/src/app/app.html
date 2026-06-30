@@ -6,6 +6,15 @@
     <a routerLink="/bookings" routerLinkActive="active">{{ 'nav.bookings' | translate }}</a>
     <a routerLink="/reconciliation" routerLinkActive="active">{{ 'nav.reconciliation' | translate }}</a>
     <a routerLink="/health" routerLinkActive="active">{{ 'nav.health' | translate }}</a>
+    <span class="nav__spacer"></span>
+    @if (user(); as currentUser) {
+      <span class="nav__user">{{ currentUser.displayName || currentUser.username }}</span>
+      <button type="button" class="nav__logout" (click)="logout()">
+        {{ 'nav.logout' | translate }}
+      </button>
+    } @else {
+      <a routerLink="/login" routerLinkActive="active">{{ 'nav.login' | translate }}</a>
+    }
   </nav>
   <router-outlet />
 </main>
