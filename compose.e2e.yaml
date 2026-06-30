@@ -1,0 +1,63 @@
+# Isolated, throwaway stack for the Playwright E2E suite (SPEC-0028 / DL-0101).
+#
+# Its Postgres is EPHEMERAL (tmpfs — lives in RAM, wiped when the container stops), so running the
+# E2E tests NEVER touches the development database in docker-compose.yml (which uses the named volume
+# `db-data`). Self-contained: needs no .env. Different project name (`acme-e2e`), network (`acme-e2e`)
+# and host ports (frontend 4201, backend 8081) than the dev stack (4200/8080/5432) so both can run side
+# by side and an E2E run cannot collide with — or reach — dev data.
+#
+#   docker compose -f compose.e2e.yaml up -d --build   # or: npm run e2e:up   (from frontend/)
+#   E2E_BASE_URL=http://localhost:4201 npm run e2e      # default baseURL is already 4201
+#   docker compose -f compose.e2e.yaml down -v          # npm run e2e:down  (-v removes any volume)
+name: acme-e2e
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: acme_e2e
+      POSTGRES_USER: acme
+      POSTGRES_PASSWORD: acme
+    # Ephemeral storage: data lives in tmpfs (RAM) and evaporates on container stop — no named volume,
+    # so nothing persists to disk and nothing can leak into the dev database (BR1/DL-0101).
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U acme -d acme_e2e"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [acme-e2e]
+
+  app:
+    build:
+      context: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/acme_e2e
+      DB_USERNAME: acme
+      DB_PASSWORD: acme
+      SERVER_PORT: "8080"
+      # dev profile so the DevUserSeeder creates the test users (one per role, password dev12345 —
+      # dev/test ONLY, never production; SPEC-0024 BR6 / DL-0101 / BR6) so the E2E login has credentials.
+      SPRING_PROFILES_ACTIVE: dev
+      # Insecure, well-known test secret — E2E only, never a production credential.
+      IDENTITY_JWT_SECRET: e2e-insecure-jwt-secret-please-change-0123456789-abcdef
+    ports:
+      - "8081:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [acme-e2e]
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "4201:80"
+    depends_on:
+      - app
+    networks: [acme-e2e]
+
+networks:
+  acme-e2e:
+    driver: bridge
