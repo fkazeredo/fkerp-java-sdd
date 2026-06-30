@@ -26,6 +26,7 @@ public class CertificateCustodyService {
 
   private final PlatformCertificateRepository certificateRepository;
   private final SecretCipher secretCipher;
+  private final SystemAuditService auditService;
   private final ApplicationEventPublisher events;
   private final Clock clock;
 
@@ -54,6 +55,17 @@ public class CertificateCustodyService {
             now,
             actor);
     certificateRepository.save(certificate);
+    // Append-only security audit (BR4/DL-0077): metadata only — NEVER the material/key (BR1).
+    auditService.record(
+        AuditType.CERTIFICATE_CUSTODIED,
+        actor,
+        "{\"fingerprint\":\""
+            + fingerprint
+            + "\",\"holder\":\""
+            + CertificateFingerprint.maskCnpj(command.holderDocument())
+            + "\",\"validUntil\":\""
+            + command.validUntil()
+            + "\"}");
     log.info(
         "CertificateCustodied fingerprint={} holder={} validUntil={} by={}",
         fingerprint,

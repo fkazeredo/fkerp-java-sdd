@@ -84,7 +84,22 @@ public class OpenApiConfig {
                         + " — buy/integrate. Endpoints: POST /api/people/employees, GET /employees/{id},"
                         + " GET /employees?status=, POST /employees/{id}/journey,"
                         + " GET /employees/{id}/journey?period=, GET /employees/{id}/timebank?period=,"
-                        + " GET /api/people/discrepancies, POST /employees/{id}/payslip.")
-                .version("0.17.0"));
+                        + " GET /api/people/discrepancies, POST /employees/{id}/payslip."
+                        + " Platform (SPEC-0023) adds the operated-infra context (TI): the e-CNPJ"
+                        + " certificate custody — the secret material is encrypted at rest (AES-256-GCM,"
+                        + " master key outside the database) and only metadata (subject, validity,"
+                        + " days-to-expiry, status) is ever returned, never the private key/password; an"
+                        + " expiry alert (CertificateExpiring) is raised by a controlled-clock sweep. Job"
+                        + " governance — every important job runs through a registry with idempotency by"
+                        + " (job, window), a Postgres advisory lock (one instance at a time; a concurrent"
+                        + " run gets 409 locked) and a JobRun history (start/finish/status/items/"
+                        + " correlation); a failed job is recorded FAILED, never masked as success; the"
+                        + " job's logic stays in its owner module. System audit — an append-only"
+                        + " consolidation of security/integration/job events (metadata only, no secrets)."
+                        + " Endpoints: GET /api/platform/certificate/status, POST /api/platform/certificate,"
+                        + " GET /api/platform/jobs, GET /api/platform/jobs/runs?job=&status=,"
+                        + " POST /api/platform/jobs/{name}/trigger,"
+                        + " GET /api/platform/audit?actor=&type=&from=&to=.")
+                .version("0.18.0"));
   }
 }
