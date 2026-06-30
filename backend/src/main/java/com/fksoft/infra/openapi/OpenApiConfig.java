@@ -46,7 +46,19 @@ public class OpenApiConfig {
                         + " erasure removes marketing PII while preserving an anonymized revocation tombstone."
                         + " Endpoints: POST /api/marketing/consents, DELETE /consents/{id}, GET /consents,"
                         + " POST /segments, GET /segments/{id}/preview, POST /campaigns, GET /campaigns/{id},"
-                        + " POST /campaigns/{id}/send, POST /attribution, GET /attribution, POST /erasure.")
-                .version("0.14.0"));
+                        + " POST /campaigns/{id}/send, POST /attribution, GET /attribution, POST /erasure."
+                        + " Portfolio (SPEC-0020) adds the representation context: the brands/suppliers"
+                        + " the Acme represents (unique brandRef, ACTIVE/INACTIVE), the representation"
+                        + " contracts (validity + a Compliance document referenced by value, with a"
+                        + " controlled-clock expiry alert that publishes RepresentationExpiring), and the"
+                        + " goals per brand (VOLUME/REVENUE) whose realized-vs-goal progress is a read-model"
+                        + " projection over sales events (BookingConfirmed/SpreadRealized) matched to a brand"
+                        + " by a Portfolio-owned sale-attribution intake — Portfolio never prices nor blocks"
+                        + " a sale (selling without an in-force contract only alerts). Endpoints:"
+                        + " POST /api/portfolio/brands, GET /brands/{id}, GET /brands, DELETE /brands/{id},"
+                        + " POST /brands/{brandRef}/contracts, GET /brands/{brandRef}/contract-coverage,"
+                        + " POST /contracts/flag-expiring, POST /brands/{brandRef}/goals,"
+                        + " GET /brands/{id}/goals/{period}/progress, POST /brands/{brandRef}/sales.")
+                .version("0.15.0"));
   }
 }
