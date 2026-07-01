@@ -1,0 +1,117 @@
+<section class="page">
+  <h1 class="page__title">{{ 'sourcing.title' | translate }}</h1>
+
+  <!-- Register a sourced offer -->
+  <form class="app-card" (ngSubmit)="register()" #f="ngForm">
+    <h2 class="app-card__title">{{ 'sourcing.register' | translate }}</h2>
+    <div class="form__row">
+      <div class="field">
+        <label for="src-product">{{ 'sourcing.productText' | translate }}</label>
+        <input pInputText id="src-product" name="productText" [(ngModel)]="newProductText" required />
+      </div>
+      <div class="field">
+        <label for="src-amount">{{ 'sourcing.basePrice' | translate }}</label>
+        <p-inputnumber
+          inputId="src-amount"
+          name="amount"
+          [(ngModel)]="newAmount"
+          mode="decimal"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          required
+        />
+      </div>
+      <div class="field">
+        <label for="src-currency">{{ 'sourcing.currency' | translate }}</label>
+        <input pInputText id="src-currency" name="currency" [(ngModel)]="newCurrency" required />
+      </div>
+    </div>
+    <div class="form__row">
+      <div class="field">
+        <label for="src-origin">{{ 'sourcing.origin' | translate }}</label>
+        <p-select
+          inputId="src-origin"
+          name="origin"
+          [(ngModel)]="newOrigin"
+          [options]="origins"
+          appendTo="body"
+        />
+      </div>
+      <div class="field">
+        <label for="src-integration">{{ 'sourcing.integrationLevel' | translate }}</label>
+        <p-select
+          inputId="src-integration"
+          name="integration"
+          [(ngModel)]="newIntegration"
+          [options]="integrationLevels"
+          appendTo="body"
+        />
+      </div>
+      <div class="field">
+        <label for="src-external">{{ 'sourcing.externalRef' | translate }}</label>
+        <input pInputText id="src-external" name="externalRef" [(ngModel)]="newExternalRef" />
+      </div>
+    </div>
+    @if (registerError()) {
+      <p-message severity="error" data-testid="sourcing-register-error">
+        {{ registerError() | translate }}
+      </p-message>
+    }
+    <div class="actions">
+      <p-button
+        type="submit"
+        [disabled]="registering() || f.invalid"
+        [loading]="registering()"
+        [label]="'sourcing.registerAction' | translate"
+      />
+    </div>
+  </form>
+
+  <!-- Look up an offer -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'sourcing.lookup' | translate }}</h2>
+      <div class="field">
+        <label for="src-lookup">{{ 'sourcing.offerId' | translate }}</label>
+        <input
+          pInputText
+          id="src-lookup"
+          name="lookupId"
+          [(ngModel)]="lookupId"
+          (keyup.enter)="lookup()"
+        />
+      </div>
+      <p-button
+        [label]="'sourcing.find' | translate"
+        icon="pi pi-search"
+        (onClick)="lookup()"
+        [disabled]="!lookupId"
+      />
+    </div>
+
+    @if (state() === 'loading') {
+      <app-screen-state state="loading" />
+    } @else if (state() === 'error') {
+      <app-screen-state state="error" [errorCode]="errorCode()" (retry)="lookup()" />
+    } @else if (state() === 'success' && offer(); as o) {
+      <dl class="kv" data-testid="sourcing-offer">
+        <dt>{{ 'sourcing.offerId' | translate }}</dt>
+        <dd>{{ o.id }}</dd>
+        <dt>{{ 'sourcing.productText' | translate }}</dt>
+        <dd>{{ o.productText }}</dd>
+        <dt>{{ 'sourcing.basePrice' | translate }}</dt>
+        <dd>{{ format(o.basePrice) }}</dd>
+        <dt>{{ 'sourcing.origin' | translate }}</dt>
+        <dd><p-tag [value]="o.origin" severity="info" /></dd>
+        <dt>{{ 'sourcing.integrationLevel' | translate }}</dt>
+        <dd>
+          <p-tag [value]="o.integrationLevel" [severity]="integrationSeverity(o.integrationLevel)" />
+        </dd>
+        <dt>{{ 'sourcing.externalRef' | translate }}</dt>
+        <dd>{{ o.externalRef }}</dd>
+        <dt>{{ 'sourcing.createdAt' | translate }}</dt>
+        <dd>{{ o.createdAt }}</dd>
+      </dl>
+    }
+  </div>
+</section>

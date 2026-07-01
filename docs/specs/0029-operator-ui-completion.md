@@ -1,6 +1,6 @@
 # 0029 - Telas de operação (quitação do gap de UI — Fase 16)
 
-Status: Approved (16a implementada)
+Status: Approved (16a e 16b implementadas)
 Related DL: DL-0109 (gap de UI), DL-0094 (dashboard compõe endpoints), DL-0082 (papéis sensíveis)
 Related ADR: 0015 (versionamento), SPEC-0026 (padrão de tela — shell/estados/nav/i18n)
 
@@ -26,7 +26,7 @@ A entrega é fatiada por domínio/papel, cada fatia um release MINOR (ADR 0015):
 | Fatia | Release | Telas | Papel de nav sugerido |
 |---|---|---|---|
 | **16a** | **0.24.0** | **Finance** (razão AP/AR, balancete por moeda, abrir/fechar período), **Billing** (NF de comissão / ISS), **Payout** (repasses/liquidações/reembolsos), **Compliance** (cofre de documentos, requisitos, retenção) | Finance/Billing/Payout → `ROLE_FINANCE`; Compliance → visível a qualquer autenticado (leitura ampla) |
-| 16b | 0.25.0 | AfterSales, Sourcing, Exchange-completo (market-rate/posições/exposição), Cancelamento | Operations |
+| **16b** | **0.25.0** | **AfterSales** (chamados/SLA/máquina de estados/resolução), **Sourcing** (proveniência de ofertas + nível de integração), **Exchange-completo** (mesa de câmbio: market-rate, posição por reserva, exposição viva + PromoFx), **Cancelamento** (política por escopo: janelas/merchant trap/quem arca) | Operations (`ROLE_OPERATIONS`) |
 | 16c | 0.26.0 | Intelligence/DSS, CommercialPolicy, Marketing, Portfolio | Director/Policy |
 | 16d | 0.27.0 | People/RH, Ponto, Assets, Admin, Platform/TI, Identity/acesso | IT/Finance/Director |
 
@@ -55,6 +55,14 @@ O **backend é a única autoridade** de autorização (security.md). A nav só *
 - Se um usuário sem ROLE_FINANCE acessar a rota diretamente e o backend recusar uma ação com 403, o
   `<app-screen-state>` já renderiza o **estado de permissão** (`access.denied`/`error.forbidden`),
   não um erro genérico.
+- **16b:** os endpoints de AfterSales (`/api/aftersales/**`), Sourcing (`/api/sourcing/**`), a mesa de
+  câmbio (`/api/exchange/{exposure,positions,market-rates,reports}`) e a política de cancelamento
+  (`/api/products/*/cancellation-policy`) exigem hoje apenas **autenticação** (SecurityConfig: sem
+  matcher de papel específico — caem em `authenticated()`). A nav destas telas é marcada
+  `roles: ['ROLE_OPERATIONS']` só para **reduzir ruído de menu** (são telas de operação do ciclo
+  comercial); o backend segue sendo a autoridade, então acesso direto à rota continua permitido a
+  qualquer autenticado e uma futura restrição de papel administrativo (cancelamento, quando
+  Identity/SPEC-0024 amadurecer) aparecerá como 403 no `<app-screen-state>`, sem mudança de tela.
 
 ## Estados de tela (obrigatórios em toda seção de dados)
 
@@ -113,6 +121,59 @@ AC9  Nenhuma mudança de backend além do bump de versão (pom + OpenAPI) para 0
      permanece verde; nenhuma migração, nenhum contrato alterado.
 ```
 
+## Business Rules (16b — o ciclo comercial)
+
+```txt
+BR5  AfterSales — a tela lista chamados (GET /api/aftersales/cases) com filtros type/status/bookingId/
+     breached; abre um chamado (POST /cases) referenciando uma reserva; conduz a máquina de estados
+     (POST /{id}/assign|progress|wait|close) e resolve (POST /{id}/resolve). O flag `breached` é um
+     alerta de SLA ortogonal que NUNCA bloqueia o fluxo (SPEC-0018 BR4/DL-0053). Uma resolução
+     REFUND_APPROVED dispara um Payout REFUND e CANCEL_APPROVED dispara o cancelamento na Booking
+     (BR2/BR3) — a UI só aciona; AfterSales não calcula penalidade nem posta financeiro. Uma transição
+     inválida volta pelo código estável (aftersales.case.transition.invalid), sem inventar rótulo.
+BR6  Sourcing — a tela registra a proveniência de uma oferta (POST /api/sourcing/offers: productText,
+     basePrice, origin, integrationLevel, externalRef) e lê uma oferta por id (GET /offers/{id}),
+     mostrando a origem do mundo híbrido (PORTAL_API/EXTERNAL_SITE/THIRD_PARTY_CATALOG/RAW_DEMAND) e o
+     nível de integração (NONE/INBOUND/BIDIRECTIONAL — SPEC-0009 BR1). Não há endpoint de listagem, então
+     a tela lê uma oferta por id (não inventa um GET de lista).
+BR7  Exchange (mesa de câmbio) — a tela COMPLEMENTA a de taxa congelada (SPEC-0003): mostra a exposição
+     viva do livro (GET /api/exchange/exposure: subsídio acumulado + drift mark-to-market + alerta de
+     drift, BR6/BR9), registra/lê a taxa de mercado e seu histórico (POST/GET /market-rates — via manual
+     de contingência, DL-0025), lê a posição de uma reserva com sua decomposição subsídio × drift (GET
+     /positions/{bookingId}) e o relatório PromoFx de um período (GET /reports/promo-fx?period=YYYY-MM).
+     São read-models/projeções; a tela de taxa congelada e seus testes seguem intactos.
+BR8  Cancelamento — a tela lê a política de um escopo produto/fornecedor (GET /api/products/{ref}/
+     cancellation-policy) e a administra (PUT), expondo o merchant trap (ALL_SALES_FINAL ⇒ não
+     reembolsável ao fornecedor — SPEC-0010 BR3/BR5), quem arca a penalidade (AGENCY/ACME/SUPPLIER),
+     as janelas (hoursBefore × penaltyPct — BR2) e a taxa de no-show. Uma janela malformada volta pelo
+     código estável (cancellation.policy.invalid). A autorização é do backend (hoje authenticated;
+     papel administrativo quando Identity/SPEC-0024 amadurecer).
+```
+
+## Acceptance Criteria (16b)
+
+```txt
+AC10 Existem telas AfterSales, Sourcing, Exchange (mesa de câmbio) e Cancelamento acessíveis pela nav
+     sob o Shell, rota lazy com authGuard (e canDeactivate nos formulários editáveis). Os itens de nav
+     são marcados roles: ['ROLE_OPERATIONS'] (esconder ruído de menu; o backend é a autoridade).
+AC11 Cada tela usa <app-screen-state> em toda seção de dados, com os quatro estados; todos os rótulos
+     vêm do i18n (pt-BR + en), sem texto hardcoded.
+AC12 AfterSales: filtra chamados, abre um, conduz a máquina de estados e resolve; uma transição inválida
+     mostra o erro pelo código estável; o alerta de SLA é exibido sem bloquear.
+AC13 Sourcing: registra uma oferta e consulta uma por id mostrando origem e nível de integração.
+AC14 Exchange (mesa): mostra exposição viva com o alerta de drift, registra/lista taxas de mercado, lê
+     a posição de uma reserva e o relatório PromoFx de um período; a tela de taxa congelada segue verde.
+AC15 Cancelamento: consulta e administra a política de um escopo, gerencia janelas de penalidade e
+     mostra o merchant trap/quem arca; um PUT inválido mostra o código estável.
+AC16 Vitest por tela cobrindo loading→success, empty (onde há lista) e error/permission; specs de
+     serviço (HttpTestingController) para os wrappers HTTP; gate de cobertura verde (pisos Fase-12).
+AC17 Uma jornada Playwright: login OPERATIONS → AfterSales (lista/estado vazio) e Cancelamento
+     (consulta de política); um usuário sem o papel administrativo/ROLE_FINANCE recebe 403 numa ação
+     financeira (autoridade no backend). Autorada; execução do stack E2E depende de rede de artefatos.
+AC18 Nenhuma mudança de backend além do bump de versão (pom + OpenAPI) para 0.25.0; ./mvnw verify
+     permanece verde; nenhuma migração, nenhum contrato alterado.
+```
+
 ## Non-Goals (recap)
 
 - Telas para endpoints M2M (webhooks/ACL) — nunca.
@@ -122,5 +183,5 @@ AC9  Nenhuma mudança de backend além do bump de versão (pom + OpenAPI) para 0
 
 ## Open Questions
 
-- Nenhuma para 16a (as APIs, os papéis e o padrão de tela já existem — DL-0109). As fatias 16b–16d
+- Nenhuma para 16a/16b (as APIs, os papéis e o padrão de tela já existem — DL-0109). As fatias 16c–16d
   detalharão suas telas quando forem implementadas, cada uma podendo refinar esta spec.

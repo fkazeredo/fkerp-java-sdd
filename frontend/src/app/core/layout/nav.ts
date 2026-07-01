@@ -16,8 +16,32 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { path: 'dashboard', labelKey: 'nav.dashboard', icon: 'pi pi-th-large' },
   { path: 'accounts', labelKey: 'nav.accounts', icon: 'pi pi-users' },
   { path: 'exchange', labelKey: 'nav.exchange', icon: 'pi pi-dollar' },
+  {
+    path: 'exchange-desk',
+    labelKey: 'nav.exchangeDesk',
+    icon: 'pi pi-chart-line',
+    roles: ['ROLE_OPERATIONS'],
+  },
   { path: 'quotes', labelKey: 'nav.quotes', icon: 'pi pi-calculator' },
+  {
+    path: 'sourcing',
+    labelKey: 'nav.sourcing',
+    icon: 'pi pi-compass',
+    roles: ['ROLE_OPERATIONS'],
+  },
   { path: 'bookings', labelKey: 'nav.bookings', icon: 'pi pi-ticket' },
+  {
+    path: 'aftersales',
+    labelKey: 'nav.aftersales',
+    icon: 'pi pi-inbox',
+    roles: ['ROLE_OPERATIONS'],
+  },
+  {
+    path: 'cancellation',
+    labelKey: 'nav.cancellation',
+    icon: 'pi pi-ban',
+    roles: ['ROLE_OPERATIONS'],
+  },
   { path: 'reconciliation', labelKey: 'nav.reconciliation', icon: 'pi pi-sync' },
   {
     path: 'finance',

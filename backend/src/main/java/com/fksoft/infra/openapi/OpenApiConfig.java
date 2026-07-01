@@ -177,7 +177,11 @@ public class OpenApiConfig {
                         + " bearer token."
                         + " Phase 16a (SPEC-0029) is frontend-only: it adds the Finance/Billing/Payout/"
                         + " Compliance operator screens over the existing APIs — no new endpoint, no"
-                        + " contract change.")
-                .version("0.24.0"));
+                        + " contract change."
+                        + " Phase 16b (SPEC-0029) is frontend-only too: it adds the AfterSales, Sourcing,"
+                        + " Exchange FX desk (market rates/positions/exposure) and Cancellation-policy"
+                        + " operator screens over the existing APIs — no new endpoint, no contract"
+                        + " change.")
+                .version("0.25.0"));
   }
 }

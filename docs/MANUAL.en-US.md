@@ -605,6 +605,45 @@ is the authority — the screen only mirrors it).
 > change (SPEC-0029 / DL-0109). It is the **first of the four Phase 16 slices** paying off the deferred-
 > screen debt; the next ones bring the remaining areas (commercial cycle, intelligence, back-office).
 
+### Phase 16b — Operator screens: After-sales, Sourcing, FX desk and Cancellation
+
+This version opens **four more screens**, now for the **commercial cycle**. As in 16a, they are
+**screens over what the system already did** (no new rules). They appear in the menu **for the
+Operations role** (menu tidiness only — the **server stays the authority**: if you lack permission for
+an action, the screen says **"access denied"**). Everywhere, an empty list shows a clear "nothing to
+show" notice.
+
+- **After-sales (cases and SLA).** Menu **"After-sales"**. Lists **cases** (complaint, change request,
+  cancellation, refund, info) filtered by **type**, **status** and **booking**, plus a filter to show
+  only those that **breached their SLA**. **Open a case** pointing at a booking and a type; then **drive
+  the handling** with the buttons — **assign**, **wait** and **close** — and **resolve** it choosing the
+  outcome: **approve refund** (triggers a refund payout), **approve cancellation** (triggers the booking
+  cancellation with the policy penalties), **resolve with no action** or **reject**. The **SLA-breached**
+  flag is only an alert — it **never blocks** the flow. The screen also shows the accumulated **cost to
+  serve** and the linked payout when there is one.
+- **Offer sourcing.** Menu **"Sourcing"**. **Record where an offer came from**: product description,
+  base price, **origin** (own integrated portal, external site, third-party catalog or raw demand) and
+  the **integration level** (none, inbound only, or two-way). Then **look up an offer by id** to review
+  those data. It makes clear, on each sale, whether the source is integrated or typed in by hand.
+- **FX desk (exposure and positions).** Menu **"FX desk"** — the **companion** to the **pinned-rate**
+  screen (which stays the same). It shows the **book exposure**: the **accrued subsidy** (how much the
+  house intentionally "eats" on the FX) plus the **market drift** (the risk that moves with the rate),
+  with an **alert** when the drift crosses the threshold. You can **record the market rate** (manual
+  contingency) and see its **history**, **look up a booking's position** (pinned rate, market at freeze,
+  subsidy and drift) and view the **PromoFx report for a month** (subsidy × drift × total gap).
+- **Cancellation policy.** Menu **"Cancellation"**. **Look up and configure** the policy of a
+  product/supplier: the **type** (standard, **all sales final** or custom), whether it is **refundable to
+  the supplier**, **who bears** the penalty (agency, Acme or supplier), whether we are the **merchant of
+  record**, the **no-show fee** and the **penalty windows** (hours-before × percentage). The screen makes
+  the **"merchant trap"** explicit: in "all sales final", the supplier cost is **still due** even when the
+  customer is refunded.
+
+> For the technically minded: a **frontend-only** slice over APIs that already existed
+> (`/api/aftersales`, `/api/sourcing`, `/api/exchange` — exposure/positions/market-rate/PromoFx — and
+> `/api/products/*/cancellation-policy`) — **no new endpoint**, no contract or database change
+> (SPEC-0029 / DL-0109). It is the **second of the four Phase 16 slices**; intelligence/commercial
+> policy (16c) and back-office/HR/IT (16d) remain.
+
 ## 4. Glossary
 
 - **Backend / server:** the part of the system that processes the rules and talks to the database.
@@ -698,6 +737,7 @@ is the authority — the screen only mirrors it).
 | 0.22.0 | 11 — Observability & monitoring | **Monitoring and version (for operations/IT)**, with no business-rule change: **`/api/version`** (open) returns version/commit/build date; **health probes** (`/actuator/health`) stay open; **metrics** (`/actuator/prometheus`) — technical (memory/CPU/requests) and **business** (bookings/quotes/invoices/logins) — **restricted to the IT role**; a **monitoring stack** (Prometheus + Loki + Grafana) that comes up via `docker compose`, with the "Acme Travel ERP — Backend Overview" dashboard and centralized logs; **JSON logs** with the correlation id and **no** secret/personal data. |
 | 0.23.0 | 13 — Professional Identity/AuthZ (graduates SPEC-0024) | **Corporate single sign-on (SSO)**: signing in now goes through the **company account** on the **identity provider's** page (Keycloak in dev), with the **"Sign in with SSO"** button and **real silent session renewal**; the ERP **no longer stores passwords**. **Roles, permissions and the access audit stay the same** — only the way you sign in changed. **Breaking change:** the old in-house login (`POST /api/identity/login`) was **removed** (login is now at the provider). |
 | 0.24.0 | 16a — Operator screens: Finance & Compliance | **Four new screens** over APIs that already existed (no new rules): **Finance** (AP/AR ledger with filters, per-currency trial balance and the monthly close with the "golden rule"), **Billing** (draft/issue/cancel of the commission invoice, with ISS and withholdings), **Payouts** (agent repass, supplier settlement with rate, customer refund, with installments and execution — a failure shows as a failure), **Compliance** (close-check with pending entries, vault upload and document lookup by id with hash and retention deadline). Finance/Billing/Payouts appear in the menu **only for the Finance role**; Compliance for any authenticated user. **First of the four Phase 16 slices** (pays off the deferred-screen debt — DL-0109). |
+| 0.25.0 | 16b — Operator screens: commercial cycle | **Four new screens** over APIs that already existed (no new rules): **After-sales** (cases with filters and SLA, an assign/wait/close state machine and a resolution that triggers refund/cancellation; a breached SLA only alerts, never blocks), **Sourcing** (register/look up an offer's provenance and integration level), **FX desk** (companion to the pinned rate: book exposure with subsidy+drift and an alert, market rate and history, position by booking and the PromoFx report), **Cancellation** (look up/configure the per-product policy: type, windows, cost bearer, no-show and the "merchant trap"). They appear in the menu **for the Operations role** (the server remains the authority). **Second of the four Phase 16 slices** (DL-0109). |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of

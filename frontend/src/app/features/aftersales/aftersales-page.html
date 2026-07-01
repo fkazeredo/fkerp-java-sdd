@@ -1,0 +1,266 @@
+<section class="page">
+  <h1 class="page__title">{{ 'aftersales.title' | translate }}</h1>
+
+  <!-- Open a new case -->
+  <form class="app-card" (ngSubmit)="open()" #f="ngForm">
+    <h2 class="app-card__title">{{ 'aftersales.newCase' | translate }}</h2>
+    <div class="form__row">
+      <div class="field">
+        <label for="as-booking">{{ 'aftersales.bookingId' | translate }}</label>
+        <input pInputText id="as-booking" name="bookingId" [(ngModel)]="newBookingId" required />
+      </div>
+      <div class="field">
+        <label for="as-type">{{ 'aftersales.type' | translate }}</label>
+        <p-select
+          inputId="as-type"
+          name="type"
+          [(ngModel)]="newType"
+          [options]="types"
+          appendTo="body"
+        />
+      </div>
+      <div class="field">
+        <label for="as-summary">{{ 'aftersales.summary' | translate }}</label>
+        <input pInputText id="as-summary" name="summary" [(ngModel)]="newSummary" />
+      </div>
+    </div>
+    @if (openError()) {
+      <p-message severity="error" data-testid="aftersales-open-error">
+        {{ openError() | translate }}
+      </p-message>
+    }
+    <div class="actions">
+      <p-button
+        type="submit"
+        [disabled]="opening() || f.invalid"
+        [loading]="opening()"
+        [label]="'aftersales.openAction' | translate"
+      />
+    </div>
+  </form>
+
+  <!-- Case list -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'aftersales.cases' | translate }}</h2>
+      <div class="form__row">
+        <div class="field">
+          <label for="as-f-type">{{ 'aftersales.type' | translate }}</label>
+          <p-select
+            inputId="as-f-type"
+            name="fType"
+            [(ngModel)]="filterType"
+            (ngModelChange)="load()"
+            [options]="types"
+            [showClear]="true"
+            [placeholder]="'common.all' | translate"
+            appendTo="body"
+          />
+        </div>
+        <div class="field">
+          <label for="as-f-status">{{ 'aftersales.status' | translate }}</label>
+          <p-select
+            inputId="as-f-status"
+            name="fStatus"
+            [(ngModel)]="filterStatus"
+            (ngModelChange)="load()"
+            [options]="statuses"
+            [showClear]="true"
+            [placeholder]="'common.all' | translate"
+            appendTo="body"
+          />
+        </div>
+        <div class="field">
+          <label for="as-f-breached">{{ 'aftersales.sla' | translate }}</label>
+          <p-select
+            inputId="as-f-breached"
+            name="fBreached"
+            [(ngModel)]="filterBreached"
+            (ngModelChange)="load()"
+            [options]="breachedOptions"
+            optionValue="value"
+            optionLabel="label"
+            appendTo="body"
+          >
+            <ng-template #selectedItem let-opt>{{ opt.label | translate }}</ng-template>
+            <ng-template #item let-opt>{{ opt.label | translate }}</ng-template>
+          </p-select>
+        </div>
+        <div class="field">
+          <label for="as-f-booking">{{ 'aftersales.bookingId' | translate }}</label>
+          <input
+            pInputText
+            id="as-f-booking"
+            name="fBooking"
+            [(ngModel)]="filterBooking"
+            (keyup.enter)="load()"
+          />
+        </div>
+      </div>
+    </div>
+
+    <app-screen-state
+      [state]="listState()"
+      [errorCode]="errorCode()"
+      emptyKey="aftersales.empty"
+      (retry)="load()"
+    >
+      <p-table
+        [value]="cases()"
+        data-testid="aftersales-table"
+        [rows]="10"
+        [paginator]="cases().length > 10"
+      >
+        <ng-template #header>
+          <tr>
+            <th>{{ 'aftersales.type' | translate }}</th>
+            <th>{{ 'aftersales.bookingId' | translate }}</th>
+            <th>{{ 'aftersales.status' | translate }}</th>
+            <th>{{ 'aftersales.sla' | translate }}</th>
+            <th>{{ 'aftersales.dueAt' | translate }}</th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-c>
+          <tr>
+            <td>{{ c.type }}</td>
+            <td>{{ c.bookingId }}</td>
+            <td><p-tag [value]="c.status" [severity]="statusSeverity(c.status)" /></td>
+            <td>
+              @if (c.breached) {
+                <p-tag [value]="'aftersales.breached' | translate" severity="danger" />
+              } @else {
+                <p-tag [value]="'aftersales.onTrack' | translate" severity="success" />
+              }
+            </td>
+            <td>{{ c.dueAt }}</td>
+            <td>
+              <p-button
+                size="small"
+                [text]="true"
+                [label]="'aftersales.open' | translate"
+                (onClick)="select(c)"
+              />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+  </div>
+
+  <!-- Selected case detail + actions -->
+  @if (selected(); as c) {
+    <div class="app-card" data-testid="aftersales-detail">
+      <h2 class="app-card__title">{{ 'aftersales.detail' | translate }}</h2>
+      <dl class="kv">
+        <dt>{{ 'aftersales.type' | translate }}</dt>
+        <dd>{{ c.type }}</dd>
+        <dt>{{ 'aftersales.bookingId' | translate }}</dt>
+        <dd>{{ c.bookingId }}</dd>
+        <dt>{{ 'aftersales.status' | translate }}</dt>
+        <dd><p-tag [value]="c.status" [severity]="statusSeverity(c.status)" /></dd>
+        <dt>{{ 'aftersales.summary' | translate }}</dt>
+        <dd>{{ c.summary }}</dd>
+        <dt>{{ 'aftersales.firstResponseDueAt' | translate }}</dt>
+        <dd>{{ c.firstResponseDueAt }}</dd>
+        <dt>{{ 'aftersales.dueAt' | translate }}</dt>
+        <dd>{{ c.dueAt }}</dd>
+        <dt>{{ 'aftersales.sla' | translate }}</dt>
+        <dd>
+          @if (c.breached) {
+            <p-tag [value]="'aftersales.breached' | translate" severity="danger" />
+          } @else {
+            <p-tag [value]="'aftersales.onTrack' | translate" severity="success" />
+          }
+        </dd>
+        <dt>{{ 'aftersales.resolution' | translate }}</dt>
+        <dd>{{ c.resolution }}</dd>
+        <dt>{{ 'aftersales.linkedPayout' | translate }}</dt>
+        <dd>{{ c.linkedPayoutId }}</dd>
+        <dt>{{ 'aftersales.reopenCount' | translate }}</dt>
+        <dd>{{ c.reopenCount }}</dd>
+        <dt>{{ 'aftersales.costToServe' | translate }}</dt>
+        <dd>{{ format(c.costToServeTotal) }}</dd>
+      </dl>
+
+      @if (actionError()) {
+        <p-message severity="error" data-testid="aftersales-action-error">
+          {{ actionError() | translate }}
+        </p-message>
+      }
+
+      <div class="actions">
+        <p-button
+          [label]="'aftersales.action_assign' | translate"
+          icon="pi pi-user"
+          size="small"
+          [loading]="busy()"
+          [disabled]="busy()"
+          (onClick)="transition('assign')"
+        />
+        <p-button
+          [label]="'aftersales.action_wait' | translate"
+          icon="pi pi-clock"
+          size="small"
+          severity="secondary"
+          [loading]="busy()"
+          [disabled]="busy()"
+          (onClick)="transition('wait')"
+        />
+        <p-button
+          [label]="'aftersales.action_close' | translate"
+          icon="pi pi-check-circle"
+          size="small"
+          severity="success"
+          [loading]="busy()"
+          [disabled]="busy()"
+          (onClick)="transition('close')"
+        />
+      </div>
+
+      <!-- Resolve -->
+      <h3 class="app-card__title">{{ 'aftersales.resolveTitle' | translate }}</h3>
+      <div class="form__row">
+        <div class="field">
+          <label for="as-resolution">{{ 'aftersales.resolution' | translate }}</label>
+          <p-select
+            inputId="as-resolution"
+            name="resolution"
+            [(ngModel)]="resolution"
+            [options]="resolutions"
+            appendTo="body"
+          />
+        </div>
+        <div class="field">
+          <label for="as-amount">{{ 'aftersales.amount' | translate }}</label>
+          <p-inputnumber
+            inputId="as-amount"
+            name="resolveAmount"
+            [(ngModel)]="resolveAmount"
+            mode="decimal"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="2"
+          />
+        </div>
+        <div class="field">
+          <label for="as-currency">{{ 'aftersales.currency' | translate }}</label>
+          <input pInputText id="as-currency" name="resolveCurrency" [(ngModel)]="resolveCurrency" />
+        </div>
+        <div class="field">
+          <label for="as-reason">{{ 'aftersales.cancellationReason' | translate }}</label>
+          <input pInputText id="as-reason" name="resolveReason" [(ngModel)]="resolveReason" />
+        </div>
+      </div>
+      <div class="actions">
+        <p-button
+          [label]="'aftersales.resolveAction' | translate"
+          icon="pi pi-flag"
+          [loading]="busy()"
+          [disabled]="busy()"
+          (onClick)="resolve()"
+          data-testid="aftersales-resolve"
+        />
+      </div>
+    </div>
+  }
+</section>

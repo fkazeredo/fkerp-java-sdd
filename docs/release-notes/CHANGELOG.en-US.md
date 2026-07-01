@@ -1,7 +1,7 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.24.0.md`](0.24.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.25.0.md`](0.25.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
@@ -9,6 +9,45 @@ detailed source; this file is the stakeholder-facing en-US mirror. Versioning fo
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
 
 ---
+
+## 0.25.0 — Phase 16b · Operator screens: After-sales, Sourcing, FX desk and Cancellation (SPEC-0029)
+
+**MINOR — new user-facing capability, retro-compatible (ADR 0015). Frontend-only over existing APIs;
+no new endpoint, no contract/schema change.**
+
+Phase 16b continues paying off the **UI gap** (DL-0109), now for the **commercial cycle**. It extends
+**SPEC-0029** and delivers four more operator screens, reusing the established frontend pattern. The
+existing **pinned-rate Exchange screen stays intact** — the FX desk is a **companion** screen, not a
+replacement.
+
+- **Added — After-sales screen** (`/aftersales`): cases filtered by type/status/booking/**SLA breach**,
+  **open** a case, drive the **state machine** (assign/wait/close) and **resolve** it (approve refund →
+  Payout REFUND; approve cancellation → Booking cancellation; resolve-no-action; reject). The `breached`
+  flag is an orthogonal alert that **never blocks** (SPEC-0018 BR4). Consumes `GET/POST
+  /api/aftersales/cases`, `GET /{id}`, `POST /{id}/{assign|progress|wait|close}`, `POST /{id}/resolve`.
+- **Added — Sourcing screen** (`/sourcing`): **register** an offer's provenance (product text, base
+  price, origin, integration level, external ref) and **look up** an offer by id. Consumes `POST
+  /api/sourcing/offers`, `GET /api/sourcing/offers/{id}`.
+- **Added — FX desk screen** (`/exchange-desk`): the book's **live exposure** (accrued subsidy +
+  mark-to-market drift + **drift alert**), the **market rate** (manual contingency record + history), a
+  booking's **position** (subsidy × drift) and the **PromoFx report** per period. Consumes `GET
+  /api/exchange/exposure`, `GET/POST /api/exchange/market-rates` (+`/current`),
+  `GET /api/exchange/positions/{bookingId}`, `GET /api/exchange/reports/promo-fx`.
+- **Added — Cancellation screen** (`/cancellation`): **look up and administer** the per product/supplier
+  policy — type, **penalty windows**, refundable, cost bearer, merchant of record, no-show fee; surfaces
+  the **merchant trap** (ALL_SALES_FINAL ⇒ not refundable to the supplier). Consumes `GET/PUT
+  /api/products/{ref}/cancellation-policy`.
+- **Added — navigation & i18n:** five new nav items (After-sales/Sourcing/FX desk/Cancellation gated on
+  `ROLE_OPERATIONS` — menu tidiness only, the backend stays the authority); pt-BR and en i18n blocks per
+  screen. Fixes the `g`+key shortcut map to keep the first screen when two paths share an initial
+  (accounts/aftersales, exchange/exchange-desk, compliance/cancellation).
+- **Added — tests:** Vitest per screen + `HttpTestingController` service specs (**135 frontend tests**,
+  coverage above the Phase-12 floors) and a Playwright After-sales/Cancellation journey
+  (`e2e/aftersales-cancellation.spec.ts`): an OPERATIONS user opens After-sales → empty list → looks up a
+  Cancellation policy; a non-FINANCE token is denied 403 on the finance close (backend authority).
+- **Changed:** backend `pom.xml` + OpenAPI version `0.24.0 → 0.25.0` (version string + OpenAPI
+  description text only; `./mvnw verify` stays green — **476 tests, 0 Checkstyle violations**). No new
+  endpoint, no migration, no contract change.
 
 ## 0.24.0 — Phase 16a · Operator screens: Finance, Billing, Payouts and Compliance (SPEC-0029)
 
