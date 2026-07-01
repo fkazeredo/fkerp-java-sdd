@@ -184,6 +184,18 @@ public class SecurityConfig {
                     .hasAnyRole("DIRECTOR", "POLICY_ADMIN")
                     .requestMatchers("/api/identity/roles", "/api/identity/access-audit")
                     .hasAnyRole("DIRECTOR", "IT")
+                    // Reference-data cadastros: reads are for any authenticated user; writes
+                    // (create/update/deactivate an item) are governance of policy — reuse the
+                    // existing POLICY_ADMIN role (SPEC-0031/DL-0115; no new role after Phase 17).
+                    .requestMatchers(
+                        org.springframework.http.HttpMethod.POST, "/api/cadastro/items")
+                    .hasRole("POLICY_ADMIN")
+                    .requestMatchers(
+                        org.springframework.http.HttpMethod.PUT, "/api/cadastro/items/*")
+                    .hasRole("POLICY_ADMIN")
+                    .requestMatchers(
+                        org.springframework.http.HttpMethod.DELETE, "/api/cadastro/items/*")
+                    .hasRole("POLICY_ADMIN")
                     // Administrative writes (supplier/contract/expense registration, expiry sweep)
                     // generate AP/finance facts → require the finance role (SPEC-0025, DL-0088).
                     .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/admin/**")
