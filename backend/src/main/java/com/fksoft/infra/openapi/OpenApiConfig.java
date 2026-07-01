@@ -181,7 +181,13 @@ public class OpenApiConfig {
                         + " Phase 16b (SPEC-0029) is frontend-only too: it adds the AfterSales, Sourcing,"
                         + " Exchange FX desk (market rates/positions/exposure) and Cancellation-policy"
                         + " operator screens over the existing APIs — no new endpoint, no contract"
-                        + " change.")
-                .version("0.26.0"));
+                        + " change."
+                        + " Phase 16c/16d (SPEC-0029) close the operator-UI gap, still frontend-only: 16c"
+                        + " adds Intelligence, Commercial-policy, Marketing and Portfolio; 16d adds"
+                        + " People/HR, Ponto (time-clock reads), Assets, Back-office admin, Platform/IT"
+                        + " (governed jobs, e-CNPJ certificate metadata, system audit) and Identity/access"
+                        + " (roles, access audit) — over the existing APIs, no new endpoint, no contract"
+                        + " change. Phase 16 is complete.")
+                .version("0.27.0"));
   }
 }
