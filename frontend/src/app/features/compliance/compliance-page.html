@@ -1,0 +1,184 @@
+<section class="page">
+  <h1 class="page__title">{{ 'compliance.title' | translate }}</h1>
+
+  <!-- Close-check -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'compliance.closeCheck' | translate }}</h2>
+      <div class="field">
+        <label for="cmp-period">{{ 'compliance.period' | translate }}</label>
+        <input
+          pInputText
+          id="cmp-period"
+          name="periodQuery"
+          [(ngModel)]="periodQuery"
+          (keyup.enter)="runCloseCheck()"
+          placeholder="YYYY-MM"
+        />
+      </div>
+      <p-button
+        [label]="'compliance.check' | translate"
+        icon="pi pi-verified"
+        (onClick)="runCloseCheck()"
+        [disabled]="!periodQuery"
+      />
+    </div>
+
+    @if (checkState() === 'loading') {
+      <app-screen-state state="loading" />
+    } @else if (checkState() === 'error') {
+      <app-screen-state state="error" [errorCode]="checkError()" (retry)="runCloseCheck()" />
+    } @else if (checkState() === 'success' && closeCheck(); as check) {
+      @if (check.canClose) {
+        <p-message severity="success" data-testid="compliance-can-close">
+          {{ 'compliance.canClose' | translate }}
+        </p-message>
+      } @else {
+        <p-message severity="warn" data-testid="compliance-cannot-close">
+          {{ 'compliance.cannotClose' | translate }}
+        </p-message>
+        <p-table [value]="check.pending" data-testid="compliance-pending">
+          <ng-template #header>
+            <tr>
+              <th>{{ 'compliance.entryId' | translate }}</th>
+              <th>{{ 'compliance.entryType' | translate }}</th>
+              <th>{{ 'compliance.missing' | translate }}</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-e>
+            <tr>
+              <td>{{ e.entryId }}</td>
+              <td>{{ e.entryType }}</td>
+              <td>{{ e.missing.join(', ') }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      }
+    }
+  </div>
+
+  <!-- Upload -->
+  <form class="app-card" (ngSubmit)="upload()" #f="ngForm">
+    <h2 class="app-card__title">{{ 'compliance.upload' | translate }}</h2>
+    <div class="form__row">
+      <div class="field">
+        <label for="cmp-type">{{ 'compliance.docType' | translate }}</label>
+        <p-select
+          inputId="cmp-type"
+          name="type"
+          [(ngModel)]="uploadType"
+          [options]="documentTypes"
+          appendTo="body"
+        />
+      </div>
+      <div class="field">
+        <label for="cmp-issuedAt">{{ 'compliance.issuedAt' | translate }}</label>
+        <input
+          pInputText
+          id="cmp-issuedAt"
+          name="issuedAt"
+          [(ngModel)]="uploadIssuedAt"
+          placeholder="YYYY-MM-DD"
+          required
+        />
+      </div>
+      <div class="field">
+        <label for="cmp-signed">{{ 'compliance.signedFormat' | translate }}</label>
+        <p-select
+          inputId="cmp-signed"
+          name="signedFormat"
+          [(ngModel)]="uploadSignedFormat"
+          [options]="signedFormats"
+          [showClear]="true"
+          [placeholder]="'compliance.notSigned' | translate"
+          appendTo="body"
+        />
+      </div>
+    </div>
+    <div class="field">
+      <label for="cmp-file">{{ 'compliance.file' | translate }}</label>
+      <input
+        id="cmp-file"
+        name="file"
+        type="file"
+        (change)="onFileSelected($event)"
+        data-testid="compliance-file"
+      />
+    </div>
+    <div class="field field--inline">
+      <label for="cmp-pii">
+        <input
+          id="cmp-pii"
+          name="hasPersonalData"
+          type="checkbox"
+          [(ngModel)]="uploadHasPersonalData"
+        />
+        {{ 'compliance.hasPersonalData' | translate }}
+      </label>
+    </div>
+    @if (uploadError()) {
+      <p-message severity="error" data-testid="compliance-upload-error">
+        {{ uploadError() | translate }}
+      </p-message>
+    }
+    <div class="actions">
+      <p-button
+        type="submit"
+        [disabled]="uploading() || !uploadFile || !uploadIssuedAt"
+        [loading]="uploading()"
+        [label]="'compliance.send' | translate"
+      />
+    </div>
+  </form>
+
+  <!-- Document lookup -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'compliance.vault' | translate }}</h2>
+      <div class="field">
+        <label for="cmp-docId">{{ 'compliance.documentId' | translate }}</label>
+        <input
+          pInputText
+          id="cmp-docId"
+          name="documentId"
+          [(ngModel)]="documentId"
+          (keyup.enter)="lookupDocument()"
+        />
+      </div>
+      <p-button
+        [label]="'compliance.find' | translate"
+        icon="pi pi-search"
+        (onClick)="lookupDocument()"
+        [disabled]="!documentId"
+      />
+    </div>
+
+    @if (docState() === 'loading') {
+      <app-screen-state state="loading" />
+    } @else if (docState() === 'error') {
+      <app-screen-state state="error" [errorCode]="docError()" (retry)="lookupDocument()" />
+    } @else if (docState() === 'success' && document(); as doc) {
+      <dl class="kv" data-testid="compliance-document">
+        <dt>{{ 'compliance.documentId' | translate }}</dt>
+        <dd>{{ doc.id }}</dd>
+        <dt>{{ 'compliance.docType' | translate }}</dt>
+        <dd>{{ doc.type }}</dd>
+        <dt>{{ 'compliance.hash' | translate }}</dt>
+        <dd>{{ doc.hash }}</dd>
+        <dt>{{ 'compliance.issuedAt' | translate }}</dt>
+        <dd>{{ doc.issuedAt }}</dd>
+        <dt>{{ 'compliance.retentionUntil' | translate }}</dt>
+        <dd>{{ doc.retentionUntil }}</dd>
+        <dt>{{ 'compliance.signedFormat' | translate }}</dt>
+        <dd>{{ doc.signedFormat ?? '—' }}</dd>
+        <dt>{{ 'compliance.hasPersonalData' | translate }}</dt>
+        <dd>
+          <p-tag
+            [value]="(doc.hasPersonalData ? 'common.yes' : 'common.no') | translate"
+            [severity]="doc.hasPersonalData ? 'warn' : 'secondary'"
+          />
+        </dd>
+      </dl>
+    }
+  </div>
+</section>

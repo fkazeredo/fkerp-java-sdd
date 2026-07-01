@@ -41,9 +41,17 @@ const DIRECTOR: AuthUser = {
   roles: ['ROLE_DIRECTOR'],
 };
 
+/** A user holding every role — sees the full navigation, including the role-gated items (SPEC-0029). */
+const SUPERUSER: AuthUser = {
+  userId: 'u0',
+  username: 'dev',
+  displayName: 'Diretor',
+  roles: ['ROLE_DIRECTOR', 'ROLE_FINANCE', 'ROLE_OPERATIONS', 'ROLE_IT', 'ROLE_POLICY_ADMIN'],
+};
+
 describe('Shell', () => {
-  it('renders the full navigation for an authenticated user (AC2)', () => {
-    configure(DIRECTOR, {});
+  it('renders the full navigation for a user with every role (AC2)', () => {
+    configure(SUPERUSER, {});
     const fixture = TestBed.createComponent(Shell);
     fixture.detectChanges();
 
@@ -52,6 +60,19 @@ describe('Shell', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="shell-user"]').textContent).toContain(
       'Diretor',
     );
+  });
+
+  it('hides role-gated items from a user without the role (SPEC-0029 BR/DL-0109)', () => {
+    configure(DIRECTOR, {});
+    const fixture = TestBed.createComponent(Shell);
+    fixture.detectChanges();
+
+    const visible = NAV_ITEMS.filter(
+      (item) => !item.roles || item.roles.some((role) => DIRECTOR.roles.includes(role)),
+    ).length;
+    const links = fixture.nativeElement.querySelectorAll('.shell__nav-item');
+    expect(links.length).toBe(visible);
+    expect(links.length).toBeLessThan(NAV_ITEMS.length);
   });
 
   it('toggles the theme via the topbar button (AC3)', () => {

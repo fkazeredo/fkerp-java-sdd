@@ -1,0 +1,170 @@
+<section class="page">
+  <h1 class="page__title">{{ 'billing.title' | translate }}</h1>
+
+  <!-- Draft creation -->
+  <form class="app-card" (ngSubmit)="createDraft()" #f="ngForm">
+    <h2 class="app-card__title">{{ 'billing.newDraft' | translate }}</h2>
+    <div class="field">
+      <label for="bil-entry">{{ 'billing.commissionEntryId' | translate }}</label>
+      <input
+        pInputText
+        id="bil-entry"
+        name="commissionEntryId"
+        [(ngModel)]="draftCommissionEntryId"
+        required
+      />
+    </div>
+    <div class="form__row">
+      <div class="field">
+        <label for="bil-base">{{ 'billing.base' | translate }}</label>
+        <p-inputnumber
+          inputId="bil-base"
+          name="base"
+          [(ngModel)]="draftBase"
+          mode="decimal"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          required
+        />
+      </div>
+      <div class="field">
+        <label for="bil-currency">{{ 'billing.currency' | translate }}</label>
+        <input pInputText id="bil-currency" name="currency" [(ngModel)]="draftCurrency" required />
+      </div>
+    </div>
+    <div class="form__row">
+      <div class="field">
+        <label for="bil-municipality">{{ 'billing.municipality' | translate }}</label>
+        <input
+          pInputText
+          id="bil-municipality"
+          name="municipality"
+          [(ngModel)]="draftMunicipality"
+          required
+        />
+      </div>
+      <div class="field">
+        <label for="bil-serviceCode">{{ 'billing.serviceCode' | translate }}</label>
+        <input pInputText id="bil-serviceCode" name="serviceCode" [(ngModel)]="draftServiceCode" />
+      </div>
+    </div>
+    @if (createError()) {
+      <p-message severity="error" data-testid="billing-create-error">
+        {{ createError() | translate }}
+      </p-message>
+    }
+    <div class="actions">
+      <p-button
+        type="submit"
+        [disabled]="creating() || f.invalid"
+        [loading]="creating()"
+        [label]="'common.create' | translate"
+      />
+    </div>
+  </form>
+
+  <!-- Lookup + detail -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'billing.lookup' | translate }}</h2>
+      <div class="field">
+        <label for="bil-id">{{ 'billing.invoiceId' | translate }}</label>
+        <input
+          pInputText
+          id="bil-id"
+          name="invoiceId"
+          [(ngModel)]="invoiceId"
+          (keyup.enter)="lookup()"
+        />
+      </div>
+      <p-button
+        [label]="'billing.find' | translate"
+        icon="pi pi-search"
+        (onClick)="lookup()"
+        [disabled]="!invoiceId"
+      />
+    </div>
+
+    @if (state() === 'loading') {
+      <app-screen-state state="loading" />
+    } @else if (state() === 'error') {
+      <app-screen-state state="error" [errorCode]="errorCode()" (retry)="lookup()" />
+    } @else if (state() === 'success' && invoice(); as inv) {
+      <dl class="kv" data-testid="billing-detail">
+        <dt>{{ 'billing.invoiceId' | translate }}</dt>
+        <dd>{{ inv.id }}</dd>
+        <dt>{{ 'billing.status' | translate }}</dt>
+        <dd><p-tag [value]="inv.status" [severity]="statusSeverity(inv.status)" /></dd>
+        <dt>{{ 'billing.base' | translate }}</dt>
+        <dd>{{ format(inv.base) }}</dd>
+        <dt>{{ 'billing.iss' | translate }}</dt>
+        <dd>{{ inv.iss ? format(inv.iss) : '—' }}</dd>
+        <dt>{{ 'billing.regime' | translate }}</dt>
+        <dd>{{ inv.regime ?? '—' }}</dd>
+        <dt>{{ 'billing.municipality' | translate }}</dt>
+        <dd>{{ inv.municipality }}</dd>
+        <dt>{{ 'billing.number' | translate }}</dt>
+        <dd>{{ inv.number ?? '—' }}</dd>
+        <dt>{{ 'billing.verificationCode' | translate }}</dt>
+        <dd>{{ inv.verificationCode ?? '—' }}</dd>
+        <dt>{{ 'billing.documentId' | translate }}</dt>
+        <dd>{{ inv.documentId ?? '—' }}</dd>
+      </dl>
+
+      @if (inv.withholdings.length > 0) {
+        <h3 class="app-card__title">{{ 'billing.withholdings' | translate }}</h3>
+        <p-table [value]="inv.withholdings" data-testid="billing-withholdings">
+          <ng-template #header>
+            <tr>
+              <th>{{ 'billing.withholdingKind' | translate }}</th>
+              <th>{{ 'billing.withholdingAmount' | translate }}</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-w>
+            <tr>
+              <td>{{ w.kind }}</td>
+              <td>{{ format(w.amount) }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      }
+
+      @if (actionError()) {
+        <p-message severity="error" data-testid="billing-action-error">
+          {{ actionError() | translate }}
+        </p-message>
+      }
+
+      @if (inv.status === 'RASCUNHO') {
+        <div class="actions">
+          <p-button
+            [label]="'billing.issue' | translate"
+            icon="pi pi-send"
+            [loading]="busy()"
+            [disabled]="busy()"
+            (onClick)="issue()"
+            data-testid="billing-issue"
+          />
+        </div>
+      }
+
+      @if (inv.status === 'EMITIDA') {
+        <div class="field">
+          <label for="bil-reason">{{ 'billing.cancelReason' | translate }}</label>
+          <input pInputText id="bil-reason" name="cancelReason" [(ngModel)]="cancelReason" />
+        </div>
+        <div class="actions">
+          <p-button
+            [label]="'billing.cancel' | translate"
+            icon="pi pi-times"
+            severity="danger"
+            [loading]="busy()"
+            [disabled]="busy() || !cancelReason"
+            (onClick)="cancel()"
+            data-testid="billing-cancel"
+          />
+        </div>
+      }
+    }
+  </div>
+</section>

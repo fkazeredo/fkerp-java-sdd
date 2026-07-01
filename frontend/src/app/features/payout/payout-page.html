@@ -1,0 +1,222 @@
+<section class="page">
+  <h1 class="page__title">{{ 'payout.title' | translate }}</h1>
+
+  <!-- Create -->
+  <form class="app-card" (ngSubmit)="create()" #f="ngForm">
+    <h2 class="app-card__title">{{ 'payout.new' | translate }}</h2>
+    <div class="form__row">
+      <div class="field">
+        <label for="pay-kind">{{ 'payout.kind' | translate }}</label>
+        <p-select
+          inputId="pay-kind"
+          name="kind"
+          [(ngModel)]="newKind"
+          [options]="kinds"
+          appendTo="body"
+        />
+      </div>
+      <div class="field">
+        <label for="pay-payeeType">{{ 'payout.payeeType' | translate }}</label>
+        <p-select
+          inputId="pay-payeeType"
+          name="payeeType"
+          [(ngModel)]="newPayeeType"
+          [options]="payeeTypes"
+          appendTo="body"
+        />
+      </div>
+      <div class="field">
+        <label for="pay-payeeId">{{ 'payout.payeeId' | translate }}</label>
+        <input pInputText id="pay-payeeId" name="payeeId" [(ngModel)]="newPayeeId" required />
+      </div>
+    </div>
+    <div class="form__row">
+      <div class="field">
+        <label for="pay-amount">{{ 'payout.amount' | translate }}</label>
+        <p-inputnumber
+          inputId="pay-amount"
+          name="amount"
+          [(ngModel)]="newAmount"
+          mode="decimal"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          required
+        />
+      </div>
+      <div class="field">
+        <label for="pay-currency">{{ 'payout.currency' | translate }}</label>
+        <input pInputText id="pay-currency" name="currency" [(ngModel)]="newCurrency" required />
+      </div>
+      <div class="field">
+        <label for="pay-rate">{{ 'payout.settlementRate' | translate }}</label>
+        <p-inputnumber
+          inputId="pay-rate"
+          name="settlementRate"
+          [(ngModel)]="newSettlementRate"
+          mode="decimal"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="6"
+        />
+      </div>
+    </div>
+    <div class="field">
+      <label for="pay-origin">{{ 'payout.originRef' | translate }}</label>
+      <input pInputText id="pay-origin" name="originRef" [(ngModel)]="newOriginRef" />
+    </div>
+    @if (createError()) {
+      <p-message severity="error" data-testid="payout-create-error">
+        {{ createError() | translate }}
+      </p-message>
+    }
+    <div class="actions">
+      <p-button
+        type="submit"
+        [disabled]="creating() || f.invalid"
+        [loading]="creating()"
+        [label]="'common.create' | translate"
+      />
+    </div>
+  </form>
+
+  <!-- List -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'payout.list' | translate }}</h2>
+      <div class="form__row">
+        <div class="field">
+          <label for="pay-f-kind">{{ 'payout.kind' | translate }}</label>
+          <p-select
+            inputId="pay-f-kind"
+            name="fKind"
+            [(ngModel)]="filterKind"
+            (ngModelChange)="load()"
+            [options]="kinds"
+            [showClear]="true"
+            [placeholder]="'common.all' | translate"
+            appendTo="body"
+          />
+        </div>
+        <div class="field">
+          <label for="pay-f-status">{{ 'payout.status' | translate }}</label>
+          <p-select
+            inputId="pay-f-status"
+            name="fStatus"
+            [(ngModel)]="filterStatus"
+            (ngModelChange)="load()"
+            [options]="statuses"
+            [showClear]="true"
+            [placeholder]="'common.all' | translate"
+            appendTo="body"
+          />
+        </div>
+      </div>
+    </div>
+
+    <app-screen-state
+      [state]="listState()"
+      [errorCode]="errorCode()"
+      emptyKey="payout.empty"
+      (retry)="load()"
+    >
+      <p-table
+        [value]="payouts()"
+        data-testid="payout-table"
+        [rows]="10"
+        [paginator]="payouts().length > 10"
+      >
+        <ng-template #header>
+          <tr>
+            <th>{{ 'payout.kind' | translate }}</th>
+            <th>{{ 'payout.payee' | translate }}</th>
+            <th>{{ 'payout.amount' | translate }}</th>
+            <th>{{ 'payout.status' | translate }}</th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-p>
+          <tr>
+            <td>{{ p.kind }}</td>
+            <td>{{ p.payee.type }} · {{ p.payee.id }}</td>
+            <td>{{ format(p.amount) }}</td>
+            <td><p-tag [value]="p.status" [severity]="statusSeverity(p.status)" /></td>
+            <td>
+              <p-button
+                size="small"
+                [text]="true"
+                [label]="'payout.open' | translate"
+                (onClick)="select(p)"
+              />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+  </div>
+
+  <!-- Detail -->
+  @if (selected(); as p) {
+    <div class="app-card" data-testid="payout-detail">
+      <h2 class="app-card__title">{{ 'payout.detail' | translate }}</h2>
+      <dl class="kv">
+        <dt>{{ 'payout.kind' | translate }}</dt>
+        <dd>{{ p.kind }}</dd>
+        <dt>{{ 'payout.payee' | translate }}</dt>
+        <dd>{{ p.payee.type }} · {{ p.payee.id }}</dd>
+        <dt>{{ 'payout.amount' | translate }}</dt>
+        <dd>{{ format(p.amount) }}</dd>
+        <dt>{{ 'payout.settledBrl' | translate }}</dt>
+        <dd>{{ p.settledBrl ? format(p.settledBrl) : '—' }}</dd>
+        <dt>{{ 'payout.status' | translate }}</dt>
+        <dd><p-tag [value]="p.status" [severity]="statusSeverity(p.status)" /></dd>
+        <dt>{{ 'payout.originRef' | translate }}</dt>
+        <dd>{{ p.originRef ?? '—' }}</dd>
+      </dl>
+
+      <h3 class="app-card__title">{{ 'payout.installments' | translate }}</h3>
+      <p-table [value]="p.installments" data-testid="payout-installments">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'payout.seq' | translate }}</th>
+            <th>{{ 'payout.dueDate' | translate }}</th>
+            <th>{{ 'payout.amount' | translate }}</th>
+            <th>{{ 'payout.status' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-i>
+          <tr>
+            <td>{{ i.seq }}</td>
+            <td>{{ i.dueDate }}</td>
+            <td>{{ format(i.amount) }}</td>
+            <td><p-tag [value]="i.status" [severity]="statusSeverity(i.status)" /></td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+      @if (actionError()) {
+        <p-message severity="error" data-testid="payout-action-error">
+          {{ actionError() | translate }}
+        </p-message>
+      }
+      <div class="list__header">
+        <div class="field">
+          <label for="pay-outcome">{{ 'payout.outcomeHint' | translate }}</label>
+          <p-select
+            inputId="pay-outcome"
+            name="outcome"
+            [(ngModel)]="outcomeHint"
+            [options]="outcomes"
+            appendTo="body"
+          />
+        </div>
+        <p-button
+          [label]="'payout.execute' | translate"
+          icon="pi pi-play"
+          [loading]="busy()"
+          [disabled]="busy() || p.status === 'EXECUTED'"
+          (onClick)="execute()"
+          data-testid="payout-execute"
+        />
+      </div>
+    </div>
+  }
+</section>

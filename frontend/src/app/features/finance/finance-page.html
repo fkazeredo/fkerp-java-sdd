@@ -1,0 +1,255 @@
+<section class="page">
+  <h1 class="page__title">{{ 'finance.title' | translate }}</h1>
+
+  <!-- New ledger entry -->
+  <form class="app-card" (ngSubmit)="submit()" #f="ngForm">
+    <h2 class="app-card__title">{{ 'finance.newEntry' | translate }}</h2>
+    <div class="form__row">
+      <div class="field">
+        <label for="fin-direction">{{ 'finance.direction' | translate }}</label>
+        <p-select
+          inputId="fin-direction"
+          name="direction"
+          [(ngModel)]="newDirection"
+          [options]="directions"
+          appendTo="body"
+        />
+      </div>
+      <div class="field">
+        <label for="fin-entryType">{{ 'finance.entryType' | translate }}</label>
+        <p-select
+          inputId="fin-entryType"
+          name="entryType"
+          [(ngModel)]="newEntryType"
+          [options]="entryTypes"
+          appendTo="body"
+        />
+      </div>
+    </div>
+    <div class="form__row">
+      <div class="field">
+        <label for="fin-partyId">{{ 'finance.partyId' | translate }}</label>
+        <input pInputText id="fin-partyId" name="partyId" [(ngModel)]="newPartyId" required />
+      </div>
+      <div class="field">
+        <label for="fin-partyType">{{ 'finance.partyType' | translate }}</label>
+        <p-select
+          inputId="fin-partyType"
+          name="partyType"
+          [(ngModel)]="newPartyType"
+          [options]="partyTypes"
+          appendTo="body"
+        />
+      </div>
+    </div>
+    <div class="form__row">
+      <div class="field">
+        <label for="fin-amount">{{ 'finance.amount' | translate }}</label>
+        <p-inputnumber
+          inputId="fin-amount"
+          name="amount"
+          [(ngModel)]="newAmount"
+          mode="decimal"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          required
+        />
+      </div>
+      <div class="field">
+        <label for="fin-currency">{{ 'finance.currency' | translate }}</label>
+        <input pInputText id="fin-currency" name="currency" [(ngModel)]="newCurrency" required />
+      </div>
+      <div class="field">
+        <label for="fin-period">{{ 'finance.period' | translate }}</label>
+        <input
+          pInputText
+          id="fin-period"
+          name="period"
+          [(ngModel)]="newPeriod"
+          placeholder="YYYY-MM"
+          required
+        />
+      </div>
+    </div>
+    @if (submitError()) {
+      <p-message severity="error" data-testid="finance-submit-error">
+        {{ submitError() | translate }}
+      </p-message>
+    }
+    <div class="actions">
+      <p-button
+        type="submit"
+        [disabled]="submitting() || f.invalid"
+        [loading]="submitting()"
+        [label]="'common.create' | translate"
+      />
+    </div>
+  </form>
+
+  <!-- Ledger list -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'finance.ledger' | translate }}</h2>
+      <div class="form__row">
+        <div class="field">
+          <label for="fin-f-direction">{{ 'finance.direction' | translate }}</label>
+          <p-select
+            inputId="fin-f-direction"
+            name="fDirection"
+            [(ngModel)]="filterDirection"
+            (ngModelChange)="loadEntries()"
+            [options]="directions"
+            [showClear]="true"
+            [placeholder]="'common.all' | translate"
+            appendTo="body"
+          />
+        </div>
+        <div class="field">
+          <label for="fin-f-status">{{ 'finance.status' | translate }}</label>
+          <p-select
+            inputId="fin-f-status"
+            name="fStatus"
+            [(ngModel)]="filterStatus"
+            (ngModelChange)="loadEntries()"
+            [options]="statuses"
+            [showClear]="true"
+            [placeholder]="'common.all' | translate"
+            appendTo="body"
+          />
+        </div>
+        <div class="field">
+          <label for="fin-f-period">{{ 'finance.period' | translate }}</label>
+          <input
+            pInputText
+            id="fin-f-period"
+            name="fPeriod"
+            [(ngModel)]="filterPeriod"
+            (keyup.enter)="loadEntries()"
+            placeholder="YYYY-MM"
+          />
+        </div>
+      </div>
+    </div>
+
+    <app-screen-state
+      [state]="listState()"
+      [errorCode]="errorCode()"
+      emptyKey="finance.empty"
+      (retry)="loadEntries()"
+    >
+      <p-table
+        [value]="entries()"
+        data-testid="finance-table"
+        [rows]="10"
+        [paginator]="entries().length > 10"
+      >
+        <ng-template #header>
+          <tr>
+            <th>{{ 'finance.direction' | translate }}</th>
+            <th>{{ 'finance.entryType' | translate }}</th>
+            <th>{{ 'finance.party' | translate }}</th>
+            <th>{{ 'finance.amount' | translate }}</th>
+            <th>{{ 'finance.period' | translate }}</th>
+            <th>{{ 'finance.status' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-entry>
+          <tr>
+            <td>{{ entry.direction }}</td>
+            <td>{{ entry.entryType }}</td>
+            <td>{{ entry.party.type }} · {{ entry.party.id }}</td>
+            <td>{{ format(entry.amount) }}</td>
+            <td>{{ entry.period }}</td>
+            <td><p-tag [value]="entry.status" [severity]="statusSeverity(entry.status)" /></td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+  </div>
+
+  <!-- Period + trial balance + close -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'finance.periodClose' | translate }}</h2>
+      <div class="field">
+        <label for="fin-period-q">{{ 'finance.period' | translate }}</label>
+        <input
+          pInputText
+          id="fin-period-q"
+          name="periodQuery"
+          [(ngModel)]="periodQuery"
+          (keyup.enter)="lookupPeriod()"
+          placeholder="YYYY-MM"
+        />
+      </div>
+      <p-button
+        [label]="'finance.lookup' | translate"
+        icon="pi pi-search"
+        (onClick)="lookupPeriod()"
+        [disabled]="!periodQuery"
+      />
+    </div>
+
+    @if (periodState() === 'loading') {
+      <app-screen-state state="loading" />
+    } @else if (periodState() === 'error') {
+      <app-screen-state state="error" [errorCode]="periodError()" (retry)="lookupPeriod()" />
+    } @else if (periodState() === 'success' && period()) {
+      <dl class="kv" data-testid="finance-period">
+        <dt>{{ 'finance.period' | translate }}</dt>
+        <dd>{{ period()!.period }}</dd>
+        <dt>{{ 'finance.status' | translate }}</dt>
+        <dd>
+          <p-tag [value]="period()!.status" [severity]="periodSeverity(period()!.status)" />
+        </dd>
+      </dl>
+
+      @if (trialBalance(); as tb) {
+        <h3 class="app-card__title">{{ 'finance.trialBalance' | translate }}</h3>
+        @if (tb.balances.length === 0) {
+          <p class="app-muted" data-testid="finance-tb-empty">{{ 'finance.tbEmpty' | translate }}</p>
+        } @else {
+          <p-table [value]="tb.balances" data-testid="finance-tb-table">
+            <ng-template #header>
+              <tr>
+                <th>{{ 'finance.currency' | translate }}</th>
+                <th>{{ 'finance.payable' | translate }}</th>
+                <th>{{ 'finance.receivable' | translate }}</th>
+                <th>{{ 'finance.net' | translate }}</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-b>
+              <tr>
+                <td>{{ b.currency }}</td>
+                <td>{{ b.payable }}</td>
+                <td>{{ b.receivable }}</td>
+                <td>{{ b.net }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        }
+        <p class="app-muted">
+          {{ 'finance.counts' | translate }}: {{ tb.provisionalCount }} / {{ tb.confirmedCount }} /
+          {{ tb.settledCount }}
+        </p>
+      }
+
+      @if (closeError()) {
+        <p-message severity="error" data-testid="finance-close-error">
+          {{ closeError() | translate }}
+        </p-message>
+      }
+      <div class="actions">
+        <p-button
+          [label]="'finance.close' | translate"
+          icon="pi pi-lock"
+          severity="danger"
+          [loading]="closing()"
+          [disabled]="closing() || period()!.status === 'CLOSED'"
+          (onClick)="closePeriod()"
+          data-testid="finance-close"
+        />
+      </div>
+    }
+  </div>
+</section>

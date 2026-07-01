@@ -53,6 +53,31 @@ export const routes: Routes = [
         canActivate: [authGuard],
       },
       {
+        path: 'finance',
+        loadComponent: () => import('./features/finance/finance-page').then((m) => m.FinancePage),
+        canActivate: [authGuard],
+        canDeactivate: [canDeactivateGuard],
+      },
+      {
+        path: 'billing',
+        loadComponent: () => import('./features/billing/billing-page').then((m) => m.BillingPage),
+        canActivate: [authGuard],
+        canDeactivate: [canDeactivateGuard],
+      },
+      {
+        path: 'payouts',
+        loadComponent: () => import('./features/payout/payout-page').then((m) => m.PayoutPage),
+        canActivate: [authGuard],
+        canDeactivate: [canDeactivateGuard],
+      },
+      {
+        path: 'compliance',
+        loadComponent: () =>
+          import('./features/compliance/compliance-page').then((m) => m.CompliancePage),
+        canActivate: [authGuard],
+        canDeactivate: [canDeactivateGuard],
+      },
+      {
         path: 'health',
         loadComponent: () => import('./features/health/health-page').then((m) => m.HealthPage),
       },
