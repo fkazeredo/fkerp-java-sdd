@@ -36,11 +36,12 @@ test('an OPERATIONS user opens After-sales (empty list) and the Cancellation pol
 });
 
 test('a token without ROLE_FINANCE is denied (403) on the finance close action', async ({
+  browser,
   request,
 }) => {
   // `ops` (ROLE_OPERATIONS) lacks ROLE_FINANCE → the finance close action is 403 (DL-0082). This
   // proves the backend is the authority even though the operations nav is visible to `ops`.
-  const opsToken = await tokenFor(request, 'ops');
+  const opsToken = await tokenFor(browser, 'ops');
   const denied = await request.post('/api/finance/periods/2026-06/close', {
     headers: { Authorization: `Bearer ${opsToken}` },
   });

@@ -44,6 +44,7 @@ test('a director opens the Intelligence panel (empty) and the Commercial-policy 
 });
 
 test('the directive endpoint is DIRECTOR-gated (403 without the role, allowed for the director)', async ({
+  browser,
   request,
 }) => {
   const directive = {
@@ -54,7 +55,7 @@ test('the directive endpoint is DIRECTOR-gated (403 without the role, allowed fo
   };
 
   // `ops` (ROLE_OPERATIONS) lacks ROLE_DIRECTOR → issuing a directive is 403 (DL-0082/BR5).
-  const opsToken = await tokenFor(request, 'ops');
+  const opsToken = await tokenFor(browser, 'ops');
   const denied = await request.post('/api/commercial-policy/directives', {
     headers: { Authorization: `Bearer ${opsToken}` },
     data: directive,
@@ -62,7 +63,7 @@ test('the directive endpoint is DIRECTOR-gated (403 without the role, allowed fo
   expect(denied.status()).toBe(403);
 
   // The director is authorized on the directive endpoint (never 401/403).
-  const directorToken = await tokenFor(request, 'director');
+  const directorToken = await tokenFor(browser, 'director');
   const allowed = await request.post('/api/commercial-policy/directives', {
     headers: { Authorization: `Bearer ${directorToken}` },
     data: directive,

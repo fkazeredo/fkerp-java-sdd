@@ -47,10 +47,11 @@ test('an IT operator opens the Platform screen (certificate metadata, jobs) and 
 });
 
 test('a governed job trigger is IT-gated (403 without ROLE_IT, allowed for IT)', async ({
+  browser,
   request,
 }) => {
   // `ops` (ROLE_OPERATIONS) lacks ROLE_IT → triggering a governed job is 403 (DL-0082).
-  const opsToken = await tokenFor(request, 'ops');
+  const opsToken = await tokenFor(browser, 'ops');
   const denied = await request.post('/api/platform/jobs/license-expiry-sweep/trigger', {
     headers: { Authorization: `Bearer ${opsToken}` },
   });
@@ -58,7 +59,7 @@ test('a governed job trigger is IT-gated (403 without ROLE_IT, allowed for IT)',
 
   // The IT operator is authorized on the trigger endpoint (never 401/403; a job that is unknown or
   // already running is a different, non-authorization status).
-  const itToken = await tokenFor(request, 'it');
+  const itToken = await tokenFor(browser, 'it');
   const allowed = await request.post('/api/platform/jobs/license-expiry-sweep/trigger', {
     headers: { Authorization: `Bearer ${itToken}` },
   });
