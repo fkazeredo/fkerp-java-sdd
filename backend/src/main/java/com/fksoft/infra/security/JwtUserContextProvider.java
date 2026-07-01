@@ -8,16 +8,16 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 /**
- * Real {@link UserContextProvider} (SPEC-0024 BR1/DL-0081, graduated in Phase 13/DL-0104): resolves
- * the current principal from the verified Spring Security context — populated by the JWT bearer
- * filter from the <strong>external IdP</strong> token in production/dev, and by the {@code
- * TestSecurityConfig} actor in the {@code test} profile. The port the modules consume is
- * <strong>unchanged</strong> by the swap to the external IdP; centralizing the {@code
- * SecurityContextHolder} access here keeps the rest of the codebase off it (security.md).
+ * Real {@link UserContextProvider} (SPEC-0024 BR1/DL-0081, re-graduated in Phase 17/DL-0110):
+ * resolves the current principal from the verified Spring Security context — populated by the JWT
+ * bearer filter from the <strong>self-hosted IdP</strong> token (the embedded Spring Authorization
+ * Server) in production/dev, and by the {@code TestSecurityConfig} actor in the {@code test}
+ * profile. The port the modules consume is <strong>unchanged</strong> by the IdP swap; centralizing
+ * the {@code SecurityContextHolder} access here keeps the rest of the codebase off it
+ * (security.md).
  *
- * <p>Active in every profile (the login-less dev stub of the 8k was retired in Phase 13 — dev now
- * logs in against the dev Keycloak). When there is no authentication (e.g. an unauthenticated
- * thread), it returns an anonymous context with no roles.
+ * <p>Active in every profile. When there is no authentication (e.g. an unauthenticated thread), it
+ * returns an anonymous context with no roles.
  */
 @Component
 public class JwtUserContextProvider implements UserContextProvider {

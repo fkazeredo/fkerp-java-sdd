@@ -1,5 +1,7 @@
 # Local stack for the Acme Travel ERP.
-# - app + db: the application and its database (SPEC-0001: GET /api/system/health returns UP).
+# - app + db: the application and its database (SPEC-0001: GET /api/system/health returns UP). The
+#   OIDC IdP is SELF-HOSTED inside `app` (embedded Spring Authorization Server — Phase 17/ADR-0018);
+#   there is NO separate Keycloak service anymore (removed — DL-0114).
 # - prometheus + loki + alloy + grafana: the observability stack (SPEC-0027 / Phase 11). `docker
 #   compose up` brings the whole thing up; metrics and logs land in Grafana (datasources + dashboard
 #   pre-provisioned). Configuration via .env (see .env.example).
@@ -21,41 +23,6 @@ services:
       retries: 12
     networks: [acme]
 
-  # Dev IdP (SPEC-0024 Phase 13 / DL-0103). Keycloak with the `acme` realm imported (roles, the
-  # public SPA client `acme-erp-web` with PKCE + refresh, and seed users — one per role + `dev`,
-  # password dev12345, DEV ONLY). The browser and the backend both reach it at http://localhost:8088
-  # so the token `iss` matches what the resource server validates (the app container resolves
-  # `localhost` to the host gateway — see `extra_hosts` on `app`). Not for production.
-  keycloak:
-    image: quay.io/keycloak/keycloak:26.0
-    command: ["start-dev", "--import-realm", "--http-port=8088"]
-    environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
-      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
-      KC_HOSTNAME: http://localhost:8088
-      KC_HOSTNAME_STRICT: "false"
-      KC_HTTP_ENABLED: "true"
-      # Enable the management health endpoint (KC 26 serves /health on port 9000) for the healthcheck.
-      KC_HEALTH_ENABLED: "true"
-    volumes:
-      - ./infra/keycloak/realm-acme.json:/opt/keycloak/data/import/realm-acme.json:ro
-    ports:
-      - "${KEYCLOAK_PORT:-8088}:8088"
-    # KC 26's micro image has no curl/wget, but ships bash with /dev/tcp — probe the management
-    # health endpoint (port 9000) for readiness. Force bash (sh has no /dev/tcp).
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "bash",
-          "-c",
-          "exec 3<>/dev/tcp/127.0.0.1/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 30
-    networks: [acme]
-
   app:
     build:
       context: ./backend
@@ -64,12 +31,15 @@ services:
       DB_USERNAME: ${DB_USERNAME:-acme}
       DB_PASSWORD: ${DB_PASSWORD:-acme}
       SERVER_PORT: "8080"
-      # Security (SPEC-0024 Phase 13 / DL-0104): validate the dev Keycloak realm's JWTs by JWKS. The
-      # token `iss` carries the PUBLIC URL the browser used (localhost:8088), validated via
-      # OIDC_ISSUER_URI; the keys are fetched INTERNALLY from the keycloak service (OIDC_JWK_SET_URI)
-      # — avoiding the localhost-in-container resolution trap.
-      OIDC_ISSUER_URI: ${OIDC_ISSUER_URI:-http://localhost:8088/realms/acme}
-      OIDC_JWK_SET_URI: http://keycloak:8088/realms/acme/protocol/openid-connect/certs
+      # Auth (SPEC-0024 Phase 17 / ADR-0018 / DL-0110/0114): the OIDC IdP is now SELF-HOSTED — the
+      # Spring Authorization Server runs EMBEDDED in this app (Keycloak removed — DL-0114). The app is
+      # both the issuer and the Resource Server: the token `iss` is the PUBLIC URL the browser used
+      # (localhost:8080), validated via OIDC_ISSUER_URI; the keys are served by this same app at
+      # /oauth2/jwks (OIDC_JWK_SET_URI reaches the app itself). The dev seed users (dev/e2e profile,
+      # password dev12345, DEV ONLY) live in the local store (V32).
+      SPRING_PROFILES_ACTIVE: dev
+      OIDC_ISSUER_URI: ${OIDC_ISSUER_URI:-http://localhost:8080}
+      OIDC_JWK_SET_URI: http://localhost:8080/oauth2/jwks
       # Observability (SPEC-0027/DL-0096): in the container, emit structured JSON logs (ECS) so
       # Grafana Alloy can ship them to Loki. Dev/local runs keep the human-readable console
       # (logging.pattern.console) — this override only applies to the containerized app.
@@ -78,8 +48,6 @@ services:
       - "${APP_PORT:-8080}:8080"
     depends_on:
       db:
-        condition: service_healthy
-      keycloak:
         condition: service_healthy
     networks: [acme]
 

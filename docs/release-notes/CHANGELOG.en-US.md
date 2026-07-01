@@ -1,7 +1,7 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.27.0.md`](0.27.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.28.0.md`](0.28.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
@@ -9,6 +9,42 @@ detailed source; this file is the stakeholder-facing en-US mirror. Versioning fo
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
 
 ---
+
+## 0.28.0 — Phase 17 · Remove Keycloak → self-hosted Authorization Server (embedded Spring Authorization Server)
+
+**MINOR — new capability + IdP swap. BREAKING at the infra/config level (allowed in `0.y`, ADR 0015 §4):
+Keycloak is removed. No `/api` contract changed.**
+
+Per the owner's decision to **not use Keycloak**, Phase 17 removes it 100% and serves OIDC from the
+**Spring Authorization Server embedded in the app** (no extra process/Docker). Only the IdP was swapped:
+the app is now **both the IdP and the Resource Server**. Because the access token keeps the same
+`realm_access.roles` claim Keycloak used to emit, the Resource Server, the role mapping, the
+`UserContextProvider` port and the **480 backend tests** are **unchanged** — only the token's *origin*
+moved (to the app itself). Re-graduates **SPEC-0024**; ADR-0018 + DL-0110..0114.
+
+- **Breaking (ops/config):** the `keycloak` service is gone from `docker-compose.yml` and
+  `compose.e2e.yaml`; `infra/keycloak/` (realm export + README) is deleted; `KEYCLOAK_*` vars are gone
+  from `.env.example`; `OIDC_ISSUER_URI` now points at the app itself (`:8080` dev, `:8081` E2E). The
+  in-house `POST /api/identity/login` stays removed (retired in Phase 13).
+- **Added — embedded Authorization Server** (`infra/security/AuthorizationServerConfig`): three
+  `SecurityFilterChain`s (AS `@Order(1)`, Resource Server `/api/**` `@Order(2)`, form login `/login`
+  `@Order(3)`). Serves `/.well-known/openid-configuration`, `/oauth2/authorize|token|jwks`, `/userinfo`
+  and a form `/login`; signs RS256 with a local RSA key. An `OAuth2TokenCustomizer` adds
+  `realm_access.roles` + `preferred_username` to the access token (DL-0110).
+- **Added — public SPA client** `acme-erp-web` (Authorization Code + PKCE, no secret, no consent screen),
+  mirroring the old realm client (DL-0111).
+- **Added — local user store reintroduced** (migration **V32**, idempotent): re-creates `identity_users`
+  + `user_roles` (BCrypt) with a `UserDetailsService` and a dev/E2E seeder (`dev` + one per role,
+  `dev12345`, dev/E2E only). The role→permission catalogue stays intact (DL-0112).
+- **Changed — Resource Server** re-pointed at the app's own issuer/JWKS; authorization behavior unchanged.
+- **Changed — frontend** issuer → the app itself; silent-refresh via a hidden **iframe** (the AS issues
+  no refresh token to a public client — DL-0113); `angular-oauth2-oidc`, interceptor, guard and the
+  `AuthService` public API are unchanged. New `public/silent-refresh.html`.
+- **Changed — E2E** re-authored against the self-hosted AS (login via the app's `/login`; role-check
+  tokens obtained through the real code+PKCE browser flow). 19 journeys compile (`playwright test --list`).
+- **Gates:** backend `./mvnw verify` GREEN (480 tests; ArchUnit/Modulith/Spotless/Checkstyle/JaCoCo all
+  pass; a new `AuthorizationServerIntegrationTest` boots the real AS). Frontend GREEN (lint; 264 tests;
+  coverage above thresholds; production build). E2E authored + compiled, not executed in the sandbox.
 
 ## 0.27.0 — Phase 16d · Operator screens: People/HR, Time clock, Assets, Back-office, Platform/IT and Access (SPEC-0029 — closes Phase 16)
 

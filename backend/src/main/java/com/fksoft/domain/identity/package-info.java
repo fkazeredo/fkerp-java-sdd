@@ -4,20 +4,22 @@
  * SPEC-0001 dev stub into real authentication and a role/permission model the other modules already
  * assume (DIRECTIVE → director, issue NF → finance, trigger job → IT).
  *
- * <p><strong>Authentication (Phase 13 — DL-0104).</strong> Authentication is delegated to an
- * <strong>external OIDC IdP (Keycloak)</strong>; the ERP is the Resource Server that validates the
- * IdP's JWT via JWKS (RS256, key rotation) and maps {@code realm_access.roles} to authorities. The
- * in-house HS256 issuer and {@code POST /login} of the 8k were retired (DL-0105). The {@code
- * UserContextProvider} port (in {@code infra.security}) is the seam that survived the swap, so the
- * modules never changed.
+ * <p><strong>Authentication (Phase 17 — ADR-0018/DL-0110).</strong> OIDC is served by a
+ * <strong>self-hosted Spring Authorization Server embedded in this app</strong> (Keycloak was
+ * removed); the ERP is the Resource Server that validates the AS's JWT via JWKS (RS256) and maps
+ * {@code realm_access.roles} to authorities. The in-house HS256 issuer and {@code POST /login} of
+ * the 8k were retired in Phase 13 (DL-0105) and stay retired. The {@code UserContextProvider} port
+ * (in {@code infra.security}) is the seam that survived the IdP swap, so the modules never changed.
  *
  * <p><strong>Role/permission model (DL-0082/DL-0107).</strong> {@link
  * com.fksoft.domain.identity.RoleEntity} ({@code roles} + {@code role_permissions}) is the single
  * source of truth of internal authorization (BR5/BR16) — the IdP says <em>which</em> roles a user
  * has, the ERP says <em>what</em> each role may do. Sensitive actions require the corresponding
  * role, enforced at the HTTP layer (Spring Security) and reaffirmed by the existing domain checks
- * (e.g. CommercialPolicy directive, DL-0038). The local user store (BCrypt hash) of the 8k was
- * retired in Phase 13 (V31) — users and passwords live in the IdP.
+ * (e.g. CommercialPolicy directive, DL-0038). The local user store (BCrypt hash) — dropped in Phase
+ * 13 (V31) — was <strong>reintroduced in Phase 17 (V32, DL-0112)</strong> in {@code infra.security}
+ * so the embedded Authorization Server can authenticate; this {@code domain.identity} module still
+ * owns only the role/permission catalogue, never the user credentials.
  *
  * <p><strong>Access auditing (DL-0083).</strong> Login (first authenticated touch) and denial are
  * recorded in the Platform's append-only {@code system_audit} ({@code AUTH_LOGIN}/{@code

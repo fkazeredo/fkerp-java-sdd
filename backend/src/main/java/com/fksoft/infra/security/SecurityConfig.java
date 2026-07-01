@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -19,19 +20,21 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * The real Spring Security configuration (SPEC-0024 — graduated in Phase 13, DL-0104). The ERP is
- * an OAuth2 <strong>Resource Server</strong> that validates JWTs minted by an <strong>external OIDC
- * IdP (Keycloak)</strong> <strong>via JWKS</strong> (RS256, automatic key rotation): the {@code
- * JwtDecoder} is auto-configured from {@code spring.security.oauth2.resourceserver.jwt.issuer-uri}
- * (production/dev) and the public keys are fetched/cached from the IdP's JWK set. This replaces the
- * in-house HS256 issuer of the 8k delivery; the {@code UserContextProvider} port survives the swap.
+ * The real Spring Security configuration (SPEC-0024 — re-graduated in Phase 17, ADR-0018/DL-0110).
+ * The ERP is an OAuth2 <strong>Resource Server</strong> that validates JWTs minted by the
+ * <strong>SELF-HOSTED OIDC IdP</strong> — the Spring Authorization Server embedded in this same app
+ * ({@link AuthorizationServerConfig}); Keycloak was removed — <strong>via JWKS</strong> (RS256):
+ * the {@code JwtDecoder} is auto-configured from {@code
+ * spring.security.oauth2.resourceserver.jwt.issuer-uri}/{@code jwk-set-uri} (both pointing at this
+ * app) and the public keys are fetched/cached from the app's own JWK set. The {@code
+ * UserContextProvider} port survives the IdP swap.
  *
- * <p>It maps the IdP's <strong>{@code realm_access.roles}</strong> (Keycloak realm roles) to Spring
- * authorities — preserving the {@code ROLE_} prefix so {@code hasRole(...)} keeps working — and
- * also exposes the {@code scope} claim as {@code SCOPE_*} authorities for future fine-grained
- * checks; the current enforcement stays by role (the closed catalogue of DL-0082). The backend is
- * the single authorization authority (security.md) — never the frontend. Denials return the stable
- * contract (401 generic / 403 audited).
+ * <p>It maps the token's <strong>{@code realm_access.roles}</strong> (the Keycloak-shaped claim the
+ * embedded AS still emits — DL-0110) to Spring authorities — preserving the {@code ROLE_} prefix so
+ * {@code hasRole(...)} keeps working — and also exposes the {@code scope} claim as {@code SCOPE_*}
+ * authorities for future fine-grained checks; the current enforcement stays by role (the closed
+ * catalogue of DL-0082). The backend is the single authorization authority (security.md) — never
+ * the frontend. Denials return the stable contract (401 generic / 403 audited).
  *
  * <p>In the {@code test} profile the decoder is provided by a local test JWK set (DL-0105) so the
  * suite validates the genuine JWKS/RS256 path without an internet IdP; the {@code
@@ -95,7 +98,17 @@ public class SecurityConfig {
         .toList();
   }
 
+  /**
+   * The Resource Server chain (Phase 17: {@code @Order(2)}, after the Authorization Server chain of
+   * {@link AuthorizationServerConfig} at {@code @Order(1)} and before its form-login chain at
+   * {@code @Order(3)}). It is scoped by {@link #resourceServerMatchers()} to the API/actuator/docs
+   * surface, so the browser login flow ({@code /login}, OAuth2 authorize/consent) falls through to
+   * the form-login chain and the AS chain — the enforcement rules and JWT validation are unchanged
+   * (DL-0110). In the {@code test} profile this bean is absent; {@code TestSecurityConfig} mounts
+   * the same {@link #configure} rules at the highest precedence.
+   */
   @Bean
+  @Order(2)
   @Profile("!test")
   public SecurityFilterChain securityFilterChain(
       HttpSecurity http,
@@ -103,9 +116,21 @@ public class SecurityConfig {
       RestAccessDeniedHandler accessDeniedHandler,
       JwtAuthenticationConverter jwtAuthenticationConverter)
       throws Exception {
+    http.securityMatcher(resourceServerMatchers());
     return configure(
             http, authenticationEntryPoint, accessDeniedHandler, jwtAuthenticationConverter)
         .build();
+  }
+
+  /**
+   * The paths the Resource Server chain owns: the API, the operational actuator surface and the API
+   * docs. Everything else (the AS endpoints, {@code /login} and the OAuth2 browser flow) is handled
+   * by the Authorization Server / form-login chains (ADR-0018).
+   */
+  private static String[] resourceServerMatchers() {
+    return Stream.of(
+            "/api/**", "/actuator/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+        .toArray(String[]::new);
   }
 
   /**

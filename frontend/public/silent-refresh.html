@@ -1,0 +1,19 @@
+<!doctype html>
+<!--
+  Silent-refresh callback page (SPEC-0024 Phase 17 / DL-0113). The self-hosted Spring Authorization
+  Server does not issue refresh tokens to a public SPA client, so angular-oauth2-oidc renews the
+  access token in a hidden iframe (prompt=none against the AS SSO session). The iframe loads this
+  page on the redirect back; the script hands the URL (with the new token in the hash/query) to the
+  parent window, which completes the renewal. No secret or token is stored here.
+-->
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Renovação de sessão</title>
+  </head>
+  <body>
+    <script>
+      parent.postMessage(location.hash || location.search, location.origin);
+    </script>
+  </body>
+</html>

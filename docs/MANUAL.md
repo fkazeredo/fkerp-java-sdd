@@ -736,6 +736,37 @@ perfil, mas o **servidor continua sendo a autoridade** (se faltar permissão par
 > da Fase 16**: com ela, **toda a dívida de UI de operação está quitada** — o operador enxerga o ERP
 > inteiro.
 
+### Fase 17 — Entrar sem o Keycloak (login servido pelo próprio sistema)
+
+Esta versão **remove o Keycloak**. Antes (Fase 13), o login era feito na tela de um **provedor externo**
+(o Keycloak) que subia num contêiner à parte. Agora **o próprio sistema faz esse papel**: a tela de
+login e todo o "entrar com a conta" passam a ser servidos **pelo próprio ERP**, sem nenhum programa
+extra. Para você, **a forma de entrar é a mesma**: clica em **"Entrar com SSO"**, informa **usuário e
+senha** e volta ao Painel autenticado.
+
+O que muda, na prática:
+
+- **Entrar.** Continua igual: **"Entrar com SSO"** → tela de login (agora **do próprio sistema**) →
+  informe **usuário e senha** → volta ao **Painel**. Senha errada mostra um erro **genérico** (não revela
+  se o usuário existe) e você **não entra**.
+- **Usuários de exemplo (só em desenvolvimento/testes).** Voltam a existir dentro do sistema os usuários
+  de exemplo — `dev` (acesso a tudo) e um por papel (`director`, `finance`, `ops`, `it`, `policy`,
+  `viewer`) — com a senha fraca conhecida `dev12345`, **apenas** para desenvolvimento e testes.
+- **Papéis, permissões e auditoria de acesso (iguais).** Nada mudou aqui: **Diretor, Financeiro,
+  Operacional, TI, Curador de Políticas e Leitor**; ações sensíveis exigem o papel certo; sem o papel,
+  **acesso negado** e a tentativa **fica na auditoria**. O **servidor continua sendo a autoridade**.
+- **Sessão sempre válida.** O sistema **renova a sessão sozinho** em segundo plano enquanto você usa;
+  quando ela termina, você volta ao login.
+
+> Para o time técnico: o Keycloak foi **removido 100%** (serviço no `docker-compose`/`compose.e2e`,
+> pasta `infra/keycloak/`, variáveis `KEYCLOAK_*`). O OIDC passa a ser servido por um **Spring
+> Authorization Server embutido no próprio app** (`/oauth2/authorize|token|jwks`,
+> `/.well-known/openid-configuration`, `/userinfo`, `/login`), assinando RS256 com chave local. O
+> backend continua **Resource Server** validando o token por JWKS — agora do **próprio app**. Os
+> usuários voltam a um **cadastro local** (senha BCrypt) para o sistema autenticar. **Qual provedor de
+> identidade em produção** segue decisão do dono (o AS embutido é o padrão; trocar é só configuração).
+> **Mudança incompatível de infraestrutura:** o Keycloak saiu (ver release note 0.28.0).
+
 
 ## 4. Glossário
 
@@ -833,6 +864,7 @@ perfil, mas o **servidor continua sendo a autoridade** (se faltar permissão par
 | 0.25.0 | 16b — Telas de operação: ciclo comercial | **Quatro telas novas** sobre APIs que já existiam (nenhuma regra nova): **Pós-venda** (chamados com filtros e SLA, máquina de estados assumir/aguardar/encerrar e resolução que dispara reembolso/cancelamento; o SLA estourado só alerta, nunca trava), **Origem de ofertas** (registrar/consultar a procedência de uma oferta e o nível de integração), **Mesa de câmbio** (companheira da taxa congelada: exposição do livro com subsídio+desvio e alerta, taxa de mercado e histórico, posição por reserva e relatório PromoFx), **Cancelamento** (consultar/configurar a política por produto: tipo, janelas, quem arca, no-show e a "armadilha do merchant"). Aparecem no menu **para o papel Operacional** (o servidor segue autoridade). **Segunda das quatro fatias da Fase 16** (DL-0109). |
 | 0.26.0 | 16c — Telas de operação: Inteligência & Crescimento | **Quatro telas novas** sobre APIs que já existiam (nenhuma regra nova): **Inteligência** (painel de insights com filtros e ordenação por ganho; evidência/recomendação/guardrail; registro da decisão humana — que só registra, nunca executa), **Política comercial** (resolver parâmetro com proveniência; lista de regras com a precedência Diretiva>Promoção>Contrato>Política>Padrão; definir regra e emitir diretiva com justificativa), **Marketing** (consentimento LGPD com histórico, conceder/revogar; segmentos e alcance; campanhas com disparo filtrado por consentimento; atribuição; apagamento LGPD), **Portfólio** (marcas, contratos e cobertura; metas × realizado com atingimento). Inteligência/Marketing/Portfólio aparecem para o papel **Operacional**; Política comercial para **Diretor/Curador**. **Terceira das quatro fatias da Fase 16** (DL-0109). |
 | 0.27.0 | 16d — Telas de operação: Back-office & TI (fecha a Fase 16) | **Seis telas novas** sobre APIs que já existiam (nenhuma regra nova): **Pessoas / RH** (colaboradores, jornada + banco de horas, fila de discrepâncias), **Ponto** (histórico de coletas do REP + espelho operacional — leituras; AFD/AEJ e disparo de coleta ficam entre sistemas, sem tela), **Patrimônio** (registro/baixa de equipamentos e licenças + varredura de licenças a vencer), **Back-office** (fornecedores/contratos/despesas administrativas + varredura de contratos — exige papel Financeiro), **Plataforma / TI** (jobs governados com catálogo/histórico/disparo, certificado e-CNPJ **só metadados** — nunca a chave/senha, auditoria de sistema), **Acesso** (catálogo de papéis/permissões e auditoria de acesso). Pessoas/Ponto/Patrimônio/Plataforma aparecem para o papel **TI** (não existe papel "RH"); Back-office para **Financeiro**; Acesso para **Diretor/TI**. **Última das quatro fatias da Fase 16** — com ela toda a dívida de UI de operação está quitada (DL-0109). |
+| 0.28.0 | 17 — Remover Keycloak → login servido pelo próprio sistema | **Keycloak removido 100%.** O login único (SSO) continua igual para o usuário (**"Entrar com SSO"** → usuário e senha → Painel), mas agora é servido **pelo próprio ERP** (sem contêiner externo). Voltam os **usuários de exemplo** dentro do sistema (`dev` + um por papel, senha `dev12345`, **só em desenvolvimento/testes**). **Papéis, permissões e auditoria de acesso continuam iguais**; o servidor segue sendo a autoridade; a sessão se renova sozinha. **Mudança incompatível de infraestrutura:** o serviço Keycloak, a pasta `infra/keycloak/` e as variáveis `KEYCLOAK_*` saíram; a URL do OIDC aponta para o próprio app. Nenhum contrato `/api` mudou (ADR-0018). |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.

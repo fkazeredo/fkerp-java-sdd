@@ -35,10 +35,11 @@ test('a FINANCE user opens Finance, sees the empty ledger, and runs a Compliance
 });
 
 test('a non-FINANCE token is denied (403) closing a period; a FINANCE token passes the gate', async ({
+  browser,
   request,
 }) => {
   // `ops` (ROLE_OPERATIONS) lacks ROLE_FINANCE → the finance close action is 403 (DL-0082).
-  const opsToken = await tokenFor(request, 'ops');
+  const opsToken = await tokenFor(browser, 'ops');
   const denied = await request.post('/api/finance/periods/2026-06/close', {
     headers: { Authorization: `Bearer ${opsToken}` },
   });
@@ -46,7 +47,7 @@ test('a non-FINANCE token is denied (403) closing a period; a FINANCE token pass
 
   // The same call with ROLE_FINANCE must NOT be blocked by authorization (proves the gate is
   // role-specific, not a blanket block). The business outcome may vary, but never 401/403.
-  const financeToken = await tokenFor(request, 'finance');
+  const financeToken = await tokenFor(browser, 'finance');
   const allowed = await request.post('/api/finance/periods/2026-06/close', {
     headers: { Authorization: `Bearer ${financeToken}` },
   });

@@ -12,10 +12,11 @@ import org.springframework.context.annotation.Configuration;
  * OpenAPI metadata for the generated contract (springdoc exposes it at {@code /v3/api-docs} and the
  * Swagger UI). Keeps the API documented from the foundation, as required by modules-and-apis.md.
  *
- * <p>Security scheme (SPEC-0024 Phase 13 / DL-0104): the API is protected by a <strong>bearer JWT
- * issued by the external OIDC IdP</strong> (Keycloak), validated by the resource server via JWKS.
- * The {@code bearerAuth} scheme documents the {@code Authorization: Bearer <jwt>} requirement;
- * obtain the token by logging in at the IdP (Authorization Code + PKCE).
+ * <p>Security scheme (SPEC-0024 Phase 17 / ADR-0018 / DL-0110): the API is protected by a
+ * <strong>bearer JWT issued by the SELF-HOSTED OIDC IdP</strong> — the Spring Authorization Server
+ * embedded in this app (Keycloak was removed) — validated by the resource server via JWKS. The
+ * {@code bearerAuth} scheme documents the {@code Authorization: Bearer <jwt>} requirement; obtain
+ * the token by logging in at the app's own OIDC endpoints (Authorization Code + PKCE).
  */
 @Configuration
 public class OpenApiConfig {
@@ -32,8 +33,9 @@ public class OpenApiConfig {
                         .scheme("bearer")
                         .bearerFormat("JWT")
                         .description(
-                            "OIDC bearer token issued by the external IdP (Keycloak), validated by"
-                                + " the resource server via JWKS (SPEC-0024 Phase 13).")))
+                            "OIDC bearer token issued by the SELF-HOSTED IdP (the embedded Spring"
+                                + " Authorization Server; Keycloak removed), validated by the"
+                                + " resource server via JWKS (SPEC-0024 Phase 17 / ADR-0018).")))
         .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
         .info(
             new Info()
@@ -187,7 +189,16 @@ public class OpenApiConfig {
                         + " People/HR, Ponto (time-clock reads), Assets, Back-office admin, Platform/IT"
                         + " (governed jobs, e-CNPJ certificate metadata, system audit) and Identity/access"
                         + " (roles, access audit) — over the existing APIs, no new endpoint, no contract"
-                        + " change. Phase 16 is complete.")
-                .version("0.27.0"));
+                        + " change. Phase 16 is complete."
+                        + " Phase 17 (SPEC-0024 re-graduation / ADR-0018) removes Keycloak and serves"
+                        + " OIDC from a SELF-HOSTED Spring Authorization Server EMBEDDED in this app"
+                        + " (endpoints /oauth2/authorize|token|jwks, /.well-known/openid-configuration,"
+                        + " /userinfo, form /login). It keeps the resource server and the realm_access."
+                        + " roles claim unchanged, re-registers the public SPA client acme-erp-web"
+                        + " (Authorization Code + PKCE) and reintroduces a local BCrypt user store (V32)."
+                        + " The security scheme is now the self-hosted OIDC bearer; no /api contract"
+                        + " changes. BREAKING at the infra/config level: Keycloak and its env vars are"
+                        + " gone.")
+                .version("0.28.0"));
   }
 }
