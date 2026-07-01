@@ -13,9 +13,9 @@ class RuleBasedInsightNarrator implements InsightNarrator {
 
   @Override
   public String narratePromoFx(
-      SubjectKind subjectKind, String subjectRef, PromoFxAssessment assessment) {
-    String subject = subjectKind.name().toLowerCase() + " " + subjectRef;
-    if (assessment.verdict() == Verdict.CONVERTE) {
+      String subjectKind, String subjectRef, PromoFxAssessment assessment) {
+    String subject = subjectKind.toLowerCase(java.util.Locale.ROOT) + " " + subjectRef;
+    if (IntelligenceCodes.CONVERTE.equals(assessment.verdict())) {
       return "manter o congelamento de câmbio para a " + subject + " (a promoção se paga)";
     }
     return "apertar o congelamento de câmbio para a "

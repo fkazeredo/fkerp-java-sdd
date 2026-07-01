@@ -30,5 +30,5 @@ public interface InsightNarrator {
    * @param assessment the already-computed assessment (verdict + gain/risk)
    * @return the human-readable action text
    */
-  String narratePromoFx(SubjectKind subjectKind, String subjectRef, PromoFxAssessment assessment);
+  String narratePromoFx(String subjectKind, String subjectRef, PromoFxAssessment assessment);
 }

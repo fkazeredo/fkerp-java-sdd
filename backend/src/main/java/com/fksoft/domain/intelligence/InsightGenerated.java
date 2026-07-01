@@ -10,10 +10,10 @@ import java.util.UUID;
  * advisory signal — it commands nothing (BR2).
  *
  * @param insightId the generated insight id
- * @param type the insight type
+ * @param type the insight-type cadastro code (was {@code InsightType}; SPEC-0031/DL-0116)
  * @param subjectRef the subject reference (e.g. agency id)
  * @param estimatedGain the estimated gain, or {@code null}
  * @param occurredAt when it was generated
  */
 public record InsightGenerated(
-    UUID insightId, InsightType type, String subjectRef, Money estimatedGain, Instant occurredAt) {}
+    UUID insightId, String type, String subjectRef, Money estimatedGain, Instant occurredAt) {}

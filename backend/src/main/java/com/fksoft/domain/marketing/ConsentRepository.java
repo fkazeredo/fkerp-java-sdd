@@ -26,13 +26,13 @@ public interface ConsentRepository extends JpaRepository<Consent, UUID> {
       "select c from Consent c where c.subjectType = :type and c.subjectId = :subjectId "
           + "and c.purpose = :purpose order by c.createdAt desc, c.id desc")
   List<Consent> findLatestRows(
-      @Param("type") SubjectType type,
+      @Param("type") String type,
       @Param("subjectId") String subjectId,
-      @Param("purpose") ConsentPurpose purpose,
+      @Param("purpose") String purpose,
       Pageable pageable);
 
   /** Convenience: the single latest row for a subject+purpose, if any. */
-  default Optional<Consent> findLatest(SubjectType type, String subjectId, ConsentPurpose purpose) {
+  default Optional<Consent> findLatest(String type, String subjectId, String purpose) {
     List<Consent> rows = findLatestRows(type, subjectId, purpose, Pageable.ofSize(1));
     return rows.isEmpty() ? Optional.empty() : Optional.of(rows.get(0));
   }
@@ -42,14 +42,14 @@ public interface ConsentRepository extends JpaRepository<Consent, UUID> {
       "select c from Consent c where c.subjectType = :type and c.subjectId = :subjectId "
           + "and c.purpose = :purpose order by c.createdAt desc, c.id desc")
   List<Consent> findHistory(
-      @Param("type") SubjectType type,
+      @Param("type") String type,
       @Param("subjectId") String subjectId,
-      @Param("purpose") ConsentPurpose purpose);
+      @Param("purpose") String purpose);
 
   /** All rows for a subject across purposes (for the LGPD erasure, DL-0058). */
   @Query("select c from Consent c where c.subjectType = :type and c.subjectId = :subjectId")
   List<Consent> findAllForSubject(
-      @Param("type") SubjectType type, @Param("subjectId") String subjectId);
+      @Param("type") String type, @Param("subjectId") String subjectId);
 
   /**
    * The distinct subjects (type + id) that have <strong>any</strong> consent row for a purpose —
@@ -60,5 +60,5 @@ public interface ConsentRepository extends JpaRepository<Consent, UUID> {
   @Query(
       "select distinct c.subjectType, c.subjectId from Consent c where c.purpose = :purpose "
           + "order by c.subjectType, c.subjectId")
-  List<Object[]> findDistinctSubjectsForPurpose(@Param("purpose") ConsentPurpose purpose);
+  List<Object[]> findDistinctSubjectsForPurpose(@Param("purpose") String purpose);
 }

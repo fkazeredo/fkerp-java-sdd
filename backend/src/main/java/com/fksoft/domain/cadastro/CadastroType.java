@@ -28,5 +28,25 @@ public enum CadastroType {
   WITHHOLDING_KIND,
 
   /** Billing issuer tax regime (was {@code TaxRegime}; selects the {@code TaxRegimeStrategy}). */
-  TAX_REGIME
+  TAX_REGIME,
+
+  // --- Slice 18b: Marketing / Intelligence / Portfolio (DL-0116) ---
+
+  /** Marketing consent purpose (was {@code ConsentPurpose}; NEWSLETTER is the wired default). */
+  CONSENT_PURPOSE,
+
+  /** Marketing consent/campaign subject type (was {@code SubjectType}). */
+  MARKETING_SUBJECT_TYPE,
+
+  /** Intelligence insight axis (was {@code SubjectKind}; AGENCY is produced in v1). */
+  INSIGHT_SUBJECT_KIND,
+
+  /** Intelligence insight type (was {@code InsightType}). */
+  INSIGHT_TYPE,
+
+  /** Intelligence advisor verdict (was {@code Verdict}; CONVERTE/QUEIMA_MARGEM drive the guardrail). */
+  INSIGHT_VERDICT,
+
+  /** Portfolio brand-goal metric (was {@code GoalMetric}; VOLUME/REVENUE drive the projection). */
+  GOAL_METRIC
 }

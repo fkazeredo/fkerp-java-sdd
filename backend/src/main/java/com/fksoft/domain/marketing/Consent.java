@@ -35,11 +35,11 @@ public class Consent {
 
   private String subjectId;
 
-  @Enumerated(EnumType.STRING)
-  private SubjectType subjectType;
+  /** The subject-type cadastro code (was {@code SubjectType}; SPEC-0031/DL-0116). */
+  private String subjectType;
 
-  @Enumerated(EnumType.STRING)
-  private ConsentPurpose purpose;
+  /** The purpose cadastro code (was {@code ConsentPurpose}; SPEC-0031/DL-0116). */
+  private String purpose;
 
   @Enumerated(EnumType.STRING)
   private LegalBasis legalBasis;
@@ -65,7 +65,7 @@ public class Consent {
    */
   public static Consent record(
       SubjectRef subject,
-      ConsentPurpose purpose,
+      String purpose,
       LegalBasis legalBasis,
       ConsentStatus status,
       String source,
@@ -113,13 +113,13 @@ public class Consent {
     return subjectId;
   }
 
-  /** The subject kind. */
-  public SubjectType subjectType() {
+  /** The subject-type cadastro code. */
+  public String subjectType() {
     return subjectType;
   }
 
-  /** The purpose. */
-  public ConsentPurpose purpose() {
+  /** The purpose cadastro code. */
+  public String purpose() {
     return purpose;
   }
 

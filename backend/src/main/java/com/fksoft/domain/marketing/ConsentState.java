@@ -8,15 +8,12 @@ import java.time.Instant;
  * the send filter (BR2) asks before enqueuing a recipient.
  *
  * @param subject the subject (value)
- * @param purpose the purpose
+ * @param purpose the purpose cadastro code
  * @param currentStatus the latest decision (GRANTED/REVOKED)
  * @param lastChangedAt when the latest decision was recorded
  */
 public record ConsentState(
-    SubjectRef subject,
-    ConsentPurpose purpose,
-    ConsentStatus currentStatus,
-    Instant lastChangedAt) {
+    SubjectRef subject, String purpose, ConsentStatus currentStatus, Instant lastChangedAt) {
 
   /** Whether the subject currently consents to the purpose (the send pre-condition, BR2). */
   public boolean isGranted() {

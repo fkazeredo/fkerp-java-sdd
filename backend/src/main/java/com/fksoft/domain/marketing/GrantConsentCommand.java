@@ -6,15 +6,16 @@ package com.fksoft.domain.marketing;
  * appended as a new immutable row (DL-0056).
  *
  * @param subject the subject (value)
- * @param purpose the purpose being consented to
+ * @param purpose the purpose cadastro code being consented to (validated by the service against the
+ *     cadastro before persisting — SPEC-0031/DL-0116)
  * @param legalBasis the LGPD legal basis
  * @param source where the consent came from (audit; may contain no PII beyond a form name)
  */
 public record GrantConsentCommand(
-    SubjectRef subject, ConsentPurpose purpose, LegalBasis legalBasis, String source) {
+    SubjectRef subject, String purpose, LegalBasis legalBasis, String source) {
 
   public GrantConsentCommand {
-    if (subject == null || purpose == null || legalBasis == null) {
+    if (subject == null || purpose == null || purpose.isBlank() || legalBasis == null) {
       throw new ConsentInvalidException();
     }
   }

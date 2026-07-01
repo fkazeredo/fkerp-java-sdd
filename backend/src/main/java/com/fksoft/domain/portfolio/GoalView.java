@@ -19,7 +19,7 @@ public record GoalView(
     UUID id,
     String brandRef,
     String period,
-    GoalMetric metric,
+    String metric,
     Money targetAmount,
     Integer targetCount,
     Instant createdAt) {}

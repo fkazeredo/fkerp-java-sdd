@@ -8,7 +8,8 @@ import java.util.List;
  * estimated gain/risk and the guardrail crossed (if any), all in Money with the provenance of the
  * numbers. It is a pure advice value — it changes no state and commands nothing (BR2/BR3).
  *
- * @param verdict CONVERTE (keep) or QUEIMA_MARGEM (tighten)
+ * @param verdict CONVERTE (keep) or QUEIMA_MARGEM (tighten) — the advisor-verdict cadastro code
+ *     (was {@code Verdict}, SPEC-0031/DL-0116)
  * @param estimatedGain the gain of following the advice (BRL); the gap to keep when CONVERTE
  * @param estimatedRisk the margin burned if nothing changes (BRL); set when QUEIMA_MARGEM, else
  *     {@code null}
@@ -17,14 +18,14 @@ import java.util.List;
  * @param sources the event types backing the advice (provenance)
  */
 public record PromoFxAssessment(
-    Verdict verdict,
+    String verdict,
     Money estimatedGain,
     Money estimatedRisk,
     Money guardrailThresholdCrossed,
     List<String> sources) {
 
   public PromoFxAssessment {
-    if (verdict == null) {
+    if (verdict == null || verdict.isBlank()) {
       throw new IllegalArgumentException("verdict is required");
     }
     sources = sources == null ? List.of() : List.copyOf(sources);
