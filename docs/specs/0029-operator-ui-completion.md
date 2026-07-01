@@ -1,6 +1,6 @@
 # 0029 - Telas de operação (quitação do gap de UI — Fase 16)
 
-Status: Approved (16a e 16b implementadas)
+Status: Approved (16a, 16b e 16c implementadas)
 Related DL: DL-0109 (gap de UI), DL-0094 (dashboard compõe endpoints), DL-0082 (papéis sensíveis)
 Related ADR: 0015 (versionamento), SPEC-0026 (padrão de tela — shell/estados/nav/i18n)
 
@@ -27,7 +27,7 @@ A entrega é fatiada por domínio/papel, cada fatia um release MINOR (ADR 0015):
 |---|---|---|---|
 | **16a** | **0.24.0** | **Finance** (razão AP/AR, balancete por moeda, abrir/fechar período), **Billing** (NF de comissão / ISS), **Payout** (repasses/liquidações/reembolsos), **Compliance** (cofre de documentos, requisitos, retenção) | Finance/Billing/Payout → `ROLE_FINANCE`; Compliance → visível a qualquer autenticado (leitura ampla) |
 | **16b** | **0.25.0** | **AfterSales** (chamados/SLA/máquina de estados/resolução), **Sourcing** (proveniência de ofertas + nível de integração), **Exchange-completo** (mesa de câmbio: market-rate, posição por reserva, exposição viva + PromoFx), **Cancelamento** (política por escopo: janelas/merchant trap/quem arca) | Operations (`ROLE_OPERATIONS`) |
-| 16c | 0.26.0 | Intelligence/DSS, CommercialPolicy, Marketing, Portfolio | Director/Policy |
+| **16c** | **0.26.0** | **Intelligence/DSS** (painel de insights: evidência/recomendação/guardrail + registro da decisão humana), **CommercialPolicy** (parâmetros governados, regras/diretivas, precedência Diretiva>Promoção>Contrato>Política>Padrão), **Marketing** (consentimento LGPD, segmentos, campanhas, atribuição, apagamento), **Portfolio** (marcas, contratos de representação, metas × realizado) | Intelligence/Marketing/Portfolio → `ROLE_OPERATIONS`; CommercialPolicy → `ROLE_DIRECTOR`/`ROLE_POLICY_ADMIN` |
 | 16d | 0.27.0 | People/RH, Ponto, Assets, Admin, Platform/TI, Identity/acesso | IT/Finance/Director |
 
 **Fora de escopo (não-metas):**
@@ -174,6 +174,63 @@ AC18 Nenhuma mudança de backend além do bump de versão (pom + OpenAPI) para 0
      permanece verde; nenhuma migração, nenhum contrato alterado.
 ```
 
+## Business Rules (16c — inteligência & crescimento)
+
+```txt
+BR9   Intelligence/DSS — a tela lista insights (GET /api/intelligence/insights) com filtros type/
+      subjectRef/status, ordenados por ganho estimado; abre um insight mostrando a evidência (subsídio
+      acumulado, gap realizado, volume atraído e proveniência), a recomendação (veredito CONVERTE/
+      QUEIMA_MARGEM, ação, ganho/risco) e o guardrail cruzado (alerta, nunca bloqueia — BR3); e registra
+      a decisão humana (POST /{id}/decision: ACCEPTED/REJECTED/DISMISSED + nota). Registrar a decisão só
+      registra — NUNCA aciona ação (BR2/8.3). Uma decisão fora do enum volta pelo código estável
+      (intelligence.decision.invalid), sem inventar rótulo.
+BR10  CommercialPolicy — a tela resolve um parâmetro governado por escopo (GET /api/commercial-policy/
+      resolve: key + accountId/productRef/channel) mostrando o valor vencedor e a proveniência (camada
+      que venceu, quem/quando); lista as regras para auditoria (GET /rules, filtros key/layer) exibindo a
+      precedência fixa Diretiva > Promoção > Contrato > Política > Padrão (BR2); define uma regra POLICY/
+      PROMOTION/CONTRACT (POST /rules — curador/diretor: ROLE_POLICY_ADMIN/ROLE_DIRECTOR) e emite uma
+      diretiva (POST /directives — topo da precedência; justificativa obrigatória; ROLE_DIRECTOR — BR5).
+      O backend é a autoridade: um chamador sem o papel recebe 403, renderizado como estado de permissão.
+BR11  Marketing — a tela lê o estado de consentimento de um titular e o histórico append-only (GET
+      /api/marketing/consents), concede (POST /consents) e revoga (DELETE /consents/{id}); define um
+      segmento e prevê o alcance (POST /segments, GET /segments/{id}/preview); cria uma campanha e a
+      dispara (POST /campaigns, POST /campaigns/{id}/send — o disparo filtra por consentimento, BR2, e
+      reporta alvos/suprimidos/enfileirados); registra/lista atribuição campanha→reserva (POST/GET
+      /attribution); e executa o apagamento LGPD (POST /erasure — remove PII, mantém a tombstone de
+      revogação, BR6). Um envio nunca ocorre sem consentimento GRANTED (BR2).
+BR12  Portfolio — a tela lista/registra/desativa marcas representadas (GET/POST/DELETE /api/portfolio/
+      brands); lista os contratos de representação de uma marca e checa a cobertura numa data (GET
+      /brands/{ref}/contracts, /contract-coverage — um alerta, nunca bloqueia a venda, BR2); registra um
+      contrato (POST /contracts); define uma meta VOLUME/REVENUE (POST /goals) e lê o progresso meta ×
+      realizado × atingimento (GET /brands/{id}/goals/{period}/progress). Amounts na moeda original.
+```
+
+## Acceptance Criteria (16c)
+
+```txt
+AC19 Existem telas Intelligence, CommercialPolicy, Marketing e Portfolio acessíveis pela nav sob o
+     Shell, rota lazy com authGuard (e canDeactivate nos formulários editáveis). Intelligence/Marketing/
+     Portfolio são marcadas roles: [ROLE_OPERATIONS]; CommercialPolicy roles: [ROLE_DIRECTOR,
+     ROLE_POLICY_ADMIN] (esconder ruído de menu; o backend é a autoridade).
+AC20 Cada tela usa <app-screen-state> em toda seção de dados, com os quatro estados; todos os rótulos
+     vêm do i18n (pt-BR + en), sem texto hardcoded.
+AC21 Intelligence: filtra insights, abre um mostrando evidência/recomendação/guardrail e registra a
+     decisão humana; uma decisão inválida mostra o código estável; registrar não aciona nenhuma ação.
+AC22 CommercialPolicy: resolve um parâmetro com proveniência, lista regras com a precedência, define
+     uma regra e emite uma diretiva; a falta de papel vira 403 (estado de permissão), sem rótulo inventado.
+AC23 Marketing: consulta consentimento + histórico, concede/revoga, define segmento + preview, cria e
+     dispara campanha (com suprimidos por consentimento), registra/lista atribuição e executa o apagamento.
+AC24 Portfolio: lista/registra/desativa marcas, lista contratos + cobertura, registra contrato, define
+     meta e lê o progresso meta × realizado × atingimento.
+AC25 Vitest por tela cobrindo loading→success, empty (onde há lista) e error/permission; specs de serviço
+     (HttpTestingController) para os wrappers HTTP; gate de cobertura verde (pisos Fase-12).
+AC26 Uma jornada Playwright: login DIRECTOR → Intelligence (lista/estado vazio) e CommercialPolicy
+     (resolução + precedência); a autoridade é provada na API — um token sem ROLE_DIRECTOR recebe 403 no
+     endpoint de diretiva, o diretor é autorizado. Autorada; execução do stack E2E depende de rede de artefatos.
+AC27 Nenhuma mudança de backend além do bump de versão (pom + OpenAPI) para 0.26.0; ./mvnw verify
+     permanece verde; nenhuma migração, nenhum contrato alterado.
+```
+
 ## Non-Goals (recap)
 
 - Telas para endpoints M2M (webhooks/ACL) — nunca.
@@ -183,5 +240,6 @@ AC18 Nenhuma mudança de backend além do bump de versão (pom + OpenAPI) para 0
 
 ## Open Questions
 
-- Nenhuma para 16a/16b (as APIs, os papéis e o padrão de tela já existem — DL-0109). As fatias 16c–16d
-  detalharão suas telas quando forem implementadas, cada uma podendo refinar esta spec.
+- Nenhuma para 16a/16b/16c (as APIs, os papéis e o padrão de tela já existem — DL-0109). A fatia 16d
+  detalhará suas telas (People/RH, Ponto, Assets, Admin, Platform/TI, Identity) quando for implementada,
+  podendo refinar esta spec.

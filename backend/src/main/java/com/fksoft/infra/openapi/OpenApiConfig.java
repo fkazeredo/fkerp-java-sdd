@@ -182,6 +182,6 @@ public class OpenApiConfig {
                         + " Exchange FX desk (market rates/positions/exposure) and Cancellation-policy"
                         + " operator screens over the existing APIs — no new endpoint, no contract"
                         + " change.")
-                .version("0.25.0"));
+                .version("0.26.0"));
   }
 }

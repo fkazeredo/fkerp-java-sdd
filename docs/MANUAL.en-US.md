@@ -644,6 +644,44 @@ show" notice.
 > (SPEC-0029 / DL-0109). It is the **second of the four Phase 16 slices**; intelligence/commercial
 > policy (16c) and back-office/HR/IT (16d) remain.
 
+### Phase 16c — Operator screens: Intelligence, Commercial policy, Marketing and Portfolio
+
+This version opens **four more screens**, now for **Intelligence & Growth**. As in 16a/16b, they are
+**screens over what the system already did** (no new rules). They appear in the menu according to role
+(that is only menu tidiness — the **server remains the authority**: if you lack permission for an action,
+the screen shows **"access denied"**). On all of them, an empty list shows a clear "nothing to show".
+
+- **Intelligence (insight panel).** Menu **"Intelligence"**. Lists the **insights** the system generates
+  on its own (the decision-support assistant), filtered by **type**, **subject** and **status**, ordered
+  by **estimated gain**. **Open an insight** to see the **evidence** (the numbers and where they came
+  from), the **recommendation** (the verdict — "converts" or "burns margin" —, the suggested action and
+  the gain/risk in money) and the crossed **guardrail**, if any (an **alert** that **never blocks**).
+  Finally, **record the human decision**: **accept**, **reject** or **dismiss**, with a note. Important:
+  **recording the decision only records it** — the system **never runs the action on its own**; it
+  advises, the person decides.
+- **Commercial policy (governed parameters).** Menu **"Commercial policy"** (visible to **Director** and
+  **Policy curator**). **Resolve a parameter** for a scope (key + account/product/channel) and see the
+  **winning value** and its **provenance** (which layer won, who defined it and when). Browse the list of
+  **rules** with the fixed **precedence**: **Directive > Promotion > Contract > Policy > Default**.
+  **Define a policy/promotion/contract rule** or **issue a directive** (it sits at the top of precedence
+  and **requires a justification** — only the **Director** can).
+- **Marketing (consent, segments, campaigns and attribution).** Menu **"Marketing"**. **Look up a
+  subject's consent** (current status and full **history**), **grant** or **revoke** it. **Define a
+  segment** and see the **estimated reach**. **Create a campaign** and **dispatch** it — the send
+  **filters by consent** (LGPD) and shows how many were **targeted, suppressed and queued**. **Register
+  and look up the attribution** of a campaign to a booking. And run the **erasure (LGPD)**: it removes the
+  marketing personal data and **keeps the revocation mark** so the subject is not mistakenly re-included.
+- **Portfolio (brands, contracts and goals).** Menu **"Portfolio"**. **List, register and deactivate**
+  the **represented brands**. For a brand, see the **representation contracts** and **coverage on a date**
+  (an informative **alert** that **never blocks** a sale) and **register a contract**. **Define a goal**
+  (by **volume** or **revenue**) and track **realized × goal** with the **attainment percentage**.
+
+> For the technical team: a **frontend-only** slice over APIs that already existed (`/api/intelligence`,
+> `/api/commercial-policy`, `/api/marketing`, `/api/portfolio`) — **no new endpoint**, no contract or
+> database change (SPEC-0029 / DL-0109). It is the **third of the four Phase 16 slices**; the back-office/
+> HR/IT (16d) is still pending.
+
+
 ## 4. Glossary
 
 - **Backend / server:** the part of the system that processes the rules and talks to the database.
@@ -738,6 +776,7 @@ show" notice.
 | 0.23.0 | 13 — Professional Identity/AuthZ (graduates SPEC-0024) | **Corporate single sign-on (SSO)**: signing in now goes through the **company account** on the **identity provider's** page (Keycloak in dev), with the **"Sign in with SSO"** button and **real silent session renewal**; the ERP **no longer stores passwords**. **Roles, permissions and the access audit stay the same** — only the way you sign in changed. **Breaking change:** the old in-house login (`POST /api/identity/login`) was **removed** (login is now at the provider). |
 | 0.24.0 | 16a — Operator screens: Finance & Compliance | **Four new screens** over APIs that already existed (no new rules): **Finance** (AP/AR ledger with filters, per-currency trial balance and the monthly close with the "golden rule"), **Billing** (draft/issue/cancel of the commission invoice, with ISS and withholdings), **Payouts** (agent repass, supplier settlement with rate, customer refund, with installments and execution — a failure shows as a failure), **Compliance** (close-check with pending entries, vault upload and document lookup by id with hash and retention deadline). Finance/Billing/Payouts appear in the menu **only for the Finance role**; Compliance for any authenticated user. **First of the four Phase 16 slices** (pays off the deferred-screen debt — DL-0109). |
 | 0.25.0 | 16b — Operator screens: commercial cycle | **Four new screens** over APIs that already existed (no new rules): **After-sales** (cases with filters and SLA, an assign/wait/close state machine and a resolution that triggers refund/cancellation; a breached SLA only alerts, never blocks), **Sourcing** (register/look up an offer's provenance and integration level), **FX desk** (companion to the pinned rate: book exposure with subsidy+drift and an alert, market rate and history, position by booking and the PromoFx report), **Cancellation** (look up/configure the per-product policy: type, windows, cost bearer, no-show and the "merchant trap"). They appear in the menu **for the Operations role** (the server remains the authority). **Second of the four Phase 16 slices** (DL-0109). |
+| 0.26.0 | 16c — Operator screens: Intelligence & Growth | **Four new screens** over APIs that already existed (no new rules): **Intelligence** (insight panel with filters and gain ordering; evidence/recommendation/guardrail; recording the human decision — which only records, never executes), **Commercial policy** (resolve a parameter with provenance; rules list with the Directive>Promotion>Contract>Policy>Default precedence; define a rule and issue a directive with justification), **Marketing** (LGPD consent with history, grant/revoke; segments and reach; campaigns with a consent-filtered dispatch; attribution; LGPD erasure), **Portfolio** (brands, contracts and coverage; goals × realized with attainment). Intelligence/Marketing/Portfolio appear for the **Operations** role; Commercial policy for **Director/Curator**. **Third of the four Phase 16 slices** (DL-0109). |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of

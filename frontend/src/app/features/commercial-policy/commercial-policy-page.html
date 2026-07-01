@@ -1,0 +1,205 @@
+<section class="page">
+  <h1 class="page__title">{{ 'commercialPolicy.title' | translate }}</h1>
+
+  <!-- Precedence explainer -->
+  <div class="app-card">
+    <h2 class="app-card__title">{{ 'commercialPolicy.precedence' | translate }}</h2>
+    <p class="app-muted">{{ 'commercialPolicy.precedenceHint' | translate }}</p>
+    <div class="actions" data-testid="policy-precedence">
+      @for (layer of precedence; track layer; let last = $last) {
+        <p-tag [value]="layer" [severity]="layerSeverity(layer)" />
+        @if (!last) {
+          <span class="app-muted">&gt;</span>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- Resolve a governed parameter -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'commercialPolicy.resolve' | translate }}</h2>
+      <div class="form__row">
+        <div class="field">
+          <label for="cp-key">{{ 'commercialPolicy.key' | translate }}</label>
+          <input pInputText id="cp-key" name="resolveKey" [(ngModel)]="resolveKey" (keyup.enter)="resolve()" />
+        </div>
+        <div class="field">
+          <label for="cp-account">{{ 'commercialPolicy.accountId' | translate }}</label>
+          <input pInputText id="cp-account" name="resolveAccount" [(ngModel)]="resolveAccountId" />
+        </div>
+        <div class="field">
+          <label for="cp-product">{{ 'commercialPolicy.productRef' | translate }}</label>
+          <input pInputText id="cp-product" name="resolveProduct" [(ngModel)]="resolveProductRef" />
+        </div>
+        <div class="field">
+          <label for="cp-channel">{{ 'commercialPolicy.channel' | translate }}</label>
+          <input pInputText id="cp-channel" name="resolveChannel" [(ngModel)]="resolveChannel" />
+        </div>
+      </div>
+      <p-button
+        [label]="'commercialPolicy.resolveAction' | translate"
+        icon="pi pi-search"
+        (onClick)="resolve()"
+        [disabled]="!resolveKey"
+        data-testid="policy-resolve"
+      />
+    </div>
+
+    @if (resolveState() === 'loading') {
+      <app-screen-state state="loading" />
+    } @else if (resolveState() === 'error') {
+      <app-screen-state state="error" [errorCode]="resolveError()" (retry)="resolve()" />
+    } @else if (resolveState() === 'success' && resolved(); as r) {
+      <dl class="kv" data-testid="policy-resolved">
+        <dt>{{ 'commercialPolicy.key' | translate }}</dt>
+        <dd>{{ r.key }}</dd>
+        <dt>{{ 'commercialPolicy.value' | translate }}</dt>
+        <dd>{{ r.value }} ({{ r.type }})</dd>
+        <dt>{{ 'commercialPolicy.winningLayer' | translate }}</dt>
+        <dd><p-tag [value]="r.provenance.layer" [severity]="layerSeverity(r.provenance.layer)" /></dd>
+        <dt>{{ 'commercialPolicy.definedBy' | translate }}</dt>
+        <dd>{{ r.provenance.definedBy }}</dd>
+        <dt>{{ 'commercialPolicy.definedAt' | translate }}</dt>
+        <dd>{{ r.provenance.definedAt }}</dd>
+        <dt>{{ 'commercialPolicy.validUntil' | translate }}</dt>
+        <dd>{{ r.provenance.validUntil ?? '—' }}</dd>
+      </dl>
+    }
+  </div>
+
+  <!-- Rules audit list -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'commercialPolicy.rules' | translate }}</h2>
+      <div class="form__row">
+        <div class="field">
+          <label for="cp-f-key">{{ 'commercialPolicy.key' | translate }}</label>
+          <input pInputText id="cp-f-key" name="fKey" [(ngModel)]="filterKey" (keyup.enter)="loadRules()" />
+        </div>
+        <div class="field">
+          <label for="cp-f-layer">{{ 'commercialPolicy.layer' | translate }}</label>
+          <p-select
+            inputId="cp-f-layer"
+            name="fLayer"
+            [(ngModel)]="filterLayer"
+            (ngModelChange)="loadRules()"
+            [options]="precedence"
+            [showClear]="true"
+            [placeholder]="'common.all' | translate"
+            appendTo="body"
+          />
+        </div>
+      </div>
+    </div>
+
+    <app-screen-state
+      [state]="rulesState()"
+      [errorCode]="listError()"
+      emptyKey="commercialPolicy.empty"
+      (retry)="loadRules()"
+    >
+      <p-table [value]="rules()" data-testid="policy-table" [rows]="10" [paginator]="rules().length > 10">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'commercialPolicy.key' | translate }}</th>
+            <th>{{ 'commercialPolicy.layer' | translate }}</th>
+            <th>{{ 'commercialPolicy.value' | translate }}</th>
+            <th>{{ 'commercialPolicy.scope' | translate }}</th>
+            <th>{{ 'commercialPolicy.definedBy' | translate }}</th>
+            <th>{{ 'commercialPolicy.validFrom' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-r>
+          <tr>
+            <td>{{ r.key }}</td>
+            <td><p-tag [value]="r.layer" [severity]="layerSeverity(r.layer)" /></td>
+            <td>{{ r.value }} ({{ r.type }})</td>
+            <td>{{ r.productRef ?? r.channel ?? r.accountId ?? ('commercialPolicy.global' | translate) }}</td>
+            <td>{{ r.definedBy }}</td>
+            <td>{{ r.validFrom }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+  </div>
+
+  <!-- Define a rule (POLICY/PROMOTION/CONTRACT) -->
+  <form class="app-card" (ngSubmit)="defineRule()" #rf="ngForm">
+    <h2 class="app-card__title">{{ 'commercialPolicy.defineRule' | translate }}</h2>
+    <div class="form__row">
+      <div class="field">
+        <label for="cp-rule-key">{{ 'commercialPolicy.key' | translate }}</label>
+        <input pInputText id="cp-rule-key" name="ruleKey" [(ngModel)]="ruleKey" required />
+      </div>
+      <div class="field">
+        <label for="cp-rule-layer">{{ 'commercialPolicy.layer' | translate }}</label>
+        <p-select inputId="cp-rule-layer" name="ruleLayer" [(ngModel)]="ruleLayer" [options]="ruleLayers" appendTo="body" />
+      </div>
+      <div class="field">
+        <label for="cp-rule-value">{{ 'commercialPolicy.value' | translate }}</label>
+        <input pInputText id="cp-rule-value" name="ruleValue" [(ngModel)]="ruleValue" required />
+      </div>
+      <div class="field">
+        <label for="cp-rule-type">{{ 'commercialPolicy.valueType' | translate }}</label>
+        <p-select inputId="cp-rule-type" name="ruleType" [(ngModel)]="ruleType" [options]="valueTypes" appendTo="body" />
+      </div>
+      <div class="field">
+        <label for="cp-rule-product">{{ 'commercialPolicy.productRef' | translate }}</label>
+        <input pInputText id="cp-rule-product" name="ruleProduct" [(ngModel)]="ruleProductRef" />
+      </div>
+      <div class="field">
+        <label for="cp-rule-channel">{{ 'commercialPolicy.channel' | translate }}</label>
+        <input pInputText id="cp-rule-channel" name="ruleChannel" [(ngModel)]="ruleChannel" />
+      </div>
+    </div>
+    @if (ruleError()) {
+      <p-message severity="error" data-testid="policy-rule-error">{{ ruleError() | translate }}</p-message>
+    }
+    <div class="actions">
+      <p-button
+        type="submit"
+        [disabled]="ruleBusy() || rf.invalid"
+        [loading]="ruleBusy()"
+        [label]="'commercialPolicy.defineRuleAction' | translate"
+      />
+    </div>
+  </form>
+
+  <!-- Issue a directive (DIRECTIVE — director role + justification) -->
+  <form class="app-card" (ngSubmit)="issueDirective()" #df="ngForm">
+    <h2 class="app-card__title">{{ 'commercialPolicy.issueDirective' | translate }}</h2>
+    <p class="app-muted">{{ 'commercialPolicy.directiveHint' | translate }}</p>
+    <div class="form__row">
+      <div class="field">
+        <label for="cp-dir-key">{{ 'commercialPolicy.key' | translate }}</label>
+        <input pInputText id="cp-dir-key" name="directiveKey" [(ngModel)]="directiveKey" required />
+      </div>
+      <div class="field">
+        <label for="cp-dir-value">{{ 'commercialPolicy.value' | translate }}</label>
+        <input pInputText id="cp-dir-value" name="directiveValue" [(ngModel)]="directiveValue" required />
+      </div>
+      <div class="field">
+        <label for="cp-dir-type">{{ 'commercialPolicy.valueType' | translate }}</label>
+        <p-select inputId="cp-dir-type" name="directiveType" [(ngModel)]="directiveType" [options]="valueTypes" appendTo="body" />
+      </div>
+      <div class="field">
+        <label for="cp-dir-just">{{ 'commercialPolicy.justification' | translate }}</label>
+        <input pInputText id="cp-dir-just" name="directiveJust" [(ngModel)]="directiveJustification" required />
+      </div>
+    </div>
+    @if (directiveError()) {
+      <p-message severity="error" data-testid="policy-directive-error">{{ directiveError() | translate }}</p-message>
+    }
+    <div class="actions">
+      <p-button
+        type="submit"
+        severity="danger"
+        [disabled]="directiveBusy() || df.invalid"
+        [loading]="directiveBusy()"
+        [label]="'commercialPolicy.issueDirectiveAction' | translate"
+        data-testid="policy-directive-submit"
+      />
+    </div>
+  </form>
+</section>

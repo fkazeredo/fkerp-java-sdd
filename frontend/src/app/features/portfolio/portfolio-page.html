@@ -1,0 +1,202 @@
+<section class="page">
+  <h1 class="page__title">{{ 'portfolio.title' | translate }}</h1>
+
+  <!-- Register a brand -->
+  <form class="app-card" (ngSubmit)="registerBrand()" #bf="ngForm">
+    <h2 class="app-card__title">{{ 'portfolio.registerBrand' | translate }}</h2>
+    <div class="form__row">
+      <div class="field">
+        <label for="pf-brand-ref">{{ 'portfolio.brandRef' | translate }}</label>
+        <input pInputText id="pf-brand-ref" name="brandRef" [(ngModel)]="newBrandRef" required />
+      </div>
+      <div class="field">
+        <label for="pf-brand-name">{{ 'portfolio.displayName' | translate }}</label>
+        <input pInputText id="pf-brand-name" name="displayName" [(ngModel)]="newDisplayName" required />
+      </div>
+    </div>
+    @if (registerError()) {
+      <p-message severity="error" data-testid="portfolio-register-error">{{ registerError() | translate }}</p-message>
+    }
+    <div class="actions">
+      <p-button type="submit" [label]="'portfolio.registerBrandAction' | translate" [loading]="registerBusy()" [disabled]="registerBusy() || bf.invalid" />
+    </div>
+  </form>
+
+  <!-- Brand list -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'portfolio.brands' | translate }}</h2>
+      <div class="field">
+        <label for="pf-f-status">{{ 'portfolio.status' | translate }}</label>
+        <p-select
+          inputId="pf-f-status"
+          name="fStatus"
+          [(ngModel)]="filterStatus"
+          (ngModelChange)="loadBrands()"
+          [options]="statuses"
+          [showClear]="true"
+          [placeholder]="'common.all' | translate"
+          appendTo="body"
+        />
+      </div>
+    </div>
+
+    <app-screen-state
+      [state]="brandsState()"
+      [errorCode]="errorCode()"
+      emptyKey="portfolio.brandsEmpty"
+      (retry)="loadBrands()"
+    >
+      <p-table [value]="brands()" data-testid="portfolio-table" [rows]="10" [paginator]="brands().length > 10">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'portfolio.brandRef' | translate }}</th>
+            <th>{{ 'portfolio.displayName' | translate }}</th>
+            <th>{{ 'portfolio.status' | translate }}</th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-b>
+          <tr>
+            <td>{{ b.brandRef }}</td>
+            <td>{{ b.displayName }}</td>
+            <td><p-tag [value]="b.status" [severity]="statusSeverity(b.status)" /></td>
+            <td>
+              @if (b.status === 'ACTIVE') {
+                <p-button size="small" [text]="true" severity="danger" [label]="'portfolio.deactivate' | translate" (onClick)="deactivateBrand(b)" />
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+  </div>
+
+  <!-- Representation contracts -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'portfolio.contracts' | translate }}</h2>
+      <div class="field">
+        <label for="pf-contract-brand">{{ 'portfolio.brandRef' | translate }}</label>
+        <input pInputText id="pf-contract-brand" name="contractBrand" [(ngModel)]="contractBrandRef" (keyup.enter)="loadContracts()" />
+      </div>
+      <p-button [label]="'portfolio.loadContractsAction' | translate" icon="pi pi-search" (onClick)="loadContracts()" [disabled]="!contractBrandRef" data-testid="portfolio-contracts-find" />
+    </div>
+
+    @if (coverage(); as cov) {
+      <p-message [severity]="cov.covered ? 'success' : 'warn'" data-testid="portfolio-coverage">
+        {{ (cov.covered ? 'portfolio.covered' : 'portfolio.notCovered') | translate }} — {{ cov.on }}
+      </p-message>
+    }
+
+    <app-screen-state
+      [state]="contractsListState()"
+      [errorCode]="contractsError()"
+      emptyKey="portfolio.contractsEmpty"
+      (retry)="loadContracts()"
+    >
+      <p-table [value]="contracts()" data-testid="portfolio-contracts-table">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'portfolio.validFrom' | translate }}</th>
+            <th>{{ 'portfolio.validUntil' | translate }}</th>
+            <th>{{ 'portfolio.documentId' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-c>
+          <tr>
+            <td>{{ c.validFrom }}</td>
+            <td>{{ c.validUntil ?? '—' }}</td>
+            <td>{{ c.documentId ?? '—' }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+
+    <!-- Register a contract -->
+    <h3 class="app-card__title">{{ 'portfolio.registerContract' | translate }}</h3>
+    @if (contractError()) {
+      <p-message severity="error" data-testid="portfolio-contract-error">{{ contractError() | translate }}</p-message>
+    }
+    <div class="form__row">
+      <div class="field">
+        <label for="pf-c-from">{{ 'portfolio.validFrom' | translate }}</label>
+        <input pInputText id="pf-c-from" name="cFrom" [(ngModel)]="newContractValidFrom" placeholder="YYYY-MM-DD" />
+      </div>
+      <div class="field">
+        <label for="pf-c-until">{{ 'portfolio.validUntil' | translate }}</label>
+        <input pInputText id="pf-c-until" name="cUntil" [(ngModel)]="newContractValidUntil" placeholder="YYYY-MM-DD" />
+      </div>
+      <div class="field">
+        <label for="pf-c-doc">{{ 'portfolio.documentId' | translate }}</label>
+        <input pInputText id="pf-c-doc" name="cDoc" [(ngModel)]="newContractDocumentId" />
+      </div>
+    </div>
+    <div class="actions">
+      <p-button [label]="'portfolio.registerContractAction' | translate" (onClick)="registerContract()" [loading]="contractBusy()" [disabled]="contractBusy() || !contractBrandRef || !newContractValidFrom" />
+    </div>
+  </div>
+
+  <!-- Goals × realized -->
+  <div class="app-card">
+    <h2 class="app-card__title">{{ 'portfolio.goals' | translate }}</h2>
+    <div class="form__row">
+      <div class="field">
+        <label for="pf-g-brand">{{ 'portfolio.brandRef' | translate }}</label>
+        <input pInputText id="pf-g-brand" name="gBrand" [(ngModel)]="goalBrandRef" />
+      </div>
+      <div class="field">
+        <label for="pf-g-period">{{ 'portfolio.period' | translate }}</label>
+        <input pInputText id="pf-g-period" name="gPeriod" [(ngModel)]="goalPeriod" placeholder="YYYY / YYYY-MM" />
+      </div>
+      <div class="field">
+        <label for="pf-g-metric">{{ 'portfolio.metric' | translate }}</label>
+        <p-select inputId="pf-g-metric" name="gMetric" [(ngModel)]="goalMetric" [options]="metrics" appendTo="body" />
+      </div>
+      @if (goalMetric === 'REVENUE') {
+        <div class="field">
+          <label for="pf-g-amount">{{ 'portfolio.targetAmount' | translate }}</label>
+          <p-inputnumber inputId="pf-g-amount" name="gAmount" [(ngModel)]="goalTargetAmount" mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="2" />
+        </div>
+        <div class="field">
+          <label for="pf-g-currency">{{ 'portfolio.currency' | translate }}</label>
+          <input pInputText id="pf-g-currency" name="gCurrency" [(ngModel)]="goalTargetCurrency" />
+        </div>
+      } @else {
+        <div class="field">
+          <label for="pf-g-count">{{ 'portfolio.targetCount' | translate }}</label>
+          <p-inputnumber inputId="pf-g-count" name="gCount" [(ngModel)]="goalTargetCount" />
+        </div>
+      }
+    </div>
+    @if (goalError()) {
+      <p-message severity="error" data-testid="portfolio-goal-error">{{ goalError() | translate }}</p-message>
+    }
+    <div class="actions">
+      <p-button [label]="'portfolio.defineGoalAction' | translate" (onClick)="defineGoal()" [loading]="goalBusy()" [disabled]="goalBusy() || !goalBrandRef || !goalPeriod" data-testid="portfolio-define-goal" />
+    </div>
+
+    @if (progressError()) {
+      <p-message severity="error">{{ progressError() | translate }}</p-message>
+    }
+    @if (progress(); as p) {
+      <dl class="kv" data-testid="portfolio-progress">
+        <dt>{{ 'portfolio.period' | translate }}</dt>
+        <dd>{{ p.period }} ({{ p.metric }})</dd>
+        @if (p.metric === 'REVENUE') {
+          <dt>{{ 'portfolio.targetAmount' | translate }}</dt>
+          <dd>{{ format(p.targetAmount) }}</dd>
+          <dt>{{ 'portfolio.realizedAmount' | translate }}</dt>
+          <dd>{{ format(p.realizedAmount) }}</dd>
+        } @else {
+          <dt>{{ 'portfolio.targetCount' | translate }}</dt>
+          <dd>{{ p.targetCount }}</dd>
+          <dt>{{ 'portfolio.realizedCount' | translate }}</dt>
+          <dd>{{ p.realizedCount }}</dd>
+        }
+        <dt>{{ 'portfolio.attainment' | translate }}</dt>
+        <dd><p-tag [value]="p.attainmentPct + '%'" severity="info" /></dd>
+      </dl>
+    }
+  </div>
+</section>

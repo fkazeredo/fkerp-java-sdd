@@ -105,6 +105,35 @@ export const routes: Routes = [
         canDeactivate: [canDeactivateGuard],
       },
       {
+        path: 'intelligence',
+        loadComponent: () =>
+          import('./features/intelligence/intelligence-page').then((m) => m.IntelligencePage),
+        canActivate: [authGuard],
+      },
+      {
+        path: 'commercial-policy',
+        loadComponent: () =>
+          import('./features/commercial-policy/commercial-policy-page').then(
+            (m) => m.CommercialPolicyPage,
+          ),
+        canActivate: [authGuard],
+        canDeactivate: [canDeactivateGuard],
+      },
+      {
+        path: 'marketing',
+        loadComponent: () =>
+          import('./features/marketing/marketing-page').then((m) => m.MarketingPage),
+        canActivate: [authGuard],
+        canDeactivate: [canDeactivateGuard],
+      },
+      {
+        path: 'portfolio',
+        loadComponent: () =>
+          import('./features/portfolio/portfolio-page').then((m) => m.PortfolioPage),
+        canActivate: [authGuard],
+        canDeactivate: [canDeactivateGuard],
+      },
+      {
         path: 'health',
         loadComponent: () => import('./features/health/health-page').then((m) => m.HealthPage),
       },

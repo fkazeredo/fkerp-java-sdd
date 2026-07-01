@@ -1,12 +1,61 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.25.0.md`](0.25.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.26.0.md`](0.26.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.26.0 — Phase 16c · Operator screens: Intelligence/DSS, Commercial policy, Marketing and Portfolio (SPEC-0029)
+
+**MINOR — new user-facing capability, retro-compatible (ADR 0015). Frontend-only over existing APIs;
+no new endpoint, no contract/schema change.**
+
+Phase 16c continues paying off the **UI gap** (DL-0109), now for **Intelligence & Growth**. It extends
+**SPEC-0029** and delivers four more operator screens, reusing the established frontend pattern.
+
+- **Added — Intelligence screen** (`/intelligence`): lists the DSS **insights** filtered by
+  type/subject/status (ordered by estimated gain); opens one to read its **evidence** (accrued subsidy,
+  realized gap, attracted volume, provenance), **recommendation** (CONVERTE/QUEIMA_MARGEM verdict, action,
+  gain/risk) and the crossed **guardrail** (an alert, never a block); and **records the human decision**
+  (accept/reject/dismiss + note). Recording a decision **only records it — it never triggers an action**
+  (the DSS advises, the human decides). Consumes `GET /api/intelligence/insights`, `GET /{id}`,
+  `POST /{id}/decision`.
+- **Added — Commercial-policy screen** (`/commercial-policy`): **resolves** a governed parameter by scope
+  (key + account/product/channel) showing the **winning value and provenance** (which layer won,
+  who/when); lists the **rules** for audit with the fixed **precedence** Directive > Promotion > Contract
+  > Policy > Default; **defines a rule** (POLICY/PROMOTION/CONTRACT — curator/director) and **issues a
+  directive** (top of precedence; mandatory justification; director role). Consumes
+  `GET /api/commercial-policy/resolve`, `GET/POST /rules`, `POST /directives`.
+- **Added — Marketing screen** (`/marketing`): **LGPD consent** (current state + append-only history;
+  grant/revoke); **segments** (define + preview reach); **campaigns** (create + dispatch — the dispatch
+  filters by consent and reports targeted/suppressed/queued); **attribution** campaign→booking (register
+  + list); and **LGPD erasure** (removes PII, keeps the revocation tombstone). Consumes the 11
+  `/api/marketing` endpoints.
+- **Added — Portfolio screen** (`/portfolio`): **represented brands** (list/register/deactivate);
+  **representation contracts** (list + coverage on a date — an alert, never a block; register); and
+  **goals × realized** (define a VOLUME/REVENUE goal + progress target × realized × attainment). Consumes
+  the 11 `/api/portfolio` endpoints.
+- **Added — Navigation & i18n:** four new nav items (Intelligence/Marketing/Portfolio gated to
+  `ROLE_OPERATIONS`; Commercial policy to `ROLE_DIRECTOR`/`ROLE_POLICY_ADMIN`); pt-BR and en-US i18n
+  blocks per screen.
+- **Added — Tests:** Vitest per screen + service specs (`HttpTestingController`) → **196 frontend tests**,
+  coverage above the Phase-12 floors; Playwright journey `e2e/intelligence-policy.spec.ts` (a director
+  opens Intelligence → empty list → resolves a parameter in Commercial policy; a token without
+  ROLE_DIRECTOR is 403 on the directive endpoint, the director is allowed — backend authority).
+- **Changed — `backend/pom.xml` + OpenAPI:** version `0.25.0 → 0.26.0` (version string + OpenAPI
+  description text only). `./mvnw verify` stays **green — 476 tests, 0 Checkstyle violations** (no backend
+  behavior change).
+- **Not changed (frontend-only):** no new endpoint, no migration, no contract/JSON/event/schema change.
+  The screens compose existing endpoints (the dashboard pattern — DL-0094).
+- **Note — E2E authored, not executed here:** the Playwright journey compiles and is discovered (17 tests
+  via `npx playwright test --list`) but was not run in the sandbox because the isolated stack builds the
+  backend image via Maven inside the container (no artifact network). Host `./mvnw verify` is green — an
+  infra limitation, not a code defect.
 
 ---
 
