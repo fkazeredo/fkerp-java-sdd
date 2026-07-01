@@ -62,5 +62,29 @@ export const NAV_ITEMS: readonly NavItem[] = [
     roles: ['ROLE_FINANCE'],
   },
   { path: 'compliance', labelKey: 'nav.compliance', icon: 'pi pi-shield' },
+  {
+    path: 'intelligence',
+    labelKey: 'nav.intelligence',
+    icon: 'pi pi-lightbulb',
+    roles: ['ROLE_OPERATIONS'],
+  },
+  {
+    path: 'commercial-policy',
+    labelKey: 'nav.commercialPolicy',
+    icon: 'pi pi-sliders-h',
+    roles: ['ROLE_DIRECTOR', 'ROLE_POLICY_ADMIN'],
+  },
+  {
+    path: 'marketing',
+    labelKey: 'nav.marketing',
+    icon: 'pi pi-megaphone',
+    roles: ['ROLE_OPERATIONS'],
+  },
+  {
+    path: 'portfolio',
+    labelKey: 'nav.portfolio',
+    icon: 'pi pi-briefcase',
+    roles: ['ROLE_OPERATIONS'],
+  },
   { path: 'health', labelKey: 'nav.health', icon: 'pi pi-heart' },
 ];
