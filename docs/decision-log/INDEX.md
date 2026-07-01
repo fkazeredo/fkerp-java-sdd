@@ -21,7 +21,8 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0062](DL-0062-portfolio-brand-sale-attribution-intake-and-realized-projection.md) | Portfolio: realizado por marca via **intake próprio** (reserva→marca) + projeção de eventos, sem alterar o evento do Booking | **Baixa** | Moderada | **Qual campo identifica a marca na venda é incógnita de negócio** (só o dono fecha); intake explícito + seam rastreável |
 | [DL-0074](DL-0074-platform-certificate-encryption-at-rest.md) | Custódia do e-CNPJ: criptografia at-rest **AES-256-GCM** (envelope), chave fora do banco; só metadados expostos | **Baixa** | **Cara** | **Onde custodiar (KMS×HSM×secret manager) e A1×A3 é decisão de infra/segurança do dono**; troca de cofre exige re-cifrar/migrar segredo real |
 | [DL-0079](DL-0079-identity-inhouse-jwt-resource-server-idp-boundary.md) | Identity: auth real **in-house** (Spring Security + JWT HS256) no 8k; **OIDC externo vivo fica para a Fase 13** — **RESOLVIDO na Fase 13 (ver DL-0103/0104/0105)** | **Baixa** | **Cara** | **Comprar/qual IdP é decisão do dono (Open Question)**; trocar emissor in-house por IdP externo vivo (Fase 13) é refator amplo (JWKS/rotação/login/gestão de usuários), ainda que a porta `UserContextProvider` e o modelo de papéis sejam preservados |
-| [DL-0103](DL-0103-identity-dev-idp-keycloak-realm-clients-roles.md) | Identity (Fase 13): **IdP de dev = Keycloak** (realm `acme` importado + client SPA PKCE + papéis + usuários seed) | **Baixa** | **Cara** | **Qual IdP em produção é decisão do dono**; trocar de IdP reprovisiona realm/client/usuários (o contrato OIDC, porém, é padrão e muda só por config) |
+| [DL-0103](DL-0103-identity-dev-idp-keycloak-realm-clients-roles.md) | Identity (Fase 13): **IdP de dev = Keycloak** — **SUBSTITUÍDA na Fase 17 (ver DL-0110 / ADR-0018): Keycloak removido, AS self-hosted embutido** | **Baixa** | **Cara** | **Qual IdP em produção é decisão do dono**; a Fase 17 trocou o Keycloak pelo Spring Authorization Server embutido — a troca é por config (o contrato OIDC é padrão) |
+| [DL-0112](DL-0112-reintroduce-local-user-store-v32.md) | Identity (Fase 17): store local de usuários **reintroduzido** (V32, BCrypt) para o AS self-hosted autenticar | Alta | Moderada | O ERP volta a custodiar hash de senha (consequência de remover o IdP externo); mitigado por hash-only + seed forte só em dev/E2E |
 
 > _Nota Fase 8e:_ DL-0052/0053/0054 são **Confiança=Média / Reversibilidade=Barata–Moderada** —
 > não entram neste destaque. O "quais custos contam" do custo de servir (DL-0053) e os prazos de
@@ -151,6 +152,19 @@ conforme `docs/RUN-PHASE.md`.
 > porta `UserContextProvider` e o modelo de papéis (DL-0082) **sobrevivem** à troca — só muda a *fonte*
 > do token (IdP externo).
 
+> _Nota Fase 17 (remover Keycloak → AS self-hosted; re-gradua SPEC-0024):_ a decisão do dono foi
+> **remover 100% do Keycloak** e servir OIDC pelo próprio Spring via **Spring Authorization Server
+> embutido no app** (ADR-0018). **DL-0110** (AS embutido, três `SecurityFilterChain`s, claim
+> `realm_access.roles` preservado — Média/Moderada) **substitui a DL-0103** e reaponta a DL-0104. Os
+> demais reapontam: **DL-0111** (client SPA público PKCE registrado no AS — Média/Barata) espelha o
+> client do realm; **DL-0112** (store local de usuários **reintroduzido** — V32/BCrypt — Alta/Moderada)
+> desfaz o drop da DL-0107/V31 porque o AS precisa autenticar localmente (o ERP volta a custodiar hash);
+> **DL-0113** (frontend: `issuer` → próprio app + silent-refresh por **iframe** — Média/Moderada)
+> reaponta a DL-0106 (o SAS não emite refresh token a client público); **DL-0114** (Keycloak removido do
+> compose dev/E2E, `infra/keycloak/`, `KEYCLOAK_*` — Alta/Moderada) encerra a infra da DL-0103. O claim
+> de papéis foi **preservado** (`realm_access.roles`), então o Resource Server e os 444 testes **não
+> mudaram** — só a *origem* do token (o próprio app). Breaking (Keycloak sai) destacado no **0.28.0**.
+
 ## Todas as decisões
 
 | DL | Fase | Título | Conf. | Rev. |
@@ -264,3 +278,8 @@ conforme `docs/RUN-PHASE.md`.
 | [DL-0107](DL-0107-identity-role-catalogue-retained-local-user-store-retired.md) | 13 | Identity: catálogo papel→permissão **permanece local** (fonte do enforcement, BR5); store local de **usuários** aposentado (V31, usuários vivem no IdP) | Alta | Moderada |
 | [DL-0108](DL-0108-upgrade-spring-boot-4-classic-starter-jackson2-bridge.md) | 14 | Upgrade para **Spring Boot 4.0.7** + Modulith 2.0.7 + springdoc 3.0.3 (Java 21 mantido); ponte **`spring-boot-starter-classic`** mantém Jackson 2 na produção (migração p/ Jackson 3 = débito rastreado); correções de teste (TestRestTemplate relocado, `@AutoConfigureMetrics`, `JsonNode`→Jackson 3, 422→`UNPROCESSABLE_CONTENT`) sem afrouxar portão; **substitui DL-0002** (ver ADR 0017) | Alta | Moderada |
 | [DL-0109](DL-0109-ui-gap-telas-adiadas-nunca-construidas.md) | 16 | **Gap de UI:** backend completo (37 controllers) mas frontend só cobre ~5 módulos — telas adiadas "→ Fase 10" nunca construídas (SPEC-0026 se escopou como repaginar as 5 existentes). Registrado a pedido do dono; quitado na **Fase 16** (telas de operação, SPEC-0029, 4 releases MINOR frontend-only) + gate de "usável" na DoD go-forward | Alta | Barata |
+| [DL-0110](DL-0110-self-hosted-authorization-server-embedded-and-roles-claim.md) | 17 | Identity: **Spring Authorization Server embutido** no app (três `SecurityFilterChain`s); access token com claim **`realm_access.roles`** preservado → Resource Server e testes inalterados; **SUBSTITUI a DL-0103** e reaponta a DL-0104 (ADR-0018) | Média | Moderada |
+| [DL-0111](DL-0111-registered-spa-client-public-pkce.md) | 17 | Identity: client SPA público **`acme-erp-web`** (code+PKCE, `NONE`, sem consent) registrado no AS self-hosted; espelha o client do realm Keycloak | Média | Barata |
+| [DL-0112](DL-0112-reintroduce-local-user-store-v32.md) | 17 | Identity: store local de usuários **reintroduzido** (V32, BCrypt, `UserDetailsService`, seeder dev/E2E) para o AS autenticar; catálogo papel→permissão intacto; **reaponta a DL-0107** | Alta | Moderada |
+| [DL-0113](DL-0113-frontend-issuer-self-hosted-silent-refresh-iframe.md) | 17 | Identity (frontend): `issuer` → **próprio app**; silent-refresh por **iframe silencioso** (SAS não emite refresh token a client público); **reaponta a DL-0106** | Média | Moderada |
+| [DL-0114](DL-0114-keycloak-fully-removed-compose-infra-env.md) | 17 | Infra: **Keycloak removido 100%** (serviço no compose dev/E2E, `infra/keycloak/`, `KEYCLOAK_*`/`OIDC_*` reapontadas); encerra a infra da DL-0103 | Alta | Moderada |
