@@ -19,5 +19,24 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { path: 'quotes', labelKey: 'nav.quotes', icon: 'pi pi-calculator' },
   { path: 'bookings', labelKey: 'nav.bookings', icon: 'pi pi-ticket' },
   { path: 'reconciliation', labelKey: 'nav.reconciliation', icon: 'pi pi-sync' },
+  {
+    path: 'finance',
+    labelKey: 'nav.finance',
+    icon: 'pi pi-book',
+    roles: ['ROLE_FINANCE'],
+  },
+  {
+    path: 'billing',
+    labelKey: 'nav.billing',
+    icon: 'pi pi-file-edit',
+    roles: ['ROLE_FINANCE'],
+  },
+  {
+    path: 'payouts',
+    labelKey: 'nav.payouts',
+    icon: 'pi pi-send',
+    roles: ['ROLE_FINANCE'],
+  },
+  { path: 'compliance', labelKey: 'nav.compliance', icon: 'pi pi-shield' },
   { path: 'health', labelKey: 'nav.health', icon: 'pi pi-heart' },
 ];

@@ -1,7 +1,7 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.22.1.md`](0.22.1.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.24.0.md`](0.24.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
@@ -9,6 +9,43 @@ detailed source; this file is the stakeholder-facing en-US mirror. Versioning fo
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
 
 ---
+
+## 0.24.0 — Phase 16a · Operator screens: Finance, Billing, Payouts and Compliance (SPEC-0029)
+
+**MINOR — new user-facing capability, retro-compatible (ADR 0015). Frontend-only over existing APIs;
+no new endpoint, no contract/schema change.**
+
+Phase 16a starts paying off the **UI gap** diagnosed in **DL-0109** (the backend has 22 modules / 37
+REST controllers, but the frontend only had screens for ~5 of them). It authors **SPEC-0029** and
+delivers the first four operator screens, reusing the established frontend pattern (feature service +
+`API_BASE_URL` + `PageResponse`; `<app-screen-state>` for loading/empty/error/permission; lazy route
+under the Shell with guards; role-gated nav; bilingual i18n; Vitest + Playwright).
+
+- **Added — Finance screen** (`/finance`): the AP/AR ledger filtered by direction/status/period/party,
+  a new-entry form, a period lookup with its **per-currency trial balance** (DL-0013 — currencies are
+  never summed together) and the **monthly close** (which surfaces `finance.period.cannot-close` when
+  Compliance vetoes it). Consumes `GET/POST /api/finance/entries`, `GET /api/finance/periods/{yyyymm}`,
+  `.../trial-balance`, `POST .../close`.
+- **Added — Billing screen** (`/billing`): look up a commission invoice by id (base/ISS/withholdings/
+  status/number), create a draft, **issue** (ROLE_FINANCE) and **cancel**. Consumes `GET/POST
+  /api/billing/invoices`, `POST .../issue`, `POST .../cancel`.
+- **Added — Payouts screen** (`/payouts`): list repasses/settlements/refunds filtered by kind/status/
+  payee, open one with its installments, create and **execute** (an explicit FAILED on provider failure,
+  never a false EXECUTED). Consumes `GET/POST /api/payouts`, `GET /{id}`, `POST /{id}/execute`.
+- **Added — Compliance screen** (`/compliance`): run a period **close-check** (may-close / pending
+  entries and what each is missing), **upload** a document to the vault and **look up** a document by id
+  (type/hash/issue/retention/personal-data; the internal fileRef is never exposed). Consumes `GET
+  /api/compliance/close-check`, `GET/POST /api/compliance/documents`.
+- **Added — navigation & i18n:** four nav items (Finance/Billing/Payouts gated on `ROLE_FINANCE`;
+  Compliance visible to any authenticated user — the backend stays the authorization authority, this
+  only hides menu noise); pt-BR and en i18n blocks per screen.
+- **Added — tests:** a Vitest spec per screen (89 frontend tests total, coverage above the Phase-12
+  floors) and a Playwright Finance/Compliance journey (`e2e/finance.spec.ts`): a FINANCE user opens
+  Finance → empty ledger → Compliance close-check; a non-FINANCE token is denied 403 on the finance
+  close while a FINANCE token passes the gate.
+- **Changed:** backend `pom.xml` + OpenAPI version `0.23.1 → 0.24.0` (version string only; `./mvnw
+  verify` stays green — **476 tests, 0 Checkstyle violations**). No new endpoint, no migration, no
+  contract change.
 
 ## 0.23.1 — Phase 14 · Stack upgrade to Spring Boot 4.0.7 (internal maintenance, no user-facing change)
 

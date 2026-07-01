@@ -174,7 +174,10 @@ public class OpenApiConfig {
                         + " external OIDC IdP (Keycloak): the backend validates the IdP's bearer JWT via"
                         + " JWKS and maps realm roles to authorities. BREAKING: POST /api/identity/login"
                         + " is removed (login moves to the IdP); the security scheme is now an OIDC"
-                        + " bearer token.")
-                .version("0.23.1"));
+                        + " bearer token."
+                        + " Phase 16a (SPEC-0029) is frontend-only: it adds the Finance/Billing/Payout/"
+                        + " Compliance operator screens over the existing APIs — no new endpoint, no"
+                        + " contract change.")
+                .version("0.24.0"));
   }
 }

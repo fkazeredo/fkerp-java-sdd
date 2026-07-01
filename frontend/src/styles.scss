@@ -136,6 +136,16 @@ body {
   font-weight: 600;
 }
 
+/* An inline field whose label carries a checkbox (SPEC-0029 Compliance upload). */
+.field--inline > label {
+  flex-direction: row;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--app-text);
+  font-weight: 500;
+}
+
 .actions {
   display: flex;
   gap: 0.5rem;

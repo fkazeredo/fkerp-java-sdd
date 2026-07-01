@@ -67,4 +67,4 @@ Atualize-o ao fechar cada fatia (antes do merge). Nada de caderno vazio ou gené
 - Plano final em docs/plan/.
 - Caderno de testes finalizado em docs/test-report/ (índice + um arquivo por fatia).
 - Release note em docs/release-notes/<versão>.md (SemVer; crie a pasta e um template se não existirem).
-- Relatório salvo como arquivo em docs/, com: fatias entregues; arquivos criados ou alterados; specs/ADRs atualizados; migrações; testes por tipo e o resultado de cada um, mais a saída do ./mvnw verify; impacto em OpenAPI; lista das decisões com link para cada DL-NNNN (destacando Reversibilidade=Cara e Confiança=Baixa); riscos; e o que ficou para a próxima fase.
+- Registro de fim de fase: **NÃO** criar um relatório solto em `docs/`. O registro já vive nos artefatos existentes — `docs/release-notes/<versão>.md` (fatias, migrações, impacto em OpenAPI, riscos, o que fica para a próxima fase), `docs/test-report/` (índice + fatias: testes por tipo, resultado e a saída do `./mvnw verify`), `docs/decision-log/` (as decisões DL-NNNN, com destaque a Reversibilidade=Cara/Confiança=Baixa) e o execution log do `docs/ROADMAP-STATUS.md`. Não duplicar isso num arquivo à parte.
