@@ -13,11 +13,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Application service for the Identity module (SPEC-0024 — graduated to the external IdP in Phase
- * 13, DL-0104/0107). Authentication now happens at the external OIDC IdP (Keycloak); this service
- * no longer verifies credentials. It lists the role/permission catalogue ({@link #listRoles}, the
- * local source of truth of internal authorization — BR5/BR16) and records the access audit (login
- * first touch and denials) reusing the Platform's append-only {@code system_audit} (DL-0083).
+ * Application service for the Identity module (SPEC-0024 — re-graduated to the self-hosted IdP in
+ * Phase 17, ADR-0018/DL-0110). Authentication now happens at the app's own embedded OIDC
+ * Authorization Server; this service no longer verifies credentials. It lists the role/permission
+ * catalogue ({@link #listRoles}, the local source of truth of internal authorization — BR5/BR16)
+ * and records the access audit (login first touch and denials) reusing the Platform's append-only
+ * {@code system_audit} (DL-0083).
  *
  * <p><strong>Security (BR4):</strong> no token/secret is ever logged or carried in an event/audit
  * detail; only metadata (actor, action, resource).

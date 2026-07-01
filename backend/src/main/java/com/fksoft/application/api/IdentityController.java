@@ -23,9 +23,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST endpoints for the Identity module (SPEC-0024 — graduated to the external IdP in Phase 13,
- * DL-0104/0105). Login now happens at the external OIDC IdP (Keycloak, Authorization Code + PKCE);
- * the in-house {@code POST /login} of the 8k was removed (breaking — BR14). What remains:
+ * REST endpoints for the Identity module (SPEC-0024 — re-graduated to the self-hosted IdP in Phase
+ * 17, ADR-0018/DL-0110). Login now happens at the app's own embedded OIDC Authorization Server
+ * (Authorization Code + PKCE, form {@code /login}); the in-house {@code POST /api/identity/login}
+ * of the 8k was removed in Phase 13 (breaking — BR14) and stays removed. What remains:
  *
  * <ul>
  *   <li>{@code GET /me} — the current principal resolved from the verified IdP token; it is the
