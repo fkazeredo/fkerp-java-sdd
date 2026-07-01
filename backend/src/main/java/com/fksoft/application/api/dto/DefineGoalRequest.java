@@ -7,9 +7,9 @@ import java.math.BigDecimal;
 
 /**
  * Request body for {@code POST /api/portfolio/brands/{brandRef}/goals} (SPEC-0020 BR3). A REVENUE
- * goal carries a {@code target} money (BRL); a VOLUME goal carries a {@code targetCount}. The {@code
- * metric} is a goal-metric cadastro code (was {@code GoalMetric}; SPEC-0031/DL-0116) — the wire
- * stays a string, validated against the cadastro by the service.
+ * goal carries a {@code target} money (BRL); a VOLUME goal carries a {@code targetCount}. The
+ * {@code metric} is a goal-metric cadastro code (was {@code GoalMetric}; SPEC-0031/DL-0116) — the
+ * wire stays a string, validated against the cadastro by the service.
  *
  * @param period the period (YYYY or YYYY-MM)
  * @param metric the goal-metric cadastro code (VOLUME or REVENUE)

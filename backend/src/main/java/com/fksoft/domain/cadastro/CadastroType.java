@@ -44,7 +44,9 @@ public enum CadastroType {
   /** Intelligence insight type (was {@code InsightType}). */
   INSIGHT_TYPE,
 
-  /** Intelligence advisor verdict (was {@code Verdict}; CONVERTE/QUEIMA_MARGEM drive the guardrail). */
+  /**
+   * Intelligence advisor verdict (was {@code Verdict}; CONVERTE/QUEIMA_MARGEM drive the guardrail).
+   */
   INSIGHT_VERDICT,
 
   /** Portfolio brand-goal metric (was {@code GoalMetric}; VOLUME/REVENUE drive the projection). */

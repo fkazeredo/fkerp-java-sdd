@@ -23,12 +23,12 @@ class BrandGoalTest {
         BrandGoal.define(
             "ALAMO",
             "2026",
-            GoalMetric.REVENUE,
+            GoalMetricCodes.REVENUE,
             Money.of(new BigDecimal("1200000.00"), "BRL"),
             null,
             NOW,
             "admin");
-    assertThat(goal.metric()).isEqualTo(GoalMetric.REVENUE);
+    assertThat(goal.metric()).isEqualTo(GoalMetricCodes.REVENUE);
     assertThat(goal.targetMoney()).isEqualTo(Money.of(new BigDecimal("1200000.00"), "BRL"));
     assertThat(goal.targetCount()).isNull();
   }
@@ -36,8 +36,8 @@ class BrandGoalTest {
   @Test
   void definesAVolumeGoal() {
     BrandGoal goal =
-        BrandGoal.define("ALAMO", "2026-06", GoalMetric.VOLUME, null, 120, NOW, "admin");
-    assertThat(goal.metric()).isEqualTo(GoalMetric.VOLUME);
+        BrandGoal.define("ALAMO", "2026-06", GoalMetricCodes.VOLUME, null, 120, NOW, "admin");
+    assertThat(goal.metric()).isEqualTo(GoalMetricCodes.VOLUME);
     assertThat(goal.targetCount()).isEqualTo(120);
     assertThat(goal.targetMoney()).isNull();
   }
@@ -45,24 +45,30 @@ class BrandGoalTest {
   @Test
   void rejectsAMalformedPeriod() {
     assertThatThrownBy(
-            () -> BrandGoal.define("ALAMO", "2026/06", GoalMetric.VOLUME, null, 10, NOW, "admin"))
+            () ->
+                BrandGoal.define(
+                    "ALAMO", "2026/06", GoalMetricCodes.VOLUME, null, 10, NOW, "admin"))
         .isInstanceOf(BrandGoalInvalidException.class);
     assertThatThrownBy(
-            () -> BrandGoal.define("ALAMO", "2026-13", GoalMetric.VOLUME, null, 10, NOW, "admin"))
+            () ->
+                BrandGoal.define(
+                    "ALAMO", "2026-13", GoalMetricCodes.VOLUME, null, 10, NOW, "admin"))
         .isInstanceOf(BrandGoalInvalidException.class);
   }
 
   @Test
   void rejectsARevenueGoalWithoutAPositiveBrlTarget() {
     assertThatThrownBy(
-            () -> BrandGoal.define("ALAMO", "2026", GoalMetric.REVENUE, null, null, NOW, "admin"))
+            () ->
+                BrandGoal.define(
+                    "ALAMO", "2026", GoalMetricCodes.REVENUE, null, null, NOW, "admin"))
         .isInstanceOf(BrandGoalInvalidException.class);
     assertThatThrownBy(
             () ->
                 BrandGoal.define(
                     "ALAMO",
                     "2026",
-                    GoalMetric.REVENUE,
+                    GoalMetricCodes.REVENUE,
                     Money.of(BigDecimal.ZERO, "BRL"),
                     null,
                     NOW,
@@ -74,7 +80,7 @@ class BrandGoalTest {
                 BrandGoal.define(
                     "ALAMO",
                     "2026",
-                    GoalMetric.REVENUE,
+                    GoalMetricCodes.REVENUE,
                     Money.of(new BigDecimal("1000.00"), "USD"),
                     null,
                     NOW,
@@ -85,7 +91,7 @@ class BrandGoalTest {
   @Test
   void rejectsAVolumeGoalWithoutAPositiveCount() {
     assertThatThrownBy(
-            () -> BrandGoal.define("ALAMO", "2026", GoalMetric.VOLUME, null, 0, NOW, "admin"))
+            () -> BrandGoal.define("ALAMO", "2026", GoalMetricCodes.VOLUME, null, 0, NOW, "admin"))
         .isInstanceOf(BrandGoalInvalidException.class);
   }
 }

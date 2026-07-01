@@ -5,15 +5,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fksoft.domain.marketing.CampaignSendResult;
 import com.fksoft.domain.marketing.CampaignView;
-import com.fksoft.domain.marketing.ConsentPurpose;
 import com.fksoft.domain.marketing.CreateCampaignCommand;
 import com.fksoft.domain.marketing.DefineSegmentCommand;
 import com.fksoft.domain.marketing.GrantConsentCommand;
 import com.fksoft.domain.marketing.LegalBasis;
+import com.fksoft.domain.marketing.MarketingCodes;
 import com.fksoft.domain.marketing.MarketingService;
 import com.fksoft.domain.marketing.SegmentView;
 import com.fksoft.domain.marketing.SubjectRef;
-import com.fksoft.domain.marketing.SubjectType;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
@@ -52,8 +51,8 @@ class CampaignSendIntegrationTest extends AbstractPostgresIntegrationTest {
   private void grant(String id) {
     marketingService.grantConsent(
         new GrantConsentCommand(
-            new SubjectRef(id, SubjectType.ACCOUNT),
-            ConsentPurpose.NEWSLETTER,
+            new SubjectRef(id, MarketingCodes.ACCOUNT),
+            MarketingCodes.NEWSLETTER,
             LegalBasis.CONSENT,
             "form"),
         "mkt");
@@ -67,7 +66,7 @@ class CampaignSendIntegrationTest extends AbstractPostgresIntegrationTest {
     grant("acc-3");
     var granted3 =
         marketingService
-            .history(new SubjectRef("acc-3", SubjectType.ACCOUNT), ConsentPurpose.NEWSLETTER)
+            .history(new SubjectRef("acc-3", MarketingCodes.ACCOUNT), MarketingCodes.NEWSLETTER)
             .get(0);
     marketingService.revokeConsent(granted3.id(), "mkt");
 
@@ -118,7 +117,7 @@ class CampaignSendIntegrationTest extends AbstractPostgresIntegrationTest {
     // Before revoke both are consented.
     var beforeState =
         marketingService
-            .history(new SubjectRef("acc-2", SubjectType.ACCOUNT), ConsentPurpose.NEWSLETTER)
+            .history(new SubjectRef("acc-2", MarketingCodes.ACCOUNT), MarketingCodes.NEWSLETTER)
             .get(0);
     marketingService.revokeConsent(beforeState.id(), "mkt");
 

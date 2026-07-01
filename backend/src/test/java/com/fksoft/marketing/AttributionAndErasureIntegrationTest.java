@@ -6,18 +6,17 @@ import com.fksoft.domain.booking.BookingConfirmed;
 import com.fksoft.domain.marketing.AttributionView;
 import com.fksoft.domain.marketing.CampaignConverted;
 import com.fksoft.domain.marketing.CampaignView;
-import com.fksoft.domain.marketing.ConsentPurpose;
 import com.fksoft.domain.marketing.ConsentStatus;
 import com.fksoft.domain.marketing.CreateCampaignCommand;
 import com.fksoft.domain.marketing.DefineSegmentCommand;
 import com.fksoft.domain.marketing.ErasureResult;
 import com.fksoft.domain.marketing.GrantConsentCommand;
 import com.fksoft.domain.marketing.LegalBasis;
+import com.fksoft.domain.marketing.MarketingCodes;
 import com.fksoft.domain.marketing.MarketingService;
 import com.fksoft.domain.marketing.RegisterAttributionCommand;
 import com.fksoft.domain.marketing.SegmentView;
 import com.fksoft.domain.marketing.SubjectRef;
-import com.fksoft.domain.marketing.SubjectType;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
 import java.time.Instant;
 import java.util.List;
@@ -129,9 +128,9 @@ class AttributionAndErasureIntegrationTest extends AbstractPostgresIntegrationTe
 
   @Test
   void erasureSuppressesTheSubjectButPreservesTombstoneAndAttributions() {
-    SubjectRef subject = new SubjectRef("acc-erase", SubjectType.ACCOUNT);
+    SubjectRef subject = new SubjectRef("acc-erase", MarketingCodes.ACCOUNT);
     marketingService.grantConsent(
-        new GrantConsentCommand(subject, ConsentPurpose.NEWSLETTER, LegalBasis.CONSENT, "form"),
+        new GrantConsentCommand(subject, MarketingCodes.NEWSLETTER, LegalBasis.CONSENT, "form"),
         "mkt");
     // An attribution that carries NO subject PII must survive the erasure (business metric).
     UUID bookingId = UUID.randomUUID();
@@ -143,7 +142,7 @@ class AttributionAndErasureIntegrationTest extends AbstractPostgresIntegrationTe
     assertThat(result.anonymizedConsents()).isGreaterThanOrEqualTo(1);
 
     // The subject is now suppressed (latest consent is REVOKED) — not granted anymore.
-    assertThat(marketingService.currentState(subject, ConsentPurpose.NEWSLETTER).isGranted())
+    assertThat(marketingService.currentState(subject, MarketingCodes.NEWSLETTER).isGranted())
         .isFalse();
 
     // The original subject id no longer appears in the consents table (PII anonymized).

@@ -48,8 +48,7 @@ public interface ConsentRepository extends JpaRepository<Consent, UUID> {
 
   /** All rows for a subject across purposes (for the LGPD erasure, DL-0058). */
   @Query("select c from Consent c where c.subjectType = :type and c.subjectId = :subjectId")
-  List<Consent> findAllForSubject(
-      @Param("type") String type, @Param("subjectId") String subjectId);
+  List<Consent> findAllForSubject(@Param("type") String type, @Param("subjectId") String subjectId);
 
   /**
    * The distinct subjects (type + id) that have <strong>any</strong> consent row for a purpose —

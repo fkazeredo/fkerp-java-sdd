@@ -9,9 +9,9 @@ package com.fksoft.domain.intelligence;
  *
  * <p>These three are <strong>system-produced</strong> values (the DSS mints them from consumed
  * events; they are never accepted as a create payload). They are still cadastros so their pt-BR
- * labels are editable and the screens render a label. The only wire input is the {@code InsightType}
- * list filter, which crosses the boundary as a plain string (no create validation needed — an
- * unknown filter simply matches nothing).
+ * labels are editable and the screens render a label. The only wire input is the {@code
+ * InsightType} list filter, which crosses the boundary as a plain string (no create validation
+ * needed — an unknown filter simply matches nothing).
  */
 public final class IntelligenceCodes {
 

@@ -405,7 +405,8 @@ public class PortfolioService {
     if (GoalMetricCodes.REVENUE.equals(goal.metric())) {
       BigDecimal realized =
           realizedRepository
-              .findByBrandRefAndMetric(goal.brandRef(), GoalMetricCodes.REVENUE).stream()
+              .findByBrandRefAndMetric(goal.brandRef(), GoalMetricCodes.REVENUE)
+              .stream()
               .filter(row -> matchesPeriod(row.occurredAt(), goal.period()))
               .map(BrandRealized::amount)
               .reduce(BigDecimal.ZERO, BigDecimal::add);
