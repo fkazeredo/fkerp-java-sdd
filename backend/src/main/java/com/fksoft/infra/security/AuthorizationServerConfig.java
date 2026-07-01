@@ -40,6 +40,9 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
  * The <strong>self-hosted OIDC Authorization Server</strong> (SPEC-0024 — re-graduated in Phase 17,
@@ -91,8 +94,8 @@ public class AuthorizationServerConfig {
    */
   @Bean
   @Order(1)
-  public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
-      throws Exception {
+  public SecurityFilterChain authorizationServerSecurityFilterChain(
+      HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
     OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
         new OAuth2AuthorizationServerConfigurer();
     http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
@@ -100,6 +103,10 @@ public class AuthorizationServerConfig {
             authorizationServerConfigurer,
             authorizationServer -> authorizationServer.oidc(Customizer.withDefaults()))
         .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
+        // The SPA (a different origin: 4200/4201) fetches the discovery document, the JWK set and
+        // exchanges the code at /oauth2/token via XHR — those need CORS (DL-0113). The browser
+        // REDIRECT to /oauth2/authorize and /login is a top-level navigation and needs no CORS.
+        .cors(cors -> cors.configurationSource(corsConfigurationSource))
         .exceptionHandling(
             exceptions ->
                 exceptions.defaultAuthenticationEntryPointFor(
@@ -226,6 +233,26 @@ public class AuthorizationServerConfig {
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
+  }
+
+  /**
+   * CORS for the SPA's cross-origin XHR to the AS endpoints (DL-0113): the SPA on dev (4200) / E2E
+   * (4201) fetches the discovery document, the JWK set and exchanges the authorization code at
+   * {@code /oauth2/token}. Only the two known SPA origins are allowed. The {@code /api/**} calls go
+   * through the frontend proxy (same-origin) and are not covered here.
+   */
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource(
+      @Value("${app.cors.allowed-origins:http://localhost:4200,http://localhost:4201}")
+          List<String> allowedOrigins) {
+    CorsConfiguration config = new CorsConfiguration();
+    config.setAllowedOrigins(allowedOrigins);
+    config.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
+    config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+    config.setAllowCredentials(true);
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", config);
+    return source;
   }
 
   /**
