@@ -651,6 +651,47 @@ claro de "nada para mostrar".
 > (SPEC-0029 / DL-0109). É a **segunda das quatro fatias da Fase 16**; faltam a inteligência/políticas
 > comerciais (16c) e o back-office/RH/TI (16d).
 
+### Fase 16c — Telas de operação: Inteligência, Política comercial, Marketing e Portfólio
+
+Esta versão abre **mais quatro telas**, agora de **Inteligência & Crescimento**. Como nas 16a/16b, são
+**telas sobre o que o sistema já fazia** (nenhuma regra nova). Elas aparecem no menu conforme o papel
+(é só para organizar o menu — o **servidor continua sendo a autoridade**: se faltar permissão para uma
+ação, a tela informa **"acesso negado"**). Em todas, lista vazia mostra um aviso claro de "nada para
+mostrar".
+
+- **Inteligência (painel de insights).** Menu **"Inteligência"**. Lista os **insights** que o sistema
+  gera sozinho (o assistente de decisão), com filtros por **tipo**, **assunto** e **situação**, ordenados
+  pelo **ganho estimado**. **Abra um insight** para ver a **evidência** (os números e de onde vieram), a
+  **recomendação** (o veredito — "converte" ou "queima margem" —, a ação sugerida e o ganho/risco em
+  dinheiro) e o **guardrail** cruzado, quando houver (um **alerta**, que **nunca trava** nada). Por fim,
+  **registre a decisão humana**: **aceitar**, **rejeitar** ou **descartar**, com uma observação.
+  Importante: **registrar a decisão só registra** — o sistema **nunca executa a ação sozinho**; ele
+  aconselha, a pessoa decide.
+- **Política comercial (parâmetros governados).** Menu **"Política comercial"** (visível a **Diretor** e
+  **Curador de políticas**). **Resolva um parâmetro** para um escopo (chave + conta/produto/canal) e veja
+  o **valor que vale** e a **proveniência** (qual camada venceu, quem definiu e quando). Consulte a lista
+  de **regras** com a **precedência fixa**: **Diretiva > Promoção > Contrato > Política > Padrão**.
+  **Defina uma regra** de política/promoção/contrato ou **emita uma diretiva** (fica no topo da
+  precedência e **exige justificativa** — só o **Diretor** pode).
+- **Marketing (consentimento, segmentos, campanhas e atribuição).** Menu **"Marketing"**. **Consulte o
+  consentimento** de um titular (situação atual e **histórico** completo), **conceda** ou **revogue**.
+  **Defina um segmento** e veja o **alcance estimado**. **Crie uma campanha** e **dispare** — o envio
+  **filtra por consentimento** (LGPD) e mostra quantos foram **alvos, suprimidos e enfileirados**.
+  **Registre e consulte a atribuição** de uma campanha a uma reserva. E execute o **apagamento (LGPD)**:
+  remove os dados pessoais de marketing e **mantém a marca de revogação** para o titular não voltar a ser
+  incluído por engano.
+- **Portfólio (marcas, contratos e metas).** Menu **"Portfólio"**. **Liste, registre e desative** as
+  **marcas representadas**. Para uma marca, veja os **contratos de representação** e a **cobertura numa
+  data** (um **alerta** informativo, que **nunca trava** a venda) e **registre um contrato**. **Defina uma
+  meta** (por **volume** ou **receita**) e acompanhe o **realizado × meta** com o **percentual de
+  atingimento**.
+
+> Para o time técnico: fatia **frontend-only** sobre APIs que já existiam (`/api/intelligence`,
+> `/api/commercial-policy`, `/api/marketing`, `/api/portfolio`) — **nenhum endpoint novo**, nenhum
+> contrato ou banco alterado (SPEC-0029 / DL-0109). É a **terceira das quatro fatias da Fase 16**; falta
+> o back-office/RH/TI (16d).
+
+
 ## 4. Glossário
 
 - **Backend / servidor:** a parte do sistema que processa as regras e fala com o banco de dados.
@@ -745,6 +786,7 @@ claro de "nada para mostrar".
 | 0.23.0 | 13 — Identidade/AuthZ profissional (gradua a SPEC-0024) | **Login único corporativo (SSO)**: entrar passa a ser pela **conta da empresa** na tela do **provedor de identidade** (Keycloak no dev), com o botão **"Entrar com SSO"** e **renovação silenciosa de sessão de verdade**; o ERP **não guarda mais senha**. **Papéis, permissões e auditoria de acesso continuam iguais** — só mudou a forma de entrar. **Mudança incompatível:** o login próprio antigo (`POST /api/identity/login`) foi **removido** (login agora é no provedor). |
 | 0.24.0 | 16a — Telas de operação: Financeiro & Conformidade | **Quatro telas novas** sobre APIs que já existiam (nenhuma regra nova): **Financeiro** (razão a pagar/receber com filtros, balancete por moeda e fechamento do mês com a "regra de ouro"), **Faturamento** (rascunho/emissão/cancelamento da NF de comissão, com ISS e retenções), **Repasses** (repasse ao agente, liquidação ao fornecedor com taxa, reembolso ao cliente, com parcelas e execução — falha aparece como falha), **Conformidade** (verificação de fechamento com pendências, envio ao cofre e consulta de documento por código com hash e prazo de retenção). Financeiro/Faturamento/Repasses aparecem no menu **só para o papel Financeiro**; Conformidade para qualquer autenticado. **Primeira das quatro fatias da Fase 16** (quita a dívida de telas — DL-0109). |
 | 0.25.0 | 16b — Telas de operação: ciclo comercial | **Quatro telas novas** sobre APIs que já existiam (nenhuma regra nova): **Pós-venda** (chamados com filtros e SLA, máquina de estados assumir/aguardar/encerrar e resolução que dispara reembolso/cancelamento; o SLA estourado só alerta, nunca trava), **Origem de ofertas** (registrar/consultar a procedência de uma oferta e o nível de integração), **Mesa de câmbio** (companheira da taxa congelada: exposição do livro com subsídio+desvio e alerta, taxa de mercado e histórico, posição por reserva e relatório PromoFx), **Cancelamento** (consultar/configurar a política por produto: tipo, janelas, quem arca, no-show e a "armadilha do merchant"). Aparecem no menu **para o papel Operacional** (o servidor segue autoridade). **Segunda das quatro fatias da Fase 16** (DL-0109). |
+| 0.26.0 | 16c — Telas de operação: Inteligência & Crescimento | **Quatro telas novas** sobre APIs que já existiam (nenhuma regra nova): **Inteligência** (painel de insights com filtros e ordenação por ganho; evidência/recomendação/guardrail; registro da decisão humana — que só registra, nunca executa), **Política comercial** (resolver parâmetro com proveniência; lista de regras com a precedência Diretiva>Promoção>Contrato>Política>Padrão; definir regra e emitir diretiva com justificativa), **Marketing** (consentimento LGPD com histórico, conceder/revogar; segmentos e alcance; campanhas com disparo filtrado por consentimento; atribuição; apagamento LGPD), **Portfólio** (marcas, contratos e cobertura; metas × realizado com atingimento). Inteligência/Marketing/Portfólio aparecem para o papel **Operacional**; Política comercial para **Diretor/Curador**. **Terceira das quatro fatias da Fase 16** (DL-0109). |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.
