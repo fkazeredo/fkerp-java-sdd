@@ -12,11 +12,7 @@ import java.util.UUID;
  * @param currencyPair the pair, e.g. {@code USD/BRL}
  * @param rate the market rate (scale 6, &gt; 0)
  * @param observedAt when the market showed this rate
- * @param source where the observation came from (FEED or MANUAL)
+ * @param source where the observation came from (market-rate source cadastro code; FEED or MANUAL)
  */
 public record MarketRateView(
-    UUID id,
-    CurrencyPair currencyPair,
-    BigDecimal rate,
-    Instant observedAt,
-    MarketRateSource source) {}
+    UUID id, CurrencyPair currencyPair, BigDecimal rate, Instant observedAt, String source) {}

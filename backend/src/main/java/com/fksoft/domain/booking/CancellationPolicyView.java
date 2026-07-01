@@ -8,7 +8,7 @@ import java.util.List;
  * API: {@code GET/PUT /api/products/{ref}/cancellation-policy}). Carries no entity.
  *
  * @param scopeRef the product/supplier scope reference this policy applies to
- * @param type the cancellation type
+ * @param type the cancellation-type cadastro code
  * @param windows the penalty windows
  * @param refundable whether the sale is refundable from the supplier's point of view
  * @param costBearer who bears a STANDARD/CUSTOM penalty
@@ -18,7 +18,7 @@ import java.util.List;
  */
 public record CancellationPolicyView(
     String scopeRef,
-    CancellationType type,
+    String type,
     List<PenaltyWindow> windows,
     boolean refundable,
     CostBearer costBearer,

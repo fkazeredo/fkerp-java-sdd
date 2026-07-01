@@ -50,5 +50,42 @@ public enum CadastroType {
   INSIGHT_VERDICT,
 
   /** Portfolio brand-goal metric (was {@code GoalMetric}; VOLUME/REVENUE drive the projection). */
-  GOAL_METRIC
+  GOAL_METRIC,
+
+  // --- Slice 18c: Sourcing / Exchange / Booking / Compliance (DL-0117) ---
+
+  /** Sourcing offer origin (was {@code OfferOrigin}; provenance of a sourced offer). */
+  OFFER_ORIGIN,
+
+  /**
+   * Sourcing integration level (was {@code IntegrationLevel}; INBOUND gates the INTEGRATED quoting
+   * branch — DL-0018).
+   */
+  INTEGRATION_LEVEL,
+
+  /** Exchange market-rate source (was {@code MarketRateSource}; FEED/MANUAL — DL-0025). */
+  MARKET_RATE_SOURCE,
+
+  /**
+   * Booking cancellation/no-show charge kind (was {@code ChargeKind}; drives the AP/AR posting).
+   */
+  CHARGE_KIND,
+
+  /**
+   * Booking cancellation type (was {@code CancellationType}; STANDARD/ALL_SALES_FINAL/CUSTOM drive
+   * the penalty windows + the merchant trap — DL-0024/DL-0010).
+   */
+  CANCELLATION_TYPE,
+
+  /** Compliance document type (was {@code DocumentType}; drives retention + requirements). */
+  DOCUMENT_TYPE,
+
+  /** Compliance signed-document format (was {@code SignedFormat}; CAdES/XAdES/PAdES). */
+  SIGNED_FORMAT,
+
+  /**
+   * Compliance requirement phase (was {@code RequirementPhase}; AT_REGISTRATION drives the
+   * close-check — DL-0012).
+   */
+  REQUIREMENT_PHASE
 }

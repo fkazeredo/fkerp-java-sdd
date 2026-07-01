@@ -14,8 +14,8 @@ import com.fksoft.application.api.dto.PinRateRequest;
 import com.fksoft.domain.accounts.LegalType;
 import com.fksoft.domain.booking.BookingView;
 import com.fksoft.domain.booking.CancellationResult;
-import com.fksoft.domain.booking.CancellationType;
-import com.fksoft.domain.booking.ChargeKind;
+import com.fksoft.domain.booking.CancellationTypeCodes;
+import com.fksoft.domain.booking.ChargeKindCodes;
 import com.fksoft.domain.booking.CostBearer;
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.quoting.QuoteView;
@@ -65,7 +65,7 @@ class MerchantTrapIntegrationTest extends AbstractPostgresIntegrationTest {
     putPolicy(
         scope,
         new CancellationPolicyRequest(
-            CancellationType.STANDARD,
+            CancellationTypeCodes.STANDARD,
             List.of(new WindowRequest(24, new BigDecimal("0.50"))),
             true,
             CostBearer.AGENCY,
@@ -88,9 +88,9 @@ class MerchantTrapIntegrationTest extends AbstractPostgresIntegrationTest {
             .getBody();
 
     assertThat(result).isNotNull();
-    assertThat(result.policyType()).isEqualTo(CancellationType.STANDARD);
+    assertThat(result.policyType()).isEqualTo(CancellationTypeCodes.STANDARD);
     assertThat(result.charges()).hasSize(1);
-    assertThat(result.charges().get(0).kind()).isEqualTo(ChargeKind.PENALTY);
+    assertThat(result.charges().get(0).kind()).isEqualTo(ChargeKindCodes.PENALTY);
     assertThat(result.charges().get(0).amount())
         .isEqualTo(Money.of(new BigDecimal("1350.00"), "BRL"));
     assertThat(result.charges().get(0).costBearer()).isEqualTo(CostBearer.AGENCY);
@@ -103,7 +103,7 @@ class MerchantTrapIntegrationTest extends AbstractPostgresIntegrationTest {
     putPolicy(
         scope,
         new CancellationPolicyRequest(
-            CancellationType.ALL_SALES_FINAL,
+            CancellationTypeCodes.ALL_SALES_FINAL,
             List.of(),
             false,
             CostBearer.SUPPLIER,
@@ -125,21 +125,21 @@ class MerchantTrapIntegrationTest extends AbstractPostgresIntegrationTest {
             .getBody();
 
     assertThat(result).isNotNull();
-    assertThat(result.policyType()).isEqualTo(CancellationType.ALL_SALES_FINAL);
+    assertThat(result.policyType()).isEqualTo(CancellationTypeCodes.ALL_SALES_FINAL);
 
     // THE TRAP: TWO distinct obligations — supplier cost AND customer refund — that do NOT net out.
     assertThat(result.charges()).hasSize(2);
     assertThat(result.charges())
         .anySatisfy(
             c -> {
-              assertThat(c.kind()).isEqualTo(ChargeKind.SUPPLIER);
+              assertThat(c.kind()).isEqualTo(ChargeKindCodes.SUPPLIER);
               // Supplier cost (basePrice = 500 USD) is due IN FULL, not 500 - refund.
               assertThat(c.amount()).isEqualTo(Money.of(new BigDecimal("500.00"), "USD"));
               assertThat(c.costBearer()).isEqualTo(CostBearer.ACME); // merchant of record -> Acme
             })
         .anySatisfy(
             c -> {
-              assertThat(c.kind()).isEqualTo(ChargeKind.CUSTOMER_REFUND);
+              assertThat(c.kind()).isEqualTo(ChargeKindCodes.CUSTOMER_REFUND);
               assertThat(c.amount()).isEqualTo(Money.of(new BigDecimal("2700.00"), "BRL"));
               assertThat(c.costBearer()).isEqualTo(CostBearer.ACME);
             });

@@ -7,9 +7,9 @@
  * 2000; CC arts. 1.179-1.180).
  *
  * <p>Spring Modulith application module. Types in this base package are the module's public API:
- * the {@link com.fksoft.domain.compliance.ComplianceService} use cases, value objects ({@link
- * com.fksoft.domain.compliance.DocumentType}, {@link com.fksoft.domain.compliance.RetentionPolicy},
- * {@link com.fksoft.domain.compliance.FileStorage} port), views, the {@link
+ * the {@link com.fksoft.domain.compliance.ComplianceService} use cases, value objects (the
+ * document-type cadastro code, {@link com.fksoft.domain.compliance.RetentionPolicy}, {@link
+ * com.fksoft.domain.compliance.FileStorage} port), views, the {@link
  * com.fksoft.domain.compliance.DocumentAttached}/{@link
  * com.fksoft.domain.compliance.RequirementUnmet}/{@link
  * com.fksoft.domain.compliance.RetentionExpiring} events and the business exceptions. The

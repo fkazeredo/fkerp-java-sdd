@@ -1,6 +1,8 @@
 package com.fksoft.domain.sourcing;
 
 import com.fksoft.domain.accounts.AccountDirectory;
+import com.fksoft.domain.cadastro.CadastroType;
+import com.fksoft.domain.cadastro.CadastroValidator;
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.quoting.QuoteIntegrationPort;
 import java.time.Clock;
@@ -33,6 +35,7 @@ public class SourcingService {
   private final InboundQuotationRepository inboundRepository;
   private final AccountDirectory accountDirectory;
   private final QuoteIntegrationPort quoteIntegrationPort;
+  private final CadastroValidator cadastroValidator;
   private final Clock clock;
   private final ApplicationEventPublisher events;
 
@@ -42,8 +45,8 @@ public class SourcingService {
    *
    * @param productText free-text product description (non-empty)
    * @param basePrice base price in the supplier's currency
-   * @param origin where the offer comes from
-   * @param integrationLevel how integrated the source is
+   * @param origin the offer-origin cadastro code
+   * @param integrationLevel the integration-level cadastro code
    * @param externalRef optional external reference
    * @param actor who registers it (audit)
    * @return the registered offer view
@@ -53,10 +56,14 @@ public class SourcingService {
   public SourcedOfferView register(
       String productText,
       Money basePrice,
-      OfferOrigin origin,
-      IntegrationLevel integrationLevel,
+      String origin,
+      String integrationLevel,
       String externalRef,
       String actor) {
+    // Validate the reference codes against the cadastro (SPEC-0031 BR3/DL-0117) — an
+    // unknown/inactive origin or integration level is rejected (422) before any write.
+    cadastroValidator.validate(CadastroType.OFFER_ORIGIN, origin);
+    cadastroValidator.validate(CadastroType.INTEGRATION_LEVEL, integrationLevel);
     SourcedOffer offer =
         offerRepository.save(
             SourcedOffer.register(
@@ -128,8 +135,8 @@ public class SourcingService {
             SourcedOffer.register(
                 command.productText(),
                 command.price(),
-                OfferOrigin.EXTERNAL_SITE,
-                IntegrationLevel.INBOUND,
+                OfferOriginCodes.EXTERNAL_SITE,
+                IntegrationLevelCodes.INBOUND,
                 command.externalQuotationId(),
                 clock.instant(),
                 actor));

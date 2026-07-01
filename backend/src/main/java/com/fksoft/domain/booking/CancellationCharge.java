@@ -30,8 +30,8 @@ public class CancellationCharge {
 
   private UUID bookingId;
 
-  @Enumerated(EnumType.STRING)
-  private ChargeKind kind;
+  /** The charge-kind cadastro code (was {@code ChargeKind}; SPEC-0031/DL-0117). */
+  private String kind;
 
   private BigDecimal amount;
   private String currency;

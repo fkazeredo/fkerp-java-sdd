@@ -117,9 +117,10 @@ public class BookingService {
   /**
    * Records a no-show using the booking's frozen no-show policy (SPEC-0010 BR6): charges the fee
    * unless it is waived by proof of a cancelled flight (when {@code waivedIfFlightCancelled} is
-   * set). Persists a {@link ChargeKind#NO_SHOW} charge when the fee applies (BR7) and publishes
-   * {@code BookingNoShow} and {@code NoShowCharged}. The proof's compliance verification is out of
-   * scope (DL-0023): {@code flightCancelledProof} is taken as the fact that proof was provided.
+   * set). Persists a {@link ChargeKindCodes#NO_SHOW} charge when the fee applies (BR7) and
+   * publishes {@code BookingNoShow} and {@code NoShowCharged}. The proof's compliance verification
+   * is out of scope (DL-0023): {@code flightCancelledProof} is taken as the fact that proof was
+   * provided.
    *
    * @param bookingId the booking id
    * @param flightCancelledProof whether proof of a cancelled flight was provided
@@ -142,7 +143,7 @@ public class BookingService {
 
     Charge charge = null;
     if (fee != null) {
-      charge = new Charge(ChargeKind.NO_SHOW, fee, snapshot.policy().costBearer());
+      charge = new Charge(ChargeKindCodes.NO_SHOW, fee, snapshot.policy().costBearer());
       chargeRepository.save(CancellationCharge.of(booking.id(), charge, now, actor));
     }
 
@@ -195,7 +196,7 @@ public class BookingService {
     events.publishEvent(new BookingCancelled(booking.id(), reason, now));
     events.publishEvent(new CancellationCharged(booking.id(), charges, policy.type(), now));
     charges.stream()
-        .filter(c -> c.kind() == ChargeKind.SUPPLIER)
+        .filter(c -> ChargeKindCodes.SUPPLIER.equals(c.kind()))
         .findFirst()
         .ifPresent(
             supplier ->

@@ -12,5 +12,5 @@ public interface DocumentRequirementRepository
     extends JpaRepository<DocumentRequirement, DocumentRequirement.Key> {
 
   /** The requirements for an entry type in a given phase (the close-check uses AT_REGISTRATION). */
-  List<DocumentRequirement> findByEntryTypeAndPhase(String entryType, RequirementPhase phase);
+  List<DocumentRequirement> findByEntryTypeAndPhase(String entryType, String phase);
 }

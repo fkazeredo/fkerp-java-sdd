@@ -2,7 +2,7 @@ package com.fksoft.domain.finance;
 
 import com.fksoft.domain.booking.CancellationCharged;
 import com.fksoft.domain.booking.Charge;
-import com.fksoft.domain.booking.ChargeKind;
+import com.fksoft.domain.booking.ChargeKindCodes;
 import com.fksoft.domain.booking.MerchantObligationIncurred;
 import com.fksoft.domain.booking.NoShowCharged;
 import java.util.UUID;
@@ -39,30 +39,37 @@ class BookingChargeEventsListener {
   @EventListener
   void onCancellationCharged(CancellationCharged event) {
     for (Charge charge : event.charges()) {
+      // charge.kind() is a charge-kind cadastro code (SPEC-0031/DL-0117); the wired posting
+      // branches
+      // on the ChargeKindCodes constants. A default guards against an unknown code (dado puro): it
+      // posts nothing (no wired ledger effect), preserving the merchant-trap invariant.
       switch (charge.kind()) {
-        case PENALTY ->
+        case ChargeKindCodes.PENALTY ->
             financeService.postFromCharge(
                 sourceRef(event.bookingId()),
-                charge.kind().name(),
+                charge.kind(),
                 LedgerDirection.RECEIVABLE,
                 agency(event.bookingId()),
                 charge.amount(),
                 EntryType.PENALTY,
                 event.occurredAt());
-        case CUSTOMER_REFUND ->
+        case ChargeKindCodes.CUSTOMER_REFUND ->
             financeService.postFromCharge(
                 sourceRef(event.bookingId()),
-                charge.kind().name(),
+                charge.kind(),
                 LedgerDirection.PAYABLE,
                 agency(event.bookingId()),
                 charge.amount(),
                 EntryType.REFUND,
                 event.occurredAt());
-        case SUPPLIER -> {
+        case ChargeKindCodes.SUPPLIER -> {
           // Posted from MerchantObligationIncurred (single source of truth) — skip here.
         }
-        case NO_SHOW -> {
+        case ChargeKindCodes.NO_SHOW -> {
           // No-show charges arrive via NoShowCharged, never inside a cancellation.
+        }
+        default -> {
+          // An unknown charge-kind code has no wired posting (dado puro) — nothing to post.
         }
       }
     }
@@ -75,7 +82,7 @@ class BookingChargeEventsListener {
   void onMerchantObligationIncurred(MerchantObligationIncurred event) {
     financeService.postFromCharge(
         sourceRef(event.bookingId()),
-        ChargeKind.SUPPLIER.name(),
+        ChargeKindCodes.SUPPLIER,
         LedgerDirection.PAYABLE,
         supplier(event.bookingId()),
         event.supplierCharge().amount(),
@@ -94,7 +101,7 @@ class BookingChargeEventsListener {
     }
     financeService.postFromCharge(
         sourceRef(event.bookingId()),
-        ChargeKind.NO_SHOW.name(),
+        ChargeKindCodes.NO_SHOW,
         LedgerDirection.RECEIVABLE,
         agency(event.bookingId()),
         event.fee(),

@@ -19,8 +19,8 @@ class SourcedOfferTest {
         SourcedOffer.register(
             "City Tour Rio - full day",
             PRICE,
-            OfferOrigin.EXTERNAL_SITE,
-            IntegrationLevel.INBOUND,
+            "EXTERNAL_SITE",
+            "INBOUND",
             "QS-2026-555",
             Instant.parse("2026-06-29T10:00:00Z"),
             "operador1");
@@ -28,8 +28,8 @@ class SourcedOfferTest {
     assertThat(offer.id()).isNotNull();
     assertThat(offer.productText()).isEqualTo("City Tour Rio - full day");
     assertThat(offer.toView().basePrice()).isEqualTo(PRICE);
-    assertThat(offer.origin()).isEqualTo(OfferOrigin.EXTERNAL_SITE);
-    assertThat(offer.integrationLevel()).isEqualTo(IntegrationLevel.INBOUND);
+    assertThat(offer.origin()).isEqualTo("EXTERNAL_SITE");
+    assertThat(offer.integrationLevel()).isEqualTo("INBOUND");
     assertThat(offer.externalRef()).isEqualTo("QS-2026-555");
   }
 
@@ -39,8 +39,8 @@ class SourcedOfferTest {
         SourcedOffer.register(
             "  Passeio de barco  ",
             PRICE,
-            OfferOrigin.RAW_DEMAND,
-            IntegrationLevel.NONE,
+            "RAW_DEMAND",
+            "NONE",
             null,
             Instant.parse("2026-06-29T10:00:00Z"),
             "operador1");
@@ -56,8 +56,8 @@ class SourcedOfferTest {
                 SourcedOffer.register(
                     "   ",
                     PRICE,
-                    OfferOrigin.EXTERNAL_SITE,
-                    IntegrationLevel.INBOUND,
+                    "EXTERNAL_SITE",
+                    "INBOUND",
                     null,
                     Instant.parse("2026-06-29T10:00:00Z"),
                     "operador1"))

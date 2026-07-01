@@ -6,10 +6,10 @@
  *
  * <p>SPEC-0010 graduates the simple cancellation into a rich <strong>cancellation policy as an
  * object</strong> ({@link com.fksoft.domain.booking.CancellationPolicy} with penalty windows, the
- * {@link com.fksoft.domain.booking.CancellationType} behavior, {@link
- * com.fksoft.domain.booking.NoShowPolicy}) frozen onto the booking at confirmation, the resulting
- * {@link com.fksoft.domain.booking.Charge}s (distinct facts that never net out — the merchant
- * trap), and the policy source administered through {@link
+ * cancellation-type behavior kept in {@link com.fksoft.domain.booking.CancellationTypeCodes},
+ * {@link com.fksoft.domain.booking.NoShowPolicy}) frozen onto the booking at confirmation, the
+ * resulting {@link com.fksoft.domain.booking.Charge}s (distinct facts that never net out — the
+ * merchant trap), and the policy source administered through {@link
  * com.fksoft.domain.booking.CancellationPolicyAdminService}. Per DL-0020 this lives in the booking
  * module (no speculative {@code cancellation}/{@code policy} module).
  *

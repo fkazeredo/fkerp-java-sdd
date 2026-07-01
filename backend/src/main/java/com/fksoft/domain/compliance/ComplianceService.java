@@ -1,5 +1,7 @@
 package com.fksoft.domain.compliance;
 
+import com.fksoft.domain.cadastro.CadastroType;
+import com.fksoft.domain.cadastro.CadastroValidator;
 import com.fksoft.domain.finance.LedgerDirectory;
 import com.fksoft.domain.finance.LedgerEntrySnapshot;
 import com.fksoft.domain.finance.PendingEntry;
@@ -44,6 +46,7 @@ public class ComplianceService implements DocumentRequirementDirectory {
   private final DocumentRequirementRepository requirements;
   private final FileStorage fileStorage;
   private final LedgerDirectory ledgerDirectory;
+  private final CadastroValidator cadastroValidator;
   private final Clock clock;
   private final ApplicationEventPublisher events;
 
@@ -51,12 +54,12 @@ public class ComplianceService implements DocumentRequirementDirectory {
    * Ingests a document: validates the upload, stores the binary, computes the SHA-256 content hash
    * and the retention deadline (BR1/BR2/DL-0015), and optionally attaches it to a financial entry.
    *
-   * @param type the document type
+   * @param type the document-type cadastro code
    * @param content the document bytes (non-empty)
    * @param originalFilename the original filename (for validation; never trusted as the ref)
    * @param contentType the declared content type
    * @param issuedAt the issue date
-   * @param signedFormat the signed format, or {@code null}
+   * @param signedFormat the signed-format cadastro code, or {@code null}
    * @param hasPersonalData whether it carries personal data (BR8)
    * @param entryId the financial entry to attach to, or {@code null}
    * @param entryType the entry's business type (value), required when {@code entryId} is set
@@ -66,19 +69,30 @@ public class ComplianceService implements DocumentRequirementDirectory {
    */
   @Transactional
   public DocumentView upload(
-      DocumentType type,
+      String type,
       byte[] content,
       String originalFilename,
       String contentType,
       LocalDate issuedAt,
-      SignedFormat signedFormat,
+      String signedFormat,
       boolean hasPersonalData,
       UUID entryId,
       String entryType,
       String actor) {
-    if (type == null || content == null || content.length == 0 || issuedAt == null) {
+    if (type == null
+        || type.isBlank()
+        || content == null
+        || content.length == 0
+        || issuedAt == null) {
       throw new ComplianceUploadInvalidException();
     }
+    // Validate the document-type reference code against the cadastro (SPEC-0031 BR3/DL-0117) — an
+    // unknown/inactive type is rejected (422) before anything is stored. The signed format is NOT
+    // validated on write: it is produced by the ingesting adapter (XADES for the NFS-e, CAdES_P7S
+    // for the AFD/AEJ), never a free-form user payload (DL-0117, like the system-produced
+    // MarketRateSource) — and its wired value CAdES_P7S is deliberately mixed-case, which the
+    // upper-casing validator would not match. It remains a cadastro so the label is editable.
+    cadastroValidator.validate(CadastroType.DOCUMENT_TYPE, type);
     String fileRef = fileStorage.store(content, originalFilename, contentType);
     String hash = sha256(content);
     Instant now = clock.instant();
@@ -254,7 +268,7 @@ public class ComplianceService implements DocumentRequirementDirectory {
   private Set<String> requiredDocumentTypes(String entryType) {
     Set<String> required = new LinkedHashSet<>();
     for (DocumentRequirement requirement :
-        requirements.findByEntryTypeAndPhase(entryType, RequirementPhase.AT_REGISTRATION)) {
+        requirements.findByEntryTypeAndPhase(entryType, RequirementPhaseCodes.AT_REGISTRATION)) {
       required.add(requirement.requiredDocumentType());
     }
     return required;
@@ -267,7 +281,7 @@ public class ComplianceService implements DocumentRequirementDirectory {
     List<UUID> documentIds = entryAttachments.stream().map(DocumentAttachment::documentId).toList();
     Set<String> types = new LinkedHashSet<>();
     for (Document document : documents.findAllById(documentIds)) {
-      types.add(document.type().name());
+      types.add(document.type());
     }
     return types;
   }

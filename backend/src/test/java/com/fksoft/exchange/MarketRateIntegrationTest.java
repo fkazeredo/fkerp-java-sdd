@@ -6,7 +6,6 @@ import com.fksoft.application.api.dto.MarketRateResponse;
 import com.fksoft.application.api.dto.RecordMarketRateRequest;
 import com.fksoft.domain.exchange.CurrencyPair;
 import com.fksoft.domain.exchange.MarketRateProvider;
-import com.fksoft.domain.exchange.MarketRateSource;
 import com.fksoft.domain.exchange.MarketRateView;
 import com.fksoft.infra.web.ApiErrorResponse;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
@@ -49,7 +48,7 @@ class MarketRateIntegrationTest extends AbstractPostgresIntegrationTest {
             MarketRateResponse.class);
     assertThat(recorded.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(recorded.getBody()).isNotNull();
-    assertThat(recorded.getBody().source()).isEqualTo(MarketRateSource.MANUAL);
+    assertThat(recorded.getBody().source()).isEqualTo("MANUAL");
 
     ResponseEntity<MarketRateResponse> current =
         restTemplate.getForEntity(
@@ -78,7 +77,7 @@ class MarketRateIntegrationTest extends AbstractPostgresIntegrationTest {
         marketRateProvider.marketRateAt(CurrencyPair.parse("USD/BRL"), Instant.now());
     assertThat(viaPort).isPresent();
     assertThat(viaPort.orElseThrow().rate()).isEqualByComparingTo("5.50");
-    assertThat(viaPort.orElseThrow().source()).isEqualTo(MarketRateSource.MANUAL);
+    assertThat(viaPort.orElseThrow().source()).isEqualTo("MANUAL");
   }
 
   @Test

@@ -1,7 +1,7 @@
 package com.fksoft.infra.integration.payment;
 
 import com.fksoft.domain.compliance.ComplianceService;
-import com.fksoft.domain.compliance.DocumentType;
+import com.fksoft.domain.compliance.DocumentTypeCodes;
 import com.fksoft.domain.compliance.DocumentView;
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.payout.PaymentGateway;
@@ -98,8 +98,10 @@ public class PayoutExecutionService {
    * receipt is traceable; sensitive payment data is never written (SPEC-0017 Error Behavior).
    */
   private UUID archiveReceipt(PayoutView payout, int installmentSeq) {
-    DocumentType type =
-        payout.kind() == PayoutKind.REFUND ? DocumentType.REFUND_PROOF : DocumentType.PAYMENT_PROOF;
+    String type =
+        payout.kind() == PayoutKind.REFUND
+            ? DocumentTypeCodes.REFUND_PROOF
+            : DocumentTypeCodes.PAYMENT_PROOF;
     Money paid = installmentAmount(payout, installmentSeq);
     String receipt = receiptText(payout, installmentSeq, paid);
     DocumentView document =

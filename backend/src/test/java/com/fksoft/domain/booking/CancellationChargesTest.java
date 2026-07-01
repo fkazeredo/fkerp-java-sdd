@@ -27,7 +27,7 @@ class CancellationChargesTest {
 
     assertThat(charges).hasSize(1);
     Charge penalty = charges.get(0);
-    assertThat(penalty.kind()).isEqualTo(ChargeKind.PENALTY);
+    assertThat(penalty.kind()).isEqualTo(ChargeKindCodes.PENALTY);
     assertThat(penalty.amount()).isEqualTo(Money.of(new BigDecimal("240.00"), "BRL"));
     assertThat(penalty.costBearer()).isEqualTo(CostBearer.AGENCY);
   }
@@ -45,7 +45,7 @@ class CancellationChargesTest {
     // Portal de Experiências case (merchant of record): ALL_SALES_FINAL, refunds the customer.
     CancellationPolicy merchant =
         new CancellationPolicy(
-            CancellationType.ALL_SALES_FINAL, List.of(), false, CostBearer.SUPPLIER, true);
+            CancellationTypeCodes.ALL_SALES_FINAL, List.of(), false, CostBearer.SUPPLIER, true);
     Money refund = Money.of(new BigDecimal("480.00"), "BRL");
 
     List<Charge> charges = CancellationCharges.compute(merchant, 1, SALE, SUPPLIER_COST, refund);
@@ -54,10 +54,13 @@ class CancellationChargesTest {
     assertThat(charges).hasSize(2);
 
     Charge supplier =
-        charges.stream().filter(c -> c.kind() == ChargeKind.SUPPLIER).findFirst().orElseThrow();
+        charges.stream()
+            .filter(c -> ChargeKindCodes.SUPPLIER.equals(c.kind()))
+            .findFirst()
+            .orElseThrow();
     Charge customerRefund =
         charges.stream()
-            .filter(c -> c.kind() == ChargeKind.CUSTOMER_REFUND)
+            .filter(c -> ChargeKindCodes.CUSTOMER_REFUND.equals(c.kind()))
             .findFirst()
             .orElseThrow();
 
@@ -77,12 +80,12 @@ class CancellationChargesTest {
   void affiliateAllSalesFinalWithoutRefundStillChargesTheSupplierCostToTheSupplier() {
     CancellationPolicy affiliate =
         new CancellationPolicy(
-            CancellationType.ALL_SALES_FINAL, List.of(), false, CostBearer.SUPPLIER, false);
+            CancellationTypeCodes.ALL_SALES_FINAL, List.of(), false, CostBearer.SUPPLIER, false);
 
     List<Charge> charges = CancellationCharges.compute(affiliate, 1, SALE, SUPPLIER_COST, null);
 
     assertThat(charges).hasSize(1);
-    assertThat(charges.get(0).kind()).isEqualTo(ChargeKind.SUPPLIER);
+    assertThat(charges.get(0).kind()).isEqualTo(ChargeKindCodes.SUPPLIER);
     assertThat(charges.get(0).costBearer()).isEqualTo(CostBearer.SUPPLIER);
   }
 }

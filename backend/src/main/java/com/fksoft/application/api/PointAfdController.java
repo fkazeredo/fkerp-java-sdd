@@ -1,6 +1,5 @@
 package com.fksoft.application.api;
 
-import com.fksoft.domain.compliance.DocumentType;
 import com.fksoft.domain.compliance.DocumentView;
 import com.fksoft.domain.people.PointAfdInvalidException;
 import com.fksoft.infra.integration.pointclock.AfdIngestionService;
@@ -36,7 +35,7 @@ public class PointAfdController {
   @PostMapping(path = "/afd", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<DocumentView> ingestAfd(
       @RequestParam("file") MultipartFile file,
-      @RequestParam(value = "type", defaultValue = "TIME_RECORD_AFD") DocumentType type,
+      @RequestParam(value = "type", defaultValue = "TIME_RECORD_AFD") String type,
       @RequestParam("issuedAt") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate issuedAt,
       @RequestParam("periodRef") String periodRef,
       @RequestParam("expectedContentHash") String expectedContentHash) {

@@ -1,9 +1,9 @@
 package com.fksoft.infra.integration.pointclock;
 
 import com.fksoft.domain.compliance.ComplianceService;
-import com.fksoft.domain.compliance.DocumentType;
+import com.fksoft.domain.compliance.DocumentTypeCodes;
 import com.fksoft.domain.compliance.DocumentView;
-import com.fksoft.domain.compliance.SignedFormat;
+import com.fksoft.domain.compliance.SignedFormatCodes;
 import com.fksoft.domain.people.LegalTimeRecordArchived;
 import com.fksoft.domain.people.PointAfdInvalidException;
 import java.time.Clock;
@@ -51,7 +51,8 @@ public class AfdIngestionService {
    * (BR4). Rejects a tampered/invalid artifact with {@link PointAfdInvalidException} (400) before
    * anything is stored.
    *
-   * @param type the legal record type ({@code TIME_RECORD_AFD} or {@code PROCESSED_JOURNAL_AEJ})
+   * @param type the legal record type cadastro code ({@code TIME_RECORD_AFD} or {@code
+   *     PROCESSED_JOURNAL_AEJ})
    * @param signedFile the signed {@code .p7s} bytes (the original, preserved as-is — BR4)
    * @param originalFilename the original filename (validated by the vault; never trusted as the
    *     ref)
@@ -64,14 +65,15 @@ public class AfdIngestionService {
    * @throws PointAfdInvalidException when signature/integrity verification fails (BR4)
    */
   public DocumentView ingest(
-      DocumentType type,
+      String type,
       byte[] signedFile,
       String originalFilename,
       String expectedContentHash,
       LocalDate issuedAt,
       String periodRef,
       String actor) {
-    if (type != DocumentType.TIME_RECORD_AFD && type != DocumentType.PROCESSED_JOURNAL_AEJ) {
+    if (!DocumentTypeCodes.TIME_RECORD_AFD.equals(type)
+        && !DocumentTypeCodes.PROCESSED_JOURNAL_AEJ.equals(type)) {
       // Only the two legal time-record types go through this path.
       throw new PointAfdInvalidException();
     }
@@ -86,7 +88,7 @@ public class AfdIngestionService {
             originalFilename,
             "application/pkcs7-signature",
             issuedAt,
-            SignedFormat.CAdES_P7S,
+            SignedFormatCodes.CAdES_P7S,
             true, // AFD/AEJ carries CPF/PIS — personal data (LGPD)
             null,
             null,

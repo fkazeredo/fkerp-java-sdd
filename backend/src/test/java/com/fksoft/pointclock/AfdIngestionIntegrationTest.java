@@ -2,9 +2,9 @@ package com.fksoft.pointclock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fksoft.domain.compliance.DocumentType;
+import com.fksoft.domain.compliance.DocumentTypeCodes;
 import com.fksoft.domain.compliance.DocumentView;
-import com.fksoft.domain.compliance.SignedFormat;
+import com.fksoft.domain.compliance.SignedFormatCodes;
 import com.fksoft.infra.integration.pointclock.AfdEnvelopeFixtures;
 import com.fksoft.infra.web.ApiErrorResponse;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
@@ -58,8 +58,8 @@ class AfdIngestionIntegrationTest extends AbstractPostgresIntegrationTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     DocumentView document = response.getBody();
     assertThat(document).isNotNull();
-    assertThat(document.type()).isEqualTo(DocumentType.TIME_RECORD_AFD);
-    assertThat(document.signedFormat()).isEqualTo(SignedFormat.CAdES_P7S);
+    assertThat(document.type()).isEqualTo(DocumentTypeCodes.TIME_RECORD_AFD);
+    assertThat(document.signedFormat()).isEqualTo(SignedFormatCodes.CAdES_P7S);
     assertThat(document.hasPersonalData()).isTrue(); // CPF/PIS (LGPD)
     // 5-year legal retention (CTN 173/174; trabalhista) — issued 2026-06-30 → 2031-06-30.
     assertThat(document.retentionUntil()).isEqualTo(LocalDate.of(2031, 6, 30));
@@ -84,8 +84,8 @@ class AfdIngestionIntegrationTest extends AbstractPostgresIntegrationTest {
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(response.getBody()).isNotNull();
-    assertThat(response.getBody().type()).isEqualTo(DocumentType.PROCESSED_JOURNAL_AEJ);
-    assertThat(response.getBody().signedFormat()).isEqualTo(SignedFormat.CAdES_P7S);
+    assertThat(response.getBody().type()).isEqualTo(DocumentTypeCodes.PROCESSED_JOURNAL_AEJ);
+    assertThat(response.getBody().signedFormat()).isEqualTo(SignedFormatCodes.CAdES_P7S);
   }
 
   @Test

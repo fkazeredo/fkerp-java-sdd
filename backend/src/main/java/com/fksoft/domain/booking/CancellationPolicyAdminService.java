@@ -1,5 +1,7 @@
 package com.fksoft.domain.booking;
 
+import com.fksoft.domain.cadastro.CadastroType;
+import com.fksoft.domain.cadastro.CadastroValidator;
 import java.time.Clock;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CancellationPolicyAdminService {
 
   private final CancellationPolicySourceRepository repository;
+  private final CadastroValidator cadastroValidator;
   private final Clock clock;
 
   /**
@@ -52,6 +55,10 @@ public class CancellationPolicyAdminService {
     if (scopeRef == null || scopeRef.isBlank()) {
       throw new CancellationPolicyInvalidException();
     }
+    // Validate the cancellation-type reference code against the cadastro (SPEC-0031 BR3/DL-0117) —
+    // an unknown/inactive type is rejected (422) before the policy is stored, so the penalty/
+    // merchant-trap logic only ever sees a known type.
+    cadastroValidator.validate(CadastroType.CANCELLATION_TYPE, policy.type());
     String ref = scopeRef.trim();
     CancellationPolicySource source =
         repository

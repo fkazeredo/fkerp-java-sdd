@@ -4,8 +4,6 @@ import com.fksoft.domain.ModuleInternal;
 import com.fksoft.domain.money.Money;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
@@ -36,11 +34,11 @@ public class SourcedOffer {
   private BigDecimal baseAmount;
   private String baseCurrency;
 
-  @Enumerated(EnumType.STRING)
-  private OfferOrigin origin;
+  /** The offer origin cadastro code (was {@code OfferOrigin}; SPEC-0031/DL-0117). */
+  private String origin;
 
-  @Enumerated(EnumType.STRING)
-  private IntegrationLevel integrationLevel;
+  /** The integration level cadastro code (was {@code IntegrationLevel}; SPEC-0031/DL-0117). */
+  private String integrationLevel;
 
   private String externalRef;
 
@@ -56,8 +54,8 @@ public class SourcedOffer {
    *
    * @param productText free-text product description (non-empty)
    * @param basePrice the base price in the supplier's currency
-   * @param origin where the offer comes from
-   * @param integrationLevel how integrated the source is
+   * @param origin where the offer comes from (offer-origin cadastro code)
+   * @param integrationLevel how integrated the source is (integration-level cadastro code)
    * @param externalRef optional external reference (e.g. an external quotation id)
    * @param now creation instant (UTC)
    * @param actor who registered it (audit)
@@ -67,8 +65,8 @@ public class SourcedOffer {
   public static SourcedOffer register(
       String productText,
       Money basePrice,
-      OfferOrigin origin,
-      IntegrationLevel integrationLevel,
+      String origin,
+      String integrationLevel,
       String externalRef,
       Instant now,
       String actor) {

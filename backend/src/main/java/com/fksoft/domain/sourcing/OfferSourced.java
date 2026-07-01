@@ -9,9 +9,9 @@ import java.util.UUID;
  * contract/outbox once another module or service consumes it (messaging-and-integrations.md).
  *
  * @param offerId the registered offer id
- * @param origin where the offer comes from
- * @param integrationLevel how integrated the source is
+ * @param origin where the offer comes from (offer-origin cadastro code)
+ * @param integrationLevel how integrated the source is (integration-level cadastro code)
  * @param occurredAt when the offer was sourced
  */
 public record OfferSourced(
-    UUID offerId, OfferOrigin origin, IntegrationLevel integrationLevel, Instant occurredAt) {}
+    UUID offerId, String origin, String integrationLevel, Instant occurredAt) {}

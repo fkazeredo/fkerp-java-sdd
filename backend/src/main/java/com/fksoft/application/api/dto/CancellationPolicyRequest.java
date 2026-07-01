@@ -1,11 +1,11 @@
 package com.fksoft.application.api.dto;
 
 import com.fksoft.domain.booking.CancellationPolicy;
-import com.fksoft.domain.booking.CancellationType;
 import com.fksoft.domain.booking.CostBearer;
 import com.fksoft.domain.booking.NoShowPolicy;
 import com.fksoft.domain.booking.PenaltyWindow;
 import com.fksoft.domain.money.Money;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.List;
@@ -14,9 +14,11 @@ import java.util.List;
  * Request body for {@code PUT /api/products/{ref}/cancellation-policy} (SPEC-0010): the
  * cancellation policy and the no-show policy to administer for a product/supplier scope.
  * Window/percentage validation lives in the domain value objects (a malformed window surfaces as
- * {@code cancellation.policy.invalid}).
+ * {@code cancellation.policy.invalid}). The {@code type} is a cancellation-type cadastro code (was
+ * {@code CancellationType}; SPEC-0031/DL-0117) — the wire stays a string, validated against the
+ * cadastro by the service.
  *
- * @param type the cancellation type (required)
+ * @param type the cancellation-type cadastro code (required)
  * @param windows the penalty windows (may be empty/null)
  * @param refundable whether the sale is refundable from the supplier's point of view (required)
  * @param costBearer who bears a STANDARD/CUSTOM penalty (required)
@@ -25,7 +27,7 @@ import java.util.List;
  * @param waivedIfFlightCancelled whether the no-show fee is waived with proof of a cancelled flight
  */
 public record CancellationPolicyRequest(
-    @NotNull CancellationType type,
+    @NotBlank String type,
     List<WindowRequest> windows,
     @NotNull Boolean refundable,
     @NotNull CostBearer costBearer,

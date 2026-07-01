@@ -32,8 +32,8 @@ public class CancellationPolicySource {
 
   private String scopeRef;
 
-  @Enumerated(EnumType.STRING)
-  private CancellationType type;
+  /** The cancellation-type cadastro code (was {@code CancellationType}; SPEC-0031/DL-0117). */
+  private String type;
 
   private String windowsEncoded;
 

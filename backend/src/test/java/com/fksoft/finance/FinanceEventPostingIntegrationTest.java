@@ -3,9 +3,9 @@ package com.fksoft.finance;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fksoft.domain.booking.CancellationCharged;
-import com.fksoft.domain.booking.CancellationType;
+import com.fksoft.domain.booking.CancellationTypeCodes;
 import com.fksoft.domain.booking.Charge;
-import com.fksoft.domain.booking.ChargeKind;
+import com.fksoft.domain.booking.ChargeKindCodes;
 import com.fksoft.domain.booking.CostBearer;
 import com.fksoft.domain.booking.MerchantObligationIncurred;
 import com.fksoft.domain.booking.NoShowCharged;
@@ -53,14 +53,14 @@ class FinanceEventPostingIntegrationTest extends AbstractPostgresIntegrationTest
             bookingId,
             List.of(
                 new Charge(
-                    ChargeKind.PENALTY,
+                    ChargeKindCodes.PENALTY,
                     Money.of(new BigDecimal("1350.00"), "BRL"),
                     CostBearer.AGENCY),
                 new Charge(
-                    ChargeKind.CUSTOMER_REFUND,
+                    ChargeKindCodes.CUSTOMER_REFUND,
                     Money.of(new BigDecimal("2700.00"), "BRL"),
                     CostBearer.ACME)),
-            CancellationType.STANDARD,
+            CancellationTypeCodes.STANDARD,
             occurredAt));
 
     List<Map<String, Object>> rows =
@@ -98,10 +98,10 @@ class FinanceEventPostingIntegrationTest extends AbstractPostgresIntegrationTest
             bookingId,
             List.of(
                 new Charge(
-                    ChargeKind.PENALTY,
+                    ChargeKindCodes.PENALTY,
                     Money.of(new BigDecimal("1350.00"), "BRL"),
                     CostBearer.AGENCY)),
-            CancellationType.STANDARD,
+            CancellationTypeCodes.STANDARD,
             Instant.parse("2026-06-15T12:00:00Z"));
 
     events.publishEvent(event);
@@ -120,7 +120,8 @@ class FinanceEventPostingIntegrationTest extends AbstractPostgresIntegrationTest
     UUID bookingId = UUID.randomUUID();
     Instant occurredAt = Instant.parse("2026-06-15T12:00:00Z");
     Charge supplier =
-        new Charge(ChargeKind.SUPPLIER, Money.of(new BigDecimal("500.00"), "USD"), CostBearer.ACME);
+        new Charge(
+            ChargeKindCodes.SUPPLIER, Money.of(new BigDecimal("500.00"), "USD"), CostBearer.ACME);
 
     // ALL_SALES_FINAL publishes the supplier obligation in BOTH forms; it must post only ONCE.
     events.publishEvent(
@@ -129,10 +130,10 @@ class FinanceEventPostingIntegrationTest extends AbstractPostgresIntegrationTest
             List.of(
                 supplier,
                 new Charge(
-                    ChargeKind.CUSTOMER_REFUND,
+                    ChargeKindCodes.CUSTOMER_REFUND,
                     Money.of(new BigDecimal("2700.00"), "BRL"),
                     CostBearer.ACME)),
-            CancellationType.ALL_SALES_FINAL,
+            CancellationTypeCodes.ALL_SALES_FINAL,
             occurredAt));
     events.publishEvent(new MerchantObligationIncurred(bookingId, supplier, occurredAt));
 

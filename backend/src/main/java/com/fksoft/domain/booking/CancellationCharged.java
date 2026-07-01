@@ -11,8 +11,8 @@ import java.util.UUID;
  *
  * @param bookingId the cancelled booking id
  * @param charges the resulting charges
- * @param policyType the type of the frozen policy applied
+ * @param policyType the cancellation-type cadastro code of the frozen policy applied
  * @param occurredAt when the cancellation happened
  */
 public record CancellationCharged(
-    UUID bookingId, List<Charge> charges, CancellationType policyType, Instant occurredAt) {}
+    UUID bookingId, List<Charge> charges, String policyType, Instant occurredAt) {}
