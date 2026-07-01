@@ -1,0 +1,248 @@
+<section class="page">
+  <h1 class="page__title">{{ 'marketing.title' | translate }}</h1>
+
+  <!-- Consent (LGPD) -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'marketing.consent' | translate }}</h2>
+      <div class="form__row">
+        <div class="field">
+          <label for="mk-subject">{{ 'marketing.subject' | translate }}</label>
+          <input pInputText id="mk-subject" name="subject" [(ngModel)]="consentSubject" (keyup.enter)="lookupConsent()" />
+        </div>
+        <div class="field">
+          <label for="mk-subject-type">{{ 'marketing.subjectType' | translate }}</label>
+          <p-select inputId="mk-subject-type" name="subjectType" [(ngModel)]="consentSubjectType" [options]="subjectTypes" appendTo="body" />
+        </div>
+      </div>
+      <p-button
+        [label]="'marketing.lookupConsent' | translate"
+        icon="pi pi-search"
+        (onClick)="lookupConsent()"
+        [disabled]="!consentSubject"
+        data-testid="marketing-consent-find"
+      />
+    </div>
+
+    @if (consentState() === 'success' && consent(); as c) {
+      <dl class="kv" data-testid="marketing-consent-state">
+        <dt>{{ 'marketing.currentStatus' | translate }}</dt>
+        <dd><p-tag [value]="c.current.currentStatus" [severity]="consentSeverity(c.current.currentStatus)" /></dd>
+        <dt>{{ 'marketing.lastChangedAt' | translate }}</dt>
+        <dd>{{ c.current.lastChangedAt }}</dd>
+      </dl>
+    }
+
+    <h3 class="app-card__title">{{ 'marketing.history' | translate }}</h3>
+    <app-screen-state
+      [state]="historyState()"
+      [errorCode]="consentError()"
+      emptyKey="marketing.historyEmpty"
+      (retry)="lookupConsent()"
+    >
+      <p-table [value]="consent()?.history ?? []" data-testid="marketing-history">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'marketing.status' | translate }}</th>
+            <th>{{ 'marketing.legalBasis' | translate }}</th>
+            <th>{{ 'marketing.source' | translate }}</th>
+            <th>{{ 'marketing.createdAt' | translate }}</th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-row>
+          <tr>
+            <td><p-tag [value]="row.status" [severity]="consentSeverity(row.status)" /></td>
+            <td>{{ row.legalBasis }}</td>
+            <td>{{ row.source ?? '—' }}</td>
+            <td>{{ row.createdAt }}</td>
+            <td>
+              @if (row.status === 'GRANTED') {
+                <p-button size="small" [text]="true" severity="danger" [label]="'marketing.revoke' | translate" (onClick)="revokeConsent(row.id)" [disabled]="grantBusy()" />
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+
+    <!-- Grant consent -->
+    <h3 class="app-card__title">{{ 'marketing.grant' | translate }}</h3>
+    @if (grantError()) {
+      <p-message severity="error" data-testid="marketing-grant-error">{{ grantError() | translate }}</p-message>
+    }
+    <div class="form__row">
+      <div class="field">
+        <label for="mk-legal">{{ 'marketing.legalBasis' | translate }}</label>
+        <p-select inputId="mk-legal" name="legalBasis" [(ngModel)]="grantLegalBasis" [options]="legalBases" appendTo="body" />
+      </div>
+      <div class="field">
+        <label for="mk-source">{{ 'marketing.source' | translate }}</label>
+        <input pInputText id="mk-source" name="source" [(ngModel)]="grantSource" />
+      </div>
+    </div>
+    <div class="actions">
+      <p-button [label]="'marketing.grantAction' | translate" icon="pi pi-check" (onClick)="grantConsent()" [loading]="grantBusy()" [disabled]="grantBusy() || !consentSubject" data-testid="marketing-grant" />
+    </div>
+  </div>
+
+  <!-- Segments -->
+  <form class="app-card" (ngSubmit)="defineSegment()" #sf="ngForm">
+    <h2 class="app-card__title">{{ 'marketing.segment' | translate }}</h2>
+    <div class="form__row">
+      <div class="field">
+        <label for="mk-seg-name">{{ 'marketing.segmentName' | translate }}</label>
+        <input pInputText id="mk-seg-name" name="segName" [(ngModel)]="segmentName" required />
+      </div>
+      <div class="field">
+        <label for="mk-seg-criteria">{{ 'marketing.criteria' | translate }}</label>
+        <input pInputText id="mk-seg-criteria" name="segCriteria" [(ngModel)]="segmentCriteria" [placeholder]="'marketing.criteriaHint' | translate" />
+      </div>
+    </div>
+    @if (segmentError()) {
+      <p-message severity="error" data-testid="marketing-segment-error">{{ segmentError() | translate }}</p-message>
+    }
+    <div class="actions">
+      <p-button type="submit" [label]="'marketing.defineSegmentAction' | translate" [loading]="segmentBusy()" [disabled]="segmentBusy() || sf.invalid" />
+    </div>
+    @if (segment(); as seg) {
+      <dl class="kv" data-testid="marketing-segment">
+        <dt>{{ 'marketing.segmentName' | translate }}</dt>
+        <dd>{{ seg.name }} ({{ seg.id }})</dd>
+        <dt>{{ 'marketing.reach' | translate }}</dt>
+        <dd>{{ preview()?.reachable ?? '—' }}</dd>
+      </dl>
+    }
+  </form>
+
+  <!-- Campaign -->
+  <form class="app-card" (ngSubmit)="createCampaign()" #cf="ngForm">
+    <h2 class="app-card__title">{{ 'marketing.campaign' | translate }}</h2>
+    <div class="form__row">
+      <div class="field">
+        <label for="mk-cmp-segment">{{ 'marketing.segmentId' | translate }}</label>
+        <input pInputText id="mk-cmp-segment" name="cmpSegment" [(ngModel)]="campaignSegmentId" required />
+      </div>
+      <div class="field">
+        <label for="mk-cmp-code">{{ 'marketing.campaignCode' | translate }}</label>
+        <input pInputText id="mk-cmp-code" name="cmpCode" [(ngModel)]="campaignCode" required />
+      </div>
+      <div class="field">
+        <label for="mk-cmp-content">{{ 'marketing.contentRef' | translate }}</label>
+        <input pInputText id="mk-cmp-content" name="cmpContent" [(ngModel)]="campaignContentRef" />
+      </div>
+    </div>
+    @if (campaignError()) {
+      <p-message severity="error" data-testid="marketing-campaign-error">{{ campaignError() | translate }}</p-message>
+    }
+    <div class="actions">
+      <p-button type="submit" [label]="'marketing.createCampaignAction' | translate" [loading]="campaignBusy()" [disabled]="campaignBusy() || cf.invalid" />
+      @if (campaign(); as cmp) {
+        <p-button [label]="'marketing.sendCampaignAction' | translate" icon="pi pi-send" severity="secondary" (onClick)="sendCampaign()" [loading]="campaignBusy()" [disabled]="campaignBusy()" data-testid="marketing-send" />
+      }
+    </div>
+    @if (campaign(); as cmp) {
+      <dl class="kv" data-testid="marketing-campaign">
+        <dt>{{ 'marketing.campaignCode' | translate }}</dt>
+        <dd>{{ cmp.code }} ({{ cmp.id }})</dd>
+        <dt>{{ 'marketing.status' | translate }}</dt>
+        <dd><p-tag [value]="cmp.status" [severity]="campaignSeverity(cmp.status)" /></dd>
+      </dl>
+    }
+    @if (sendResult(); as sr) {
+      <dl class="kv" data-testid="marketing-send-result">
+        <dt>{{ 'marketing.targeted' | translate }}</dt>
+        <dd>{{ sr.targeted }}</dd>
+        <dt>{{ 'marketing.suppressed' | translate }}</dt>
+        <dd>{{ sr.suppressedNoConsent }}</dd>
+        <dt>{{ 'marketing.queued' | translate }}</dt>
+        <dd>{{ sr.queued }}</dd>
+      </dl>
+    }
+  </form>
+
+  <!-- Attribution -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'marketing.attribution' | translate }}</h2>
+      <div class="form__row">
+        <div class="field">
+          <label for="mk-att-code">{{ 'marketing.campaignCode' | translate }}</label>
+          <input pInputText id="mk-att-code" name="attCode" [(ngModel)]="attributionCode" (keyup.enter)="loadAttribution()" />
+        </div>
+        <div class="field">
+          <label for="mk-att-booking">{{ 'marketing.bookingId' | translate }}</label>
+          <input pInputText id="mk-att-booking" name="attBooking" [(ngModel)]="attributionBooking" />
+        </div>
+      </div>
+      <div class="actions">
+        <p-button [label]="'marketing.registerAttributionAction' | translate" icon="pi pi-link" (onClick)="registerAttribution()" [disabled]="!attributionCode || !attributionBooking" />
+        <p-button [label]="'marketing.loadAttributionAction' | translate" icon="pi pi-search" severity="secondary" (onClick)="loadAttribution()" [disabled]="!attributionCode" data-testid="marketing-attribution-find" />
+      </div>
+    </div>
+    @if (attributionError()) {
+      <p-message severity="error" data-testid="marketing-attribution-error">{{ attributionError() | translate }}</p-message>
+    }
+    <app-screen-state
+      [state]="attributionListState()"
+      [errorCode]="attributionError()"
+      emptyKey="marketing.attributionEmpty"
+      (retry)="loadAttribution()"
+    >
+      <p-table [value]="attributions()" data-testid="marketing-attribution-table">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'marketing.campaignCode' | translate }}</th>
+            <th>{{ 'marketing.bookingId' | translate }}</th>
+            <th>{{ 'marketing.converted' | translate }}</th>
+            <th>{{ 'marketing.createdAt' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-row>
+          <tr>
+            <td>{{ row.campaignCode }}</td>
+            <td>{{ row.bookingId }}</td>
+            <td>
+              @if (row.converted) {
+                <p-tag [value]="'marketing.convertedYes' | translate" severity="success" />
+              } @else {
+                <p-tag [value]="'marketing.convertedNo' | translate" severity="secondary" />
+              }
+            </td>
+            <td>{{ row.attributedAt }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+  </div>
+
+  <!-- LGPD erasure -->
+  <div class="app-card">
+    <h2 class="app-card__title">{{ 'marketing.erasure' | translate }}</h2>
+    <p class="app-muted">{{ 'marketing.erasureHint' | translate }}</p>
+    <div class="form__row">
+      <div class="field">
+        <label for="mk-er-subject">{{ 'marketing.subject' | translate }}</label>
+        <input pInputText id="mk-er-subject" name="erSubject" [(ngModel)]="erasureSubject" />
+      </div>
+      <div class="field">
+        <label for="mk-er-type">{{ 'marketing.subjectType' | translate }}</label>
+        <p-select inputId="mk-er-type" name="erType" [(ngModel)]="erasureSubjectType" [options]="subjectTypes" appendTo="body" />
+      </div>
+    </div>
+    @if (erasureError()) {
+      <p-message severity="error" data-testid="marketing-erasure-error">{{ erasureError() | translate }}</p-message>
+    }
+    <div class="actions">
+      <p-button [label]="'marketing.eraseAction' | translate" icon="pi pi-trash" severity="danger" (onClick)="erase()" [loading]="erasureBusy()" [disabled]="erasureBusy() || !erasureSubject" data-testid="marketing-erase" />
+    </div>
+    @if (erasureResult(); as er) {
+      <dl class="kv" data-testid="marketing-erasure-result">
+        <dt>{{ 'marketing.anonymized' | translate }}</dt>
+        <dd>{{ er.anonymizedConsents }}</dd>
+        <dt>{{ 'marketing.suppressedSubject' | translate }}</dt>
+        <dd>{{ er.suppressed ? ('common.yes' | translate) : ('common.no' | translate) }}</dd>
+      </dl>
+    }
+  </div>
+</section>

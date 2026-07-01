@@ -1,0 +1,196 @@
+<section class="page">
+  <h1 class="page__title">{{ 'intelligence.title' | translate }}</h1>
+  <p class="app-muted">{{ 'intelligence.subtitle' | translate }}</p>
+
+  <!-- Insight list -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'intelligence.insights' | translate }}</h2>
+      <div class="form__row">
+        <div class="field">
+          <label for="in-f-type">{{ 'intelligence.type' | translate }}</label>
+          <p-select
+            inputId="in-f-type"
+            name="fType"
+            [(ngModel)]="filterType"
+            (ngModelChange)="load()"
+            [options]="types"
+            [showClear]="true"
+            [placeholder]="'common.all' | translate"
+            appendTo="body"
+          />
+        </div>
+        <div class="field">
+          <label for="in-f-status">{{ 'intelligence.status' | translate }}</label>
+          <p-select
+            inputId="in-f-status"
+            name="fStatus"
+            [(ngModel)]="filterStatus"
+            (ngModelChange)="load()"
+            [options]="statuses"
+            [showClear]="true"
+            [placeholder]="'common.all' | translate"
+            appendTo="body"
+          />
+        </div>
+        <div class="field">
+          <label for="in-f-subject">{{ 'intelligence.subjectRef' | translate }}</label>
+          <input
+            pInputText
+            id="in-f-subject"
+            name="fSubject"
+            [(ngModel)]="filterSubject"
+            (keyup.enter)="load()"
+          />
+        </div>
+      </div>
+    </div>
+
+    <app-screen-state
+      [state]="listState()"
+      [errorCode]="errorCode()"
+      emptyKey="intelligence.empty"
+      (retry)="load()"
+    >
+      <p-table
+        [value]="insights()"
+        data-testid="intelligence-table"
+        [rows]="10"
+        [paginator]="insights().length > 10"
+      >
+        <ng-template #header>
+          <tr>
+            <th>{{ 'intelligence.type' | translate }}</th>
+            <th>{{ 'intelligence.subject' | translate }}</th>
+            <th>{{ 'intelligence.verdict' | translate }}</th>
+            <th>{{ 'intelligence.estimatedGain' | translate }}</th>
+            <th>{{ 'intelligence.guardrail' | translate }}</th>
+            <th>{{ 'intelligence.status' | translate }}</th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-i>
+          <tr>
+            <td>{{ i.type }}</td>
+            <td>{{ i.subjectKind }} · {{ i.subjectRef }}</td>
+            <td>
+              <p-tag
+                [value]="i.recommendation.verdict"
+                [severity]="verdictSeverity(i.recommendation.verdict)"
+              />
+            </td>
+            <td>{{ format(i.recommendation.estimatedGain) }}</td>
+            <td>
+              @if (i.guardrail) {
+                <p-tag [value]="'intelligence.guardrailCrossed' | translate" severity="danger" />
+              } @else {
+                <span class="app-muted">—</span>
+              }
+            </td>
+            <td><p-tag [value]="i.status" [severity]="statusSeverity(i.status)" /></td>
+            <td>
+              <p-button
+                size="small"
+                [text]="true"
+                [label]="'intelligence.open' | translate"
+                (onClick)="select(i)"
+              />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+  </div>
+
+  <!-- Selected insight detail + decision -->
+  @if (selected(); as i) {
+    <div class="app-card" data-testid="intelligence-detail">
+      <h2 class="app-card__title">{{ 'intelligence.detail' | translate }}</h2>
+
+      <h3 class="app-card__title">{{ 'intelligence.evidence' | translate }}</h3>
+      <dl class="kv">
+        <dt>{{ 'intelligence.type' | translate }}</dt>
+        <dd>{{ i.type }}</dd>
+        <dt>{{ 'intelligence.subject' | translate }}</dt>
+        <dd>{{ i.subjectKind }} · {{ i.subjectRef }}</dd>
+        <dt>{{ 'intelligence.accruedSubsidy' | translate }}</dt>
+        <dd>{{ format(i.evidence.accruedSubsidy) }}</dd>
+        <dt>{{ 'intelligence.realizedGap' | translate }}</dt>
+        <dd>{{ format(i.evidence.realizedGap) }}</dd>
+        <dt>{{ 'intelligence.volumeAttracted' | translate }}</dt>
+        <dd>{{ i.evidence.volumeAttracted }}</dd>
+        <dt>{{ 'intelligence.sources' | translate }}</dt>
+        <dd>{{ i.evidence.sources.join(', ') }}</dd>
+      </dl>
+
+      <h3 class="app-card__title">{{ 'intelligence.recommendation' | translate }}</h3>
+      <dl class="kv">
+        <dt>{{ 'intelligence.verdict' | translate }}</dt>
+        <dd>
+          <p-tag
+            [value]="i.recommendation.verdict"
+            [severity]="verdictSeverity(i.recommendation.verdict)"
+          />
+        </dd>
+        <dt>{{ 'intelligence.action' | translate }}</dt>
+        <dd>{{ i.recommendation.action }}</dd>
+        <dt>{{ 'intelligence.estimatedGain' | translate }}</dt>
+        <dd>{{ format(i.recommendation.estimatedGain) }}</dd>
+        <dt>{{ 'intelligence.estimatedRisk' | translate }}</dt>
+        <dd>{{ format(i.recommendation.estimatedRisk) }}</dd>
+      </dl>
+
+      @if (i.guardrail; as g) {
+        <p-message severity="warn" data-testid="intelligence-guardrail">
+          {{ g.description }} — {{ format(g.thresholdCrossed) }}
+        </p-message>
+      }
+
+      <dl class="kv">
+        <dt>{{ 'intelligence.status' | translate }}</dt>
+        <dd><p-tag [value]="i.status" [severity]="statusSeverity(i.status)" /></dd>
+        <dt>{{ 'intelligence.decidedBy' | translate }}</dt>
+        <dd>{{ i.decidedBy }}</dd>
+        <dt>{{ 'intelligence.decidedAt' | translate }}</dt>
+        <dd>{{ i.decidedAt }}</dd>
+        <dt>{{ 'intelligence.generatedAt' | translate }}</dt>
+        <dd>{{ i.generatedAt }}</dd>
+      </dl>
+
+      <!-- Record the human decision -->
+      <h3 class="app-card__title">{{ 'intelligence.decide' | translate }}</h3>
+      <p class="app-muted">{{ 'intelligence.decideHint' | translate }}</p>
+      @if (decisionError()) {
+        <p-message severity="error" data-testid="intelligence-decide-error">
+          {{ decisionError() | translate }}
+        </p-message>
+      }
+      <div class="form__row">
+        <div class="field">
+          <label for="in-decision">{{ 'intelligence.decision' | translate }}</label>
+          <p-select
+            inputId="in-decision"
+            name="decision"
+            [(ngModel)]="decision"
+            [options]="decisions"
+            appendTo="body"
+          />
+        </div>
+        <div class="field">
+          <label for="in-note">{{ 'intelligence.note' | translate }}</label>
+          <input pInputText id="in-note" name="note" [(ngModel)]="decisionNote" />
+        </div>
+      </div>
+      <div class="actions">
+        <p-button
+          [label]="'intelligence.decideAction' | translate"
+          icon="pi pi-check"
+          [loading]="busy()"
+          [disabled]="busy()"
+          (onClick)="decide()"
+          data-testid="intelligence-decide"
+        />
+      </div>
+    </div>
+  }
+</section>
