@@ -781,6 +781,31 @@ How to use it (menu **"Reference data"**, visible to the **Policy Admin** role):
 > validated against the cadastro; the API contract **did not change** (the JSON value is the same
 > text). The next slices (18b–18d) convert the remaining groups. See SPEC-0031 / ADR-0019 / DL-0115.
 
+### Phase 18b — More reference data (Marketing, Intelligence, Portfolio) and **labels on screens**
+
+This slice turns more reference lists into **editable cadastros**, now in the **Marketing**,
+**Intelligence** and **Portfolio** areas:
+
+- **Marketing:** the consent **purpose** (e.g. *Newsletter*) and the **subject type** (*Account
+  (agency)* / *Agent*).
+- **Intelligence:** the insight **axis** (*Agency*, *Route*, *Product*, *Supplier*), the **insight
+  type** (*FX advisor (promo)*, *Commission-tier nudge*) and the **verdict** (*Converts (keep)* /
+  *Burns margin (tighten)*).
+- **Portfolio:** the goal **metric** (*Volume (sales)* / *Revenue (BRL spread)*).
+
+You maintain these labels on the same **"Reference data"** screen (**Policy Admin** role), just like
+the 18a lists.
+
+**What everyone sees:** the **Marketing**, **Intelligence** and **Portfolio** screens now show the
+**human label** instead of the technical code. For example, the Intelligence screen shows *"FX advisor
+(promo)"* and *"Converts (keep)"* instead of `PROMO_FX_ADVISOR` and `CONVERTE`; Portfolio shows
+*"Revenue (BRL spread)"* instead of `REVENUE`. This also fixes, on these screens, the previous
+behavior (which showed the code).
+
+> **Nothing changes in what you record.** The underlying values are the same — only the **on-screen
+> text** got clearer. For the technical team: the Marketing/Intelligence/Portfolio enums became a
+> validated `code`; the `/api` contract **did not change**. See SPEC-0031 / ADR-0019 / DL-0116.
+
 
 ## 4. Glossary
 
@@ -880,6 +905,7 @@ How to use it (menu **"Reference data"**, visible to the **Policy Admin** role):
 | 0.27.0 | 16d — Operator screens: Back-office & IT (closes Phase 16) | **Six new screens** over APIs that already existed (no new rules): **People / HR** (collaborators, journey + time-bank, discrepancy queue), **Time clock** (REP crawl-run history + operational snapshot — read-only; AFD/AEJ and crawl trigger stay machine-to-machine, no screen), **Assets** (register/retire equipment and licenses + license-expiry sweep), **Back-office** (administrative suppliers/contracts/expenses + contract sweep — requires the Finance role), **Platform / IT** (governed jobs with catalog/history/trigger, e-CNPJ certificate **metadata only** — never the key/password, system audit), **Access** (role/permission catalogue and access audit). People/Time-clock/Assets/Platform appear for the **IT** role (there is no "HR" role); Back-office for **Finance**; Access for **Director/IT**. **Last of the four Phase 16 slices** — with it the whole operator-UI debt is paid off (DL-0109). |
 | 0.28.0 | 17 — Remove Keycloak → login served by the system itself | **Keycloak removed 100%.** Single sign-on (SSO) stays the same for the user (**"Sign in with SSO"** → username and password → Dashboard), but it is now served **by the ERP itself** (no external container). The **sample users** are back inside the system (`dev` + one per role, password `dev12345`, **development/tests only**). **Roles, permissions and the access audit stay the same**; the server remains the authority; the session renews on its own. **Breaking infrastructure change:** the Keycloak service, the `infra/keycloak/` folder and the `KEYCLOAK_*` vars are gone; the OIDC URL points at the app itself. No `/api` contract changed (ADR-0018). |
 | 0.29.0 | 18a — Reference data (editable lookups) | **New "Reference data" screen** (for the **Policy Admin** role): the system's reference lists — **expense kind, supplier/asset type, tax regime, withholding kind** — stop being hard-coded and become **editable cadastros** (rename the label, reorder, activate/deactivate and **add** items, **without a new release**). Each item's **code** is fixed (it is what old records keep); only label/order/active change. **Nothing changes for anyone already using the Back-office, Assets and Billing screens** — the values are the same, just editable; **no `/api` contract changed**. First group converted (Admin/Assets/Billing); the rest come in slices 18b–18d. (SPEC-0031 / ADR-0019 / DL-0115.) |
+| 0.30.0 | 18b — More reference data (Marketing/Intelligence/Portfolio) + labels on screens | More reference lists become **editable cadastros** on the "Reference data" screen: **Marketing** (consent purpose, subject type), **Intelligence** (insight axis, insight type, verdict) and **Portfolio** (goal metric). **What everyone sees:** the **Marketing, Intelligence and Portfolio** screens now show the **human label** instead of the technical code (e.g. *"FX advisor (promo)"*, *"Converts (keep)"*, *"Revenue (BRL spread)"*) — also fixing, on these screens, the previous code-only display. **Nothing changes in what you record**; the underlying values are the same and **no `/api` contract changed**. (SPEC-0031 / ADR-0019 / DL-0116.) |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of

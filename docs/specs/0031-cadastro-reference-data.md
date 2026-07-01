@@ -2,7 +2,8 @@
 
 Status: Approved
 Related ADRs: 0012, 0016, 0019
-Related DLs: DL-0115 (padrão enum→cadastro); DL-0085 (kind→entryType); DL-0044 (regime→estratégia)
+Related DLs: DL-0115 (padrão enum→cadastro, 18a); DL-0116 (enums Marketing/Intelligence/Portfolio,
+18b); DL-0085 (kind→entryType); DL-0044 (regime→estratégia)
 
 > Convenções herdadas da **SPEC-0001**. **Subdomínio de suporte** transversal: um **registry
 > genérico** de dados de referência editáveis (`cadastro_item`) que substitui os enums de negócio que
@@ -36,8 +37,14 @@ tela **"Cadastros"** para listar os tipos e manter os itens de cada tipo.
 - Tela **"Cadastros"** no shell (nav gated pelo papel admin) e ajuste das telas Admin/Assets/Billing
   para exibir rótulo do cadastro.
 
-**Fora de escopo (18b–18d):** os demais grupos de enums (Compliance/People/Intelligence/Portfolio/
-Booking/Payout/AfterSales/…), convertidos por grupo nas fatias seguintes, reusando este módulo.
+**Entregue (fatia 18b):** os grupos **Marketing** (`ConsentPurpose`, `SubjectType`), **Intelligence**
+(`SubjectKind`, `InsightType`, `Verdict`) e **Portfolio** (`GoalMetric`), convertidos reusando este
+módulo (DL-0116). As telas Marketing/Intelligence/Portfolio passam a exibir o **rótulo** do cadastro
+(lookup no frontend), retro-corrigindo o seam que 18a deixou (telas mostravam o code). Migração
+**V34** semeia os valores atuais.
+
+**Fora de escopo (18c–18d):** os demais grupos de enums (Compliance/People/Booking/Payout/
+AfterSales/…), convertidos por grupo nas fatias seguintes, reusando este módulo.
 
 **Nunca convertido:** máquinas de estado (`*Status`/lifecycle), técnicos (`*FailureClass`,
 circuit-breaker) e fixados por lei (`LegalType`, `LegalBasis`). O `EntryType` do Finance permanece
@@ -83,6 +90,23 @@ BR8  V33 semeia os valores atuais dos enums convertidos (Admin/Assets/Billing) c
 | assets  | `ASSET_TYPE`            | EQUIPMENT, SOFTWARE_LICENSE, OTHER                           | `SOFTWARE_LICENSE` exige `expiresAt` (BR1 SPEC-0021) |
 | billing | `WITHHOLDING_KIND`      | IRRF, PIS, COFINS, CSLL, ISS_RETIDO                         | `WithholdingKindCodes` (codec) |
 | billing | `TAX_REGIME`            | SIMPLES_NACIONAL, LUCRO_PRESUMIDO, LUCRO_REAL               | `TaxRegimeCodes`→estratégia (DL-0044) |
+
+### Enums convertidos nesta fatia (18b — DL-0116)
+
+| Módulo       | CadastroType             | Codes (semeados em V34)              | Ramificação preservada |
+|--------------|--------------------------|--------------------------------------|------------------------|
+| marketing    | `CONSENT_PURPOSE`        | NEWSLETTER                           | `MarketingCodes.NEWSLETTER` (base de envio; varredura da anonimização LGPD) |
+| marketing    | `MARKETING_SUBJECT_TYPE` | ACCOUNT, AGENT                       | — (valor/chave de consulta) |
+| intelligence | `INSIGHT_SUBJECT_KIND`   | AGENCY, ROUTE, PRODUCT, SUPPLIER     | `IntelligenceCodes.AGENCY` (produzido em v1) |
+| intelligence | `INSIGHT_TYPE`           | PROMO_FX_ADVISOR, OVERRIDE_NUDGE     | `IntelligenceCodes.PROMO_FX_ADVISOR` (chave do upsert) |
+| intelligence | `INSIGHT_VERDICT`        | CONVERTE, QUEIMA_MARGEM              | `IntelligenceCodes` (regra da guardrail no `isValid`; narrator) |
+| portfolio    | `GOAL_METRIC`            | VOLUME, REVENUE                      | `GoalMetricCodes` (VOLUME←BookingConfirmed, REVENUE←SpreadRealized; projeção DL-0062) |
+
+> Os três tipos `INSIGHT_*` são **produzidos pelo sistema** (o DSS os cunha de eventos consumidos;
+> nunca chegam como payload de criação): não há validação de escrita, mas são cadastros para que os
+> rótulos sejam editáveis e as telas mostrem o label. Marketing (`CONSENT_PURPOSE`/
+> `MARKETING_SUBJECT_TYPE`) e Portfolio (`GOAL_METRIC`) **são validados na escrita** pela porta
+> `CadastroValidator` (422 em código inválido/inativo).
 
 ## Tests Required
 

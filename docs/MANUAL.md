@@ -794,6 +794,31 @@ Como usar (menu **"Cadastros"**, visível para quem tem o perfil de **Curador de
 > `code` validado contra o cadastro; o contrato das APIs **não mudou** (o valor no JSON é o mesmo
 > texto). As próximas fatias (18b–18d) convertem os demais grupos. Ver SPEC-0031 / ADR-0019 / DL-0115.
 
+### Fase 18b — Mais cadastros (Marketing, Inteligência, Portfólio) e **rótulos nas telas**
+
+Esta fatia converte para **cadastros editáveis** mais listas de referência, agora nas áreas de
+**Marketing**, **Inteligência** e **Portfólio**:
+
+- **Marketing:** a **finalidade** do consentimento (ex.: *Newsletter*) e o **tipo de titular** (*Conta
+  (agência)* / *Agente*).
+- **Inteligência:** o **eixo** do insight (*Agência*, *Rota*, *Produto*, *Fornecedor*), o **tipo de
+  insight** (*Consultor de câmbio (promoção)*, *Alerta de faixa de comissão*) e o **veredito**
+  (*Converte (manter)* / *Queima margem (apertar)*).
+- **Portfólio:** a **métrica da meta** (*Volume (vendas)* / *Receita (spread BRL)*).
+
+Você mantém esses rótulos na mesma tela **"Cadastros"** (perfil **Curador de Políticas**), do mesmo
+jeito das listas de 18a.
+
+**A novidade que aparece para todos:** as telas de **Marketing**, **Inteligência** e **Portfólio**
+agora mostram o **rótulo em português** (o nome amigável) no lugar do código técnico. Por exemplo, a
+tela de Inteligência passa a exibir *"Consultor de câmbio (promoção)"* e *"Converte (manter)"* em vez
+de `PROMO_FX_ADVISOR` e `CONVERTE`; a de Portfólio mostra *"Receita (spread BRL)"* em vez de
+`REVENUE`. Isso também corrige, nessas telas, o comportamento anterior (que mostrava o código).
+
+> **Nada muda no que você registra.** Os valores por baixo continuam os mesmos — só o **texto na tela**
+> ficou mais claro. Para o time técnico: enums de Marketing/Inteligência/Portfólio viraram `code`
+> validado; o contrato `/api` **não mudou**. Ver SPEC-0031 / ADR-0019 / DL-0116.
+
 
 ## 4. Glossário
 
@@ -893,6 +918,7 @@ Como usar (menu **"Cadastros"**, visível para quem tem o perfil de **Curador de
 | 0.27.0 | 16d — Telas de operação: Back-office & TI (fecha a Fase 16) | **Seis telas novas** sobre APIs que já existiam (nenhuma regra nova): **Pessoas / RH** (colaboradores, jornada + banco de horas, fila de discrepâncias), **Ponto** (histórico de coletas do REP + espelho operacional — leituras; AFD/AEJ e disparo de coleta ficam entre sistemas, sem tela), **Patrimônio** (registro/baixa de equipamentos e licenças + varredura de licenças a vencer), **Back-office** (fornecedores/contratos/despesas administrativas + varredura de contratos — exige papel Financeiro), **Plataforma / TI** (jobs governados com catálogo/histórico/disparo, certificado e-CNPJ **só metadados** — nunca a chave/senha, auditoria de sistema), **Acesso** (catálogo de papéis/permissões e auditoria de acesso). Pessoas/Ponto/Patrimônio/Plataforma aparecem para o papel **TI** (não existe papel "RH"); Back-office para **Financeiro**; Acesso para **Diretor/TI**. **Última das quatro fatias da Fase 16** — com ela toda a dívida de UI de operação está quitada (DL-0109). |
 | 0.28.0 | 17 — Remover Keycloak → login servido pelo próprio sistema | **Keycloak removido 100%.** O login único (SSO) continua igual para o usuário (**"Entrar com SSO"** → usuário e senha → Painel), mas agora é servido **pelo próprio ERP** (sem contêiner externo). Voltam os **usuários de exemplo** dentro do sistema (`dev` + um por papel, senha `dev12345`, **só em desenvolvimento/testes**). **Papéis, permissões e auditoria de acesso continuam iguais**; o servidor segue sendo a autoridade; a sessão se renova sozinha. **Mudança incompatível de infraestrutura:** o serviço Keycloak, a pasta `infra/keycloak/` e as variáveis `KEYCLOAK_*` saíram; a URL do OIDC aponta para o próprio app. Nenhum contrato `/api` mudou (ADR-0018). |
 | 0.29.0 | 18a — Cadastros (dados de referência editáveis) | **Nova tela "Cadastros"** (para o perfil **Curador de Políticas**): as listas de referência do sistema — **natureza de despesa, tipo de fornecedor/ativo, regime tributário, tipo de retenção** — deixam de ser fixas no programa e viram **cadastros editáveis** (renomear rótulo, reordenar, ativar/desativar e **acrescentar** itens, **sem nova versão**). O **código** de cada item é fixo (é o que os registros antigos guardam); só o rótulo/ordem/ativação mudam. **Nada muda para quem já usava as telas de Back-office, Patrimônio e Faturamento** — os valores continuam os mesmos, só ficaram editáveis; **nenhum contrato `/api` mudou**. Primeiro grupo convertido (Admin/Assets/Billing); os próximos vêm nas fatias 18b–18d. (SPEC-0031 / ADR-0019 / DL-0115.) |
+| 0.30.0 | 18b — Mais cadastros (Marketing/Inteligência/Portfólio) + rótulos nas telas | Mais listas de referência viram **cadastros editáveis** na tela "Cadastros": **Marketing** (finalidade do consentimento, tipo de titular), **Inteligência** (eixo do insight, tipo de insight, veredito) e **Portfólio** (métrica da meta). **Novidade para todos:** as telas de **Marketing, Inteligência e Portfólio** passam a mostrar o **rótulo em português** no lugar do código técnico (ex.: *"Consultor de câmbio (promoção)"*, *"Converte (manter)"*, *"Receita (spread BRL)"*) — corrigindo também nessas telas o comportamento anterior que exibia o código. **Nada muda no que se registra**; os valores por baixo são os mesmos e **nenhum contrato `/api` mudou**. (SPEC-0031 / ADR-0019 / DL-0116.) |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.

@@ -204,7 +204,13 @@ public class OpenApiConfig {
                         + " POST/PUT/DELETE gated by ROLE_POLICY_ADMIN). The Admin/Assets/Billing"
                         + " reference enums (AdminExpenseKind/Recurrence/SupplierType, AssetType,"
                         + " WithholdingKind, TaxRegime) became validated string codes — the converted"
-                        + " fields keep their JSON schema (string), so NO existing /api contract changes.")
-                .version("0.29.0"));
+                        + " fields keep their JSON schema (string), so NO existing /api contract changes."
+                        + " Phase 18b (SPEC-0031 / DL-0116) converts the Marketing (ConsentPurpose,"
+                        + " SubjectType), Intelligence (SubjectKind, InsightType, Verdict) and Portfolio"
+                        + " (GoalMetric) reference enums to validated string codes reusing the Cadastro"
+                        + " module (seeded by V34). The converted fields keep their JSON schema (string),"
+                        + " so NO existing /api contract changes; the Marketing/Intelligence/Portfolio"
+                        + " screens now render the cadastro label.")
+                .version("0.30.0"));
   }
 }
