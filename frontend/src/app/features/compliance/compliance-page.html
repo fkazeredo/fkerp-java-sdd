@@ -162,7 +162,7 @@
         <dt>{{ 'compliance.documentId' | translate }}</dt>
         <dd>{{ doc.id }}</dd>
         <dt>{{ 'compliance.docType' | translate }}</dt>
-        <dd>{{ doc.type }}</dd>
+        <dd>{{ doc.type | cadastroLabel: 'DOCUMENT_TYPE' }}</dd>
         <dt>{{ 'compliance.hash' | translate }}</dt>
         <dd>{{ doc.hash }}</dd>
         <dt>{{ 'compliance.issuedAt' | translate }}</dt>
@@ -170,7 +170,7 @@
         <dt>{{ 'compliance.retentionUntil' | translate }}</dt>
         <dd>{{ doc.retentionUntil }}</dd>
         <dt>{{ 'compliance.signedFormat' | translate }}</dt>
-        <dd>{{ doc.signedFormat ?? '—' }}</dd>
+        <dd>{{ doc.signedFormat ? (doc.signedFormat | cadastroLabel: 'SIGNED_FORMAT') : '—' }}</dd>
         <dt>{{ 'compliance.hasPersonalData' | translate }}</dt>
         <dd>
           <p-tag

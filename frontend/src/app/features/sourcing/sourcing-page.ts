@@ -7,6 +7,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
+import { CadastroLabelPipe } from '../../core/cadastro/cadastro-label.pipe';
 import { ApiError } from '../../core/http/api-error';
 import { FormLeaveGuard } from '../../core/guards/can-deactivate.guard';
 import { formatMoney } from '../../core/models/api.models';
@@ -34,6 +35,7 @@ import { SourcingService } from './sourcing.service';
     SelectModule,
     TagModule,
     ScreenState,
+    CadastroLabelPipe,
   ],
   templateUrl: './sourcing-page.html',
 })

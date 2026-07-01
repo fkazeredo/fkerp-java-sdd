@@ -102,10 +102,13 @@
         <dt>{{ 'sourcing.basePrice' | translate }}</dt>
         <dd>{{ format(o.basePrice) }}</dd>
         <dt>{{ 'sourcing.origin' | translate }}</dt>
-        <dd><p-tag [value]="o.origin" severity="info" /></dd>
+        <dd><p-tag [value]="o.origin | cadastroLabel: 'OFFER_ORIGIN'" severity="info" /></dd>
         <dt>{{ 'sourcing.integrationLevel' | translate }}</dt>
         <dd>
-          <p-tag [value]="o.integrationLevel" [severity]="integrationSeverity(o.integrationLevel)" />
+          <p-tag
+            [value]="o.integrationLevel | cadastroLabel: 'INTEGRATION_LEVEL'"
+            [severity]="integrationSeverity(o.integrationLevel)"
+          />
         </dd>
         <dt>{{ 'sourcing.externalRef' | translate }}</dt>
         <dd>{{ o.externalRef }}</dd>

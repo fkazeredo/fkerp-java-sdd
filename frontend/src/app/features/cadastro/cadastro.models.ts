@@ -18,7 +18,16 @@ export type CadastroType =
   | 'INSIGHT_SUBJECT_KIND'
   | 'INSIGHT_TYPE'
   | 'INSIGHT_VERDICT'
-  | 'GOAL_METRIC';
+  | 'GOAL_METRIC'
+  // Slice 18c (DL-0117): Sourcing / Exchange / Booking / Compliance.
+  | 'OFFER_ORIGIN'
+  | 'INTEGRATION_LEVEL'
+  | 'MARKET_RATE_SOURCE'
+  | 'CHARGE_KIND'
+  | 'CANCELLATION_TYPE'
+  | 'DOCUMENT_TYPE'
+  | 'SIGNED_FORMAT'
+  | 'REQUIREMENT_PHASE';
 
 /** Read view of a cadastro item (`GET /api/cadastro/items`). */
 export interface CadastroItemView {
