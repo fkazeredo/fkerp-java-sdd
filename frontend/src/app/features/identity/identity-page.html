@@ -1,0 +1,73 @@
+<section class="page">
+  <h1 class="page__title">{{ 'identityScreen.title' | translate }}</h1>
+
+  <!-- Role / permission catalogue -->
+  <div class="app-card">
+    <h2 class="app-card__title">{{ 'identityScreen.roles' | translate }}</h2>
+    <p class="app-muted">{{ 'identityScreen.rolesHint' | translate }}</p>
+    <app-screen-state
+      [state]="rolesListState()"
+      [errorCode]="rolesError()"
+      emptyKey="identityScreen.rolesEmpty"
+      (retry)="loadRoles()"
+    >
+      <p-table [value]="roles()" data-testid="identity-roles-table">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'identityScreen.roleName' | translate }}</th>
+            <th>{{ 'identityScreen.roleDescription' | translate }}</th>
+            <th>{{ 'identityScreen.permissions' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-r>
+          <tr>
+            <td><p-tag [value]="r.name" severity="info" /></td>
+            <td>{{ r.description }}</td>
+            <td>{{ r.permissions.join(', ') || '—' }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+  </div>
+
+  <!-- Access-audit trail -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'identityScreen.accessAudit' | translate }}</h2>
+      <div class="field">
+        <label for="id-a-actor">{{ 'identityScreen.actor' | translate }}</label>
+        <input pInputText id="id-a-actor" name="aActor" [(ngModel)]="auditActor" (keyup.enter)="loadAudit()" />
+      </div>
+      <div class="field">
+        <label for="id-a-type">{{ 'identityScreen.auditType' | translate }}</label>
+        <p-select inputId="id-a-type" name="aType" [(ngModel)]="auditType" (ngModelChange)="loadAudit()" [options]="auditTypes" [showClear]="true" [placeholder]="'common.all' | translate" appendTo="body" />
+      </div>
+    </div>
+
+    <app-screen-state
+      [state]="auditListState()"
+      [errorCode]="auditError()"
+      emptyKey="identityScreen.accessAuditEmpty"
+      (retry)="loadAudit()"
+    >
+      <p-table [value]="audit()" data-testid="identity-audit-table" [rows]="10" [paginator]="audit().length > 10">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'identityScreen.occurredAt' | translate }}</th>
+            <th>{{ 'identityScreen.actor' | translate }}</th>
+            <th>{{ 'identityScreen.auditType' | translate }}</th>
+            <th>{{ 'identityScreen.detail' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-a>
+          <tr>
+            <td>{{ a.occurredAt }}</td>
+            <td>{{ a.actor }}</td>
+            <td><p-tag [value]="a.type" [severity]="auditSeverity(a.type)" /></td>
+            <td>{{ a.detail }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+  </div>
+</section>

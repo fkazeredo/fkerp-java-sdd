@@ -1,0 +1,188 @@
+<section class="page">
+  <h1 class="page__title">{{ 'admin.title' | translate }}</h1>
+
+  <!-- Register a supplier -->
+  <form class="app-card" (ngSubmit)="registerSupplier()" #sf="ngForm">
+    <h2 class="app-card__title">{{ 'admin.registerSupplier' | translate }}</h2>
+    <div class="form__row">
+      <div class="field">
+        <label for="ad-type">{{ 'admin.supplierType' | translate }}</label>
+        <p-select inputId="ad-type" name="type" [(ngModel)]="newType" [options]="types" appendTo="body" />
+      </div>
+      <div class="field">
+        <label for="ad-identifier">{{ 'admin.identifier' | translate }}</label>
+        <input pInputText id="ad-identifier" name="identifier" [(ngModel)]="newIdentifier" required />
+      </div>
+      <div class="field">
+        <label for="ad-name">{{ 'admin.displayName' | translate }}</label>
+        <input pInputText id="ad-name" name="displayName" [(ngModel)]="newDisplayName" required />
+      </div>
+    </div>
+    @if (registerError()) {
+      <p-message severity="error" data-testid="admin-register-error">{{ registerError() | translate }}</p-message>
+    }
+    <div class="actions">
+      <p-button type="submit" [label]="'admin.registerSupplierAction' | translate" [loading]="registerBusy()" [disabled]="registerBusy() || sf.invalid" />
+    </div>
+  </form>
+
+  <!-- Supplier list -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'admin.suppliers' | translate }}</h2>
+      <div class="field">
+        <label for="ad-f-type">{{ 'admin.supplierType' | translate }}</label>
+        <p-select inputId="ad-f-type" name="fType" [(ngModel)]="filterType" (ngModelChange)="loadSuppliers()" [options]="types" [showClear]="true" [placeholder]="'common.all' | translate" appendTo="body" />
+      </div>
+      <div class="field">
+        <label for="ad-f-status">{{ 'admin.status' | translate }}</label>
+        <p-select inputId="ad-f-status" name="fStatus" [(ngModel)]="filterStatus" (ngModelChange)="loadSuppliers()" [options]="statuses" [showClear]="true" [placeholder]="'common.all' | translate" appendTo="body" />
+      </div>
+      <p-button [label]="'admin.runSweep' | translate" icon="pi pi-bell" (onClick)="runSweep()" [loading]="sweepBusy()" data-testid="admin-sweep" />
+    </div>
+
+    @if (sweepResult() !== null) {
+      <p-message severity="info" data-testid="admin-sweep-result">{{ 'admin.sweepFlagged' | translate }}: {{ sweepResult() }}</p-message>
+    }
+
+    <app-screen-state
+      [state]="suppliersState()"
+      [errorCode]="errorCode()"
+      emptyKey="admin.suppliersEmpty"
+      (retry)="loadSuppliers()"
+    >
+      <p-table [value]="suppliers()" data-testid="admin-table" [rows]="10" [paginator]="suppliers().length > 10">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'admin.supplierType' | translate }}</th>
+            <th>{{ 'admin.identifier' | translate }}</th>
+            <th>{{ 'admin.displayName' | translate }}</th>
+            <th>{{ 'admin.status' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-s>
+          <tr>
+            <td>{{ s.type }}</td>
+            <td>{{ s.identifier }}</td>
+            <td>{{ s.displayName }}</td>
+            <td><p-tag [value]="s.status" [severity]="statusSeverity(s.status)" /></td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+  </div>
+
+  <!-- Contracts -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'admin.contracts' | translate }}</h2>
+      <div class="field">
+        <label for="ad-contract-supplier">{{ 'admin.supplierId' | translate }}</label>
+        <input pInputText id="ad-contract-supplier" name="contractSupplier" [(ngModel)]="contractSupplierId" (keyup.enter)="loadContracts()" />
+      </div>
+      <p-button [label]="'admin.loadContractsAction' | translate" icon="pi pi-search" (onClick)="loadContracts()" [disabled]="!contractSupplierId" data-testid="admin-contracts-find" />
+    </div>
+
+    <app-screen-state
+      [state]="contractsListState()"
+      [errorCode]="contractsError()"
+      emptyKey="admin.contractsEmpty"
+      (retry)="loadContracts()"
+    >
+      <p-table [value]="contracts()" data-testid="admin-contracts-table">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'admin.validFrom' | translate }}</th>
+            <th>{{ 'admin.validUntil' | translate }}</th>
+            <th>{{ 'admin.recurrence' | translate }}</th>
+            <th>{{ 'admin.amount' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-c>
+          <tr>
+            <td>{{ c.validFrom }}</td>
+            <td>{{ c.validUntil ?? '—' }}</td>
+            <td>{{ c.recurrence }}</td>
+            <td>{{ format(c.amount) }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+
+    <!-- Register a contract -->
+    <h3 class="app-card__title">{{ 'admin.registerContract' | translate }}</h3>
+    @if (contractError()) {
+      <p-message severity="error" data-testid="admin-contract-error">{{ contractError() | translate }}</p-message>
+    }
+    <div class="form__row">
+      <div class="field">
+        <label for="ad-c-from">{{ 'admin.validFrom' | translate }}</label>
+        <input pInputText id="ad-c-from" name="cFrom" [(ngModel)]="newContractValidFrom" placeholder="YYYY-MM-DD" />
+      </div>
+      <div class="field">
+        <label for="ad-c-until">{{ 'admin.validUntil' | translate }}</label>
+        <input pInputText id="ad-c-until" name="cUntil" [(ngModel)]="newContractValidUntil" placeholder="YYYY-MM-DD" />
+      </div>
+      <div class="field">
+        <label for="ad-c-recurrence">{{ 'admin.recurrence' | translate }}</label>
+        <p-select inputId="ad-c-recurrence" name="cRecurrence" [(ngModel)]="newContractRecurrence" [options]="recurrences" appendTo="body" />
+      </div>
+      <div class="field">
+        <label for="ad-c-amount">{{ 'admin.amount' | translate }}</label>
+        <p-inputnumber inputId="ad-c-amount" name="cAmount" [(ngModel)]="newContractAmount" mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="2" />
+      </div>
+      <div class="field">
+        <label for="ad-c-currency">{{ 'admin.currency' | translate }}</label>
+        <input pInputText id="ad-c-currency" name="cCurrency" [(ngModel)]="newContractCurrency" />
+      </div>
+    </div>
+    <div class="actions">
+      <p-button [label]="'admin.registerContractAction' | translate" (onClick)="registerContract()" [loading]="contractBusy()" [disabled]="contractBusy() || !contractSupplierId || !newContractValidFrom" />
+    </div>
+  </div>
+
+  <!-- Recurring expenses -->
+  <div class="app-card">
+    <h2 class="app-card__title">{{ 'admin.expenses' | translate }}</h2>
+    <div class="form__row">
+      <div class="field">
+        <label for="ad-e-supplier">{{ 'admin.supplierId' | translate }}</label>
+        <input pInputText id="ad-e-supplier" name="eSupplier" [(ngModel)]="expenseSupplierId" />
+      </div>
+      <div class="field">
+        <label for="ad-e-period">{{ 'admin.period' | translate }}</label>
+        <input pInputText id="ad-e-period" name="ePeriod" [(ngModel)]="expensePeriod" placeholder="YYYY-MM" />
+      </div>
+      <div class="field">
+        <label for="ad-e-amount">{{ 'admin.amount' | translate }}</label>
+        <p-inputnumber inputId="ad-e-amount" name="eAmount" [(ngModel)]="expenseAmount" mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="2" />
+      </div>
+      <div class="field">
+        <label for="ad-e-currency">{{ 'admin.currency' | translate }}</label>
+        <input pInputText id="ad-e-currency" name="eCurrency" [(ngModel)]="expenseCurrency" />
+      </div>
+      <div class="field">
+        <label for="ad-e-kind">{{ 'admin.expenseKind' | translate }}</label>
+        <p-select inputId="ad-e-kind" name="eKind" [(ngModel)]="expenseKind" [options]="expenseKinds" appendTo="body" />
+      </div>
+    </div>
+    @if (expenseError()) {
+      <p-message severity="error" data-testid="admin-expense-error">{{ expenseError() | translate }}</p-message>
+    }
+    <div class="actions">
+      <p-button [label]="'admin.registerExpenseAction' | translate" (onClick)="registerExpense()" [loading]="expenseBusy()" [disabled]="expenseBusy() || !expenseSupplierId || !expensePeriod || expenseAmount === null" data-testid="admin-register-expense" />
+    </div>
+    @if (expense(); as ex) {
+      <dl class="kv" data-testid="admin-expense">
+        <dt>{{ 'admin.period' | translate }}</dt>
+        <dd>{{ ex.period }}</dd>
+        <dt>{{ 'admin.amount' | translate }}</dt>
+        <dd>{{ format(ex.amount) }}</dd>
+        <dt>{{ 'admin.financeEntryId' | translate }}</dt>
+        <dd>{{ ex.financeEntryId ?? '—' }}</dd>
+        <dt>{{ 'admin.requiredDocuments' | translate }}</dt>
+        <dd>{{ ex.requiredDocuments.join(', ') || '—' }}</dd>
+      </dl>
+    }
+  </div>
+</section>

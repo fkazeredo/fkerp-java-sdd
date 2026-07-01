@@ -1,0 +1,168 @@
+<section class="page">
+  <h1 class="page__title">{{ 'people.title' | translate }}</h1>
+
+  <!-- Register a collaborator -->
+  <form class="app-card" (ngSubmit)="registerEmployee()" #ef="ngForm">
+    <h2 class="app-card__title">{{ 'people.registerEmployee' | translate }}</h2>
+    <div class="form__row">
+      <div class="field">
+        <label for="pe-identifier">{{ 'people.identifier' | translate }}</label>
+        <input pInputText id="pe-identifier" name="identifier" [(ngModel)]="newIdentifier" required />
+      </div>
+      <div class="field">
+        <label for="pe-admission">{{ 'people.admissionDate' | translate }}</label>
+        <input pInputText id="pe-admission" name="admissionDate" [(ngModel)]="newAdmissionDate" placeholder="YYYY-MM-DD" required />
+      </div>
+      <div class="field">
+        <label for="pe-journey">{{ 'people.contractedJourney' | translate }}</label>
+        <input pInputText id="pe-journey" name="contractedJourney" [(ngModel)]="newContractedJourney" placeholder="44h" required />
+      </div>
+      <div class="field">
+        <label for="pe-doc">{{ 'people.contractDocumentId' | translate }}</label>
+        <input pInputText id="pe-doc" name="contractDocumentId" [(ngModel)]="newContractDocumentId" />
+      </div>
+    </div>
+    @if (registerError()) {
+      <p-message severity="error" data-testid="people-register-error">{{ registerError() | translate }}</p-message>
+    }
+    <div class="actions">
+      <p-button type="submit" [label]="'people.registerEmployeeAction' | translate" [loading]="registerBusy()" [disabled]="registerBusy() || ef.invalid" />
+    </div>
+  </form>
+
+  <!-- Collaborator list -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'people.employees' | translate }}</h2>
+      <div class="field">
+        <label for="pe-f-status">{{ 'people.status' | translate }}</label>
+        <p-select
+          inputId="pe-f-status"
+          name="fStatus"
+          [(ngModel)]="filterStatus"
+          (ngModelChange)="loadEmployees()"
+          [options]="statuses"
+          [showClear]="true"
+          [placeholder]="'common.all' | translate"
+          appendTo="body"
+        />
+      </div>
+    </div>
+
+    <app-screen-state
+      [state]="employeesState()"
+      [errorCode]="errorCode()"
+      emptyKey="people.employeesEmpty"
+      (retry)="loadEmployees()"
+    >
+      <p-table [value]="employees()" data-testid="people-table" [rows]="10" [paginator]="employees().length > 10">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'people.identifier' | translate }}</th>
+            <th>{{ 'people.admissionDate' | translate }}</th>
+            <th>{{ 'people.contractedJourney' | translate }}</th>
+            <th>{{ 'people.status' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-e>
+          <tr>
+            <td>{{ e.identifier }}</td>
+            <td>{{ e.admissionDate }}</td>
+            <td>{{ e.contractedJourney }}</td>
+            <td><p-tag [value]="e.status" [severity]="statusSeverity(e.status)" /></td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+  </div>
+
+  <!-- Journey / time-bank read -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'people.journey' | translate }}</h2>
+      <div class="field">
+        <label for="pe-j-id">{{ 'people.employeeId' | translate }}</label>
+        <input pInputText id="pe-j-id" name="jId" [(ngModel)]="journeyEmployeeId" />
+      </div>
+      <div class="field">
+        <label for="pe-j-period">{{ 'people.period' | translate }}</label>
+        <input pInputText id="pe-j-period" name="jPeriod" [(ngModel)]="journeyPeriod" placeholder="YYYY-MM" (keyup.enter)="loadJourney()" />
+      </div>
+      <p-button [label]="'people.loadJourneyAction' | translate" icon="pi pi-search" (onClick)="loadJourney()" [disabled]="!journeyEmployeeId || !journeyPeriod" data-testid="people-journey-find" />
+    </div>
+
+    @if (journeyError()) {
+      <p-message severity="error" data-testid="people-journey-error">{{ journeyError() | translate }}</p-message>
+    }
+    @if (journey(); as j) {
+      <dl class="kv" data-testid="people-journey">
+        <dt>{{ 'people.period' | translate }}</dt>
+        <dd>{{ j.period }}</dd>
+        <dt>{{ 'people.workedHours' | translate }}</dt>
+        <dd>{{ j.workedHours }}</dd>
+        <dt>{{ 'people.contractedHours' | translate }}</dt>
+        <dd>{{ j.contractedHours }}</dd>
+        <dt>{{ 'people.balance' | translate }}</dt>
+        <dd>{{ j.balance }}</dd>
+      </dl>
+    }
+    @if (timebank(); as t) {
+      <dl class="kv" data-testid="people-timebank">
+        <dt>{{ 'people.timebankBalance' | translate }}</dt>
+        <dd>{{ t.balance }}</dd>
+        <dt>{{ 'people.discrepanciesCount' | translate }}</dt>
+        <dd><p-tag [value]="t.discrepancies + ''" [severity]="t.discrepancies > 0 ? 'warn' : 'success'" /></dd>
+      </dl>
+    }
+  </div>
+
+  <!-- Discrepancy treatment queue -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'people.discrepancies' | translate }}</h2>
+      <div class="field">
+        <label for="pe-d-period">{{ 'people.period' | translate }}</label>
+        <input pInputText id="pe-d-period" name="dPeriod" [(ngModel)]="discrepancyPeriod" placeholder="YYYY-MM" />
+      </div>
+      <div class="field">
+        <label for="pe-d-status">{{ 'people.status' | translate }}</label>
+        <p-select
+          inputId="pe-d-status"
+          name="dStatus"
+          [(ngModel)]="discrepancyStatus"
+          [options]="discrepancyStatuses"
+          [showClear]="true"
+          [placeholder]="'common.all' | translate"
+          appendTo="body"
+        />
+      </div>
+      <p-button [label]="'people.loadDiscrepanciesAction' | translate" icon="pi pi-search" (onClick)="loadDiscrepancies()" data-testid="people-discrepancies-find" />
+    </div>
+
+    <app-screen-state
+      [state]="discrepanciesState()"
+      [errorCode]="discrepancyError()"
+      emptyKey="people.discrepanciesEmpty"
+      (retry)="loadDiscrepancies()"
+    >
+      <p-table [value]="discrepancies()" data-testid="people-discrepancies-table">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'people.period' | translate }}</th>
+            <th>{{ 'people.discrepancyKind' | translate }}</th>
+            <th>{{ 'people.status' | translate }}</th>
+            <th>{{ 'people.detail' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-d>
+          <tr>
+            <td>{{ d.period }}</td>
+            <td>{{ d.kind }}</td>
+            <td><p-tag [value]="d.status" [severity]="discrepancySeverity(d.status)" /></td>
+            <td>{{ d.detail }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+  </div>
+</section>
