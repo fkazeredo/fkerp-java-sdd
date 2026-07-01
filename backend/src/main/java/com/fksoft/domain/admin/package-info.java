@@ -21,9 +21,9 @@
  * {@code money}/{@code error} kernels; none of those depend back on Admin, so the module graph
  * stays <strong>acyclic</strong> (Spring Modulith verify — DL-0086). Types in this base package are
  * the module's public API: the {@link com.fksoft.domain.admin.AdminService} use cases, the
- * commands/ views/value objects, the enums-with-behavior ({@link
- * com.fksoft.domain.admin.AdminExpenseKind}), the events ({@link
- * com.fksoft.domain.admin.AdminSupplierRegistered}/{@link
+ * commands/ views/value objects, the reference codes wired to behavior ({@link
+ * com.fksoft.domain.admin.AdminExpenseCodes}, after the enum→cadastro conversion — SPEC-0031/
+ * DL-0115), the events ({@link com.fksoft.domain.admin.AdminSupplierRegistered}/{@link
  * com.fksoft.domain.admin.AdminContractRegistered}/{@link
  * com.fksoft.domain.admin.AdminExpenseRegistered}/{@link
  * com.fksoft.domain.admin.AdminContractExpiring}) and the business exceptions. The implementation

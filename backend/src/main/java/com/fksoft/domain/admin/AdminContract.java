@@ -3,8 +3,6 @@ package com.fksoft.domain.admin;
 import com.fksoft.domain.ModuleInternal;
 import com.fksoft.domain.money.Money;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
@@ -43,8 +41,8 @@ public class AdminContract {
   private LocalDate validFrom;
   private LocalDate validUntil;
 
-  @Enumerated(EnumType.STRING)
-  private AdminRecurrence recurrence;
+  /** The recurrence cadence cadastro code (was {@code AdminRecurrence}; SPEC-0031/DL-0115). */
+  private String recurrence;
 
   private BigDecimal amount;
   private String currency;
@@ -69,7 +67,7 @@ public class AdminContract {
    * @param supplierId the supplier the contract covers (required)
    * @param validFrom the start of validity (required)
    * @param validUntil the end of validity, or {@code null} when open-ended
-   * @param recurrence the recurring-charge cadence, or {@code null}
+   * @param recurrence the recurring-charge cadence cadastro code, or {@code null}
    * @param amount the recurring amount (Money), or {@code null}
    * @param documentId the Compliance document id (value), or {@code null}
    * @param now the creation instant (UTC)
@@ -81,7 +79,7 @@ public class AdminContract {
       UUID supplierId,
       LocalDate validFrom,
       LocalDate validUntil,
-      AdminRecurrence recurrence,
+      String recurrence,
       Money amount,
       UUID documentId,
       Instant now,

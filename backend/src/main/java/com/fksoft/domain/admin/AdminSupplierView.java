@@ -8,7 +8,7 @@ import java.util.UUID;
  * record, never the {@code AdminSupplier} entity (the model stays inside the module).
  *
  * @param id the supplier id
- * @param type the supplier type
+ * @param type the supplier-type cadastro code (was {@code AdminSupplierType}; SPEC-0031)
  * @param identifier the legal identifier (CNPJ/CPF), or {@code null}
  * @param displayName the display name
  * @param status ACTIVE or INACTIVE
@@ -16,7 +16,7 @@ import java.util.UUID;
  */
 public record AdminSupplierView(
     UUID id,
-    AdminSupplierType type,
+    String type,
     String identifier,
     String displayName,
     AdminSupplierStatus status,

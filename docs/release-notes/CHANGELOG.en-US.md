@@ -1,12 +1,46 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.28.0.md`](0.28.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.29.0.md`](0.29.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.29.0 — Phase 18a · `cadastro` module + reference enums → editable cadastros (Admin/Assets/Billing)
+
+**MINOR — new capability. No existing `/api` contract changed (the converted fields keep their `string`
+schema).**
+
+Per the owner's decision that **every reference enum that is neither a state machine nor law-fixed
+becomes an editable cadastro** (lookup data with a pt-BR label, order and active flag — no redeploy),
+slice 18a ships the mechanism and converts the first group (Admin/Assets/Billing). New **SPEC-0031**;
+ADR-0019 + DL-0115.
+
+- **New `cadastro` module (23rd Modulith, a leaf):** a single `cadastro_item(type, code, label, active,
+  sort_order, …)` registry (`unique(type, code)`), `CadastroService` CRUD (code immutable; label/active/
+  order editable) and the public `CadastroValidator` port other modules call to validate a code.
+- **The invariant (wire contract unchanged):** each `@Enumerated` field becomes a validated `String
+  code` whose value equals the old enum constant name (`"UTILITY"`, `"SIMPLES_NACIONAL"`, …), so
+  request/response JSON is identical; a brand-new code with no wired logic works as pure data.
+- **Branching preserved** via `*Codes` constants: `AdminExpenseCodes.entryTypeFor` (kind→EntryType→
+  document, DL-0085), `TaxRegimeCodes` (regime→tax strategy, DL-0044), `WithholdingKindCodes` (codec),
+  `AssetCodes.isSoftwareLicense` (requires expiry).
+- **Added:** `GET /api/cadastro/types`, `GET /api/cadastro/items?type=…` (reads — authenticated);
+  `POST`/`PUT`/`DELETE /api/cadastro/items(/{id})` (writes — `ROLE_POLICY_ADMIN`, an existing role; no
+  new role, auth untouched). A **"Reference data" screen** in the shell (nav + route gated by the
+  role). **Migration V33** creates and seeds `cadastro_item`.
+- **Changed:** the Admin/Assets/Billing enums (`AdminExpenseKind`/`AdminRecurrence`/`AdminSupplierType`,
+  `AssetType`, `WithholdingKind`, `TaxRegime`) became validated string codes; the enums were removed.
+  OpenAPI → 0.29.0.
+- **Gates green:** backend `./mvnw verify` **495 tests** (was 480), ArchUnit/Modulith (23 modules,
+  acyclic)/Spotless/Checkstyle/JaCoCo unchanged; frontend lint + **278 tests** + build; the
+  `cadastro` E2E journey (3 tests) is authored and compiles (`playwright test --list`), not executed in
+  this sandbox.
+- **Next (18b–18d):** convert the remaining enum groups reusing this module (`0.30.0`–`0.32.0`).
 
 ---
 

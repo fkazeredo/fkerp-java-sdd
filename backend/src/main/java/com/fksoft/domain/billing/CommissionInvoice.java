@@ -44,8 +44,8 @@ public class CommissionInvoice {
   @Enumerated(EnumType.STRING)
   private InvoiceStatus status;
 
-  @Enumerated(EnumType.STRING)
-  private TaxRegime taxRegime;
+  /** The tax-regime cadastro code (was {@code TaxRegime}; SPEC-0031/DL-0115). */
+  private String taxRegime;
 
   private String municipality;
   private String serviceCode;
@@ -69,7 +69,7 @@ public class CommissionInvoice {
    * @param commissionBase the commission (the taxable base — never the gross package)
    * @param municipality the IBGE municipality code of incidence
    * @param serviceCode the municipal service code
-   * @param regime the tax regime to apply (the issuer's regime, DL-0044)
+   * @param regime the tax-regime cadastro code to apply (the issuer's regime, DL-0044)
    * @param now creation instant (UTC)
    * @param actor who creates it (audit)
    * @return a new, persistable draft invoice
@@ -80,7 +80,7 @@ public class CommissionInvoice {
       Money commissionBase,
       String municipality,
       String serviceCode,
-      TaxRegime regime,
+      String regime,
       Instant now,
       String actor) {
     if (commissionBase == null || commissionBase.isNegative()) {

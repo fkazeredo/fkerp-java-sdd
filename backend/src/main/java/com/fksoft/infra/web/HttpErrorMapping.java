@@ -29,6 +29,10 @@ import com.fksoft.domain.booking.BookingNotFoundException;
 import com.fksoft.domain.booking.BookingQuoteNotFoundException;
 import com.fksoft.domain.booking.BookingTransitionInvalidException;
 import com.fksoft.domain.booking.CancellationPolicyInvalidException;
+import com.fksoft.domain.cadastro.CadastroCodeInvalidException;
+import com.fksoft.domain.cadastro.CadastroItemDuplicateException;
+import com.fksoft.domain.cadastro.CadastroItemInvalidException;
+import com.fksoft.domain.cadastro.CadastroItemNotFoundException;
 import com.fksoft.domain.commercialpolicy.PolicyDirectiveForbiddenException;
 import com.fksoft.domain.commercialpolicy.PolicyParameterUnknownException;
 import com.fksoft.domain.commercialpolicy.PolicyRuleInvalidException;
@@ -207,7 +211,11 @@ public class HttpErrorMapping {
           entry(AdminSupplierInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(AdminContractInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(AdminExpenseInvalidException.class, HttpStatus.BAD_REQUEST),
-          entry(AdminExpenseDuplicateException.class, HttpStatus.CONFLICT));
+          entry(AdminExpenseDuplicateException.class, HttpStatus.CONFLICT),
+          entry(CadastroItemNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(CadastroItemInvalidException.class, HttpStatus.BAD_REQUEST),
+          entry(CadastroItemDuplicateException.class, HttpStatus.CONFLICT),
+          entry(CadastroCodeInvalidException.class, HttpStatus.UNPROCESSABLE_CONTENT));
 
   /** The HTTP status for a domain exception type; {@code 422} when unmapped. */
   public HttpStatus statusFor(Class<? extends DomainException> type) {

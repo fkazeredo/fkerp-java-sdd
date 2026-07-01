@@ -111,6 +111,12 @@ export const NAV_ITEMS: readonly NavItem[] = [
     roles: ['ROLE_FINANCE'],
   },
   {
+    path: 'cadastro',
+    labelKey: 'nav.cadastro',
+    icon: 'pi pi-list',
+    roles: ['ROLE_POLICY_ADMIN'],
+  },
+  {
     path: 'platform',
     labelKey: 'nav.platform',
     icon: 'pi pi-cog',

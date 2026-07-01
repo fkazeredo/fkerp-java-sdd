@@ -16,8 +16,9 @@
  * com.fksoft.domain.billing.BillingTaxRegimeConfig} ports, the {@link
  * com.fksoft.domain.billing.NfseGateway}/{@link com.fksoft.domain.billing.CertificateSigner}
  * integration ports, value objects ({@link com.fksoft.domain.billing.TaxAssessment}, {@link
- * com.fksoft.domain.billing.Withholding}, {@link com.fksoft.domain.billing.TaxRegime}), the views,
- * the {@link com.fksoft.domain.billing.CommissionInvoiceIssued}/{@link
+ * com.fksoft.domain.billing.Withholding}, the tax-regime codes {@link
+ * com.fksoft.domain.billing.TaxRegimeCodes} — after the enum→cadastro conversion, SPEC-0031/
+ * DL-0115), the views, the {@link com.fksoft.domain.billing.CommissionInvoiceIssued}/{@link
  * com.fksoft.domain.billing.CommissionInvoiceCancelled} events and the business exceptions. The
  * implementation types (the aggregate, repositories, the Simples strategy, the rate provider) live
  * in this same package marked {@link com.fksoft.domain.ModuleInternal} and must never be reached

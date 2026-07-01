@@ -198,7 +198,13 @@ public class OpenApiConfig {
                         + " (Authorization Code + PKCE) and reintroduces a local BCrypt user store (V32)."
                         + " The security scheme is now the self-hosted OIDC bearer; no /api contract"
                         + " changes. BREAKING at the infra/config level: Keycloak and its env vars are"
-                        + " gone.")
-                .version("0.28.0"));
+                        + " gone."
+                        + " Phase 18a (SPEC-0031 / ADR-0019) introduces the Cadastro module: editable"
+                        + " reference data (GET /api/cadastro/types, /api/cadastro/items and"
+                        + " POST/PUT/DELETE gated by ROLE_POLICY_ADMIN). The Admin/Assets/Billing"
+                        + " reference enums (AdminExpenseKind/Recurrence/SupplierType, AssetType,"
+                        + " WithholdingKind, TaxRegime) became validated string codes — the converted"
+                        + " fields keep their JSON schema (string), so NO existing /api contract changes.")
+                .version("0.29.0"));
   }
 }

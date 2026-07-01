@@ -48,7 +48,7 @@ class CommissionInvoiceEventsListener {
     for (Withholding withholding : event.withholdings()) {
       financeService.postFromCharge(
           sourceRef,
-          "WHT_" + withholding.kind().name(),
+          "WHT_" + withholding.kind(),
           LedgerDirection.PAYABLE,
           fisco,
           withholding.amount(),

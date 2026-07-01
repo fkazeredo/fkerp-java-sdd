@@ -28,8 +28,8 @@ public class AdminSupplier {
 
   @Id private UUID id;
 
-  @Enumerated(EnumType.STRING)
-  private AdminSupplierType type;
+  /** The supplier-type cadastro code (was {@code AdminSupplierType}; SPEC-0031/DL-0115). */
+  private String type;
 
   private String identifier;
   private String displayName;
@@ -48,7 +48,7 @@ public class AdminSupplier {
    * Registers a new administrative supplier in {@link AdminSupplierStatus#ACTIVE} (BR1). Validates
    * the mandatory data (type and display name).
    *
-   * @param type the supplier type (required)
+   * @param type the supplier-type cadastro code (required; validated by the service)
    * @param identifier the legal identifier (CNPJ/CPF), or {@code null}
    * @param displayName the display name (required)
    * @param now the creation instant (UTC)
@@ -57,8 +57,8 @@ public class AdminSupplier {
    * @throws AdminSupplierInvalidException when a mandatory field is missing (BR1)
    */
   public static AdminSupplier register(
-      AdminSupplierType type, String identifier, String displayName, Instant now, String actor) {
-    if (type == null || displayName == null || displayName.isBlank()) {
+      String type, String identifier, String displayName, Instant now, String actor) {
+    if (type == null || type.isBlank() || displayName == null || displayName.isBlank()) {
       throw new AdminSupplierInvalidException();
     }
     AdminSupplier supplier = new AdminSupplier();

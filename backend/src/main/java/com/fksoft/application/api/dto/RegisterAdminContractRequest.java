@@ -1,6 +1,5 @@
 package com.fksoft.application.api.dto;
 
-import com.fksoft.domain.admin.AdminRecurrence;
 import com.fksoft.domain.admin.RegisterContractCommand;
 import com.fksoft.domain.money.Money;
 import jakarta.validation.constraints.NotNull;
@@ -13,14 +12,14 @@ import java.util.UUID;
  *
  * @param validFrom the start of validity (required)
  * @param validUntil the end of validity, or {@code null} when open-ended
- * @param recurrence the recurring-charge cadence, or {@code null}
+ * @param recurrence the recurring-charge cadence cadastro code, or {@code null}
  * @param amount the recurring amount (Money), or {@code null}
  * @param documentId the Compliance document id (value), or {@code null}
  */
 public record RegisterAdminContractRequest(
     @NotNull LocalDate validFrom,
     LocalDate validUntil,
-    AdminRecurrence recurrence,
+    String recurrence,
     Money amount,
     UUID documentId) {
 

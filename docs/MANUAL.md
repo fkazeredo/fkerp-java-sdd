@@ -767,6 +767,33 @@ O que muda, na prática:
 > identidade em produção** segue decisão do dono (o AS embutido é o padrão; trocar é só configuração).
 > **Mudança incompatível de infraestrutura:** o Keycloak saiu (ver release note 0.28.0).
 
+### Fase 18a — Cadastros (dados de referência editáveis)
+
+Muitas listas do sistema — a **natureza de uma despesa**, o **tipo de fornecedor** ou de **ativo**, o
+**regime tributário**, o **tipo de retenção** — antes eram fixas no programa. Agora elas viram
+**cadastros**: você pode **renomear** o rótulo que aparece na tela, **reordenar** e **ativar/desativar**
+opções, e até **acrescentar** novos itens, **sem precisar de uma nova versão do sistema**.
+
+Como usar (menu **"Cadastros"**, visível para quem tem o perfil de **Curador de Políticas**):
+
+1. Abra **"Cadastros"** no menu lateral.
+2. Escolha o **Tipo de cadastro** (por exemplo, "Tipo de ativo" ou "Regime tributário"). A lista de
+   itens daquele tipo aparece — os **ativos primeiro**, na ordem definida.
+3. Para **adicionar** um item: preencha o **Código** (um identificador curto, ex.: `VEICULO`), o
+   **Rótulo** (o nome que aparece nas telas) e a **Ordem**, e clique em **"Adicionar item"**.
+4. Para **editar** um item existente: altere o **Rótulo** ou a **Ordem** na própria linha e clique em
+   **"Salvar"**. O **Código nunca muda** (ele é o que os registros antigos guardam).
+5. Para **desativar** (ou reativar) um item: clique em **"Desativar"** / **"Ativar"** na linha. Um item
+   desativado deixa de ser aceito em novos registros, mas os registros antigos continuam válidos.
+
+> **Nada muda para quem já usava as telas.** Os valores continuam os mesmos por baixo (o "código" é
+> exatamente o que era antes) — só ficaram **editáveis**. Se você não tem o perfil de Curador de
+> Políticas, o menu não aparece e uma tentativa de alterar é **negada** (o servidor é a autoridade).
+>
+> Para o time técnico: os enums de referência de **Back-office, Patrimônio e Faturamento** viraram
+> `code` validado contra o cadastro; o contrato das APIs **não mudou** (o valor no JSON é o mesmo
+> texto). As próximas fatias (18b–18d) convertem os demais grupos. Ver SPEC-0031 / ADR-0019 / DL-0115.
+
 
 ## 4. Glossário
 
@@ -865,6 +892,7 @@ O que muda, na prática:
 | 0.26.0 | 16c — Telas de operação: Inteligência & Crescimento | **Quatro telas novas** sobre APIs que já existiam (nenhuma regra nova): **Inteligência** (painel de insights com filtros e ordenação por ganho; evidência/recomendação/guardrail; registro da decisão humana — que só registra, nunca executa), **Política comercial** (resolver parâmetro com proveniência; lista de regras com a precedência Diretiva>Promoção>Contrato>Política>Padrão; definir regra e emitir diretiva com justificativa), **Marketing** (consentimento LGPD com histórico, conceder/revogar; segmentos e alcance; campanhas com disparo filtrado por consentimento; atribuição; apagamento LGPD), **Portfólio** (marcas, contratos e cobertura; metas × realizado com atingimento). Inteligência/Marketing/Portfólio aparecem para o papel **Operacional**; Política comercial para **Diretor/Curador**. **Terceira das quatro fatias da Fase 16** (DL-0109). |
 | 0.27.0 | 16d — Telas de operação: Back-office & TI (fecha a Fase 16) | **Seis telas novas** sobre APIs que já existiam (nenhuma regra nova): **Pessoas / RH** (colaboradores, jornada + banco de horas, fila de discrepâncias), **Ponto** (histórico de coletas do REP + espelho operacional — leituras; AFD/AEJ e disparo de coleta ficam entre sistemas, sem tela), **Patrimônio** (registro/baixa de equipamentos e licenças + varredura de licenças a vencer), **Back-office** (fornecedores/contratos/despesas administrativas + varredura de contratos — exige papel Financeiro), **Plataforma / TI** (jobs governados com catálogo/histórico/disparo, certificado e-CNPJ **só metadados** — nunca a chave/senha, auditoria de sistema), **Acesso** (catálogo de papéis/permissões e auditoria de acesso). Pessoas/Ponto/Patrimônio/Plataforma aparecem para o papel **TI** (não existe papel "RH"); Back-office para **Financeiro**; Acesso para **Diretor/TI**. **Última das quatro fatias da Fase 16** — com ela toda a dívida de UI de operação está quitada (DL-0109). |
 | 0.28.0 | 17 — Remover Keycloak → login servido pelo próprio sistema | **Keycloak removido 100%.** O login único (SSO) continua igual para o usuário (**"Entrar com SSO"** → usuário e senha → Painel), mas agora é servido **pelo próprio ERP** (sem contêiner externo). Voltam os **usuários de exemplo** dentro do sistema (`dev` + um por papel, senha `dev12345`, **só em desenvolvimento/testes**). **Papéis, permissões e auditoria de acesso continuam iguais**; o servidor segue sendo a autoridade; a sessão se renova sozinha. **Mudança incompatível de infraestrutura:** o serviço Keycloak, a pasta `infra/keycloak/` e as variáveis `KEYCLOAK_*` saíram; a URL do OIDC aponta para o próprio app. Nenhum contrato `/api` mudou (ADR-0018). |
+| 0.29.0 | 18a — Cadastros (dados de referência editáveis) | **Nova tela "Cadastros"** (para o perfil **Curador de Políticas**): as listas de referência do sistema — **natureza de despesa, tipo de fornecedor/ativo, regime tributário, tipo de retenção** — deixam de ser fixas no programa e viram **cadastros editáveis** (renomear rótulo, reordenar, ativar/desativar e **acrescentar** itens, **sem nova versão**). O **código** de cada item é fixo (é o que os registros antigos guardam); só o rótulo/ordem/ativação mudam. **Nada muda para quem já usava as telas de Back-office, Patrimônio e Faturamento** — os valores continuam os mesmos, só ficaram editáveis; **nenhum contrato `/api` mudou**. Primeiro grupo convertido (Admin/Assets/Billing); os próximos vêm nas fatias 18b–18d. (SPEC-0031 / ADR-0019 / DL-0115.) |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.

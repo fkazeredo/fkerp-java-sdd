@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fksoft.application.api.dto.RegisterAssetRequest;
 import com.fksoft.application.api.dto.RetireAssetRequest;
 import com.fksoft.domain.assets.AssetStatus;
-import com.fksoft.domain.assets.AssetType;
 import com.fksoft.domain.assets.AssetView;
 import com.fksoft.domain.money.Money;
 import com.fksoft.infra.web.ApiErrorResponse;
@@ -51,7 +50,7 @@ class AssetApiIntegrationTest extends AbstractPostgresIntegrationTest {
         restTemplate.postForEntity(
             "/api/assets",
             new RegisterAssetRequest(
-                AssetType.SOFTWARE_LICENSE,
+                "SOFTWARE_LICENSE",
                 "JetBrains All Products Pack",
                 java.time.LocalDate.of(2026, 1, 10),
                 COST,
@@ -102,7 +101,7 @@ class AssetApiIntegrationTest extends AbstractPostgresIntegrationTest {
         restTemplate.postForEntity(
             "/api/assets",
             new RegisterAssetRequest(
-                AssetType.SOFTWARE_LICENSE,
+                "SOFTWARE_LICENSE",
                 "Sem vencimento",
                 java.time.LocalDate.of(2026, 1, 10),
                 COST,
@@ -131,7 +130,7 @@ class AssetApiIntegrationTest extends AbstractPostgresIntegrationTest {
         restTemplate.postForEntity(
             "/api/assets",
             new RegisterAssetRequest(
-                AssetType.EQUIPMENT,
+                "EQUIPMENT",
                 "Notebook Dell",
                 java.time.LocalDate.of(2026, 1, 10),
                 COST,

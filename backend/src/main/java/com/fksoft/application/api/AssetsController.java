@@ -4,7 +4,6 @@ import com.fksoft.application.api.dto.RegisterAssetRequest;
 import com.fksoft.application.api.dto.RetireAssetRequest;
 import com.fksoft.domain.assets.AssetService;
 import com.fksoft.domain.assets.AssetStatus;
-import com.fksoft.domain.assets.AssetType;
 import com.fksoft.domain.assets.AssetView;
 import com.fksoft.infra.security.UserContextProvider;
 import jakarta.validation.Valid;
@@ -50,7 +49,7 @@ public class AssetsController {
 
   @GetMapping
   public List<AssetView> list(
-      @RequestParam(required = false) AssetType type,
+      @RequestParam(required = false) String type,
       @RequestParam(required = false) AssetStatus status,
       @RequestParam(required = false) Integer expiringWithinDays) {
     return assetService.list(type, status, expiringWithinDays);

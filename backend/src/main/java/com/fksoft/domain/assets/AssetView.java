@@ -10,7 +10,7 @@ import java.util.UUID;
  * the {@code Asset} entity (the model stays inside the module).
  *
  * @param id the asset id
- * @param type the asset type
+ * @param type the asset-type cadastro code (was {@code AssetType}; SPEC-0031)
  * @param identifier the human-readable identification/description
  * @param status ACTIVE or RETIRED
  * @param acquisitionDate when it was acquired
@@ -27,7 +27,7 @@ import java.util.UUID;
  */
 public record AssetView(
     UUID id,
-    AssetType type,
+    String type,
     String identifier,
     AssetStatus status,
     LocalDate acquisitionDate,

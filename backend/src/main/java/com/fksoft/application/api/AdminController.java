@@ -7,7 +7,6 @@ import com.fksoft.domain.admin.AdminContractView;
 import com.fksoft.domain.admin.AdminExpenseView;
 import com.fksoft.domain.admin.AdminService;
 import com.fksoft.domain.admin.AdminSupplierStatus;
-import com.fksoft.domain.admin.AdminSupplierType;
 import com.fksoft.domain.admin.AdminSupplierView;
 import com.fksoft.infra.security.UserContextProvider;
 import jakarta.validation.Valid;
@@ -57,7 +56,7 @@ public class AdminController {
 
   @GetMapping("/suppliers")
   public List<AdminSupplierView> listSuppliers(
-      @RequestParam(required = false) AdminSupplierType type,
+      @RequestParam(required = false) String type,
       @RequestParam(required = false) AdminSupplierStatus status) {
     return adminService.listSuppliers(type, status);
   }

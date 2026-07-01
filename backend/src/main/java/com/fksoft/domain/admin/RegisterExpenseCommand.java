@@ -10,7 +10,6 @@ import java.util.UUID;
  * @param supplierId the administrative supplier the expense belongs to (required)
  * @param period the accounting period ({@code YYYY-MM}, required)
  * @param amount the expense amount (Money, required)
- * @param kind the expense kind (required) — maps to the Finance entry type (DL-0085)
+ * @param kind the expense-kind cadastro code (required) — maps to the Finance entry type (DL-0085)
  */
-public record RegisterExpenseCommand(
-    UUID supplierId, String period, Money amount, AdminExpenseKind kind) {}
+public record RegisterExpenseCommand(UUID supplierId, String period, Money amount, String kind) {}

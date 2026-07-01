@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fksoft.domain.admin.AdminContractExpiring;
 import com.fksoft.domain.admin.AdminService;
-import com.fksoft.domain.admin.AdminSupplierType;
 import com.fksoft.domain.admin.AdminSupplierView;
 import com.fksoft.domain.admin.RegisterContractCommand;
 import com.fksoft.domain.admin.RegisterSupplierCommand;
@@ -46,7 +45,7 @@ class AdminContractExpiryIntegrationTest extends AbstractPostgresIntegrationTest
 
   private AdminSupplierView supplier() {
     return adminService.registerSupplier(
-        new RegisterSupplierCommand(AdminSupplierType.SOFTWARE, null, "Sistema XPTO"), "admin");
+        new RegisterSupplierCommand("SOFTWARE", null, "Sistema XPTO"), "admin");
   }
 
   private void contract(AdminSupplierView supplier, LocalDate validUntil) {

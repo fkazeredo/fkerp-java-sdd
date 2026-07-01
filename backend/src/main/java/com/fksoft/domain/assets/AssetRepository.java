@@ -18,14 +18,14 @@ public interface AssetRepository extends JpaRepository<Asset, UUID> {
   /** All assets, newest first. */
   List<Asset> findAllByOrderByCreatedAtDesc();
 
-  /** All assets of a type, newest first. */
-  List<Asset> findByTypeOrderByCreatedAtDesc(AssetType type);
+  /** All assets of a type (cadastro code), newest first. */
+  List<Asset> findByTypeOrderByCreatedAtDesc(String type);
 
   /** All assets in a status, newest first. */
   List<Asset> findByStatusOrderByCreatedAtDesc(AssetStatus status);
 
-  /** All assets of a type and status, newest first. */
-  List<Asset> findByTypeAndStatusOrderByCreatedAtDesc(AssetType type, AssetStatus status);
+  /** All assets of a type (cadastro code) and status, newest first. */
+  List<Asset> findByTypeAndStatusOrderByCreatedAtDesc(String type, AssetStatus status);
 
   /**
    * Active software licenses not yet signaled whose {@code expiresAt} is on/before the threshold —
@@ -35,7 +35,7 @@ public interface AssetRepository extends JpaRepository<Asset, UUID> {
    * @return the candidate licenses
    */
   @Query(
-      "SELECT a FROM Asset a WHERE a.type = com.fksoft.domain.assets.AssetType.SOFTWARE_LICENSE "
+      "SELECT a FROM Asset a WHERE a.type = 'SOFTWARE_LICENSE' "
           + "AND a.status = com.fksoft.domain.assets.AssetStatus.ACTIVE "
           + "AND a.expirySignaledAt IS NULL AND a.expiresAt IS NOT NULL "
           + "AND a.expiresAt <= :threshold")
@@ -49,7 +49,7 @@ public interface AssetRepository extends JpaRepository<Asset, UUID> {
    * @return the licenses expiring within the window, newest expiry first
    */
   @Query(
-      "SELECT a FROM Asset a WHERE a.type = com.fksoft.domain.assets.AssetType.SOFTWARE_LICENSE "
+      "SELECT a FROM Asset a WHERE a.type = 'SOFTWARE_LICENSE' "
           + "AND a.status = com.fksoft.domain.assets.AssetStatus.ACTIVE "
           + "AND a.expiresAt IS NOT NULL AND a.expiresAt <= :threshold "
           + "ORDER BY a.expiresAt ASC")

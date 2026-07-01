@@ -28,6 +28,6 @@ public class SimplesNacionalTaxStrategy implements TaxRegimeStrategy {
     BigDecimal rate = rateProvider.rateFor(municipality);
     Money iss = commissionBase.multiply(rate);
     // Simples optant: no federal withholdings on the commission (DL-0044).
-    return new TaxAssessment(iss, List.of(), TaxRegime.SIMPLES_NACIONAL);
+    return new TaxAssessment(iss, List.of(), TaxRegimeCodes.SIMPLES_NACIONAL);
   }
 }

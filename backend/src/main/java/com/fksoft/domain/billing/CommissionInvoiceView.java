@@ -16,7 +16,7 @@ import java.util.UUID;
  * @param status the lifecycle status
  * @param iss the ISS due, or {@code null} while a draft
  * @param withholdings the withholdings (empty under Simples Nacional)
- * @param regime the tax regime applied
+ * @param regime the tax-regime cadastro code applied (was {@code TaxRegime}; SPEC-0031)
  * @param municipality the IBGE municipality code of incidence
  * @param serviceCode the municipal service code
  * @param number the NFS-e number, or {@code null} while not issued
@@ -31,7 +31,7 @@ public record CommissionInvoiceView(
     InvoiceStatus status,
     Money iss,
     List<Withholding> withholdings,
-    TaxRegime regime,
+    String regime,
     String municipality,
     String serviceCode,
     String number,
