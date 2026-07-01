@@ -610,6 +610,47 @@ autoridade — a tela só reflete).
 > banco alterado (SPEC-0029 / DL-0109). É a **primeira das quatro fatias da Fase 16** que quita a dívida
 > de telas adiadas; as próximas trazem as demais áreas (ciclo comercial, inteligência, back-office).
 
+### Fase 16b — Telas de operação: Pós-venda, Origem de ofertas, Mesa de câmbio e Cancelamento
+
+Esta versão abre **mais quatro telas**, agora do **ciclo comercial**. Como na 16a, são **telas sobre o
+que o sistema já fazia** (nenhuma regra nova). Elas aparecem no menu **para quem tem o papel
+Operacional** (é só para organizar o menu — o **servidor continua sendo a autoridade**: se faltar
+permissão para uma ação, a tela informa **"acesso negado"**). Em todas, lista vazia mostra um aviso
+claro de "nada para mostrar".
+
+- **Pós-venda (chamados e SLA).** Menu **"Pós-venda"**. Lista os **chamados** (reclamação, pedido de
+  alteração, cancelamento, reembolso, informação) com filtros por **tipo**, **situação** e **reserva**, e
+  um filtro para ver só os que **estouraram o prazo (SLA)**. **Abra um chamado** apontando a reserva e o
+  tipo; depois **conduza o atendimento** pelos botões — **assumir**, **aguardar** e **encerrar** — e
+  **resolva** o chamado escolhendo o desfecho: **aprovar reembolso** (dispara o repasse de reembolso),
+  **aprovar cancelamento** (dispara o cancelamento da reserva, com as multas da política), **resolver sem
+  ação** ou **rejeitar**. O aviso de **SLA estourado** é só um alerta — **nunca trava** o fluxo. A tela
+  mostra também o **custo de atendimento** acumulado e o repasse vinculado, quando houver.
+- **Origem de ofertas.** Menu **"Origem de ofertas"**. **Registre de onde uma oferta veio**: descrição do
+  produto, preço-base, **origem** (portal próprio integrado, site externo, catálogo de terceiros ou
+  demanda avulsa) e o **nível de integração** (nenhum, só entrada, ou nos dois sentidos). Depois
+  **consulte uma oferta pelo código** para rever esses dados. Serve para deixar claro, em cada venda, se
+  a origem é integrada ou digitada à mão.
+- **Mesa de câmbio (exposição e posições).** Menu **"Mesa de câmbio"** — é a **companheira** da tela de
+  **taxa congelada** (que continua igual). Mostra a **exposição do livro**: o **subsídio acumulado** (o
+  quanto a casa "banca" no câmbio de propósito) somado ao **desvio de mercado** (o risco que se move com
+  a cotação), com um **alerta** quando o desvio passa do limite. Você pode **registrar a taxa de mercado**
+  (contingência manual) e ver seu **histórico**, **consultar a posição de uma reserva** (com a taxa
+  congelada, o mercado no momento, subsídio e desvio) e ver o **relatório PromoFx de um mês** (subsídio ×
+  desvio × diferença total).
+- **Política de cancelamento.** Menu **"Cancelamento"**. **Consulte e configure** a política de um
+  produto/fornecedor: o **tipo** (padrão, **tudo não reembolsável** ou personalizado), se é
+  **reembolsável ao fornecedor**, **quem arca** a multa (agência, Acme ou fornecedor), se somos o
+  **merchant of record**, a **taxa de no-show** e as **janelas de penalidade** (quantas horas antes ×
+  porcentagem). A tela deixa explícita a **"armadilha do merchant"**: em "tudo não reembolsável", o custo
+  do fornecedor é **devido mesmo** quando o cliente é reembolsado.
+
+> Para o time técnico: fatia **frontend-only** sobre APIs que já existiam (`/api/aftersales`,
+> `/api/sourcing`, `/api/exchange` — exposição/posições/market-rate/PromoFx — e
+> `/api/products/*/cancellation-policy`) — **nenhum endpoint novo**, nenhum contrato ou banco alterado
+> (SPEC-0029 / DL-0109). É a **segunda das quatro fatias da Fase 16**; faltam a inteligência/políticas
+> comerciais (16c) e o back-office/RH/TI (16d).
+
 ## 4. Glossário
 
 - **Backend / servidor:** a parte do sistema que processa as regras e fala com o banco de dados.
@@ -703,6 +744,7 @@ autoridade — a tela só reflete).
 | 0.22.0 | 11 — Observabilidade & monitoramento | **Monitoramento e versão (para a operação/TI)**, sem mudar regras de negócio: endereço **`/api/version`** (aberto) com versão/commit/data do build; **sondas de saúde** (`/actuator/health`) abertas; **métricas** (`/actuator/prometheus`) — técnicas (memória/CPU/requisições) e de **negócio** (reservas/cotações/NF/logins) — **restritas ao papel TI**; **stack de monitoramento** (Prometheus + Loki + Grafana) que sobe junto via `docker compose`, com painel "Acme Travel ERP — Backend Overview" e logs centralizados; **logs em JSON** com número de correlação e **sem** segredo/dado pessoal. |
 | 0.23.0 | 13 — Identidade/AuthZ profissional (gradua a SPEC-0024) | **Login único corporativo (SSO)**: entrar passa a ser pela **conta da empresa** na tela do **provedor de identidade** (Keycloak no dev), com o botão **"Entrar com SSO"** e **renovação silenciosa de sessão de verdade**; o ERP **não guarda mais senha**. **Papéis, permissões e auditoria de acesso continuam iguais** — só mudou a forma de entrar. **Mudança incompatível:** o login próprio antigo (`POST /api/identity/login`) foi **removido** (login agora é no provedor). |
 | 0.24.0 | 16a — Telas de operação: Financeiro & Conformidade | **Quatro telas novas** sobre APIs que já existiam (nenhuma regra nova): **Financeiro** (razão a pagar/receber com filtros, balancete por moeda e fechamento do mês com a "regra de ouro"), **Faturamento** (rascunho/emissão/cancelamento da NF de comissão, com ISS e retenções), **Repasses** (repasse ao agente, liquidação ao fornecedor com taxa, reembolso ao cliente, com parcelas e execução — falha aparece como falha), **Conformidade** (verificação de fechamento com pendências, envio ao cofre e consulta de documento por código com hash e prazo de retenção). Financeiro/Faturamento/Repasses aparecem no menu **só para o papel Financeiro**; Conformidade para qualquer autenticado. **Primeira das quatro fatias da Fase 16** (quita a dívida de telas — DL-0109). |
+| 0.25.0 | 16b — Telas de operação: ciclo comercial | **Quatro telas novas** sobre APIs que já existiam (nenhuma regra nova): **Pós-venda** (chamados com filtros e SLA, máquina de estados assumir/aguardar/encerrar e resolução que dispara reembolso/cancelamento; o SLA estourado só alerta, nunca trava), **Origem de ofertas** (registrar/consultar a procedência de uma oferta e o nível de integração), **Mesa de câmbio** (companheira da taxa congelada: exposição do livro com subsídio+desvio e alerta, taxa de mercado e histórico, posição por reserva e relatório PromoFx), **Cancelamento** (consultar/configurar a política por produto: tipo, janelas, quem arca, no-show e a "armadilha do merchant"). Aparecem no menu **para o papel Operacional** (o servidor segue autoridade). **Segunda das quatro fatias da Fase 16** (DL-0109). |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.
