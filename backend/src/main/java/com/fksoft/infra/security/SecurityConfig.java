@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -95,7 +96,17 @@ public class SecurityConfig {
         .toList();
   }
 
+  /**
+   * The Resource Server chain (Phase 17: {@code @Order(2)}, after the Authorization Server chain of
+   * {@link AuthorizationServerConfig} at {@code @Order(1)} and before its form-login chain at {@code
+   * @Order(3)}). It is scoped by {@link #resourceServerMatchers()} to the API/actuator/docs surface,
+   * so the browser login flow ({@code /login}, OAuth2 authorize/consent) falls through to the
+   * form-login chain and the AS chain — the enforcement rules and JWT validation are unchanged
+   * (DL-0110). In the {@code test} profile this bean is absent; {@code TestSecurityConfig} mounts the
+   * same {@link #configure} rules at the highest precedence.
+   */
   @Bean
+  @Order(2)
   @Profile("!test")
   public SecurityFilterChain securityFilterChain(
       HttpSecurity http,
@@ -103,9 +114,25 @@ public class SecurityConfig {
       RestAccessDeniedHandler accessDeniedHandler,
       JwtAuthenticationConverter jwtAuthenticationConverter)
       throws Exception {
+    http.securityMatcher(resourceServerMatchers());
     return configure(
             http, authenticationEntryPoint, accessDeniedHandler, jwtAuthenticationConverter)
         .build();
+  }
+
+  /**
+   * The paths the Resource Server chain owns: the API, the operational actuator surface and the API
+   * docs. Everything else (the AS endpoints, {@code /login} and the OAuth2 browser flow) is handled
+   * by the Authorization Server / form-login chains (ADR-0018).
+   */
+  private static String[] resourceServerMatchers() {
+    return Stream.of(
+            "/api/**",
+            "/actuator/**",
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html")
+        .toArray(String[]::new);
   }
 
   /**

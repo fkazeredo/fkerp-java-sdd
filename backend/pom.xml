@@ -13,7 +13,7 @@
 
   <groupId>com.fksoft</groupId>
   <artifactId>acme-travel-erp</artifactId>
-  <version>0.27.0</version>
+  <version>0.28.0</version>
   <name>acme-travel-erp</name>
   <description>ERP Acme Travel — modular monolith (manual commercial core + minimal compliance)</description>
 
@@ -95,9 +95,13 @@
       <artifactId>spring-modulith-starter-core</artifactId>
     </dependency>
 
-    <!-- Security: real authentication/authorization (SPEC-0024). The ERP is a Resource Server of its
-         own in-house JWT issuer (DL-0079); Nimbus (oauth2-jose) signs/verifies the HS256 token. The
-         live external OIDC IdP is Phase 13. -->
+    <!-- Security: real authentication/authorization (SPEC-0024). The ERP is an OAuth2 Resource Server
+         that validates JWTs (oauth2-resource-server + Nimbus oauth2-jose). Phase 17 (ADR-0018/DL-0110):
+         the OIDC IdP is now SELF-HOSTED — the Spring Authorization Server runs EMBEDDED in this app
+         (spring-boot-starter-oauth2-authorization-server; on Boot 4 / Security 7 the AS is part of
+         Spring Security, version managed by the Boot BOM). It signs RS256 with a local RSA key and
+         serves /oauth2/authorize|token|jwks, /.well-known/openid-configuration, /userinfo and /login.
+         Keycloak was removed (DL-0114). -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-security</artifactId>
@@ -105,6 +109,10 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-authorization-server</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.security</groupId>

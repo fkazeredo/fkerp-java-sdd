@@ -14,31 +14,38 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
-  # Security (SPEC-0024 — graduated in Phase 13, DL-0104). The ERP is an OAuth2 Resource Server that
-  # validates JWTs from the external OIDC IdP (Keycloak) by JWKS (RS256, key rotation). Two URIs:
-  #  - issuer-uri:  the PUBLIC realm URL the token's `iss` carries (what the browser uses). Used to
-  #                 VALIDATE `iss` — and, when jwk-set-uri is unset, also to discover the JWK set.
-  #  - jwk-set-uri: where the backend FETCHES the keys. In containers the backend reaches Keycloak by
-  #                 its service name, which differs from the public issuer the browser sees; setting
-  #                 jwk-set-uri lets the backend fetch keys internally while still validating the public
-  #                 `iss` — avoiding the localhost-in-container resolution trap.
-  # Locally (no container) both default to the same host:port. In the 'test' profile a local test
-  # JwtDecoder bean is provided instead (no internet IdP — DL-0105), so neither URI is contacted.
+  # Security (SPEC-0024 — re-graduated in Phase 17, ADR-0018/DL-0110). The OIDC IdP is now SELF-HOSTED:
+  # the Spring Authorization Server runs EMBEDDED in THIS app (Keycloak removed — DL-0114). The ERP is
+  # both the Authorization Server (issuer) and the Resource Server: it validates its own JWTs by JWKS
+  # (RS256, local RSA key). Since the AS lives in the same app on the same origin, issuer-uri and
+  # jwk-set-uri point at THIS app's base URL:
+  #  - issuer-uri:  the PUBLIC base URL the token's `iss` carries (the AuthorizationServerSettings
+  #                 issuer). Used to VALIDATE `iss` and — with jwk-set-uri unset — to discover the JWKS.
+  #  - jwk-set-uri: the AS JWK set endpoint on this same app (/oauth2/jwks), served by the local key.
+  # In the 'test' profile a local test JwtDecoder bean is provided instead (no live issuer — DL-0105),
+  # so neither URI is contacted and the AS is not booted.
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8088/realms/acme}
-          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8088/realms/acme/protocol/openid-connect/certs}
+          issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8080}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8080/oauth2/jwks}
 
 server:
   port: ${SERVER_PORT:8080}
 
+# Self-hosted Authorization Server (SPEC-0024 Phase 17 / ADR-0018 / DL-0110). The public issuer the AS
+# stamps into the token `iss` and advertises at /.well-known/openid-configuration. Leave blank to let
+# the AS derive it per-request (works in dev 8080 and the E2E stack 8081 without a hardcoded host); set
+# it explicitly (matching resourceserver issuer-uri above) when the public URL differs from the request.
+#
 # Application metadata (SPEC-0027/DL-0097). app.version is filtered from the pom at build time
-# (@project.version@ → e.g. 0.22.0), the SemVer source of truth (ADR 0015). It is the fallback for
+# (@project.version@ → e.g. 0.28.0), the SemVer source of truth (ADR 0015). It is the fallback for
 # GET /api/version when BuildProperties (the packaged build-info) is absent (dev/test runs).
 app:
   version: @project.version@
+  oidc:
+    issuer: ${OIDC_ISSUER_URI:}
 
 management:
   endpoints:
