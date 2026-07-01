@@ -1,0 +1,110 @@
+<section class="page">
+  <h1 class="page__title">{{ 'assets.title' | translate }}</h1>
+
+  <!-- Register an asset -->
+  <form class="app-card" (ngSubmit)="registerAsset()" #af="ngForm">
+    <h2 class="app-card__title">{{ 'assets.registerAsset' | translate }}</h2>
+    <div class="form__row">
+      <div class="field">
+        <label for="as-type">{{ 'assets.type' | translate }}</label>
+        <p-select inputId="as-type" name="type" [(ngModel)]="newType" [options]="types" appendTo="body" />
+      </div>
+      <div class="field">
+        <label for="as-identifier">{{ 'assets.identifier' | translate }}</label>
+        <input pInputText id="as-identifier" name="identifier" [(ngModel)]="newIdentifier" required />
+      </div>
+      <div class="field">
+        <label for="as-acq-date">{{ 'assets.acquisitionDate' | translate }}</label>
+        <input pInputText id="as-acq-date" name="acqDate" [(ngModel)]="newAcquisitionDate" placeholder="YYYY-MM-DD" required />
+      </div>
+      <div class="field">
+        <label for="as-cost">{{ 'assets.acquisitionCost' | translate }}</label>
+        <p-inputnumber inputId="as-cost" name="cost" [(ngModel)]="newCostAmount" mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="2" />
+      </div>
+      <div class="field">
+        <label for="as-currency">{{ 'assets.currency' | translate }}</label>
+        <input pInputText id="as-currency" name="currency" [(ngModel)]="newCostCurrency" />
+      </div>
+      <div class="field">
+        <label for="as-expires">{{ 'assets.expiresAt' | translate }}</label>
+        <input pInputText id="as-expires" name="expiresAt" [(ngModel)]="newExpiresAt" placeholder="YYYY-MM-DD" />
+      </div>
+      <div class="field">
+        <label for="as-supplier">{{ 'assets.supplierRef' | translate }}</label>
+        <input pInputText id="as-supplier" name="supplierRef" [(ngModel)]="newSupplierRef" />
+      </div>
+    </div>
+    @if (registerError()) {
+      <p-message severity="error" data-testid="assets-register-error">{{ registerError() | translate }}</p-message>
+    }
+    <div class="actions">
+      <p-button type="submit" [label]="'assets.registerAssetAction' | translate" [loading]="registerBusy()" [disabled]="registerBusy() || af.invalid || newCostAmount === null" />
+    </div>
+  </form>
+
+  <!-- Asset list -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'assets.assets' | translate }}</h2>
+      <div class="field">
+        <label for="as-f-type">{{ 'assets.type' | translate }}</label>
+        <p-select inputId="as-f-type" name="fType" [(ngModel)]="filterType" (ngModelChange)="loadAssets()" [options]="types" [showClear]="true" [placeholder]="'common.all' | translate" appendTo="body" />
+      </div>
+      <div class="field">
+        <label for="as-f-status">{{ 'assets.status' | translate }}</label>
+        <p-select inputId="as-f-status" name="fStatus" [(ngModel)]="filterStatus" (ngModelChange)="loadAssets()" [options]="statuses" [showClear]="true" [placeholder]="'common.all' | translate" appendTo="body" />
+      </div>
+      <div class="field">
+        <label for="as-f-exp">{{ 'assets.expiringWithinDays' | translate }}</label>
+        <p-inputnumber inputId="as-f-exp" name="fExp" [(ngModel)]="filterExpiring" (ngModelChange)="loadAssets()" />
+      </div>
+      <p-button [label]="'assets.runSweep' | translate" icon="pi pi-bell" (onClick)="runSweep()" [loading]="sweepBusy()" data-testid="assets-sweep" />
+    </div>
+
+    @if (sweepResult() !== null) {
+      <p-message severity="info" data-testid="assets-sweep-result">{{ 'assets.sweepFlagged' | translate }}: {{ sweepResult() }}</p-message>
+    }
+    @if (retireError()) {
+      <p-message severity="error" data-testid="assets-retire-error">{{ retireError() | translate }}</p-message>
+    }
+
+    <app-screen-state
+      [state]="assetsState()"
+      [errorCode]="errorCode()"
+      emptyKey="assets.assetsEmpty"
+      (retry)="loadAssets()"
+    >
+      <p-table [value]="assets()" data-testid="assets-table" [rows]="10" [paginator]="assets().length > 10">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'assets.type' | translate }}</th>
+            <th>{{ 'assets.identifier' | translate }}</th>
+            <th>{{ 'assets.status' | translate }}</th>
+            <th>{{ 'assets.acquisitionCost' | translate }}</th>
+            <th>{{ 'assets.expiresAt' | translate }}</th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-a>
+          <tr>
+            <td>{{ a.type }}</td>
+            <td>{{ a.identifier }}</td>
+            <td><p-tag [value]="a.status" [severity]="statusSeverity(a.status)" /></td>
+            <td>{{ format(a.acquisitionCost) }}</td>
+            <td>{{ a.expiresAt ?? '—' }}</td>
+            <td>
+              @if (a.status === 'ACTIVE') {
+                <p-button size="small" [text]="true" severity="danger" [label]="'assets.retire' | translate" (onClick)="retireAsset(a)" />
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+
+    <div class="field">
+      <label for="as-retire-reason">{{ 'assets.retireReason' | translate }}</label>
+      <input pInputText id="as-retire-reason" name="retireReason" [(ngModel)]="retireReason" [placeholder]="'assets.retireReasonPlaceholder' | translate" />
+    </div>
+  </div>
+</section>

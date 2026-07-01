@@ -1,0 +1,84 @@
+<section class="page">
+  <h1 class="page__title">{{ 'point.title' | translate }}</h1>
+  <p class="app-muted">{{ 'point.subtitle' | translate }}</p>
+
+  <!-- Crawl-run history -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'point.runs' | translate }}</h2>
+      <div class="field">
+        <label for="pt-f-status">{{ 'point.status' | translate }}</label>
+        <p-select
+          inputId="pt-f-status"
+          name="fStatus"
+          [(ngModel)]="filterStatus"
+          (ngModelChange)="loadRuns()"
+          [options]="statuses"
+          [showClear]="true"
+          [placeholder]="'common.all' | translate"
+          appendTo="body"
+        />
+      </div>
+    </div>
+
+    <app-screen-state
+      [state]="runsState()"
+      [errorCode]="errorCode()"
+      emptyKey="point.runsEmpty"
+      (retry)="loadRuns()"
+    >
+      <p-table [value]="runs()" data-testid="point-runs-table" [rows]="10" [paginator]="runs().length > 10">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'point.sourceRef' | translate }}</th>
+            <th>{{ 'point.periodRef' | translate }}</th>
+            <th>{{ 'point.status' | translate }}</th>
+            <th>{{ 'point.attempts' | translate }}</th>
+            <th>{{ 'point.items' | translate }}</th>
+            <th>{{ 'point.failureClass' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-r>
+          <tr>
+            <td>{{ r.sourceRef }}</td>
+            <td>{{ r.periodRef }}</td>
+            <td><p-tag [value]="r.status" [severity]="statusSeverity(r.status)" /></td>
+            <td>{{ r.attempts }}</td>
+            <td>{{ r.items ?? '—' }}</td>
+            <td>{{ r.failureClass ?? '—' }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+  </div>
+
+  <!-- Snapshot lookup -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'point.snapshot' | translate }}</h2>
+      <div class="field">
+        <label for="pt-snap-id">{{ 'point.snapshotId' | translate }}</label>
+        <input pInputText id="pt-snap-id" name="snapId" [(ngModel)]="snapshotId" (keyup.enter)="loadSnapshot()" />
+      </div>
+      <p-button [label]="'point.loadSnapshotAction' | translate" icon="pi pi-search" (onClick)="loadSnapshot()" [disabled]="!snapshotId" data-testid="point-snapshot-find" />
+    </div>
+
+    @if (snapshotError()) {
+      <p-message severity="error" data-testid="point-snapshot-error">{{ snapshotError() | translate }}</p-message>
+    }
+    @if (snapshot(); as s) {
+      <dl class="kv" data-testid="point-snapshot">
+        <dt>{{ 'point.sourceRef' | translate }}</dt>
+        <dd>{{ s.sourceRef }}</dd>
+        <dt>{{ 'point.periodRef' | translate }}</dt>
+        <dd>{{ s.periodRef }}</dd>
+        <dt>{{ 'point.marks' | translate }}</dt>
+        <dd>{{ s.marks }}</dd>
+        <dt>{{ 'point.operationalOnly' | translate }}</dt>
+        <dd><p-tag [value]="(s.operationalOnly ? 'common.yes' : 'common.no') | translate" [severity]="s.operationalOnly ? 'warn' : 'success'" /></dd>
+        <dt>{{ 'point.collectedAt' | translate }}</dt>
+        <dd>{{ s.collectedAt }}</dd>
+      </dl>
+    }
+  </div>
+</section>

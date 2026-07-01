@@ -134,6 +134,41 @@ export const routes: Routes = [
         canDeactivate: [canDeactivateGuard],
       },
       {
+        path: 'people',
+        loadComponent: () => import('./features/people/people-page').then((m) => m.PeoplePage),
+        canActivate: [authGuard],
+        canDeactivate: [canDeactivateGuard],
+      },
+      {
+        path: 'point',
+        loadComponent: () => import('./features/point/point-page').then((m) => m.PointPage),
+        canActivate: [authGuard],
+      },
+      {
+        path: 'assets',
+        loadComponent: () => import('./features/assets/assets-page').then((m) => m.AssetsPage),
+        canActivate: [authGuard],
+        canDeactivate: [canDeactivateGuard],
+      },
+      {
+        path: 'admin',
+        loadComponent: () => import('./features/admin/admin-page').then((m) => m.AdminPage),
+        canActivate: [authGuard],
+        canDeactivate: [canDeactivateGuard],
+      },
+      {
+        path: 'platform',
+        loadComponent: () =>
+          import('./features/platform/platform-page').then((m) => m.PlatformPage),
+        canActivate: [authGuard],
+      },
+      {
+        path: 'identity',
+        loadComponent: () =>
+          import('./features/identity/identity-page').then((m) => m.IdentityPage),
+        canActivate: [authGuard],
+      },
+      {
         path: 'health',
         loadComponent: () => import('./features/health/health-page').then((m) => m.HealthPage),
       },

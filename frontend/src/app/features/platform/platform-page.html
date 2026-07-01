@@ -1,0 +1,152 @@
+<section class="page">
+  <h1 class="page__title">{{ 'platform.title' | translate }}</h1>
+
+  <!-- e-CNPJ certificate status (metadata only) -->
+  <div class="app-card">
+    <h2 class="app-card__title">{{ 'platform.certificate' | translate }}</h2>
+    <p class="app-muted">{{ 'platform.certificateHint' | translate }}</p>
+    <app-screen-state
+      [state]="certScreenState()"
+      [errorCode]="certError()"
+      emptyKey="platform.certificateEmpty"
+      (retry)="loadCertificate()"
+    >
+      @if (certificate(); as c) {
+        <dl class="kv" data-testid="platform-certificate">
+          <dt>{{ 'platform.certSubject' | translate }}</dt>
+          <dd>{{ c.subject }}</dd>
+          <dt>{{ 'platform.certHolder' | translate }}</dt>
+          <dd>{{ c.holderDocument }}</dd>
+          <dt>{{ 'platform.certFingerprint' | translate }}</dt>
+          <dd><code>{{ c.fingerprint }}</code></dd>
+          <dt>{{ 'platform.certValidity' | translate }}</dt>
+          <dd>{{ c.validFrom }} → {{ c.validUntil }} ({{ c.daysToExpiry }} {{ 'platform.days' | translate }})</dd>
+          <dt>{{ 'platform.status' | translate }}</dt>
+          <dd><p-tag [value]="c.status" [severity]="certSeverity(c.status)" /></dd>
+        </dl>
+      }
+    </app-screen-state>
+  </div>
+
+  <!-- Governed jobs -->
+  <div class="app-card">
+    <h2 class="app-card__title">{{ 'platform.jobs' | translate }}</h2>
+    @if (triggerError()) {
+      <p-message severity="error" data-testid="platform-trigger-error">{{ triggerError() | translate }}</p-message>
+    }
+    <app-screen-state
+      [state]="jobsListState()"
+      [errorCode]="jobsError()"
+      emptyKey="platform.jobsEmpty"
+      (retry)="loadJobs()"
+    >
+      <p-table [value]="jobs()" data-testid="platform-jobs-table">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'platform.jobName' | translate }}</th>
+            <th>{{ 'platform.cron' | translate }}</th>
+            <th>{{ 'platform.ownerModule' | translate }}</th>
+            <th>{{ 'platform.enabled' | translate }}</th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-j>
+          <tr>
+            <td>{{ j.name }}</td>
+            <td><code>{{ j.cron }}</code></td>
+            <td>{{ j.ownerModule }}</td>
+            <td><p-tag [value]="(j.enabled ? 'common.yes' : 'common.no') | translate" [severity]="j.enabled ? 'success' : 'secondary'" /></td>
+            <td>
+              <p-button size="small" [text]="true" icon="pi pi-play" [label]="'platform.trigger' | translate" (onClick)="triggerJob(j)" [loading]="triggerBusy() === j.name" [disabled]="!j.enabled" />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+  </div>
+
+  <!-- Run history -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'platform.runs' | translate }}</h2>
+      <div class="field">
+        <label for="pl-r-job">{{ 'platform.jobName' | translate }}</label>
+        <input pInputText id="pl-r-job" name="rJob" [(ngModel)]="runFilterJob" (keyup.enter)="loadRuns()" />
+      </div>
+      <div class="field">
+        <label for="pl-r-status">{{ 'platform.status' | translate }}</label>
+        <p-select inputId="pl-r-status" name="rStatus" [(ngModel)]="runFilterStatus" (ngModelChange)="loadRuns()" [options]="jobStatuses" [showClear]="true" [placeholder]="'common.all' | translate" appendTo="body" />
+      </div>
+      <p-button [label]="'common.refresh' | translate" icon="pi pi-refresh" (onClick)="loadRuns()" data-testid="platform-runs-refresh" />
+    </div>
+
+    <app-screen-state
+      [state]="runsListState()"
+      [errorCode]="runsError()"
+      emptyKey="platform.runsEmpty"
+      (retry)="loadRuns()"
+    >
+      <p-table [value]="runs()" data-testid="platform-runs-table" [rows]="10" [paginator]="runs().length > 10">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'platform.jobName' | translate }}</th>
+            <th>{{ 'platform.status' | translate }}</th>
+            <th>{{ 'platform.startedAt' | translate }}</th>
+            <th>{{ 'platform.items' | translate }}</th>
+            <th>{{ 'platform.failureClass' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-r>
+          <tr>
+            <td>{{ r.job }}</td>
+            <td><p-tag [value]="r.status" [severity]="jobSeverity(r.status)" /></td>
+            <td>{{ r.startedAt }}</td>
+            <td>{{ r.items ?? '—' }}</td>
+            <td>{{ r.failureClass ?? '—' }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+  </div>
+
+  <!-- System audit -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'platform.audit' | translate }}</h2>
+      <div class="field">
+        <label for="pl-a-actor">{{ 'platform.actor' | translate }}</label>
+        <input pInputText id="pl-a-actor" name="aActor" [(ngModel)]="auditActor" (keyup.enter)="loadAudit()" />
+      </div>
+      <div class="field">
+        <label for="pl-a-type">{{ 'platform.auditType' | translate }}</label>
+        <p-select inputId="pl-a-type" name="aType" [(ngModel)]="auditType" (ngModelChange)="loadAudit()" [options]="auditTypes" [showClear]="true" [placeholder]="'common.all' | translate" appendTo="body" />
+      </div>
+    </div>
+
+    <app-screen-state
+      [state]="auditListState()"
+      [errorCode]="auditError()"
+      emptyKey="platform.auditEmpty"
+      (retry)="loadAudit()"
+    >
+      <p-table [value]="audit()" data-testid="platform-audit-table" [rows]="10" [paginator]="audit().length > 10">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'platform.occurredAt' | translate }}</th>
+            <th>{{ 'platform.actor' | translate }}</th>
+            <th>{{ 'platform.auditType' | translate }}</th>
+            <th>{{ 'platform.detail' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-a>
+          <tr>
+            <td>{{ a.occurredAt }}</td>
+            <td>{{ a.actor }}</td>
+            <td><p-tag [value]="a.type" severity="info" /></td>
+            <td>{{ a.detail }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+  </div>
+</section>

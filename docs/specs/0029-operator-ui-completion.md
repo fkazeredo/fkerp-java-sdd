@@ -1,6 +1,6 @@
 # 0029 - Telas de operação (quitação do gap de UI — Fase 16)
 
-Status: Approved (16a, 16b e 16c implementadas)
+Status: Approved (16a, 16b, 16c e 16d implementadas — Fase 16 concluída)
 Related DL: DL-0109 (gap de UI), DL-0094 (dashboard compõe endpoints), DL-0082 (papéis sensíveis)
 Related ADR: 0015 (versionamento), SPEC-0026 (padrão de tela — shell/estados/nav/i18n)
 
@@ -28,7 +28,7 @@ A entrega é fatiada por domínio/papel, cada fatia um release MINOR (ADR 0015):
 | **16a** | **0.24.0** | **Finance** (razão AP/AR, balancete por moeda, abrir/fechar período), **Billing** (NF de comissão / ISS), **Payout** (repasses/liquidações/reembolsos), **Compliance** (cofre de documentos, requisitos, retenção) | Finance/Billing/Payout → `ROLE_FINANCE`; Compliance → visível a qualquer autenticado (leitura ampla) |
 | **16b** | **0.25.0** | **AfterSales** (chamados/SLA/máquina de estados/resolução), **Sourcing** (proveniência de ofertas + nível de integração), **Exchange-completo** (mesa de câmbio: market-rate, posição por reserva, exposição viva + PromoFx), **Cancelamento** (política por escopo: janelas/merchant trap/quem arca) | Operations (`ROLE_OPERATIONS`) |
 | **16c** | **0.26.0** | **Intelligence/DSS** (painel de insights: evidência/recomendação/guardrail + registro da decisão humana), **CommercialPolicy** (parâmetros governados, regras/diretivas, precedência Diretiva>Promoção>Contrato>Política>Padrão), **Marketing** (consentimento LGPD, segmentos, campanhas, atribuição, apagamento), **Portfolio** (marcas, contratos de representação, metas × realizado) | Intelligence/Marketing/Portfolio → `ROLE_OPERATIONS`; CommercialPolicy → `ROLE_DIRECTOR`/`ROLE_POLICY_ADMIN` |
-| 16d | 0.27.0 | People/RH, Ponto, Assets, Admin, Platform/TI, Identity/acesso | IT/Finance/Director |
+| **16d** | **0.27.0** | **People/RH** (colaboradores, jornada/banco de horas, fila de discrepâncias), **Ponto** (histórico de coletas do REP + espelho operacional — leituras; AFD/AEJ e disparo de coleta ficam M2M), **Assets** (patrimônio interno: registro/baixa + varredura de licenças), **Admin/back-office** (fornecedores/contratos/despesas + varredura de contratos), **Platform/TI** (jobs governados, certificado e-CNPJ **metadata-only**, auditoria de sistema), **Identity/acesso** (catálogo de papéis, auditoria de acesso) | People/Ponto/Assets/Platform → `ROLE_IT`; Admin → `ROLE_FINANCE`; Identity → `ROLE_DIRECTOR`/`ROLE_IT` |
 
 **Fora de escopo (não-metas):**
 - **Endpoints máquina-a-máquina não ganham tela**: webhooks de pagamento/NFS-e (`/api/webhooks/**`),
@@ -63,6 +63,19 @@ O **backend é a única autoridade** de autorização (security.md). A nav só *
   comercial); o backend segue sendo a autoridade, então acesso direto à rota continua permitido a
   qualquer autenticado e uma futura restrição de papel administrativo (cancelamento, quando
   Identity/SPEC-0024 amadurecer) aparecerá como 403 no `<app-screen-state>`, sem mudança de tela.
+- **16d:** o gating real (SecurityConfig) é: **Platform** `POST /jobs/*/trigger` e `POST /certificate`
+  → **ROLE_IT**; **Admin** `POST /api/admin/**` (fornecedor/contrato/despesa/varredura) → **ROLE_FINANCE**;
+  **Identity** `/roles` e `/access-audit` → **ROLE_DIRECTOR** ou **ROLE_IT**; as leituras de **People**
+  (`/api/people/**`) e **Assets** (`/api/assets`) caem em `authenticated()`. A nav marca People/Ponto/
+  Assets/Platform como `roles: ['ROLE_IT']`, Admin `['ROLE_FINANCE']` e Identity `['ROLE_DIRECTOR',
+  'ROLE_IT']` **só para reduzir ruído de menu** — o backend é a autoridade; acesso direto à rota
+  segue as regras acima e uma ação sem papel volta como 403 renderizado no `<app-screen-state>`.
+  **Não existe papel "HR"** no realm (só DIRECTOR/FINANCE/OPERATIONS/IT/POLICY_ADMIN/VIEWER) — por isso
+  People/RH usa **IT** na nav. O **Ponto** expõe apenas leituras de operador/TI (histórico de coletas e
+  espelho); a ingestão do AFD/AEJ assinado (`POST /afd`) e o disparo de coleta (`POST /crawl`) são
+  contratos máquina-a-máquina/operacionais sob `/api/integration/**` (permitAll por HMAC) e **não ganham
+  tela** (não-meta). O **certificado e-CNPJ** mostra **só metadados** (titular, validade, impressão
+  digital, status via `GET /certificate/status`) — a chave/senha **nunca** trafegam à UI (BR1).
 
 ## Estados de tela (obrigatórios em toda seção de dados)
 
@@ -231,6 +244,81 @@ AC27 Nenhuma mudança de backend além do bump de versão (pom + OpenAPI) para 0
      permanece verde; nenhuma migração, nenhum contrato alterado.
 ```
 
+## Business Rules (16d — back-office & TI)
+
+```txt
+BR13  People/RH — a tela lista colaboradores (GET /api/people/employees, filtro status, paginado) e
+      registra um colaborador (POST /employees: matrícula/admissão/jornada contratada/contrato-doc);
+      lê a jornada processada de um período (GET /employees/{id}/journey?period) e o banco de horas
+      (GET /employees/{id}/timebank?period) mostrando horas trabalhadas × contratadas × saldo; e
+      navega a fila de discrepâncias (GET /discrepancies, filtros period/status, paginado). Horas são
+      strings vindas do backend — a UI nunca faz aritmética de jornada. O holerite/espelho é arquivado
+      via multipart no cofre da Compliance (SPEC-0022 BR5) — fluxo pesado que fica fora da tela; a tela
+      só mostra o documentId por valor quando presente (BR6).
+BR14  Ponto — a tela lê o histórico de coletas do REP (GET /api/integration/point/runs, filtro status,
+      paginado) com tentativas/itens/classe de falha (RUNNING/SUCCEEDED/RETRY_SCHEDULED/DEAD_LETTER —
+      SPEC-0012 BR7) e um espelho operacional por id (GET /snapshots/{id}). São leituras de operador/TI.
+      A ingestão do AFD/AEJ assinado (POST /afd) e o disparo manual de coleta (POST /crawl) são ações
+      máquina-a-máquina/operacionais e NÃO ganham tela (não-meta).
+BR15  Assets — a tela lista o patrimônio (GET /api/assets, filtros type/status/expiringWithinDays
+      combináveis), registra um item (POST /: tipo/identificação/aquisição/custo na moeda original/
+      expiração/fornecedor), baixa um item com motivo auditado (POST /{id}/retire) e dispara a varredura
+      de expiração de licenças (POST /flag-expiring, DL-0066), mostrando quantas foram sinalizadas.
+      Amounts na moeda original; Assets nunca precifica venda (SPEC-0021 BR5).
+BR16  Admin (back-office) — a tela lista fornecedores administrativos (GET /api/admin/suppliers, filtros
+      type/status) e registra um (POST /suppliers); lista os contratos de um fornecedor (GET
+      /suppliers/{id}/contracts) e registra um (POST); registra uma despesa recorrente (POST /expenses,
+      que cria o lançamento no Financeiro e lista os documentos exigidos) e dispara a varredura de
+      expiração de contratos (POST /contracts/flag-expiring, DL-0087). As escritas exigem ROLE_FINANCE
+      (DL-0088) — um chamador sem o papel recebe 403 renderizado como estado de permissão.
+BR17  Platform/TI — a tela lista o catálogo de jobs governados (GET /api/platform/jobs) e o histórico de
+      execuções (GET /jobs/runs, filtros job/status, paginado) e dispara um job manualmente (POST
+      /jobs/{name}/trigger — ROLE_IT; 404 job desconhecido, 409 já rodando); mostra o STATUS do
+      certificado e-CNPJ (GET /certificate/status) — SÓ metadados (titular/documento/impressão digital/
+      validade/dias-para-expirar/status); a chave e a senha NUNCA são retornadas por endpoint algum
+      (BR1). E lê a auditoria de sistema consolidada (GET /audit, filtros actor/type/janela, paginado,
+      mais novo primeiro) — metadados, nunca material secreto (BR4).
+BR18  Identity/acesso — a tela lê o catálogo de papéis/permissões (GET /api/identity/roles — fonte da
+      verdade da autorização interna, BR16) e a trilha de auditoria de acesso (GET /access-audit,
+      login/negação, filtros actor/type/janela, paginado). Ambas exigem DIRECTOR ou IT — o backend é a
+      autoridade, então a falta do papel vira 403 (estado de permissão). O login acontece no IdP OIDC
+      externo (Fase 13); não há gestão de credencial na tela.
+```
+
+## Acceptance Criteria (16d)
+
+```txt
+AC28 Existem telas People/RH, Ponto, Assets, Admin, Platform/TI e Identity/acesso acessíveis pela nav
+     sob o Shell, rota lazy com authGuard (e canDeactivate nos formulários editáveis — People/Assets/
+     Admin). A nav marca People/Ponto/Assets/Platform roles: ['ROLE_IT'], Admin ['ROLE_FINANCE'] e
+     Identity ['ROLE_DIRECTOR','ROLE_IT'] (esconder ruído de menu; o backend é a autoridade). Não há
+     papel "HR" no realm — People usa IT.
+AC29 Cada tela usa <app-screen-state> em toda seção de dados, com os quatro estados; todos os rótulos
+     vêm do i18n (pt-BR + en), sem texto hardcoded.
+AC30 People: filtra/registra colaboradores, consulta jornada + banco de horas de um colaborador/período
+     e navega a fila de discrepâncias; horas vêm do backend, sem aritmética no cliente.
+AC31 Ponto: lista o histórico de coletas (com classe de falha) e lê um espelho por id; a tela não expõe
+     ingestão de AFD nem disparo de coleta (M2M/operacional).
+AC32 Assets: lista com filtros combináveis, registra, baixa com motivo e dispara a varredura de licenças
+     mostrando o total sinalizado; amounts na moeda original.
+AC33 Admin: lista/registra fornecedores, lista/registra contratos, registra despesa (mostrando o
+     lançamento financeiro e os documentos exigidos) e dispara a varredura de contratos; uma escrita sem
+     ROLE_FINANCE vira 403 (estado de permissão).
+AC34 Platform: lista o catálogo de jobs + histórico de execuções e dispara um job; mostra o certificado
+     e-CNPJ apenas por metadados (nunca a chave/senha) e lê a auditoria de sistema; um trigger sem
+     ROLE_IT vira 403 (estado de permissão).
+AC35 Identity: lista o catálogo de papéis e a auditoria de acesso; a falta de DIRECTOR/IT vira 403
+     (estado de permissão).
+AC36 Vitest por tela cobrindo loading→success, empty (onde há lista) e error/permission; specs de serviço
+     (HttpTestingController) para os wrappers HTTP; gate de cobertura verde (pisos Fase-12).
+AC37 Uma jornada Playwright: login IT → Platform (certificado metadata-only + catálogo de jobs) e People
+     (lista/estado vazio); a autoridade é provada na API — um token sem ROLE_IT recebe 403 no trigger de
+     job governado, o IT é autorizado. Autorada; execução do stack E2E depende de rede de artefatos.
+AC38 Nenhuma mudança de backend além do bump de versão (pom + OpenAPI) para 0.27.0; ./mvnw verify
+     permanece verde; nenhuma migração, nenhum contrato alterado. Fase 16 concluída (toda a UI de
+     operação entregue).
+```
+
 ## Non-Goals (recap)
 
 - Telas para endpoints M2M (webhooks/ACL) — nunca.
@@ -240,6 +328,8 @@ AC27 Nenhuma mudança de backend além do bump de versão (pom + OpenAPI) para 0
 
 ## Open Questions
 
-- Nenhuma para 16a/16b/16c (as APIs, os papéis e o padrão de tela já existem — DL-0109). A fatia 16d
-  detalhará suas telas (People/RH, Ponto, Assets, Admin, Platform/TI, Identity) quando for implementada,
-  podendo refinar esta spec.
+- Nenhuma. 16a/16b/16c/16d entregues (as APIs, os papéis e o padrão de tela já existiam — DL-0109).
+  **A Fase 16 está concluída**: todo módulo de backend que só existia como API agora tem tela de operação
+  reusando o padrão SPEC-0026 (service + `<app-screen-state>` + rota lazy + nav por papel + i18n
+  bilíngue), sem nenhuma mudança de contrato/schema. Evoluções futuras (ex.: papel administrativo próprio
+  para cancelamento, ou um papel HR dedicado) aparecerão como novas specs, não reabrem esta.

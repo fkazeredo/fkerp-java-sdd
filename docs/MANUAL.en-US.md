@@ -681,6 +681,48 @@ the screen shows **"access denied"**). On all of them, an empty list shows a cle
 > database change (SPEC-0029 / DL-0109). It is the **third of the four Phase 16 slices**; the back-office/
 > HR/IT (16d) is still pending.
 
+### Phase 16d — Operator screens: People/HR, Time clock, Assets, Back-office, Platform/IT and Access
+
+This version opens the **back-office and IT screens** — the **last** slice of Phase 16. With it, **every
+module that used to exist only "under the hood" (with no screen) now has an operator screen**. As before,
+these are **screens over what the system already did** (no new rules); the menu hides what isn't for your
+profile, but the **server remains the authority** (if a role is missing for an action, the screen shows
+**"access denied"**). An empty list shows a clear "nothing to show" notice.
+
+- **People / HR (collaborators, journey and discrepancies).** Menu **"People / HR"**. **List and register**
+  collaborators (registration id, admission, contracted journey, status). **Look up the journey** of a
+  collaborator for a period and the **time-bank** (worked × contracted × balance). Browse the **discrepancy
+  queue** (inconsistent punches) by period/status — a **treatment** queue (an alert); the system **does not
+  auto-correct**. The payslip is still **archived in the vault** by the existing flow; the screen only
+  references it.
+- **Time clock (crawls and operational snapshot).** Menu **"Time clock"**. Follow the **crawl-run history**
+  of the punch-clock (REP) — with **attempts, items and the failure class** (succeeded, retry-scheduled,
+  dead-letter) — and **look up an operational snapshot** by id. It is a **read-only** screen for IT; the
+  signed legal file (AFD/AEJ) ingest and the crawl trigger are **machine-to-machine** and have **no screen**.
+- **Assets (equipment and licenses).** Menu **"Assets"**. **List** items with type/status/expiring filters,
+  **register** an item (type, identifier, acquisition, cost in the original currency, expiry, supplier),
+  **retire** one with an **audited reason**, and run the **license-expiry sweep** (shows how many were
+  flagged). It is patrimony, not a product — it never enters pricing/sales.
+- **Back-office (administrative suppliers, contracts and expenses).** Menu **"Back-office"** (visible to the
+  **Finance** role). **List and register** administrative suppliers (utilities, software, service); **list
+  and register** a supplier's contracts (validity, recurrence, amount); **post the monthly expense** — which
+  **creates the Accounts Payable entry** and lists the **required documents**; and run the **contract-expiry
+  sweep**. **Registering/posting requires the Finance role** — without it the screen shows "access denied".
+- **Platform / IT (jobs, certificate and audit).** Menu **"Platform / IT"** (**IT** role). See the **e-CNPJ
+  certificate status** — **metadata only** (subject, holder document, fingerprint, validity, days to expiry,
+  status); the **key and password never appear**. Browse the **governed-job catalog** and **run history**,
+  and **trigger a job manually** (one run at a time). Read the filterable **system audit** (who/what/when) —
+  always **metadata only**.
+- **Access (roles and access audit).** Menu **"Access"** (**Director** or **IT** roles). See the **role and
+  permission catalogue** (the source of truth of internal authorization) and the **access audit** (logins
+  and denials; who/action/when, **no password/token**). Signing in is still through the **corporate single
+  sign-on** (Phase 13); passwords **are not managed** here.
+
+> For the technical team: a **frontend-only** slice over APIs that already existed (`/api/people`,
+> `/api/integration/point`, `/api/assets`, `/api/admin`, `/api/platform`, `/api/identity`) — **no new
+> endpoint**, no contract or database change (SPEC-0029 / DL-0109). It is the **fourth and last slice of
+> Phase 16**: with it, **the entire operator-UI debt is paid off** — the operator sees the whole ERP.
+
 
 ## 4. Glossary
 
@@ -777,6 +819,7 @@ the screen shows **"access denied"**). On all of them, an empty list shows a cle
 | 0.24.0 | 16a — Operator screens: Finance & Compliance | **Four new screens** over APIs that already existed (no new rules): **Finance** (AP/AR ledger with filters, per-currency trial balance and the monthly close with the "golden rule"), **Billing** (draft/issue/cancel of the commission invoice, with ISS and withholdings), **Payouts** (agent repass, supplier settlement with rate, customer refund, with installments and execution — a failure shows as a failure), **Compliance** (close-check with pending entries, vault upload and document lookup by id with hash and retention deadline). Finance/Billing/Payouts appear in the menu **only for the Finance role**; Compliance for any authenticated user. **First of the four Phase 16 slices** (pays off the deferred-screen debt — DL-0109). |
 | 0.25.0 | 16b — Operator screens: commercial cycle | **Four new screens** over APIs that already existed (no new rules): **After-sales** (cases with filters and SLA, an assign/wait/close state machine and a resolution that triggers refund/cancellation; a breached SLA only alerts, never blocks), **Sourcing** (register/look up an offer's provenance and integration level), **FX desk** (companion to the pinned rate: book exposure with subsidy+drift and an alert, market rate and history, position by booking and the PromoFx report), **Cancellation** (look up/configure the per-product policy: type, windows, cost bearer, no-show and the "merchant trap"). They appear in the menu **for the Operations role** (the server remains the authority). **Second of the four Phase 16 slices** (DL-0109). |
 | 0.26.0 | 16c — Operator screens: Intelligence & Growth | **Four new screens** over APIs that already existed (no new rules): **Intelligence** (insight panel with filters and gain ordering; evidence/recommendation/guardrail; recording the human decision — which only records, never executes), **Commercial policy** (resolve a parameter with provenance; rules list with the Directive>Promotion>Contract>Policy>Default precedence; define a rule and issue a directive with justification), **Marketing** (LGPD consent with history, grant/revoke; segments and reach; campaigns with a consent-filtered dispatch; attribution; LGPD erasure), **Portfolio** (brands, contracts and coverage; goals × realized with attainment). Intelligence/Marketing/Portfolio appear for the **Operations** role; Commercial policy for **Director/Curator**. **Third of the four Phase 16 slices** (DL-0109). |
+| 0.27.0 | 16d — Operator screens: Back-office & IT (closes Phase 16) | **Six new screens** over APIs that already existed (no new rules): **People / HR** (collaborators, journey + time-bank, discrepancy queue), **Time clock** (REP crawl-run history + operational snapshot — read-only; AFD/AEJ and crawl trigger stay machine-to-machine, no screen), **Assets** (register/retire equipment and licenses + license-expiry sweep), **Back-office** (administrative suppliers/contracts/expenses + contract sweep — requires the Finance role), **Platform / IT** (governed jobs with catalog/history/trigger, e-CNPJ certificate **metadata only** — never the key/password, system audit), **Access** (role/permission catalogue and access audit). People/Time-clock/Assets/Platform appear for the **IT** role (there is no "HR" role); Back-office for **Finance**; Access for **Director/IT**. **Last of the four Phase 16 slices** — with it the whole operator-UI debt is paid off (DL-0109). |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of

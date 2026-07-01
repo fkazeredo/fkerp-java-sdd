@@ -86,5 +86,41 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: 'pi pi-briefcase',
     roles: ['ROLE_OPERATIONS'],
   },
+  {
+    path: 'people',
+    labelKey: 'nav.people',
+    icon: 'pi pi-id-card',
+    roles: ['ROLE_IT'],
+  },
+  {
+    path: 'point',
+    labelKey: 'nav.point',
+    icon: 'pi pi-clock',
+    roles: ['ROLE_IT'],
+  },
+  {
+    path: 'assets',
+    labelKey: 'nav.assets',
+    icon: 'pi pi-desktop',
+    roles: ['ROLE_IT'],
+  },
+  {
+    path: 'admin',
+    labelKey: 'nav.admin',
+    icon: 'pi pi-building',
+    roles: ['ROLE_FINANCE'],
+  },
+  {
+    path: 'platform',
+    labelKey: 'nav.platform',
+    icon: 'pi pi-cog',
+    roles: ['ROLE_IT'],
+  },
+  {
+    path: 'identity',
+    labelKey: 'nav.identity',
+    icon: 'pi pi-key',
+    roles: ['ROLE_DIRECTOR', 'ROLE_IT'],
+  },
   { path: 'health', labelKey: 'nav.health', icon: 'pi pi-heart' },
 ];

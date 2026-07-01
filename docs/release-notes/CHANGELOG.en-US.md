@@ -1,12 +1,71 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.26.0.md`](0.26.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.27.0.md`](0.27.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.27.0 — Phase 16d · Operator screens: People/HR, Time clock, Assets, Back-office, Platform/IT and Access (SPEC-0029 — closes Phase 16)
+
+**MINOR — new user-facing capability, retro-compatible (ADR 0015). Frontend-only over existing APIs;
+no new endpoint, no contract/schema change.**
+
+Phase 16d pays off the **remaining UI gap** (DL-0109), now for the **back-office and IT**. It is the
+**last of the four Phase 16 slices**: with it, **every module that only existed as an API now has an
+operator screen** — the operator sees the whole ERP. It extends **SPEC-0029** and delivers six more
+operator screens, reusing the established frontend pattern.
+
+- **Added — People/HR screen** (`/people`): **collaborators** (list by status + register); **journey and
+  time-bank** for a collaborator/period (worked × contracted × balance — all from the backend, no client
+  math); and the **discrepancy queue** (period/status filters — an alert, no auto-correction). Consumes
+  `GET/POST /api/people/employees`, `GET /employees/{id}/journey`, `GET /employees/{id}/timebank`,
+  `GET /discrepancies`. The payslip stays archived in the vault by the existing multipart flow.
+- **Added — Time-clock screen** (`/point`): the REP **crawl-run history** (status filter, with
+  attempts/items/failure-class) and an **operational snapshot** by id — operator/IT reads. Consumes
+  `GET /api/integration/point/runs` and `GET /snapshots/{id}`. The signed AFD/AEJ ingest (`POST /afd`) and
+  the crawl trigger (`POST /crawl`) are machine-to-machine/operational contracts and get **no screen**.
+- **Added — Assets screen** (`/assets`): **list** with combinable type/status/expiring filters, **register**
+  (cost in the original currency), **retire** with an audited reason and the **license-expiry sweep** (shows
+  the flagged count). Consumes `GET/POST /api/assets`, `GET /{id}`, `POST /{id}/retire`, `POST
+  /flag-expiring`.
+- **Added — Back-office (Admin) screen** (`/admin`): **administrative suppliers** (list/register),
+  **contracts** per supplier (list/register), a **recurring expense** (register — creates the Finance entry
+  and lists the required documents) and the **contract-expiry sweep**. Consumes `GET/POST
+  /api/admin/suppliers`, `GET/POST /suppliers/{id}/contracts`, `POST /expenses`, `POST
+  /contracts/flag-expiring`. **Writes require `ROLE_FINANCE`** (DL-0088) — without it, a 403 renders as the
+  permission state.
+- **Added — Platform/IT screen** (`/platform`): the **governed-job catalog** + **run history** (job/status
+  filters) + **manual trigger** (ROLE_IT; 404 unknown, 409 already running); the **e-CNPJ certificate
+  status** — **metadata only** (subject/holder/fingerprint/validity/days/status); the **key and password
+  NEVER reach the UI**; and the consolidated **system audit** (actor/type/window filters). Consumes
+  `GET /api/platform/jobs`, `GET /jobs/runs`, `POST /jobs/{name}/trigger`, `GET /certificate/status`,
+  `GET /audit`.
+- **Added — Identity/Access screen** (`/identity`): the **role/permission catalogue** (source of truth of
+  internal authorization) and the **access audit** (login/denial; actor/type/window filters). Both require
+  **DIRECTOR or IT** — without the role, a 403 (permission state). Consumes `GET /api/identity/roles` and
+  `GET /access-audit`. Login is at the external OIDC IdP (Phase 13); no credential management here.
+- **Added — navigation & i18n:** six new nav items — People/Time-clock/Assets/Platform
+  `roles: ['ROLE_IT']` (**there is no "HR" role** in the realm), Admin `['ROLE_FINANCE']`, Identity
+  `['ROLE_DIRECTOR','ROLE_IT']`; pt-BR and en-US i18n blocks per screen. Screens whose first letter clashes
+  with an earlier route remain reachable via the `Ctrl/Cmd+K` palette.
+- **Tests:** Vitest per screen + service specs (`HttpTestingController`) → **264 frontend tests** (49
+  files), coverage above the Phase-12 floors; Playwright journey `e2e/platform-people.spec.ts` (IT opens
+  Platform → metadata-only certificate + job catalog, then People → empty list; a token without ROLE_IT is
+  denied 403 on the governed-job trigger, IT is allowed — authority in the backend).
+- **Changed — `backend/pom.xml` + OpenAPI**: version `0.26.0 → 0.27.0` (only the version string and the
+  OpenAPI description text, which now records 16c/16d as frontend-only and Phase 16 as complete). `./mvnw
+  verify` stays **green — 476 tests, BUILD SUCCESS** (no backend behavior change).
+- **Not changed (frontend-only):** no new endpoint, no migration, no contract/JSON/event/schema change.
+- **E2E in the sandbox:** the Playwright journey is **authored and compiles** (Playwright discovers it — 19
+  tests via `npx playwright test --list`) but was **not executed here** because building the isolated
+  stack's backend image needs Maven network/cache inside the container, unavailable in the sandbox. `./mvnw
+  verify` on the host is green — an infra limit, not a code defect.
+- **Phase 16 complete:** no operator-UI slices remain; the whole UI debt (DL-0109) is paid off.
 
 ---
 
