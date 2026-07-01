@@ -1,12 +1,42 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.29.0.md`](0.29.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.30.0.md`](0.30.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.30.0 — Phase 18b · reference enums → cadastros (Marketing/Intelligence/Portfolio) + labels on screens
+
+**MINOR — new capability. No existing `/api` contract changed (the converted fields keep their `string`
+schema).**
+
+Slice 18b reuses the `cadastro` module (18a) and converts three more reference-enum groups to
+validated `code`s (code = old enum constant name ⇒ JSON identical), and retro-fixes the 18a seam by
+rendering the cadastro **label** on screen instead of the code. SPEC-0031 updated; ADR-0019 + DL-0116.
+
+- **Marketing:** `ConsentPurpose`, `SubjectType` → validated codes (`CONSENT_PURPOSE`,
+  `MARKETING_SUBJECT_TYPE`), validated on write (`grantConsent`).
+- **Intelligence:** `SubjectKind`, `InsightType`, `Verdict` → codes. These are **system-produced** (the
+  DSS mints them from consumed events), so they become cadastros for the editable label — no write
+  validation.
+- **Portfolio:** `GoalMetric` → `code`, validated on `defineGoal`. The realized-projection branching is
+  preserved: VOLUME←BookingConfirmed, REVENUE←SpreadRealized (DL-0062).
+- **Added:** `*Codes` constants (`MarketingCodes`, `IntelligenceCodes`, `GoalMetricCodes`); a frontend
+  label lookup — `CadastroLabelService` (cache-first per-type `code→label` fetch) + `CadastroLabelPipe`
+  — wired into the Marketing/Intelligence/Portfolio screens; `marketing.purpose` i18n (pt-BR + en).
+  **Migration V34** seeds the 6 new types.
+- **Changed:** the Marketing/Intelligence/Portfolio enum fields became validated string codes (the
+  enums were removed); those screens now render the label. OpenAPI → 0.30.0.
+- **Gates green:** backend `./mvnw verify` **503 tests** (was 495; round-trip, invalid/inactive code
+  rejection, branching preserved — REVENUE/VOLUME projection, verdict narrator), ArchUnit/Modulith/
+  Spotless/Checkstyle/JaCoCo unchanged; frontend lint + **284 tests** + build; E2E `cadastro.spec.ts`
+  extended with the 18b goal-metric round-trip (authored + compiled; `playwright test --list`, 23
+  tests), not executed in-sandbox (infra).
 
 ---
 

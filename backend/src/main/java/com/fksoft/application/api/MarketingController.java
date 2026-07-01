@@ -10,13 +10,11 @@ import com.fksoft.application.api.dto.SegmentPreviewResponse;
 import com.fksoft.domain.marketing.AttributionView;
 import com.fksoft.domain.marketing.CampaignSendResult;
 import com.fksoft.domain.marketing.CampaignView;
-import com.fksoft.domain.marketing.ConsentPurpose;
 import com.fksoft.domain.marketing.ConsentView;
 import com.fksoft.domain.marketing.ErasureResult;
 import com.fksoft.domain.marketing.MarketingService;
 import com.fksoft.domain.marketing.SegmentView;
 import com.fksoft.domain.marketing.SubjectRef;
-import com.fksoft.domain.marketing.SubjectType;
 import com.fksoft.infra.security.UserContextProvider;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -65,8 +63,8 @@ public class MarketingController {
   @GetMapping("/consents")
   public ConsentStateResponse state(
       @RequestParam String subject,
-      @RequestParam SubjectType subjectType,
-      @RequestParam(defaultValue = "NEWSLETTER") ConsentPurpose purpose) {
+      @RequestParam String subjectType,
+      @RequestParam(defaultValue = "NEWSLETTER") String purpose) {
     SubjectRef ref = new SubjectRef(subject, subjectType);
     return new ConsentStateResponse(
         marketingService.currentState(ref, purpose), marketingService.history(ref, purpose));

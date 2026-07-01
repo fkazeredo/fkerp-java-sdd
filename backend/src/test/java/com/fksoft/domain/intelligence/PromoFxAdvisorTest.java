@@ -31,7 +31,7 @@ class PromoFxAdvisorTest {
 
     assertThat(assessment).isPresent();
     PromoFxAssessment advice = assessment.get();
-    assertThat(advice.verdict()).isEqualTo(Verdict.CONVERTE);
+    assertThat(advice.verdict()).isEqualTo(IntelligenceCodes.CONVERTE);
     assertThat(advice.estimatedGain()).isEqualTo(brl("4900.00"));
     assertThat(advice.estimatedRisk()).isNull();
     assertThat(advice.hasGuardrail()).isFalse();
@@ -45,7 +45,7 @@ class PromoFxAdvisorTest {
 
     PromoFxAssessment advice = PromoFxAdvisor.assess(signal).orElseThrow();
 
-    assertThat(advice.verdict()).isEqualTo(Verdict.CONVERTE);
+    assertThat(advice.verdict()).isEqualTo(IntelligenceCodes.CONVERTE);
     assertThat(advice.estimatedGain()).isEqualTo(brl("4200.00"));
   }
 
@@ -55,7 +55,7 @@ class PromoFxAdvisorTest {
 
     PromoFxAssessment advice = PromoFxAdvisor.assess(signal).orElseThrow();
 
-    assertThat(advice.verdict()).isEqualTo(Verdict.QUEIMA_MARGEM);
+    assertThat(advice.verdict()).isEqualTo(IntelligenceCodes.QUEIMA_MARGEM);
     assertThat(advice.estimatedRisk()).isEqualTo(brl("1500.00"));
     assertThat(advice.estimatedGain()).isEqualTo(brl("0.00"));
     assertThat(advice.hasGuardrail()).isTrue();

@@ -38,11 +38,11 @@ public class Insight {
 
   @Id private UUID id;
 
-  @Enumerated(EnumType.STRING)
-  private InsightType type;
+  /** The insight-type cadastro code (was {@code InsightType}; SPEC-0031/DL-0116). */
+  private String type;
 
-  @Enumerated(EnumType.STRING)
-  private SubjectKind subjectKind;
+  /** The subject-kind cadastro code (was {@code SubjectKind}; SPEC-0031/DL-0116). */
+  private String subjectKind;
 
   private String subjectRef;
 
@@ -53,8 +53,8 @@ public class Insight {
   private String evidenceSources;
 
   // recommendation
-  @Enumerated(EnumType.STRING)
-  private com.fksoft.domain.intelligence.Verdict verdict;
+  /** The advisor-verdict cadastro code (was {@code Verdict}; SPEC-0031/DL-0116). */
+  private String verdict;
 
   private String recommendationAction;
   private BigDecimal estimatedGainBrl;
@@ -88,7 +88,7 @@ public class Insight {
    * @return a new NEW insight
    */
   public static Insight promoFx(
-      SubjectKind subjectKind,
+      String subjectKind,
       String subjectRef,
       InsightEvidence evidence,
       PromoFxAssessment assessment,
@@ -96,7 +96,7 @@ public class Insight {
       Instant now) {
     Insight insight = new Insight();
     insight.id = UUID.randomUUID();
-    insight.type = InsightType.PROMO_FX_ADVISOR;
+    insight.type = IntelligenceCodes.PROMO_FX_ADVISOR;
     insight.subjectKind = subjectKind;
     insight.subjectRef = subjectRef;
     insight.applyEvidence(evidence);

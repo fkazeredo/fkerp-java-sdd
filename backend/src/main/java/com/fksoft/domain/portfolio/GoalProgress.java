@@ -21,7 +21,7 @@ import java.math.BigDecimal;
 public record GoalProgress(
     String brandRef,
     String period,
-    GoalMetric metric,
+    String metric,
     Money targetAmount,
     Money realizedAmount,
     Integer targetCount,

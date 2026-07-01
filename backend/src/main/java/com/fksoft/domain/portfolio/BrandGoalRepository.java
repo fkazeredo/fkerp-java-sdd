@@ -12,10 +12,10 @@ public interface BrandGoalRepository extends JpaRepository<BrandGoal, UUID> {
 
   /** A goal by its natural key (brand, period, metric) — unique (BR3). */
   Optional<BrandGoal> findByBrandRefAndPeriodAndMetric(
-      String brandRef, String period, GoalMetric metric);
+      String brandRef, String period, String metric);
 
   /** Whether a goal already exists for that natural key (duplicate guard). */
-  boolean existsByBrandRefAndPeriodAndMetric(String brandRef, String period, GoalMetric metric);
+  boolean existsByBrandRefAndPeriodAndMetric(String brandRef, String period, String metric);
 
   /** All goals for a brand and period (across metrics). */
   List<BrandGoal> findByBrandRefAndPeriod(String brandRef, String period);

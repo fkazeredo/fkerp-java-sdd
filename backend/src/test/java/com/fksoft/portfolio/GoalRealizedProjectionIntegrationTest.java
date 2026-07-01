@@ -7,7 +7,7 @@ import com.fksoft.domain.booking.BookingConfirmed;
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.portfolio.BrandGoalInvalidException;
 import com.fksoft.domain.portfolio.DefineGoalCommand;
-import com.fksoft.domain.portfolio.GoalMetric;
+import com.fksoft.domain.portfolio.GoalMetricCodes;
 import com.fksoft.domain.portfolio.GoalProgress;
 import com.fksoft.domain.portfolio.GoalView;
 import com.fksoft.domain.portfolio.PortfolioService;
@@ -62,11 +62,11 @@ class GoalRealizedProjectionIntegrationTest extends AbstractPostgresIntegrationT
             new DefineGoalCommand(
                 "ALAMO",
                 "2026",
-                GoalMetric.REVENUE,
+                GoalMetricCodes.REVENUE,
                 Money.of(new BigDecimal("1200000.00"), "BRL"),
                 null),
             "admin");
-    assertThat(goal.metric()).isEqualTo(GoalMetric.REVENUE);
+    assertThat(goal.metric()).isEqualTo(GoalMetricCodes.REVENUE);
 
     // A second goal for the same (brand, period, metric) is rejected.
     assertThatThrownBy(
@@ -75,7 +75,7 @@ class GoalRealizedProjectionIntegrationTest extends AbstractPostgresIntegrationT
                     new DefineGoalCommand(
                         "ALAMO",
                         "2026",
-                        GoalMetric.REVENUE,
+                        GoalMetricCodes.REVENUE,
                         Money.of(new BigDecimal("999.00"), "BRL"),
                         null),
                     "admin"))
@@ -87,7 +87,7 @@ class GoalRealizedProjectionIntegrationTest extends AbstractPostgresIntegrationT
     registerAlamo();
     UUID brandId = portfolioService.listBrands(null).get(0).id();
     portfolioService.defineGoal(
-        new DefineGoalCommand("ALAMO", "2026", GoalMetric.VOLUME, null, 10), "admin");
+        new DefineGoalCommand("ALAMO", "2026", GoalMetricCodes.VOLUME, null, 10), "admin");
 
     // Two bookings attributed to ALAMO, then confirmed → VOLUME realized = 2.
     UUID b1 = UUID.randomUUID();
@@ -102,7 +102,7 @@ class GoalRealizedProjectionIntegrationTest extends AbstractPostgresIntegrationT
         new BookingConfirmed(bOther, UUID.randomUUID(), UUID.randomUUID(), IN_2026));
 
     GoalProgress progress = portfolioService.goalProgress(brandId, "2026");
-    assertThat(progress.metric()).isEqualTo(GoalMetric.VOLUME);
+    assertThat(progress.metric()).isEqualTo(GoalMetricCodes.VOLUME);
     assertThat(progress.realizedCount()).isEqualTo(2);
     assertThat(progress.targetCount()).isEqualTo(10);
     assertThat(progress.attainmentPct()).isEqualByComparingTo("20.0");
@@ -113,7 +113,7 @@ class GoalRealizedProjectionIntegrationTest extends AbstractPostgresIntegrationT
     registerAlamo();
     UUID brandId = portfolioService.listBrands(null).get(0).id();
     portfolioService.defineGoal(
-        new DefineGoalCommand("ALAMO", "2026", GoalMetric.VOLUME, null, 10), "admin");
+        new DefineGoalCommand("ALAMO", "2026", GoalMetricCodes.VOLUME, null, 10), "admin");
 
     UUID booking = UUID.randomUUID();
     portfolioService.attributeSale("ALAMO", booking, "agent");
@@ -134,7 +134,7 @@ class GoalRealizedProjectionIntegrationTest extends AbstractPostgresIntegrationT
         new DefineGoalCommand(
             "ALAMO",
             "2026",
-            GoalMetric.REVENUE,
+            GoalMetricCodes.REVENUE,
             Money.of(new BigDecimal("1200000.00"), "BRL"),
             null),
         "admin");
@@ -149,7 +149,7 @@ class GoalRealizedProjectionIntegrationTest extends AbstractPostgresIntegrationT
             caseId, Money.of(new BigDecimal("480000.00"), "BRL"), Money.zero("BRL"), IN_2026));
 
     GoalProgress progress = portfolioService.goalProgress(brandId, "2026");
-    assertThat(progress.metric()).isEqualTo(GoalMetric.REVENUE);
+    assertThat(progress.metric()).isEqualTo(GoalMetricCodes.REVENUE);
     assertThat(progress.realizedAmount()).isEqualTo(Money.of(new BigDecimal("480000.00"), "BRL"));
     assertThat(progress.attainmentPct()).isEqualByComparingTo("40.0"); // 480k / 1.2M
   }
@@ -160,7 +160,11 @@ class GoalRealizedProjectionIntegrationTest extends AbstractPostgresIntegrationT
     UUID brandId = portfolioService.listBrands(null).get(0).id();
     portfolioService.defineGoal(
         new DefineGoalCommand(
-            "ALAMO", "2026", GoalMetric.REVENUE, Money.of(new BigDecimal("1000.00"), "BRL"), null),
+            "ALAMO",
+            "2026",
+            GoalMetricCodes.REVENUE,
+            Money.of(new BigDecimal("1000.00"), "BRL"),
+            null),
         "admin");
 
     UUID booking = UUID.randomUUID();
@@ -183,7 +187,7 @@ class GoalRealizedProjectionIntegrationTest extends AbstractPostgresIntegrationT
     registerAlamo();
     UUID brandId = portfolioService.listBrands(null).get(0).id();
     portfolioService.defineGoal(
-        new DefineGoalCommand("ALAMO", "2026", GoalMetric.VOLUME, null, 10), "admin");
+        new DefineGoalCommand("ALAMO", "2026", GoalMetricCodes.VOLUME, null, 10), "admin");
 
     // A confirmed booking that was never attributed to a brand must not move any goal.
     publisher.publishEvent(
@@ -197,7 +201,7 @@ class GoalRealizedProjectionIntegrationTest extends AbstractPostgresIntegrationT
     registerAlamo();
     UUID brandId = portfolioService.listBrands(null).get(0).id();
     portfolioService.defineGoal(
-        new DefineGoalCommand("ALAMO", "2026", GoalMetric.VOLUME, null, 10), "admin");
+        new DefineGoalCommand("ALAMO", "2026", GoalMetricCodes.VOLUME, null, 10), "admin");
 
     UUID booking = UUID.randomUUID();
     portfolioService.attributeSale("ALAMO", booking, "agent");

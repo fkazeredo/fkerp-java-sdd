@@ -9,8 +9,8 @@ import java.util.UUID;
  *
  * @param id the row id
  * @param subjectId the subject id (value)
- * @param subjectType the subject kind
- * @param purpose the purpose
+ * @param subjectType the subject-type cadastro code
+ * @param purpose the purpose cadastro code
  * @param legalBasis the legal basis
  * @param status the decision (GRANTED/REVOKED)
  * @param source the free-text source, or {@code null}
@@ -19,8 +19,8 @@ import java.util.UUID;
 public record ConsentView(
     UUID id,
     String subjectId,
-    SubjectType subjectType,
-    ConsentPurpose purpose,
+    String subjectType,
+    String purpose,
     LegalBasis legalBasis,
     ConsentStatus status,
     String source,

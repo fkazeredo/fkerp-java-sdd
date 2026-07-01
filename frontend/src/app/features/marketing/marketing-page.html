@@ -26,6 +26,10 @@
 
     @if (consentState() === 'success' && consent(); as c) {
       <dl class="kv" data-testid="marketing-consent-state">
+        <dt>{{ 'marketing.subjectType' | translate }}</dt>
+        <dd>{{ c.current.subject.type | cadastroLabel: 'MARKETING_SUBJECT_TYPE' }}</dd>
+        <dt>{{ 'marketing.purpose' | translate }}</dt>
+        <dd>{{ c.current.purpose | cadastroLabel: 'CONSENT_PURPOSE' }}</dd>
         <dt>{{ 'marketing.currentStatus' | translate }}</dt>
         <dd><p-tag [value]="c.current.currentStatus" [severity]="consentSeverity(c.current.currentStatus)" /></dd>
         <dt>{{ 'marketing.lastChangedAt' | translate }}</dt>

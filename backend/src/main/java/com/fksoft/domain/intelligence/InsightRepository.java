@@ -14,7 +14,7 @@ import org.springframework.data.repository.query.Param;
 public interface InsightRepository extends JpaRepository<Insight, UUID> {
 
   Optional<Insight> findByTypeAndSubjectKindAndSubjectRef(
-      InsightType type, SubjectKind subjectKind, String subjectRef);
+      String type, String subjectKind, String subjectRef);
 
   /**
    * Lists insights with optional type/subjectRef/status filters, ordered by estimated gain
@@ -29,7 +29,7 @@ public interface InsightRepository extends JpaRepository<Insight, UUID> {
       order by i.estimatedGainBrl desc nulls last, i.generatedAt desc
       """)
   Page<Insight> search(
-      @Param("type") InsightType type,
+      @Param("type") String type,
       @Param("subjectRef") String subjectRef,
       @Param("status") InsightStatus status,
       Pageable pageable);

@@ -8,9 +8,9 @@ import java.time.Instant;
  * and the purpose — no extra PII (LGPD: events do not leak personal data beyond the natural key).
  *
  * @param subjectRef the subject id (value)
- * @param subjectType the subject kind
- * @param purpose the purpose revoked
+ * @param subjectType the subject-type cadastro code
+ * @param purpose the purpose cadastro code revoked
  * @param occurredAt when the revocation was recorded
  */
 public record ConsentRevoked(
-    String subjectRef, SubjectType subjectType, ConsentPurpose purpose, Instant occurredAt) {}
+    String subjectRef, String subjectType, String purpose, Instant occurredAt) {}

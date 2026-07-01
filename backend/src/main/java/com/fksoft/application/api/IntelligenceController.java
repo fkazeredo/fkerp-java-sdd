@@ -2,7 +2,6 @@ package com.fksoft.application.api;
 
 import com.fksoft.application.api.dto.DecideInsightRequest;
 import com.fksoft.domain.intelligence.InsightStatus;
-import com.fksoft.domain.intelligence.InsightType;
 import com.fksoft.domain.intelligence.InsightView;
 import com.fksoft.domain.intelligence.IntelligenceService;
 import com.fksoft.infra.security.UserContextProvider;
@@ -56,7 +55,7 @@ public class IntelligenceController {
 
   @GetMapping
   public PageResponse<InsightView> list(
-      @RequestParam(required = false) InsightType type,
+      @RequestParam(required = false) String type,
       @RequestParam(required = false) String subjectRef,
       @RequestParam(required = false) InsightStatus status,
       @RequestParam(defaultValue = "0") int page,

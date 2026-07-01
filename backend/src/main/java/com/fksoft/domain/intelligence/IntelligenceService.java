@@ -148,7 +148,7 @@ public class IntelligenceService {
   /** Lists insights filtered by type/subjectRef/status, ordered by estimated gain descending. */
   @Transactional(readOnly = true)
   public Page<InsightView> list(
-      InsightType type, String subjectRef, InsightStatus status, Pageable pageable) {
+      String type, String subjectRef, InsightStatus status, Pageable pageable) {
     return insights.search(type, subjectRef, status, pageable).map(Insight::toView);
   }
 
@@ -258,13 +258,13 @@ public class IntelligenceService {
             signal.realizedGap(),
             signal.volumeAttracted(),
             advice.sources());
-    String action = narrator.narratePromoFx(SubjectKind.AGENCY, subjectRef, advice);
+    String action = narrator.narratePromoFx(IntelligenceCodes.AGENCY, subjectRef, advice);
     Instant now = clock.instant();
 
     Insight insight =
         insights
             .findByTypeAndSubjectKindAndSubjectRef(
-                InsightType.PROMO_FX_ADVISOR, SubjectKind.AGENCY, subjectRef)
+                IntelligenceCodes.PROMO_FX_ADVISOR, IntelligenceCodes.AGENCY, subjectRef)
             .map(
                 existing -> {
                   existing.refresh(evidence, advice, action, now);
@@ -272,12 +272,17 @@ public class IntelligenceService {
                 })
             .orElseGet(
                 () ->
-                    Insight.promoFx(SubjectKind.AGENCY, subjectRef, evidence, advice, action, now));
+                    Insight.promoFx(
+                        IntelligenceCodes.AGENCY, subjectRef, evidence, advice, action, now));
     insights.save(insight);
 
     events.publishEvent(
         new InsightGenerated(
-            insight.id(), InsightType.PROMO_FX_ADVISOR, subjectRef, advice.estimatedGain(), now));
+            insight.id(),
+            IntelligenceCodes.PROMO_FX_ADVISOR,
+            subjectRef,
+            advice.estimatedGain(),
+            now));
     log.info(
         "InsightGenerated insightId={} type=PROMO_FX_ADVISOR subjectRef={} verdict={} estimatedGain={}",
         insight.id(),
@@ -302,9 +307,12 @@ public class IntelligenceService {
     if (!hasGain && !hasRisk) {
       return false;
     }
+    // Verdict is a cadastro code now (DL-0116); the two wired verdicts keep their guardrail rule,
+    // and any other/unknown verdict is invalid (fallback to no insight) rather than persisted.
     return switch (advice.verdict()) {
-      case CONVERTE -> !advice.hasGuardrail();
-      case QUEIMA_MARGEM -> advice.hasGuardrail();
+      case IntelligenceCodes.CONVERTE -> !advice.hasGuardrail();
+      case IntelligenceCodes.QUEIMA_MARGEM -> advice.hasGuardrail();
+      default -> false;
     };
   }
 

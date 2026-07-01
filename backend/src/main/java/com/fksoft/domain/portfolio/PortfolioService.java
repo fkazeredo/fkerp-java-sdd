@@ -1,5 +1,7 @@
 package com.fksoft.domain.portfolio;
 
+import com.fksoft.domain.cadastro.CadastroType;
+import com.fksoft.domain.cadastro.CadastroValidator;
 import com.fksoft.domain.money.Money;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -37,6 +39,7 @@ public class PortfolioService {
   private final BrandGoalRepository goalRepository;
   private final BrandSaleAttributionRepository saleAttributionRepository;
   private final BrandRealizedRepository realizedRepository;
+  private final CadastroValidator cadastroValidator;
   private final Clock clock;
   private final ApplicationEventPublisher events;
 
@@ -229,6 +232,9 @@ public class PortfolioService {
     if (command == null || command.brandRef() == null) {
       throw new BrandGoalInvalidException();
     }
+    // Validate the goal-metric reference code against the cadastro (SPEC-0031 BR3/DL-0116) — an
+    // unknown/inactive code is rejected (422) before any write.
+    cadastroValidator.validate(CadastroType.GOAL_METRIC, command.metric());
     brandRepository.findByBrandRef(command.brandRef()).orElseThrow(BrandNotFoundException::new);
     if (goalRepository.existsByBrandRefAndPeriodAndMetric(
         command.brandRef(), command.period(), command.metric())) {
@@ -301,7 +307,8 @@ public class PortfolioService {
         .ifPresent(
             attribution -> {
               String sourceRef = bookingId.toString();
-              if (realizedRepository.existsByMetricAndSourceRef(GoalMetric.VOLUME, sourceRef)) {
+              if (realizedRepository.existsByMetricAndSourceRef(
+                  GoalMetricCodes.VOLUME, sourceRef)) {
                 return; // idempotent: this booking was already counted
               }
               realizedRepository.save(
@@ -352,7 +359,8 @@ public class PortfolioService {
         .ifPresent(
             attribution -> {
               String sourceRef = caseId.toString();
-              if (realizedRepository.existsByMetricAndSourceRef(GoalMetric.REVENUE, sourceRef)) {
+              if (realizedRepository.existsByMetricAndSourceRef(
+                  GoalMetricCodes.REVENUE, sourceRef)) {
                 return; // idempotent: this case's spread was already counted
               }
               realizedRepository.save(
@@ -394,9 +402,11 @@ public class PortfolioService {
 
   /** Builds the progress read-model for a goal (BR4). */
   private GoalProgress progressFor(BrandGoal goal) {
-    if (goal.metric() == GoalMetric.REVENUE) {
+    if (GoalMetricCodes.REVENUE.equals(goal.metric())) {
       BigDecimal realized =
-          realizedRepository.findByBrandRefAndMetric(goal.brandRef(), GoalMetric.REVENUE).stream()
+          realizedRepository
+              .findByBrandRefAndMetric(goal.brandRef(), GoalMetricCodes.REVENUE)
+              .stream()
               .filter(row -> matchesPeriod(row.occurredAt(), goal.period()))
               .map(BrandRealized::amount)
               .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -405,7 +415,7 @@ public class PortfolioService {
       return new GoalProgress(
           goal.brandRef(),
           goal.period(),
-          GoalMetric.REVENUE,
+          GoalMetricCodes.REVENUE,
           target,
           realizedMoney,
           null,
@@ -413,14 +423,14 @@ public class PortfolioService {
           attainment(realized, target.amount()));
     }
     int realizedCount =
-        realizedRepository.findByBrandRefAndMetric(goal.brandRef(), GoalMetric.VOLUME).stream()
+        realizedRepository.findByBrandRefAndMetric(goal.brandRef(), GoalMetricCodes.VOLUME).stream()
             .filter(row -> matchesPeriod(row.occurredAt(), goal.period()))
             .mapToInt(BrandRealized::countInc)
             .sum();
     return new GoalProgress(
         goal.brandRef(),
         goal.period(),
-        GoalMetric.VOLUME,
+        GoalMetricCodes.VOLUME,
         null,
         null,
         goal.targetCount(),

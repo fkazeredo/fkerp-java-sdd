@@ -3,8 +3,6 @@ package com.fksoft.domain.portfolio;
 import com.fksoft.domain.ModuleInternal;
 import com.fksoft.domain.money.Money;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
@@ -39,8 +37,8 @@ public class BrandGoal {
   private String brandRef;
   private String period;
 
-  @Enumerated(EnumType.STRING)
-  private GoalMetric metric;
+  /** The goal-metric cadastro code (was {@code GoalMetric}; SPEC-0031/DL-0116). */
+  private String metric;
 
   private BigDecimal targetAmount;
   private Integer targetCount;
@@ -69,12 +67,16 @@ public class BrandGoal {
   public static BrandGoal define(
       String brandRef,
       String period,
-      GoalMetric metric,
+      String metric,
       Money targetAmount,
       Integer targetCount,
       Instant now,
       String actor) {
-    if (brandRef == null || brandRef.isBlank() || period == null || metric == null) {
+    if (brandRef == null
+        || brandRef.isBlank()
+        || period == null
+        || metric == null
+        || metric.isBlank()) {
       throw new BrandGoalInvalidException();
     }
     if (!PERIOD.matcher(period).matches()) {
@@ -85,7 +87,7 @@ public class BrandGoal {
     goal.brandRef = brandRef.trim();
     goal.period = period;
     goal.metric = metric;
-    if (metric == GoalMetric.REVENUE) {
+    if (GoalMetricCodes.REVENUE.equals(metric)) {
       if (targetAmount == null
           || targetAmount.amount().signum() <= 0
           || !REVENUE_CURRENCY.equals(targetAmount.currency())) {
@@ -120,8 +122,8 @@ public class BrandGoal {
     return period;
   }
 
-  /** The metric. */
-  public GoalMetric metric() {
+  /** The goal-metric cadastro code. */
+  public String metric() {
     return metric;
   }
 

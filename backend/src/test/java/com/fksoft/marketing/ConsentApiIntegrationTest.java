@@ -4,14 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fksoft.domain.marketing.ConsentNotFoundException;
-import com.fksoft.domain.marketing.ConsentPurpose;
 import com.fksoft.domain.marketing.ConsentStatus;
 import com.fksoft.domain.marketing.ConsentView;
 import com.fksoft.domain.marketing.GrantConsentCommand;
 import com.fksoft.domain.marketing.LegalBasis;
+import com.fksoft.domain.marketing.MarketingCodes;
 import com.fksoft.domain.marketing.MarketingService;
 import com.fksoft.domain.marketing.SubjectRef;
-import com.fksoft.domain.marketing.SubjectType;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
 import java.util.List;
 import java.util.UUID;
@@ -32,7 +31,7 @@ class ConsentApiIntegrationTest extends AbstractPostgresIntegrationTest {
   @Autowired private MarketingService marketingService;
   @Autowired private JdbcTemplate jdbcTemplate;
 
-  private static final SubjectRef ACME = new SubjectRef("acc-1", SubjectType.ACCOUNT);
+  private static final SubjectRef ACME = new SubjectRef("acc-1", MarketingCodes.ACCOUNT);
 
   @AfterEach
   void cleanUp() {
@@ -44,11 +43,11 @@ class ConsentApiIntegrationTest extends AbstractPostgresIntegrationTest {
     ConsentView granted =
         marketingService.grantConsent(
             new GrantConsentCommand(
-                ACME, ConsentPurpose.NEWSLETTER, LegalBasis.CONSENT, "signup-form"),
+                ACME, MarketingCodes.NEWSLETTER, LegalBasis.CONSENT, "signup-form"),
             "agent");
 
     assertThat(granted.status()).isEqualTo(ConsentStatus.GRANTED);
-    assertThat(marketingService.currentState(ACME, ConsentPurpose.NEWSLETTER).isGranted()).isTrue();
+    assertThat(marketingService.currentState(ACME, MarketingCodes.NEWSLETTER).isGranted()).isTrue();
 
     Integer rows =
         jdbcTemplate.queryForObject(
@@ -63,7 +62,7 @@ class ConsentApiIntegrationTest extends AbstractPostgresIntegrationTest {
   void revokingAppendsANewRowAndPreservesHistory() {
     ConsentView granted =
         marketingService.grantConsent(
-            new GrantConsentCommand(ACME, ConsentPurpose.NEWSLETTER, LegalBasis.CONSENT, "form"),
+            new GrantConsentCommand(ACME, MarketingCodes.NEWSLETTER, LegalBasis.CONSENT, "form"),
             "agent");
 
     ConsentView revoked = marketingService.revokeConsent(granted.id(), "agent");
@@ -71,9 +70,9 @@ class ConsentApiIntegrationTest extends AbstractPostgresIntegrationTest {
     assertThat(revoked.id()).isNotEqualTo(granted.id()); // a NEW row, not an update
 
     // Current state is now REVOKED (latest row), but the GRANTED row is preserved (append).
-    assertThat(marketingService.currentState(ACME, ConsentPurpose.NEWSLETTER).isGranted())
+    assertThat(marketingService.currentState(ACME, MarketingCodes.NEWSLETTER).isGranted())
         .isFalse();
-    List<ConsentView> history = marketingService.history(ACME, ConsentPurpose.NEWSLETTER);
+    List<ConsentView> history = marketingService.history(ACME, MarketingCodes.NEWSLETTER);
     assertThat(history).hasSize(2);
     assertThat(history.get(0).status()).isEqualTo(ConsentStatus.REVOKED); // newest first
     assertThat(history.get(1).status()).isEqualTo(ConsentStatus.GRANTED);
@@ -83,22 +82,22 @@ class ConsentApiIntegrationTest extends AbstractPostgresIntegrationTest {
   void reConsentAfterRevokeResolvesBackToGranted() {
     ConsentView granted =
         marketingService.grantConsent(
-            new GrantConsentCommand(ACME, ConsentPurpose.NEWSLETTER, LegalBasis.CONSENT, "form"),
+            new GrantConsentCommand(ACME, MarketingCodes.NEWSLETTER, LegalBasis.CONSENT, "form"),
             "agent");
     marketingService.revokeConsent(granted.id(), "agent");
 
     marketingService.grantConsent(
-        new GrantConsentCommand(ACME, ConsentPurpose.NEWSLETTER, LegalBasis.CONSENT, "form-2"),
+        new GrantConsentCommand(ACME, MarketingCodes.NEWSLETTER, LegalBasis.CONSENT, "form-2"),
         "agent");
 
-    assertThat(marketingService.currentState(ACME, ConsentPurpose.NEWSLETTER).isGranted()).isTrue();
-    assertThat(marketingService.history(ACME, ConsentPurpose.NEWSLETTER)).hasSize(3);
+    assertThat(marketingService.currentState(ACME, MarketingCodes.NEWSLETTER).isGranted()).isTrue();
+    assertThat(marketingService.history(ACME, MarketingCodes.NEWSLETTER)).hasSize(3);
   }
 
   @Test
   void unknownSubjectIsNotConsented() {
-    SubjectRef unknown = new SubjectRef("never-seen", SubjectType.AGENT);
-    assertThat(marketingService.currentState(unknown, ConsentPurpose.NEWSLETTER).isGranted())
+    SubjectRef unknown = new SubjectRef("never-seen", MarketingCodes.AGENT);
+    assertThat(marketingService.currentState(unknown, MarketingCodes.NEWSLETTER).isGranted())
         .isFalse();
   }
 

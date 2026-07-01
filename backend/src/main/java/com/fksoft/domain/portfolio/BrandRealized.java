@@ -2,8 +2,6 @@ package com.fksoft.domain.portfolio;
 
 import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
@@ -31,8 +29,8 @@ public class BrandRealized {
 
   private String brandRef;
 
-  @Enumerated(EnumType.STRING)
-  private GoalMetric metric;
+  /** The goal-metric cadastro code (was {@code GoalMetric}; SPEC-0031/DL-0116). */
+  private String metric;
 
   private String sourceRef;
   private BigDecimal amount;
@@ -48,7 +46,7 @@ public class BrandRealized {
    * @return a new, persistable VOLUME contribution
    */
   public static BrandRealized volume(String brandRef, String sourceRef, Instant occurredAt) {
-    return contribution(brandRef, GoalMetric.VOLUME, sourceRef, null, 1, occurredAt);
+    return contribution(brandRef, GoalMetricCodes.VOLUME, sourceRef, null, 1, occurredAt);
   }
 
   /**
@@ -62,12 +60,12 @@ public class BrandRealized {
    */
   public static BrandRealized revenue(
       String brandRef, String sourceRef, BigDecimal amount, Instant occurredAt) {
-    return contribution(brandRef, GoalMetric.REVENUE, sourceRef, amount, null, occurredAt);
+    return contribution(brandRef, GoalMetricCodes.REVENUE, sourceRef, amount, null, occurredAt);
   }
 
   private static BrandRealized contribution(
       String brandRef,
-      GoalMetric metric,
+      String metric,
       String sourceRef,
       BigDecimal amount,
       Integer countInc,

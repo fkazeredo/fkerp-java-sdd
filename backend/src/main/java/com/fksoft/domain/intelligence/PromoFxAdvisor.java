@@ -47,7 +47,7 @@ public final class PromoFxAdvisor {
     if (gap.isNonNegative() && signal.volumeAttracted() >= MIN_VOLUME) {
       Money gain = gap.amount().signum() == 0 ? signal.accruedSubsidy() : gap;
       return Optional.of(
-          new PromoFxAssessment(Verdict.CONVERTE, gain, null, null, signal.sources()));
+          new PromoFxAssessment(IntelligenceCodes.CONVERTE, gain, null, null, signal.sources()));
     }
     if (gap.isNegative()) {
       Money burned = Money.of(gap.amount().abs(), CURRENCY);
@@ -55,7 +55,11 @@ public final class PromoFxAdvisor {
         Money threshold = Money.of(BURN_THRESHOLD, CURRENCY);
         return Optional.of(
             new PromoFxAssessment(
-                Verdict.QUEIMA_MARGEM, Money.zero(CURRENCY), burned, threshold, signal.sources()));
+                IntelligenceCodes.QUEIMA_MARGEM,
+                Money.zero(CURRENCY),
+                burned,
+                threshold,
+                signal.sources()));
       }
     }
     return Optional.empty();

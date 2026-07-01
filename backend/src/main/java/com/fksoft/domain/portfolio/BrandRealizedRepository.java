@@ -14,8 +14,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface BrandRealizedRepository extends JpaRepository<BrandRealized, UUID> {
 
   /** Whether a contribution from this event already exists (idempotency, BR4). */
-  boolean existsByMetricAndSourceRef(GoalMetric metric, String sourceRef);
+  boolean existsByMetricAndSourceRef(String metric, String sourceRef);
 
   /** All contributions for a brand and metric (the service filters by period and aggregates). */
-  List<BrandRealized> findByBrandRefAndMetric(String brandRef, GoalMetric metric);
+  List<BrandRealized> findByBrandRefAndMetric(String brandRef, String metric);
 }

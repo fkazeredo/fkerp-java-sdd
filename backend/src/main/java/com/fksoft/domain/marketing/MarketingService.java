@@ -1,5 +1,7 @@
 package com.fksoft.domain.marketing;
 
+import com.fksoft.domain.cadastro.CadastroType;
+import com.fksoft.domain.cadastro.CadastroValidator;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -37,6 +39,7 @@ public class MarketingService {
   private final CampaignSendRepository campaignSendRepository;
   private final AttributionRepository attributionRepository;
   private final NewsletterSender newsletterSender;
+  private final CadastroValidator cadastroValidator;
   private final Clock clock;
   private final ApplicationEventPublisher events;
 
@@ -53,6 +56,10 @@ public class MarketingService {
     if (command == null) {
       throw new ConsentInvalidException();
     }
+    // Validate the subject-type and purpose reference codes against the cadastro (SPEC-0031
+    // BR3/DL-0116) — an unknown/inactive code is rejected (422) before any write.
+    cadastroValidator.validate(CadastroType.MARKETING_SUBJECT_TYPE, command.subject().type());
+    cadastroValidator.validate(CadastroType.CONSENT_PURPOSE, command.purpose());
     Instant now = clock.instant();
     Consent consent =
         Consent.record(
@@ -120,7 +127,7 @@ public class MarketingService {
    *     consent was ever recorded (so the send filter treats unknown subjects as not-consented)
    */
   @Transactional(readOnly = true)
-  public ConsentState currentState(SubjectRef subject, ConsentPurpose purpose) {
+  public ConsentState currentState(SubjectRef subject, String purpose) {
     return consentRepository
         .findLatest(subject.type(), subject.id(), purpose)
         .map(
@@ -135,7 +142,7 @@ public class MarketingService {
 
   /** The full append-only history for a subject+purpose, newest first (BR1). */
   @Transactional(readOnly = true)
-  public List<ConsentView> history(SubjectRef subject, ConsentPurpose purpose) {
+  public List<ConsentView> history(SubjectRef subject, String purpose) {
     return consentRepository.findHistory(subject.type(), subject.id(), purpose).stream()
         .map(Consent::toView)
         .toList();
@@ -176,7 +183,7 @@ public class MarketingService {
   @Transactional(readOnly = true)
   public long previewSegment(UUID segmentId) {
     segmentRepository.findById(segmentId).orElseThrow(SegmentInvalidException::new);
-    return consentedRecipients(ConsentPurpose.NEWSLETTER).size();
+    return consentedRecipients(MarketingCodes.NEWSLETTER).size();
   }
 
   // --- Campaigns (BR2/BR4/DL-0055) ---
@@ -232,7 +239,7 @@ public class MarketingService {
     Campaign campaign =
         campaignRepository.findById(campaignId).orElseThrow(CampaignNotFoundException::new);
     Instant now = clock.instant();
-    ConsentPurpose purpose = ConsentPurpose.NEWSLETTER;
+    String purpose = MarketingCodes.NEWSLETTER;
 
     List<SubjectRef> candidates = candidateRecipients(purpose);
     int targeted = candidates.size();
@@ -362,7 +369,9 @@ public class MarketingService {
   public ErasureResult erase(SubjectRef subject, String actor) {
     Instant now = clock.instant();
     // 1) Ensure a revocation tombstone for any currently-granted purpose (suppression survives).
-    for (ConsentPurpose purpose : ConsentPurpose.values()) {
+    // The seeded purpose set (MarketingCodes, DL-0116) replaces the old enum values() sweep; a
+    // purpose added later as a cadastro item still gets anonymized by the id-based sweep in step 2.
+    for (String purpose : MarketingCodes.KNOWN_PURPOSES) {
       if (currentState(subject, purpose).isGranted()) {
         Consent revocation =
             Consent.record(
@@ -411,16 +420,16 @@ public class MarketingService {
    * row for it — the base the module owns. Their current GRANTED/REVOKED status is resolved by the
    * send filter (BR2).
    */
-  private List<SubjectRef> candidateRecipients(ConsentPurpose purpose) {
+  private List<SubjectRef> candidateRecipients(String purpose) {
     return consentRepository.findDistinctSubjectsForPurpose(purpose).stream()
-        .map(row -> new SubjectRef((String) row[1], (SubjectType) row[0]))
+        .map(row -> new SubjectRef((String) row[1], (String) row[0]))
         .toList();
   }
 
   /**
    * The subjects with a current GRANTED consent for a purpose (the reachable base, for preview).
    */
-  private List<SubjectRef> consentedRecipients(ConsentPurpose purpose) {
+  private List<SubjectRef> consentedRecipients(String purpose) {
     return candidateRecipients(purpose).stream()
         .filter(recipient -> currentState(recipient, purpose).isGranted())
         .toList();
