@@ -32,10 +32,11 @@ rendering the cadastro **label** on screen instead of the code. SPEC-0031 update
   **Migration V34** seeds the 6 new types.
 - **Changed:** the Marketing/Intelligence/Portfolio enum fields became validated string codes (the
   enums were removed); those screens now render the label. OpenAPI → 0.30.0.
-- **Gates green:** backend `./mvnw verify` (round-trip, invalid/inactive code rejection, branching
-  preserved — REVENUE/VOLUME projection, verdict guardrail); frontend lint + **284 tests** + build;
-  E2E `cadastro.spec.ts` extended with the 18b goal-metric round-trip (authored + compiled;
-  `playwright test --list`, 23 tests), not executed in-sandbox (infra).
+- **Gates green:** backend `./mvnw verify` **503 tests** (was 495; round-trip, invalid/inactive code
+  rejection, branching preserved — REVENUE/VOLUME projection, verdict narrator), ArchUnit/Modulith/
+  Spotless/Checkstyle/JaCoCo unchanged; frontend lint + **284 tests** + build; E2E `cadastro.spec.ts`
+  extended with the 18b goal-metric round-trip (authored + compiled; `playwright test --list`, 23
+  tests), not executed in-sandbox (infra).
 
 ---
 
