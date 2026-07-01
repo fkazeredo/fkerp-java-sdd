@@ -754,6 +754,33 @@ What changes, in practice:
 > decision (the embedded AS is the default; swapping it is only configuration). **Breaking infrastructure
 > change:** Keycloak is gone (see release note 0.28.0).
 
+### Phase 18a — Reference data (editable lookups)
+
+Many of the system's lists — the **kind of an expense**, the **type of a supplier** or **asset**, the
+**tax regime**, the **withholding kind** — used to be hard-coded in the program. They are now
+**cadastros**: you can **rename** the label shown on screen, **reorder** and **activate/deactivate**
+options, and even **add** new items, **without a new release of the system**.
+
+How to use it (menu **"Reference data"**, visible to the **Policy Admin** role):
+
+1. Open **"Reference data"** in the side menu.
+2. Pick the **Reference type** (e.g. "Asset type" or "Tax regime"). The items of that type appear —
+   **active first**, in the defined order.
+3. To **add** an item: fill in the **Code** (a short identifier, e.g. `VEHICLE`), the **Label** (the
+   name shown on screens) and the **Order**, then click **"Add item"**.
+4. To **edit** an existing item: change the **Label** or **Order** on the row and click **"Save"**. The
+   **Code never changes** (it is what old records keep).
+5. To **deactivate** (or reactivate) an item: click **"Deactivate"** / **"Activate"** on the row. A
+   deactivated item is no longer accepted in new records, but old records stay valid.
+
+> **Nothing changes for anyone already using the screens.** The values are the same underneath (the
+> "code" is exactly what it was before) — they just became **editable**. If you don't have the Policy
+> Admin role, the menu doesn't show and any change attempt is **denied** (the server is the authority).
+>
+> For the technical team: the reference enums of **Back-office, Assets and Billing** became a `code`
+> validated against the cadastro; the API contract **did not change** (the JSON value is the same
+> text). The next slices (18b–18d) convert the remaining groups. See SPEC-0031 / ADR-0019 / DL-0115.
+
 
 ## 4. Glossary
 
@@ -852,6 +879,7 @@ What changes, in practice:
 | 0.26.0 | 16c — Operator screens: Intelligence & Growth | **Four new screens** over APIs that already existed (no new rules): **Intelligence** (insight panel with filters and gain ordering; evidence/recommendation/guardrail; recording the human decision — which only records, never executes), **Commercial policy** (resolve a parameter with provenance; rules list with the Directive>Promotion>Contract>Policy>Default precedence; define a rule and issue a directive with justification), **Marketing** (LGPD consent with history, grant/revoke; segments and reach; campaigns with a consent-filtered dispatch; attribution; LGPD erasure), **Portfolio** (brands, contracts and coverage; goals × realized with attainment). Intelligence/Marketing/Portfolio appear for the **Operations** role; Commercial policy for **Director/Curator**. **Third of the four Phase 16 slices** (DL-0109). |
 | 0.27.0 | 16d — Operator screens: Back-office & IT (closes Phase 16) | **Six new screens** over APIs that already existed (no new rules): **People / HR** (collaborators, journey + time-bank, discrepancy queue), **Time clock** (REP crawl-run history + operational snapshot — read-only; AFD/AEJ and crawl trigger stay machine-to-machine, no screen), **Assets** (register/retire equipment and licenses + license-expiry sweep), **Back-office** (administrative suppliers/contracts/expenses + contract sweep — requires the Finance role), **Platform / IT** (governed jobs with catalog/history/trigger, e-CNPJ certificate **metadata only** — never the key/password, system audit), **Access** (role/permission catalogue and access audit). People/Time-clock/Assets/Platform appear for the **IT** role (there is no "HR" role); Back-office for **Finance**; Access for **Director/IT**. **Last of the four Phase 16 slices** — with it the whole operator-UI debt is paid off (DL-0109). |
 | 0.28.0 | 17 — Remove Keycloak → login served by the system itself | **Keycloak removed 100%.** Single sign-on (SSO) stays the same for the user (**"Sign in with SSO"** → username and password → Dashboard), but it is now served **by the ERP itself** (no external container). The **sample users** are back inside the system (`dev` + one per role, password `dev12345`, **development/tests only**). **Roles, permissions and the access audit stay the same**; the server remains the authority; the session renews on its own. **Breaking infrastructure change:** the Keycloak service, the `infra/keycloak/` folder and the `KEYCLOAK_*` vars are gone; the OIDC URL points at the app itself. No `/api` contract changed (ADR-0018). |
+| 0.29.0 | 18a — Reference data (editable lookups) | **New "Reference data" screen** (for the **Policy Admin** role): the system's reference lists — **expense kind, supplier/asset type, tax regime, withholding kind** — stop being hard-coded and become **editable cadastros** (rename the label, reorder, activate/deactivate and **add** items, **without a new release**). Each item's **code** is fixed (it is what old records keep); only label/order/active change. **Nothing changes for anyone already using the Back-office, Assets and Billing screens** — the values are the same, just editable; **no `/api` contract changed**. First group converted (Admin/Assets/Billing); the rest come in slices 18b–18d. (SPEC-0031 / ADR-0019 / DL-0115.) |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of
