@@ -270,6 +270,41 @@ usuário/cliente em pt-BR **e** en-US; nenhuma versão defasada.
 
 ---
 
+## FASE 16 — Telas de operação (completar a UI) · `SPEC-0029` · **✅ concluída**
+
+Quitou a dívida do **DL-0109**: o backend tinha ~22 módulos mas o frontend cobria ~5. Em 4 fatias
+(16a–16d, releases `0.24.0`–`0.27.0`) todo módulo do backend ganhou **tela de operação** (Finance,
+Billing, Payout, Compliance, AfterSales, Sourcing, Exchange-desk, Cancelamento, Intelligence/DSS,
+CommercialPolicy, Marketing, Portfolio, People/RH, Ponto, Assets, Admin, Platform/TI, Identity/acesso),
+reusando o padrão da SPEC-0026 (service+`PageResponse`, `<app-screen-state>`, nav por papel). Correção
+de processo: capacidade de negócio agora exige tela na Definition of Done.
+
+## FASE 17 — Substituir Keycloak por auth server self-hosted (Spring Authorization Server) · re-gradua `SPEC-0024`
+
+Decisão do dono: **remover 100% do Keycloak** (serviços em `docker-compose.yml`/`compose.e2e.yaml`,
+`infra/keycloak/`, `KEYCLOAK_*`) e servir OIDC pelo próprio Spring via **Spring Authorization Server**
+self-hosted (**sem novo Docker** — embutido ou módulo co-localizado): `/oauth2/authorize|token|jwks`,
+`/login`, `/userinfo`, **user store local** de volta (BCrypt, migração V32), cliente SPA público
+PKCE+refresh, claim de papéis. **Preserva** o front OIDC+PKCE e o Resource Server (só troca o IdP). ADR-0018;
+substitui DL-0103, reaponta DL-0104…0107. Entregáveis completos + gates verdes. **Aceite:** login e
+papéis funcionando sem Keycloak (dev + E2E), `./mvnw verify` + gates de front verdes. MINOR `0.28.0`
+(**breaking** — Keycloak sai). *Recomendação: rodar o AuthZ Server embutido no app para não subir novo processo.*
+
+## FASE 18 — Módulo `cadastro`: enums de referência → cadastros com telas · `SPEC-0031` (nova)
+
+Decisão do dono: **todo enum que não seja máquina de estado nem imutável vira cadastro** (dado de
+referência editável). Novo módulo **`cadastro`** com registry genérico `cadastro_item(type,code,label,
+active,…)` + **telas de CRUD** ("Cadastros" no shell, papel admin). Critério **agressivo**: mantém só
+máquinas-de-estado (`*Status`/lifecycle), técnicos (`*FailureClass`, circuit-breaker) e fixados por lei
+(`LegalType`, `LegalBasis`); converte o resto (`AdminExpenseKind/SupplierType/Recurrence`, `AssetType`,
+`DocumentType`, `ConsentPurpose`, `InsightType`, `Verdict`, `GoalMetric`, `WithholdingKind`, `TaxRegime`,
+`OfferOrigin`, `ChargeKind`, `CancellationType`, `EntryType`, `PayoutKind`, `SupportCaseType`, …). **Invariante:**
+o valor persistido vira `code` validado com `code`=nome do enum ⇒ **JSON de contrato inalterado**; a lógica
+que ramifica usa constantes de `code`; seeds preservam os valores. 4 fatias por grupo de domínio (18a–18d,
+`0.29.0`–`0.32.0`); cada decisão limítrofe num DL. Entregáveis completos por fatia (backend+telas+E2E+docs).
+
+---
+
 ## Perguntas em aberto que **travam** fatias (da Parte 13 do redesenho)
 
 | # | Pergunta | Trava a fatia |
