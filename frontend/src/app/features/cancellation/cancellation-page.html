@@ -1,0 +1,224 @@
+<section class="page">
+  <h1 class="page__title">{{ 'cancellation.title' | translate }}</h1>
+
+  <!-- Scope lookup -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'cancellation.lookup' | translate }}</h2>
+      <div class="field">
+        <label for="cx-scope">{{ 'cancellation.scopeRef' | translate }}</label>
+        <input
+          pInputText
+          id="cx-scope"
+          name="scopeRef"
+          [(ngModel)]="scopeRef"
+          (keyup.enter)="lookup()"
+        />
+      </div>
+      <p-button
+        [label]="'cancellation.find' | translate"
+        icon="pi pi-search"
+        (onClick)="lookup()"
+        [disabled]="!scopeRef"
+        data-testid="cancellation-find"
+      />
+    </div>
+
+    @if (state() === 'loading') {
+      <app-screen-state state="loading" />
+    } @else if (state() === 'error') {
+      <app-screen-state state="error" [errorCode]="errorCode()" (retry)="lookup()" />
+    } @else if (state() === 'success' && policy(); as p) {
+      <dl class="kv" data-testid="cancellation-policy">
+        <dt>{{ 'cancellation.scopeRef' | translate }}</dt>
+        <dd>{{ p.scopeRef }}</dd>
+        <dt>{{ 'cancellation.type' | translate }}</dt>
+        <dd><p-tag [value]="p.type" [severity]="typeSeverity(p.type)" /></dd>
+        <dt>{{ 'cancellation.refundable' | translate }}</dt>
+        <dd>
+          <p-tag
+            [value]="(p.refundable ? 'common.yes' : 'common.no') | translate"
+            [severity]="p.refundable ? 'success' : 'danger'"
+          />
+        </dd>
+        <dt>{{ 'cancellation.costBearer' | translate }}</dt>
+        <dd>{{ p.costBearer }}</dd>
+        <dt>{{ 'cancellation.merchantOfRecord' | translate }}</dt>
+        <dd>{{ (p.merchantOfRecord ? 'common.yes' : 'common.no') | translate }}</dd>
+        <dt>{{ 'cancellation.noShowFee' | translate }}</dt>
+        <dd>{{ format(p.noShowFee) }}</dd>
+        <dt>{{ 'cancellation.waivedIfFlightCancelled' | translate }}</dt>
+        <dd>{{ (p.waivedIfFlightCancelled ? 'common.yes' : 'common.no') | translate }}</dd>
+      </dl>
+    }
+  </div>
+
+  <!-- Administer the policy -->
+  @if (state() === 'success') {
+    <form class="app-card" (ngSubmit)="save()">
+      <h2 class="app-card__title">{{ 'cancellation.administer' | translate }}</h2>
+      <div class="form__row">
+        <div class="field">
+          <label for="cx-type">{{ 'cancellation.type' | translate }}</label>
+          <p-select
+            inputId="cx-type"
+            name="editType"
+            [(ngModel)]="editType"
+            (ngModelChange)="markDirty()"
+            [options]="types"
+            appendTo="body"
+          />
+        </div>
+        <div class="field">
+          <label for="cx-bearer">{{ 'cancellation.costBearer' | translate }}</label>
+          <p-select
+            inputId="cx-bearer"
+            name="editCostBearer"
+            [(ngModel)]="editCostBearer"
+            (ngModelChange)="markDirty()"
+            [options]="costBearers"
+            appendTo="body"
+          />
+        </div>
+      </div>
+      <div class="form__row">
+        <div class="field field--inline">
+          <label for="cx-refundable">
+            <input
+              id="cx-refundable"
+              name="editRefundable"
+              type="checkbox"
+              [(ngModel)]="editRefundable"
+              (ngModelChange)="markDirty()"
+            />
+            {{ 'cancellation.refundable' | translate }}
+          </label>
+        </div>
+        <div class="field field--inline">
+          <label for="cx-mor">
+            <input
+              id="cx-mor"
+              name="editMerchantOfRecord"
+              type="checkbox"
+              [(ngModel)]="editMerchantOfRecord"
+              (ngModelChange)="markDirty()"
+            />
+            {{ 'cancellation.merchantOfRecord' | translate }}
+          </label>
+        </div>
+      </div>
+      <div class="form__row">
+        <div class="field">
+          <label for="cx-fee">{{ 'cancellation.noShowFee' | translate }}</label>
+          <p-inputnumber
+            inputId="cx-fee"
+            name="editNoShowFee"
+            [(ngModel)]="editNoShowFee"
+            (ngModelChange)="markDirty()"
+            mode="decimal"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="2"
+          />
+        </div>
+        <div class="field">
+          <label for="cx-fee-cur">{{ 'cancellation.currency' | translate }}</label>
+          <input
+            pInputText
+            id="cx-fee-cur"
+            name="editNoShowCurrency"
+            [(ngModel)]="editNoShowCurrency"
+            (ngModelChange)="markDirty()"
+          />
+        </div>
+        <div class="field field--inline">
+          <label for="cx-waived">
+            <input
+              id="cx-waived"
+              name="editWaivedIfFlightCancelled"
+              type="checkbox"
+              [(ngModel)]="editWaivedIfFlightCancelled"
+              (ngModelChange)="markDirty()"
+            />
+            {{ 'cancellation.waivedIfFlightCancelled' | translate }}
+          </label>
+        </div>
+      </div>
+
+      <!-- Penalty windows -->
+      <h3 class="app-card__title">{{ 'cancellation.windows' | translate }}</h3>
+      @if (windows().length === 0) {
+        <p class="app-muted" data-testid="cancellation-windows-empty">
+          {{ 'cancellation.noWindows' | translate }}
+        </p>
+      } @else {
+        <p-table [value]="windows()" data-testid="cancellation-windows-table">
+          <ng-template #header>
+            <tr>
+              <th>{{ 'cancellation.hoursBefore' | translate }}</th>
+              <th>{{ 'cancellation.penaltyPct' | translate }}</th>
+              <th></th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-w let-i="rowIndex">
+            <tr>
+              <td>{{ w.hoursBefore }}</td>
+              <td>{{ w.penaltyPct }}</td>
+              <td>
+                <p-button
+                  size="small"
+                  [text]="true"
+                  severity="danger"
+                  icon="pi pi-trash"
+                  [label]="'cancellation.removeWindow' | translate"
+                  (onClick)="removeWindow(i)"
+                />
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      }
+      <div class="form__row">
+        <div class="field">
+          <label for="cx-w-hours">{{ 'cancellation.hoursBefore' | translate }}</label>
+          <p-inputnumber inputId="cx-w-hours" name="newWindowHours" [(ngModel)]="newWindowHours" />
+        </div>
+        <div class="field">
+          <label for="cx-w-pct">{{ 'cancellation.penaltyPct' | translate }}</label>
+          <p-inputnumber
+            inputId="cx-w-pct"
+            name="newWindowPct"
+            [(ngModel)]="newWindowPct"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="4"
+          />
+        </div>
+        <div class="actions">
+          <p-button
+            type="button"
+            [label]="'cancellation.addWindow' | translate"
+            icon="pi pi-plus"
+            [text]="true"
+            (onClick)="addWindow()"
+            [disabled]="newWindowHours === null || newWindowPct === null"
+          />
+        </div>
+      </div>
+
+      @if (saveError()) {
+        <p-message severity="error" data-testid="cancellation-save-error">
+          {{ saveError() | translate }}
+        </p-message>
+      }
+      <div class="actions">
+        <p-button
+          type="submit"
+          [label]="'cancellation.save' | translate"
+          icon="pi pi-save"
+          [loading]="saving()"
+          [disabled]="saving()"
+          data-testid="cancellation-save"
+        />
+      </div>
+    </form>
+  }
+</section>

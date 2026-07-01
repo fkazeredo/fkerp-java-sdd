@@ -25,10 +25,18 @@ export class ShortcutService {
   private leaderTimer: ReturnType<typeof setTimeout> | null = null;
   private listener: ((event: KeyboardEvent) => void) | null = null;
 
-  /** Maps the second key of a `g`-prefixed shortcut to a nav path (first letter of each path). */
-  private readonly navByKey = new Map<string, string>(
-    NAV_ITEMS.map((item) => [item.path[0].toLowerCase(), item.path]),
-  );
+  /**
+   * Maps the second key of a `g`-prefixed shortcut to a nav path (first letter of each path). When
+   * two nav paths share a first letter (e.g. accounts/aftersales), the first-registered item keeps
+   * the letter; the later one stays reachable through the command palette (SPEC-0026 BR4).
+   */
+  private readonly navByKey = NAV_ITEMS.reduce((map, item) => {
+    const key = item.path[0].toLowerCase();
+    if (!map.has(key)) {
+      map.set(key, item.path);
+    }
+    return map;
+  }, new Map<string, string>());
 
   /** Starts listening for global shortcuts (called by the shell). Idempotent. */
   start(): void {

@@ -1,0 +1,215 @@
+<section class="page">
+  <h1 class="page__title">{{ 'exchangeDesk.title' | translate }}</h1>
+
+  <!-- Live exposure -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'exchangeDesk.exposure' | translate }}</h2>
+      <p-button
+        [label]="'common.refresh' | translate"
+        icon="pi pi-refresh"
+        size="small"
+        [text]="true"
+        (onClick)="loadExposure()"
+      />
+    </div>
+
+    @if (exposureState() === 'loading') {
+      <app-screen-state state="loading" />
+    } @else if (exposureState() === 'error') {
+      <app-screen-state state="error" [errorCode]="exposureError()" (retry)="loadExposure()" />
+    } @else if (exposure(); as ex) {
+      <dl class="kv" data-testid="exchange-exposure">
+        <dt>{{ 'exchangeDesk.asOf' | translate }}</dt>
+        <dd>{{ ex.asOf }}</dd>
+        <dt>{{ 'exchangeDesk.openPositions' | translate }}</dt>
+        <dd>{{ ex.openPositions }}</dd>
+        <dt>{{ 'exchangeDesk.accruedSubsidy' | translate }}</dt>
+        <dd>{{ format(ex.accruedSubsidy) }}</dd>
+        <dt>{{ 'exchangeDesk.drift' | translate }}</dt>
+        <dd>{{ format(ex.markToMarketDrift) }}</dd>
+        <dt>{{ 'exchangeDesk.totalExposure' | translate }}</dt>
+        <dd>{{ format(ex.totalExposure) }}</dd>
+        <dt>{{ 'exchangeDesk.driftThreshold' | translate }}</dt>
+        <dd>{{ format(ex.driftThreshold) }}</dd>
+        <dt>{{ 'exchangeDesk.driftAlert' | translate }}</dt>
+        <dd>
+          @if (ex.driftAlert) {
+            <p-tag
+              [value]="'exchangeDesk.alertOn' | translate"
+              severity="danger"
+              data-testid="exchange-drift-alert"
+            />
+          } @else {
+            <p-tag [value]="'exchangeDesk.alertOff' | translate" severity="success" />
+          }
+        </dd>
+      </dl>
+    }
+  </div>
+
+  <!-- Market rate: record + history -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'exchangeDesk.marketRate' | translate }}</h2>
+      <div class="form__row">
+        <div class="field">
+          <label for="ed-rate-pair">{{ 'exchangeDesk.pair' | translate }}</label>
+          <input
+            pInputText
+            id="ed-rate-pair"
+            name="ratePair"
+            [(ngModel)]="ratePair"
+            (change)="loadRates()"
+          />
+        </div>
+        <div class="field">
+          <label for="ed-new-rate">{{ 'exchangeDesk.rate' | translate }}</label>
+          <p-inputnumber
+            inputId="ed-new-rate"
+            name="newRate"
+            [(ngModel)]="newRate"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="6"
+          />
+        </div>
+        <div class="actions">
+          <p-button
+            [label]="'exchangeDesk.recordRate' | translate"
+            icon="pi pi-plus"
+            [loading]="recording()"
+            [disabled]="recording() || newRate === null"
+            (onClick)="recordRate()"
+            data-testid="exchange-record-rate"
+          />
+        </div>
+      </div>
+    </div>
+    @if (recordError()) {
+      <p-message severity="error" data-testid="exchange-record-error">
+        {{ recordError() | translate }}
+      </p-message>
+    }
+
+    <app-screen-state
+      [state]="rateListState()"
+      [errorCode]="rateError()"
+      emptyKey="exchangeDesk.rateEmpty"
+      (retry)="loadRates()"
+    >
+      <p-table [value]="rates()" data-testid="exchange-rate-table">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'exchangeDesk.pair' | translate }}</th>
+            <th>{{ 'exchangeDesk.rate' | translate }}</th>
+            <th>{{ 'exchangeDesk.observedAt' | translate }}</th>
+            <th>{{ 'exchangeDesk.source' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-r>
+          <tr>
+            <td>{{ r.currencyPair }}</td>
+            <td>{{ r.rate }}</td>
+            <td>{{ r.observedAt }}</td>
+            <td><p-tag [value]="r.source" [severity]="r.source === 'FEED' ? 'info' : 'secondary'" /></td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+  </div>
+
+  <!-- Position lookup by booking -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'exchangeDesk.position' | translate }}</h2>
+      <div class="field">
+        <label for="ed-pos-booking">{{ 'exchangeDesk.bookingId' | translate }}</label>
+        <input
+          pInputText
+          id="ed-pos-booking"
+          name="positionBookingId"
+          [(ngModel)]="positionBookingId"
+          (keyup.enter)="lookupPosition()"
+        />
+      </div>
+      <p-button
+        [label]="'exchangeDesk.find' | translate"
+        icon="pi pi-search"
+        (onClick)="lookupPosition()"
+        [disabled]="!positionBookingId"
+      />
+    </div>
+
+    @if (positionState() === 'loading') {
+      <app-screen-state state="loading" />
+    } @else if (positionState() === 'error') {
+      <app-screen-state state="error" [errorCode]="positionError()" (retry)="lookupPosition()" />
+    } @else if (positionState() === 'success' && position(); as p) {
+      <dl class="kv" data-testid="exchange-position">
+        <dt>{{ 'exchangeDesk.bookingId' | translate }}</dt>
+        <dd>{{ p.bookingId }}</dd>
+        <dt>{{ 'exchangeDesk.foreignAmount' | translate }}</dt>
+        <dd>{{ format(p.foreignAmount) }}</dd>
+        <dt>{{ 'exchangeDesk.pinnedRate' | translate }}</dt>
+        <dd>{{ p.pinnedRate }}</dd>
+        <dt>{{ 'exchangeDesk.marketAtFreeze' | translate }}</dt>
+        <dd>{{ p.marketAtFreeze }}</dd>
+        <dt>{{ 'exchangeDesk.subsidy' | translate }}</dt>
+        <dd>{{ format(p.subsidy) }}</dd>
+        <dt>{{ 'exchangeDesk.drift' | translate }}</dt>
+        <dd>{{ format(p.markToMarketDrift) }}</dd>
+        <dt>{{ 'exchangeDesk.realizedDrift' | translate }}</dt>
+        <dd>{{ format(p.realizedDrift) }}</dd>
+        <dt>{{ 'exchangeDesk.totalGap' | translate }}</dt>
+        <dd>{{ format(p.totalGap) }}</dd>
+        <dt>{{ 'exchangeDesk.status' | translate }}</dt>
+        <dd>
+          <p-tag [value]="p.status" [severity]="p.status === 'CLOSED' ? 'success' : 'info'" />
+        </dd>
+      </dl>
+    }
+  </div>
+
+  <!-- Promo-fx report -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'exchangeDesk.promoFx' | translate }}</h2>
+      <div class="field">
+        <label for="ed-promo-period">{{ 'exchangeDesk.period' | translate }}</label>
+        <input
+          pInputText
+          id="ed-promo-period"
+          name="promoPeriod"
+          [(ngModel)]="promoPeriod"
+          placeholder="YYYY-MM"
+          (keyup.enter)="lookupPromo()"
+        />
+      </div>
+      <p-button
+        [label]="'exchangeDesk.find' | translate"
+        icon="pi pi-search"
+        (onClick)="lookupPromo()"
+        [disabled]="!promoPeriod"
+      />
+    </div>
+
+    @if (promoState() === 'loading') {
+      <app-screen-state state="loading" />
+    } @else if (promoState() === 'error') {
+      <app-screen-state state="error" [errorCode]="promoError()" (retry)="lookupPromo()" />
+    } @else if (promoState() === 'success' && promo(); as pr) {
+      <dl class="kv" data-testid="exchange-promo">
+        <dt>{{ 'exchangeDesk.period' | translate }}</dt>
+        <dd>{{ pr.period }}</dd>
+        <dt>{{ 'exchangeDesk.positions' | translate }}</dt>
+        <dd>{{ pr.positions }}</dd>
+        <dt>{{ 'exchangeDesk.subsidy' | translate }}</dt>
+        <dd>{{ format(pr.subsidy) }}</dd>
+        <dt>{{ 'exchangeDesk.drift' | translate }}</dt>
+        <dd>{{ format(pr.drift) }}</dd>
+        <dt>{{ 'exchangeDesk.totalGap' | translate }}</dt>
+        <dd>{{ format(pr.totalGap) }}</dd>
+      </dl>
+    }
+  </div>
+</section>

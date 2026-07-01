@@ -36,6 +36,13 @@ export const routes: Routes = [
         canDeactivate: [canDeactivateGuard],
       },
       {
+        path: 'exchange-desk',
+        loadComponent: () =>
+          import('./features/exchange/exchange-desk-page').then((m) => m.ExchangeDeskPage),
+        canActivate: [authGuard],
+        canDeactivate: [canDeactivateGuard],
+      },
+      {
         path: 'quotes',
         loadComponent: () => import('./features/quoting/quoting-page').then((m) => m.QuotingPage),
         canActivate: [authGuard],
@@ -74,6 +81,26 @@ export const routes: Routes = [
         path: 'compliance',
         loadComponent: () =>
           import('./features/compliance/compliance-page').then((m) => m.CompliancePage),
+        canActivate: [authGuard],
+        canDeactivate: [canDeactivateGuard],
+      },
+      {
+        path: 'aftersales',
+        loadComponent: () =>
+          import('./features/aftersales/aftersales-page').then((m) => m.AfterSalesPage),
+        canActivate: [authGuard],
+        canDeactivate: [canDeactivateGuard],
+      },
+      {
+        path: 'sourcing',
+        loadComponent: () => import('./features/sourcing/sourcing-page').then((m) => m.SourcingPage),
+        canActivate: [authGuard],
+        canDeactivate: [canDeactivateGuard],
+      },
+      {
+        path: 'cancellation',
+        loadComponent: () =>
+          import('./features/cancellation/cancellation-page').then((m) => m.CancellationPage),
         canActivate: [authGuard],
         canDeactivate: [canDeactivateGuard],
       },
