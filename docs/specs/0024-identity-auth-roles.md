@@ -1,7 +1,8 @@
 # 0024 - Identity (Autenticação, Papéis e Auditoria de Acesso)
 
-Status: Approved — **graduado na Fase 13 (OIDC externo vivo; ver seção "Graduação — Fase 13")**
-Related ADRs: 0011, 0012, 0014, 0015
+Status: Approved — **re-graduado na Fase 17 (OIDC self-hosted, Keycloak removido; ver "Re-graduação —
+Fase 17"). A "Graduação — Fase 13" fica como histórico.**
+Related ADRs: 0011, 0012, 0014, 0015, **0018**
 
 > Convenções herdadas da **SPEC-0001** (que entregou o `UserContextProvider` **stub de dev**). Esta spec
 > **gradua** esse stub em autenticação real. **Subdomínio genérico** (redesenho linha 136: "avaliar
@@ -95,6 +96,19 @@ BR16 ASSUMIDO (ver DL-0107). O **catálogo papel→permissão permanece local** 
      como única fonte de verdade do enforcement interno (BR5); o **store local de usuários**
      (`identity_users`/`user_roles`, hash BCrypt) é **aposentado** (migração V31), pois os usuários e suas
      senhas passam a viver no IdP — o ERP deixa de custodiar senha.
+BR17 ASSUMIDO (ver ADR-0018 / DL-0110..0114). **RE-GRADUAÇÃO Fase 17 — OIDC self-hosted.** Decisão do
+     dono: **remover 100% do Keycloak** e servir OIDC pelo próprio Spring via **Spring Authorization
+     Server EMBUTIDO no app** (sem novo processo/Docker). O app passa a ser **IdP e Resource Server**:
+     expõe `/.well-known/openid-configuration`, `/oauth2/authorize|token|jwks`, `/userinfo` e um form
+     `/login`; assina RS256 com chave RSA local. O **claim de papéis `realm_access.roles` é preservado**
+     (via `OAuth2TokenCustomizer`), então o Resource Server (BR13), a porta `UserContextProvider` (BR1),
+     os gates por papel (BR2/BR10) e os testes **não mudam**. O client SPA público `acme-erp-web`
+     (code+PKCE) é registrado no AS (DL-0111). O **store local de usuários é REINTRODUZIDO** (migração
+     **V32**, BCrypt, `UserDetailsService`, seeder dev/E2E) — desfaz o drop da BR16/V31, pois o AS
+     autentica localmente; o catálogo papel→permissão permanece intacto. O **frontend** mantém
+     `angular-oauth2-oidc` (code+PKCE); só o `issuer` aponta para o próprio app e o silent-refresh passa
+     a ser por **iframe** (o SAS não emite refresh token a client público — DL-0113). **DL-0103
+     substituída; DL-0104..0107 reapontadas.** Breaking (Keycloak sai) destacado no release `0.28.0`.
 ```
 
 ## Graduação — Fase 13 (OIDC externo vivo)
@@ -117,6 +131,31 @@ emissor HS256 e passou a validar JWTs de um IdP OIDC externo (Keycloak) por JWKS
 Decisões: DL-0103 (Keycloak dev IdP), DL-0104 (Resource Server por JWKS + mapeamento de papéis),
 DL-0105 (JWKS local de teste + remoção de `/login`), DL-0106 (frontend OIDC + silent-refresh real),
 DL-0107 (catálogo local mantido; store de usuários aposentado). **DL-0079 e DL-0092 ficam RESOLVIDOS.**
+
+## Re-graduação — Fase 17 (OIDC self-hosted; Keycloak removido)
+
+Decisão do dono: **não usar Keycloak**. A Fase 17 remove 100% do Keycloak e serve OIDC pelo próprio
+Spring, via **Spring Authorization Server (SAS) embutido no app** (ADR-0018). Em uma frase: **o IdP
+externo (Keycloak) virou um IdP self-hosted embutido; o Resource Server, o modelo de papéis e o
+frontend OIDC foram preservados — só a *origem* do token mudou (o próprio app).**
+
+| Aspecto | Fase 13 (Keycloak) | Fase 17 (self-hosted) |
+|---|---|---|
+| Emissor do token | Keycloak (contêiner), RS256 | **Spring Authorization Server EMBUTIDO no app**, RS256 |
+| Processo/Docker | 1 contêiner Keycloak (dev + E2E) | **nenhum** (embutido no app) |
+| Endpoints OIDC | realm do Keycloak | **`/oauth2/authorize|token|jwks`, `/.well-known/openid-configuration`, `/userinfo`, `/login`** |
+| Verificação (RS) | JWKS do realm | **JWKS do próprio app** (`issuer-uri`/`jwk-set-uri` → app) |
+| Claim de papéis | `realm_access.roles` (Keycloak) | **`realm_access.roles` (preservado via token customizer)** |
+| Client SPA | `acme-erp-web` no realm | **`acme-erp-web` registrado no SAS** (code+PKCE, público) |
+| Usuários/senhas | no Keycloak | **store local BCrypt reintroduzido (V32)** + `UserDetailsService` |
+| Silent-refresh (front) | refresh token | **iframe silencioso** (SAS não emite refresh token a client público) |
+| Catálogo papel→permissão | local (inalterado) | **local (inalterado — BR5)** |
+| Porta `UserContextProvider` | inalterada | **inalterada (seam preservado)** |
+
+Decisões: DL-0110 (AS embutido + claim `realm_access.roles`; **substitui DL-0103**), DL-0111 (client SPA
+público PKCE), DL-0112 (store local reintroduzido — V32/BCrypt; reaponta DL-0107), DL-0113 (frontend
+issuer → app + silent-refresh por iframe; reaponta DL-0106), DL-0114 (Keycloak removido do compose/
+infra/env). **DL-0104/0105 reapontadas ao AS self-hosted (mesma mecânica JWKS/RS256, mesmo claim).**
 
 ## Input/Output Examples
 
@@ -184,6 +223,13 @@ A configuração de segurança (Spring Security + emissão/verificação JWT in-
 `identity_users` (mantém `roles`/`role_permissions` — catálogo do enforcement, BR16). O
 `UserContextProvider` (`JwtUserContextProvider`) **não muda** — só a fonte do token.
 
+**RE-GRADUAÇÃO Fase 17 (ADR-0018/DL-0110/0112):** o IdP passa a ser **self-hosted embutido**; o
+`issuer-uri`/`jwk-set-uri` apontam para o **próprio app**. Migração **V32__reintroduce_local_user_store.
+sql** **recria** `identity_users` + `user_roles` (idempotente, `CREATE TABLE IF NOT EXISTS`; nunca edita
+V29/V31), pois o AS autentica localmente (BCrypt); `roles`/`role_permissions` seguem intactos. O store de
+usuários, o `UserDetailsService` e o seeder dev/E2E vivem em `infra.security` (concern do IdP/AS). O
+`UserContextProvider` **continua inalterado**.
+
 ## Validation Rules
 
 - Segurança: verificação de token (assinatura/expiração/audiência); enforcement por papel (BR2).
@@ -225,9 +271,15 @@ auditado). Sem código que vaze existência de usuário (BR4). i18n em `messages
 > DLs citados). Permanecem listadas para o dono **confirmar/trocar** — são decisões assumidas, não
 > definitivas.
 
-- ~~**Comprar/usar IdP** (Keycloak/Entra/Cognito) × IAM próprio~~ → **RESOLVIDO na Fase 13 (DL-0103):**
-  IdP externo OIDC vivo = **Keycloak** (dev/E2E, realm importado). **Qual IdP em produção** segue
-  decisão do dono (Confiança=Baixa) — o contrato OIDC é padrão e a troca é por configuração.
+- ~~**Comprar/usar IdP** (Keycloak/Entra/Cognito) × IAM próprio~~ → **RE-RESOLVIDO na Fase 17
+  (DL-0110/ADR-0018):** decisão do dono = **não usar Keycloak**; OIDC é servido pelo **Spring
+  Authorization Server self-hosted embutido no app**. **Qual IdP em produção** (SAS embutido × Entra ×
+  Cognito × outro) segue decisão do dono (Confiança=Baixa) — o contrato OIDC é padrão e a troca é por
+  configuração (`issuer`), preservando `UserContextProvider` e o modelo de papéis.
+- ~~Usuários no IdP × localmente~~ → **RE-RESOLVIDO na Fase 17 (DL-0112):** com o AS self-hosted, os
+  usuários voltam a viver **localmente** (store BCrypt reintroduzido, V32) — o ERP volta a custodiar
+  hash de senha (trade-off aceito no ADR-0018; mitigado por hash-only + seed forte só em dev/E2E). O
+  seam `UserDetailsService` permite plugar um diretório corporativo depois.
 - ~~Papéis/permissões finais e mapeamento exato~~ → **ASSUMIDO (DL-0082):** 6 papéis base + catálogo
   fechado de permissões mapeando as ações sensíveis. Na Fase 13 os papéis vêm de `realm_access.roles`
   do IdP (DL-0104); o catálogo papel→permissão permanece local (BR16).
