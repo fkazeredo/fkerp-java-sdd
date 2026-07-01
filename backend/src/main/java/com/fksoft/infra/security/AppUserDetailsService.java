@@ -11,12 +11,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Bridges the local {@link AppUser} store to Spring Security so the self-hosted Authorization Server
- * can authenticate the form login (SPEC-0024 Phase 17 / DL-0112). It resolves the user by username,
- * exposes the BCrypt hash for the password check (never logged), and maps the granted {@code ROLE_*}
- * names to authorities — which the token customizer then places into {@code realm_access.roles}
- * (DL-0110). A generic error (no "user not found" detail leak) satisfies BR4. Infra-only; not active
- * in the {@code test} profile (the suite never boots the AS/form login).
+ * Bridges the local {@link AppUser} store to Spring Security so the self-hosted Authorization
+ * Server can authenticate the form login (SPEC-0024 Phase 17 / DL-0112). It resolves the user by
+ * username, exposes the BCrypt hash for the password check (never logged), and maps the granted
+ * {@code ROLE_*} names to authorities — which the token customizer then places into {@code
+ * realm_access.roles} (DL-0110). A generic error (no "user not found" detail leak) satisfies BR4.
+ * Infra-only; not active in the {@code test} profile (the suite never boots the AS/form login).
  */
 @Service
 @Profile("!test")

@@ -98,12 +98,12 @@ public class SecurityConfig {
 
   /**
    * The Resource Server chain (Phase 17: {@code @Order(2)}, after the Authorization Server chain of
-   * {@link AuthorizationServerConfig} at {@code @Order(1)} and before its form-login chain at {@code
-   * @Order(3)}). It is scoped by {@link #resourceServerMatchers()} to the API/actuator/docs surface,
-   * so the browser login flow ({@code /login}, OAuth2 authorize/consent) falls through to the
-   * form-login chain and the AS chain — the enforcement rules and JWT validation are unchanged
-   * (DL-0110). In the {@code test} profile this bean is absent; {@code TestSecurityConfig} mounts the
-   * same {@link #configure} rules at the highest precedence.
+   * {@link AuthorizationServerConfig} at {@code @Order(1)} and before its form-login chain at
+   * {@code @Order(3)}). It is scoped by {@link #resourceServerMatchers()} to the API/actuator/docs
+   * surface, so the browser login flow ({@code /login}, OAuth2 authorize/consent) falls through to
+   * the form-login chain and the AS chain — the enforcement rules and JWT validation are unchanged
+   * (DL-0110). In the {@code test} profile this bean is absent; {@code TestSecurityConfig} mounts
+   * the same {@link #configure} rules at the highest precedence.
    */
   @Bean
   @Order(2)
@@ -127,11 +127,7 @@ public class SecurityConfig {
    */
   private static String[] resourceServerMatchers() {
     return Stream.of(
-            "/api/**",
-            "/actuator/**",
-            "/v3/api-docs/**",
-            "/swagger-ui/**",
-            "/swagger-ui.html")
+            "/api/**", "/actuator/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
         .toArray(String[]::new);
   }
 

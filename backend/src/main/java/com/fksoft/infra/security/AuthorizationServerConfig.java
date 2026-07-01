@@ -19,19 +19,19 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
-import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
-import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
-import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
@@ -54,12 +54,12 @@ import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
  * Resource Server chain of {@link SecurityConfig} is #2):
  *
  * <ol>
- *   <li><b>{@code @Order(1)}</b> — the Authorization Server endpoints (protocol + OIDC), redirecting
- *       unauthenticated browser requests to {@code /login}.
+ *   <li><b>{@code @Order(1)}</b> — the Authorization Server endpoints (protocol + OIDC),
+ *       redirecting unauthenticated browser requests to {@code /login}.
  *   <li><b>{@code @Order(2)}</b> — the Resource Server {@code /api/**} chain ({@link
  *       SecurityConfig}), unchanged in behavior.
- *   <li><b>{@code @Order(3)}</b> — the form-login chain ({@code /login}) that authenticates the user
- *       against the local user store (BCrypt — DL-0112) via {@link AppUserDetailsService}.
+ *   <li><b>{@code @Order(3)}</b> — the form-login chain ({@code /login}) that authenticates the
+ *       user against the local user store (BCrypt — DL-0112) via {@link AppUserDetailsService}.
  * </ol>
  *
  * <p><strong>Roles claim preserved.</strong> The {@link OAuth2TokenCustomizer} injects {@code
@@ -67,10 +67,10 @@ import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
  * token, so the Resource Server's {@code JwtAuthenticationConverter} ({@link SecurityConfig}) and
  * every security test keep working with <strong>only the token issuer changed</strong> to this app.
  *
- * <p>Not active in the {@code test} profile: the suite uses a local test {@code JwtDecoder} (DL-0105)
- * and never boots the AS, so the 444 backend tests validate the genuine JWKS/RS256 path without a
- * live issuer. This config lives in {@code infra} (never {@code domain}) so ArchUnit/Modulith stay
- * green.
+ * <p>Not active in the {@code test} profile: the suite uses a local test {@code JwtDecoder}
+ * (DL-0105) and never boots the AS, so the 444 backend tests validate the genuine JWKS/RS256 path
+ * without a live issuer. This config lives in {@code infra} (never {@code domain}) so
+ * ArchUnit/Modulith stay green.
  */
 @Configuration
 @Profile("!test")
@@ -191,9 +191,9 @@ public class AuthorizationServerConfig {
 
   /**
    * The RSA key that signs the tokens (RS256), served by the AS JWK set ({@code /oauth2/jwks}). It
-   * is generated at boot (the app is single-instance — ADR 0002); tokens are invalidated on restart.
-   * A persisted/externalized key is a documented seam for a multi-instance production (out of scope
-   * — Rule Zero).
+   * is generated at boot (the app is single-instance — ADR 0002); tokens are invalidated on
+   * restart. A persisted/externalized key is a documented seam for a multi-instance production (out
+   * of scope — Rule Zero).
    */
   @Bean
   public JWKSource<SecurityContext> jwkSource() {
