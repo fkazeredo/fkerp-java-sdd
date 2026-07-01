@@ -7,6 +7,7 @@ import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
+import { CadastroLabelPipe } from '../../core/cadastro/cadastro-label.pipe';
 import { ApiError } from '../../core/http/api-error';
 import { formatMoney } from '../../core/models/api.models';
 import { ScreenState, ScreenStateKind } from '../../shared/screen-state/screen-state';
@@ -38,6 +39,7 @@ import { IntelligenceService } from './intelligence.service';
     TableModule,
     TagModule,
     ScreenState,
+    CadastroLabelPipe,
   ],
   templateUrl: './intelligence-page.html',
 })

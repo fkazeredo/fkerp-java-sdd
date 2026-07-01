@@ -71,11 +71,11 @@
         </ng-template>
         <ng-template #body let-i>
           <tr>
-            <td>{{ i.type }}</td>
-            <td>{{ i.subjectKind }} · {{ i.subjectRef }}</td>
+            <td>{{ i.type | cadastroLabel: 'INSIGHT_TYPE' }}</td>
+            <td>{{ i.subjectKind | cadastroLabel: 'INSIGHT_SUBJECT_KIND' }} · {{ i.subjectRef }}</td>
             <td>
               <p-tag
-                [value]="i.recommendation.verdict"
+                [value]="i.recommendation.verdict | cadastroLabel: 'INSIGHT_VERDICT'"
                 [severity]="verdictSeverity(i.recommendation.verdict)"
               />
             </td>
@@ -110,9 +110,9 @@
       <h3 class="app-card__title">{{ 'intelligence.evidence' | translate }}</h3>
       <dl class="kv">
         <dt>{{ 'intelligence.type' | translate }}</dt>
-        <dd>{{ i.type }}</dd>
+        <dd>{{ i.type | cadastroLabel: 'INSIGHT_TYPE' }}</dd>
         <dt>{{ 'intelligence.subject' | translate }}</dt>
-        <dd>{{ i.subjectKind }} · {{ i.subjectRef }}</dd>
+        <dd>{{ i.subjectKind | cadastroLabel: 'INSIGHT_SUBJECT_KIND' }} · {{ i.subjectRef }}</dd>
         <dt>{{ 'intelligence.accruedSubsidy' | translate }}</dt>
         <dd>{{ format(i.evidence.accruedSubsidy) }}</dd>
         <dt>{{ 'intelligence.realizedGap' | translate }}</dt>
@@ -128,7 +128,7 @@
         <dt>{{ 'intelligence.verdict' | translate }}</dt>
         <dd>
           <p-tag
-            [value]="i.recommendation.verdict"
+            [value]="i.recommendation.verdict | cadastroLabel: 'INSIGHT_VERDICT'"
             [severity]="verdictSeverity(i.recommendation.verdict)"
           />
         </dd>

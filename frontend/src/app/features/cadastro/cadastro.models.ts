@@ -11,7 +11,14 @@ export type CadastroType =
   | 'ADMIN_SUPPLIER_TYPE'
   | 'ASSET_TYPE'
   | 'WITHHOLDING_KIND'
-  | 'TAX_REGIME';
+  | 'TAX_REGIME'
+  // Slice 18b (DL-0116): Marketing / Intelligence / Portfolio.
+  | 'CONSENT_PURPOSE'
+  | 'MARKETING_SUBJECT_TYPE'
+  | 'INSIGHT_SUBJECT_KIND'
+  | 'INSIGHT_TYPE'
+  | 'INSIGHT_VERDICT'
+  | 'GOAL_METRIC';
 
 /** Read view of a cadastro item (`GET /api/cadastro/items`). */
 export interface CadastroItemView {

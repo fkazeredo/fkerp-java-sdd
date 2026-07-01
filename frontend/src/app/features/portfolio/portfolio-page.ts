@@ -8,6 +8,7 @@ import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
+import { CadastroLabelPipe } from '../../core/cadastro/cadastro-label.pipe';
 import { ApiError } from '../../core/http/api-error';
 import { FormLeaveGuard } from '../../core/guards/can-deactivate.guard';
 import { formatMoney } from '../../core/models/api.models';
@@ -42,6 +43,7 @@ import { PortfolioService } from './portfolio.service';
     TableModule,
     TagModule,
     ScreenState,
+    CadastroLabelPipe,
   ],
   templateUrl: './portfolio-page.html',
 })

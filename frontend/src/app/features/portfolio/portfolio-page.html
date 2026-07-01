@@ -182,7 +182,7 @@
     @if (progress(); as p) {
       <dl class="kv" data-testid="portfolio-progress">
         <dt>{{ 'portfolio.period' | translate }}</dt>
-        <dd>{{ p.period }} ({{ p.metric }})</dd>
+        <dd>{{ p.period }} ({{ p.metric | cadastroLabel: 'GOAL_METRIC' }})</dd>
         @if (p.metric === 'REVENUE') {
           <dt>{{ 'portfolio.targetAmount' | translate }}</dt>
           <dd>{{ format(p.targetAmount) }}</dd>
