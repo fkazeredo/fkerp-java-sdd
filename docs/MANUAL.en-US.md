@@ -723,6 +723,37 @@ profile, but the **server remains the authority** (if a role is missing for an a
 > endpoint**, no contract or database change (SPEC-0029 / DL-0109). It is the **fourth and last slice of
 > Phase 16**: with it, **the entire operator-UI debt is paid off** — the operator sees the whole ERP.
 
+### Phase 17 — Signing in without Keycloak (login served by the system itself)
+
+This release **removes Keycloak**. Before (Phase 13), you signed in on an **external provider's** page
+(Keycloak) running in a separate container. Now **the system itself plays that role**: the login page
+and the whole "sign in with your account" flow are served **by the ERP itself**, with no extra program.
+For you, **signing in is the same**: click **"Sign in with SSO"**, enter your **username and password**,
+and you are back on the Dashboard, authenticated.
+
+What changes, in practice:
+
+- **Sign in.** Still the same: **"Sign in with SSO"** → login page (now **the system's own**) → enter
+  **username and password** → back to the **Dashboard**. A wrong password shows a **generic** error (it
+  never reveals whether the user exists) and you **do not get in**.
+- **Sample users (development/tests only).** The sample users are back **inside** the system — `dev`
+  (access to everything) and one per role (`director`, `finance`, `ops`, `it`, `policy`, `viewer`) —
+  with the known weak password `dev12345`, **only** for development and tests.
+- **Roles, permissions and access audit (unchanged).** Nothing changed here: **Director, Finance,
+  Operations, IT, Policy Admin and Viewer**; sensitive actions require the right role; without it,
+  **access denied**, recorded in the audit. The **server is still the authority**.
+- **Session always valid.** The system **renews the session on its own** in the background while you
+  use it; when it truly ends, you are taken back to login.
+
+> For the technical team: Keycloak was **removed 100%** (service in `docker-compose`/`compose.e2e`, the
+> `infra/keycloak/` folder, the `KEYCLOAK_*` vars). OIDC is now served by a **Spring Authorization Server
+> embedded in the app** (`/oauth2/authorize|token|jwks`, `/.well-known/openid-configuration`,
+> `/userinfo`, `/login`), signing RS256 with a local key. The backend stays a **Resource Server**
+> validating the token via JWKS — now from the **app itself**. Users are back in a **local store**
+> (BCrypt) for the system to authenticate. **Which identity provider in production** stays the owner's
+> decision (the embedded AS is the default; swapping it is only configuration). **Breaking infrastructure
+> change:** Keycloak is gone (see release note 0.28.0).
+
 
 ## 4. Glossary
 
@@ -820,6 +851,7 @@ profile, but the **server remains the authority** (if a role is missing for an a
 | 0.25.0 | 16b — Operator screens: commercial cycle | **Four new screens** over APIs that already existed (no new rules): **After-sales** (cases with filters and SLA, an assign/wait/close state machine and a resolution that triggers refund/cancellation; a breached SLA only alerts, never blocks), **Sourcing** (register/look up an offer's provenance and integration level), **FX desk** (companion to the pinned rate: book exposure with subsidy+drift and an alert, market rate and history, position by booking and the PromoFx report), **Cancellation** (look up/configure the per-product policy: type, windows, cost bearer, no-show and the "merchant trap"). They appear in the menu **for the Operations role** (the server remains the authority). **Second of the four Phase 16 slices** (DL-0109). |
 | 0.26.0 | 16c — Operator screens: Intelligence & Growth | **Four new screens** over APIs that already existed (no new rules): **Intelligence** (insight panel with filters and gain ordering; evidence/recommendation/guardrail; recording the human decision — which only records, never executes), **Commercial policy** (resolve a parameter with provenance; rules list with the Directive>Promotion>Contract>Policy>Default precedence; define a rule and issue a directive with justification), **Marketing** (LGPD consent with history, grant/revoke; segments and reach; campaigns with a consent-filtered dispatch; attribution; LGPD erasure), **Portfolio** (brands, contracts and coverage; goals × realized with attainment). Intelligence/Marketing/Portfolio appear for the **Operations** role; Commercial policy for **Director/Curator**. **Third of the four Phase 16 slices** (DL-0109). |
 | 0.27.0 | 16d — Operator screens: Back-office & IT (closes Phase 16) | **Six new screens** over APIs that already existed (no new rules): **People / HR** (collaborators, journey + time-bank, discrepancy queue), **Time clock** (REP crawl-run history + operational snapshot — read-only; AFD/AEJ and crawl trigger stay machine-to-machine, no screen), **Assets** (register/retire equipment and licenses + license-expiry sweep), **Back-office** (administrative suppliers/contracts/expenses + contract sweep — requires the Finance role), **Platform / IT** (governed jobs with catalog/history/trigger, e-CNPJ certificate **metadata only** — never the key/password, system audit), **Access** (role/permission catalogue and access audit). People/Time-clock/Assets/Platform appear for the **IT** role (there is no "HR" role); Back-office for **Finance**; Access for **Director/IT**. **Last of the four Phase 16 slices** — with it the whole operator-UI debt is paid off (DL-0109). |
+| 0.28.0 | 17 — Remove Keycloak → login served by the system itself | **Keycloak removed 100%.** Single sign-on (SSO) stays the same for the user (**"Sign in with SSO"** → username and password → Dashboard), but it is now served **by the ERP itself** (no external container). The **sample users** are back inside the system (`dev` + one per role, password `dev12345`, **development/tests only**). **Roles, permissions and the access audit stay the same**; the server remains the authority; the session renews on its own. **Breaking infrastructure change:** the Keycloak service, the `infra/keycloak/` folder and the `KEYCLOAK_*` vars are gone; the OIDC URL points at the app itself. No `/api` contract changed (ADR-0018). |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of
