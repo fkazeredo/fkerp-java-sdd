@@ -87,3 +87,39 @@ test('the converted goal-metric code (18b) round-trips the same wire value', asy
   });
   expect(rejected.status()).toBe(422);
 });
+
+test('the converted sourcing codes (18c) round-trip the same wire value', async ({
+  browser,
+  request,
+}) => {
+  // Slice 18c invariant (SPEC-0031 BR4/DL-0117): a sourced offer registered with known OFFER_ORIGIN
+  // and INTEGRATION_LEVEL codes returns the same strings — no wire change — and an unknown code is
+  // rejected (422) by the CadastroValidator port.
+  const token = await tokenFor(browser, 'dev');
+
+  const created = await request.post('/api/sourcing/offers', {
+    headers: { Authorization: `Bearer ${token}` },
+    data: {
+      productText: 'City Tour Rio - E2E',
+      basePrice: { amount: 480.0, currency: 'BRL' },
+      origin: 'EXTERNAL_SITE',
+      integrationLevel: 'INBOUND',
+      externalRef: `QS-E2E-${Date.now()}`,
+    },
+  });
+  expect(created.status()).toBe(201);
+  const body = await created.json();
+  expect(body.origin).toBe('EXTERNAL_SITE');
+  expect(body.integrationLevel).toBe('INBOUND');
+
+  const rejected = await request.post('/api/sourcing/offers', {
+    headers: { Authorization: `Bearer ${token}` },
+    data: {
+      productText: 'Bad origin - E2E',
+      basePrice: { amount: 10.0, currency: 'BRL' },
+      origin: 'NOT_AN_ORIGIN',
+      integrationLevel: 'INBOUND',
+    },
+  });
+  expect(rejected.status()).toBe(422);
+});
