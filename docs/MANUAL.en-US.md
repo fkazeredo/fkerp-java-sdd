@@ -566,6 +566,45 @@ How it works in practice:
 > a ready realm: roles, the web app and sample users — **development only**). It comes up with
 > `docker compose up`.
 
+### Phase 16a — Operator screens: Finance, Billing, Payouts and Compliance
+
+This release **opens four new screens** to operate areas that previously existed only "under the hood"
+(the logic already ran, but there was **no screen**). No new rules: these are **screens over what the
+system already did**. The first three appear in the menu **only for users with the Finance role**;
+**Compliance** appears for any authenticated user. On every screen, an empty list shows a clear
+"nothing to show" notice, and a missing permission for an action shows **"access denied"** (the server
+is the authority — the screen only mirrors it).
+
+- **Finance (AP/AR ledger and monthly close).** Menu **"Finance"**. Shows **payable and receivable
+  entries**, filtered by **direction** (payable/receivable), **status** (provisional/confirmed/settled)
+  and **period** (YYYY-MM). You can **create an entry** (direction, party, amount in its original
+  currency, type and period). Under **"Period & close"**, look up a month to see the **trial balance per
+  currency** (payable, receivable and net — **currencies are never mixed**) and the period status, and
+  **close the month** with one click. The **"golden rule"** applies: if an entry is **missing its
+  mandatory document**, the close is **refused** and the reason is shown on screen.
+- **Billing (commission invoice / ISS).** Menu **"Billing"**. **Create a draft** commission invoice
+  (from the commission entry, giving the **base = the commission**, never the full package, and the
+  municipality). **Look up an invoice by id** to see base, **ISS**, withholdings, status, number and
+  verification code. From the screen you **issue** it (computes ISS, signs, transmits and archives the
+  document — requires the Finance role) and **cancel** an issued one with a reason.
+- **Payouts & settlements.** Menu **"Payouts"**. Lists **agent commission repasses**, **supplier
+  settlements** (with a **rate** when in foreign currency, showing the BRL settled amount) and
+  **customer refunds** (which reference their **origin**), filtered by kind, status and payee. **Open a
+  payout** to see its **installments**; **create** a new one and **execute** the payment. If the provider
+  **fails**, the status becomes **"failed"** explicitly — **never** a false "paid".
+- **Compliance (document vault, requirements and retention).** Menu **"Compliance"**. Run the
+  **close-check** for a month: the system says whether the period **may close** or lists the **pending
+  entries** (which entry and **which document is missing**). **Upload a document** to the vault (type,
+  issue date, signed format when applicable, and whether it carries **personal data**) and **look up a
+  document by id** to see **type, hash, issue date and the retention deadline** computed by the system
+  (5 years for fiscal/payroll/time-clock; 10 years for contracts). The **internal content/file is never
+  exposed** — only the metadata.
+
+> For the technically minded: a **frontend-only** slice over APIs that already existed (`/api/finance`,
+> `/api/billing`, `/api/payouts`, `/api/compliance`) — **no new endpoint**, no contract or database
+> change (SPEC-0029 / DL-0109). It is the **first of the four Phase 16 slices** paying off the deferred-
+> screen debt; the next ones bring the remaining areas (commercial cycle, intelligence, back-office).
+
 ## 4. Glossary
 
 - **Backend / server:** the part of the system that processes the rules and talks to the database.
@@ -658,6 +697,7 @@ How it works in practice:
 | 0.21.0 | 10 — UX & professional frontend | **New experience** (no rule changes): **SaaS layout** (sidebar + top bar + mobile drawer); **light/dark theme** with the choice saved; **command palette `Ctrl/Cmd+K`** + shortcuts (`g`+key, `?` help); renewed **login** with **silent session revalidation** (returns to the intended screen); **unsaved-changes warning** when leaving a form; **real states** (loading/empty/error/permission) on every screen; a **Dashboard** with Accounts/Bookings/Reconciliation/Exchange KPIs computed in the browser. Screens built with **PrimeNG 21 + Tailwind v4** on Angular 22; **no new server endpoint**. Graduates DL-0003. |
 | 0.22.0 | 11 — Observability & monitoring | **Monitoring and version (for operations/IT)**, with no business-rule change: **`/api/version`** (open) returns version/commit/build date; **health probes** (`/actuator/health`) stay open; **metrics** (`/actuator/prometheus`) — technical (memory/CPU/requests) and **business** (bookings/quotes/invoices/logins) — **restricted to the IT role**; a **monitoring stack** (Prometheus + Loki + Grafana) that comes up via `docker compose`, with the "Acme Travel ERP — Backend Overview" dashboard and centralized logs; **JSON logs** with the correlation id and **no** secret/personal data. |
 | 0.23.0 | 13 — Professional Identity/AuthZ (graduates SPEC-0024) | **Corporate single sign-on (SSO)**: signing in now goes through the **company account** on the **identity provider's** page (Keycloak in dev), with the **"Sign in with SSO"** button and **real silent session renewal**; the ERP **no longer stores passwords**. **Roles, permissions and the access audit stay the same** — only the way you sign in changed. **Breaking change:** the old in-house login (`POST /api/identity/login`) was **removed** (login is now at the provider). |
+| 0.24.0 | 16a — Operator screens: Finance & Compliance | **Four new screens** over APIs that already existed (no new rules): **Finance** (AP/AR ledger with filters, per-currency trial balance and the monthly close with the "golden rule"), **Billing** (draft/issue/cancel of the commission invoice, with ISS and withholdings), **Payouts** (agent repass, supplier settlement with rate, customer refund, with installments and execution — a failure shows as a failure), **Compliance** (close-check with pending entries, vault upload and document lookup by id with hash and retention deadline). Finance/Billing/Payouts appear in the menu **only for the Finance role**; Compliance for any authenticated user. **First of the four Phase 16 slices** (pays off the deferred-screen debt — DL-0109). |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of

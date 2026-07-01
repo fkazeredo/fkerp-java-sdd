@@ -570,6 +570,46 @@ Como funciona, na prática:
 > papéis, o aplicativo web e usuários de exemplo — **só** em desenvolvimento). Sobe junto com
 > `docker compose up`.
 
+### Fase 16a — Telas de operação: Financeiro, Faturamento, Repasses e Conformidade
+
+Esta versão **abre quatro telas novas** para operar áreas que antes só existiam "por baixo" (a lógica
+já rodava, mas **faltava a tela**). Nada de regra nova: são **telas sobre o que o sistema já fazia**.
+As três primeiras aparecem no menu **só para quem tem o papel Financeiro**; a **Conformidade** aparece
+para qualquer pessoa autenticada. Em todas, se a lista está vazia você vê um aviso claro de "nada para
+mostrar", e se faltar permissão para uma ação o sistema informa **"acesso negado"** (o servidor é a
+autoridade — a tela só reflete).
+
+- **Financeiro (razão AP/AR e fechamento do mês).** Menu **"Financeiro"**. Mostra os **lançamentos a
+  pagar e a receber**, com filtros por **direção** (pagar/receber), **situação** (provisório/confirmado/
+  liquidado) e **período** (AAAA-MM). Você pode **criar um lançamento** (direção, parte, valor na moeda
+  original, tipo e período). Em **"Período e fechamento"**, consulte um mês para ver o **balancete por
+  moeda** (a pagar, a receber e saldo — **sem misturar moedas**) e a situação do período, e **feche o
+  mês** com um clique. Vale a **"regra de ouro"**: se houver lançamento **sem o documento obrigatório**,
+  o fechamento é **recusado** e o motivo aparece na tela.
+- **Faturamento (NF de comissão / ISS).** Menu **"Faturamento"**. **Crie um rascunho** de nota de
+  comissão (a partir do lançamento de comissão, informando a **base = a comissão**, nunca o pacote
+  cheio, e o município). **Consulte uma nota pelo código** para ver base, **ISS**, retenções, situação,
+  número e código de verificação. Da própria tela você **emite** a nota (calcula o ISS, assina,
+  transmite e arquiva o documento — exige o papel Financeiro) e **cancela** uma nota emitida, com
+  motivo.
+- **Repasses e liquidações.** Menu **"Repasses"**. Lista os **repasses de comissão ao agente**, as
+  **liquidações ao fornecedor** (com **taxa** quando em moeda estrangeira, mostrando a baixa em BRL) e os
+  **reembolsos ao cliente** (que apontam a **origem**), com filtros por tipo, situação e beneficiário.
+  **Abra um repasse** para ver suas **parcelas**; **crie** um novo e **execute** o pagamento. Se o
+  provedor **falhar**, a situação vira **"falhou"** de forma explícita — **nunca** um falso "pago".
+- **Conformidade (cofre de documentos, requisitos e retenção).** Menu **"Conformidade"**. Rode a
+  **verificação de fechamento** de um mês: o sistema diz se o período **pode fechar** ou lista as
+  **pendências** (qual lançamento e **qual documento falta**). **Envie um documento** ao cofre (tipo,
+  data de emissão, formato assinado quando houver, e se contém **dado pessoal**) e **consulte um
+  documento pelo código** para ver **tipo, hash, emissão e o prazo de retenção** calculado pelo sistema
+  (5 anos para fiscal/folha/ponto; 10 anos para contratos). O **conteúdo/arquivo interno nunca é
+  exposto** — só os metadados.
+
+> Para o time técnico: fatia **frontend-only** sobre APIs que já existiam (`/api/finance`,
+> `/api/billing`, `/api/payouts`, `/api/compliance`) — **nenhum endpoint novo**, nenhum contrato ou
+> banco alterado (SPEC-0029 / DL-0109). É a **primeira das quatro fatias da Fase 16** que quita a dívida
+> de telas adiadas; as próximas trazem as demais áreas (ciclo comercial, inteligência, back-office).
+
 ## 4. Glossário
 
 - **Backend / servidor:** a parte do sistema que processa as regras e fala com o banco de dados.
@@ -662,6 +702,7 @@ Como funciona, na prática:
 | 0.21.0 | 10 — UX & Frontend profissional | **Nova experiência** (sem mudar regras): **layout SaaS** (barra lateral + topo + gaveta no celular); **tema claro/escuro** com a escolha salva; **paleta de comandos `Ctrl/Cmd+K`** + atalhos (`g`+tecla, `?` ajuda); **login** renovado com **revalidação silenciosa da sessão** (volta para a tela pretendida); **aviso de alterações não salvas** ao sair de um formulário; **estados reais** (carregando/vazio/erro/permissão) em todas as telas; **Painel (dashboard)** com indicadores de Contas/Reservas/Conciliação/Câmbio calculados no navegador. Telas com **PrimeNG 21 + Tailwind v4** sobre Angular 22; **nenhum endpoint novo** no servidor. Gradua a DL-0003. |
 | 0.22.0 | 11 — Observabilidade & monitoramento | **Monitoramento e versão (para a operação/TI)**, sem mudar regras de negócio: endereço **`/api/version`** (aberto) com versão/commit/data do build; **sondas de saúde** (`/actuator/health`) abertas; **métricas** (`/actuator/prometheus`) — técnicas (memória/CPU/requisições) e de **negócio** (reservas/cotações/NF/logins) — **restritas ao papel TI**; **stack de monitoramento** (Prometheus + Loki + Grafana) que sobe junto via `docker compose`, com painel "Acme Travel ERP — Backend Overview" e logs centralizados; **logs em JSON** com número de correlação e **sem** segredo/dado pessoal. |
 | 0.23.0 | 13 — Identidade/AuthZ profissional (gradua a SPEC-0024) | **Login único corporativo (SSO)**: entrar passa a ser pela **conta da empresa** na tela do **provedor de identidade** (Keycloak no dev), com o botão **"Entrar com SSO"** e **renovação silenciosa de sessão de verdade**; o ERP **não guarda mais senha**. **Papéis, permissões e auditoria de acesso continuam iguais** — só mudou a forma de entrar. **Mudança incompatível:** o login próprio antigo (`POST /api/identity/login`) foi **removido** (login agora é no provedor). |
+| 0.24.0 | 16a — Telas de operação: Financeiro & Conformidade | **Quatro telas novas** sobre APIs que já existiam (nenhuma regra nova): **Financeiro** (razão a pagar/receber com filtros, balancete por moeda e fechamento do mês com a "regra de ouro"), **Faturamento** (rascunho/emissão/cancelamento da NF de comissão, com ISS e retenções), **Repasses** (repasse ao agente, liquidação ao fornecedor com taxa, reembolso ao cliente, com parcelas e execução — falha aparece como falha), **Conformidade** (verificação de fechamento com pendências, envio ao cofre e consulta de documento por código com hash e prazo de retenção). Financeiro/Faturamento/Repasses aparecem no menu **só para o papel Financeiro**; Conformidade para qualquer autenticado. **Primeira das quatro fatias da Fase 16** (quita a dívida de telas — DL-0109). |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.
