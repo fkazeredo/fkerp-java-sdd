@@ -25,13 +25,13 @@ class AssetTest {
     assertThatThrownBy(
             () ->
                 Asset.register(
-                    AssetType.EQUIPMENT, "  ", TODAY, COST, null, null, null, null, NOW, "admin"))
+                    "EQUIPMENT", "  ", TODAY, COST, null, null, null, null, NOW, "admin"))
         .isInstanceOf(AssetInvalidException.class);
 
     assertThatThrownBy(
             () ->
                 Asset.register(
-                    AssetType.EQUIPMENT,
+                    "EQUIPMENT",
                     "Notebook",
                     null,
                     COST,
@@ -49,7 +49,7 @@ class AssetTest {
     assertThatThrownBy(
             () ->
                 Asset.register(
-                    AssetType.SOFTWARE_LICENSE,
+                    "SOFTWARE_LICENSE",
                     "JetBrains All Products Pack",
                     TODAY,
                     COST,
@@ -66,7 +66,7 @@ class AssetTest {
   void registeringStartsActiveAndKeepsTheValueLinks() {
     Asset asset =
         Asset.register(
-            AssetType.SOFTWARE_LICENSE,
+            "SOFTWARE_LICENSE",
             "JetBrains All Products Pack",
             TODAY,
             COST,
@@ -78,7 +78,7 @@ class AssetTest {
             "admin");
 
     assertThat(asset.status()).isEqualTo(AssetStatus.ACTIVE);
-    assertThat(asset.type()).isEqualTo(AssetType.SOFTWARE_LICENSE);
+    assertThat(asset.type()).isEqualTo("SOFTWARE_LICENSE");
     assertThat(asset.expiresAt()).isEqualTo(LocalDate.of(2027, 1, 10));
     assertThat(asset.toView().acquisitionCost()).isEqualTo(COST);
   }
@@ -102,7 +102,7 @@ class AssetTest {
   void expiringLicenseSignalIsIdempotentAndScoped() {
     Asset license =
         Asset.register(
-            AssetType.SOFTWARE_LICENSE,
+            "SOFTWARE_LICENSE",
             "Datadog",
             TODAY,
             COST,
@@ -124,6 +124,6 @@ class AssetTest {
 
   private static Asset equipment() {
     return Asset.register(
-        AssetType.EQUIPMENT, "Notebook Dell", TODAY, COST, null, null, null, null, NOW, "admin");
+        "EQUIPMENT", "Notebook Dell", TODAY, COST, null, null, null, null, NOW, "admin");
   }
 }

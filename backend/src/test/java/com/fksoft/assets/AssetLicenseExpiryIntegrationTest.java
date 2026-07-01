@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fksoft.domain.assets.AssetLicenseExpiring;
 import com.fksoft.domain.assets.AssetRegistered;
 import com.fksoft.domain.assets.AssetService;
-import com.fksoft.domain.assets.AssetType;
 import com.fksoft.domain.assets.AssetView;
 import com.fksoft.domain.assets.RegisterAssetCommand;
 import com.fksoft.domain.money.Money;
@@ -49,7 +48,7 @@ class AssetLicenseExpiryIntegrationTest extends AbstractPostgresIntegrationTest 
   private AssetView license(String identifier, LocalDate expiresAt) {
     return assetService.register(
         new RegisterAssetCommand(
-            AssetType.SOFTWARE_LICENSE, identifier, TODAY, COST, expiresAt, null, null, null),
+            "SOFTWARE_LICENSE", identifier, TODAY, COST, expiresAt, null, null, null),
         "admin");
   }
 
@@ -80,7 +79,7 @@ class AssetLicenseExpiryIntegrationTest extends AbstractPostgresIntegrationTest 
     // A non-license never participates in the license-expiry sweep.
     assetService.register(
         new RegisterAssetCommand(
-            AssetType.EQUIPMENT, "Notebook", TODAY, COST, null, null, null, null),
+            "EQUIPMENT", "Notebook", TODAY, COST, null, null, null, null),
         "admin");
 
     assertThat(assetService.flagExpiringLicenses(NOW)).isZero();

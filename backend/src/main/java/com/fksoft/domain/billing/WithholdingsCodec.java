@@ -23,7 +23,7 @@ final class WithholdingsCodec {
     }
     List<String> parts = new ArrayList<>();
     for (Withholding withholding : withholdings) {
-      parts.add(withholding.kind().name() + ":" + withholding.amount().amount().toPlainString());
+      parts.add(withholding.kind() + ":" + withholding.amount().amount().toPlainString());
     }
     return String.join(",", parts);
   }
@@ -40,7 +40,7 @@ final class WithholdingsCodec {
         continue;
       }
       int sep = trimmed.indexOf(':');
-      WithholdingKind kind = WithholdingKind.valueOf(trimmed.substring(0, sep));
+      String kind = trimmed.substring(0, sep);
       Money amount = Money.of(new BigDecimal(trimmed.substring(sep + 1)), currency);
       withholdings.add(new Withholding(kind, amount));
     }

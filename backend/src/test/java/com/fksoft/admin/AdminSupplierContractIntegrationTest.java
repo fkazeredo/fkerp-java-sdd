@@ -6,12 +6,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.fksoft.domain.admin.AdminContractInvalidException;
 import com.fksoft.domain.admin.AdminContractRegistered;
 import com.fksoft.domain.admin.AdminContractView;
-import com.fksoft.domain.admin.AdminRecurrence;
 import com.fksoft.domain.admin.AdminService;
 import com.fksoft.domain.admin.AdminSupplierNotFoundException;
 import com.fksoft.domain.admin.AdminSupplierRegistered;
 import com.fksoft.domain.admin.AdminSupplierStatus;
-import com.fksoft.domain.admin.AdminSupplierType;
 import com.fksoft.domain.admin.AdminSupplierView;
 import com.fksoft.domain.admin.RegisterContractCommand;
 import com.fksoft.domain.admin.RegisterSupplierCommand;
@@ -62,7 +60,7 @@ class AdminSupplierContractIntegrationTest extends AbstractPostgresIntegrationTe
   private AdminSupplierView energySupplier() {
     return adminService.registerSupplier(
         new RegisterSupplierCommand(
-            AdminSupplierType.UTILITY, "61695227000193", "Companhia de Energia"),
+            "UTILITY", "61695227000193", "Companhia de Energia"),
         "admin");
   }
 
@@ -71,7 +69,7 @@ class AdminSupplierContractIntegrationTest extends AbstractPostgresIntegrationTe
     AdminSupplierView supplier = energySupplier();
 
     assertThat(supplier.status()).isEqualTo(AdminSupplierStatus.ACTIVE);
-    assertThat(supplier.type()).isEqualTo(AdminSupplierType.UTILITY);
+    assertThat(supplier.type()).isEqualTo("UTILITY");
     assertThat(adminService.getSupplier(supplier.id()).displayName())
         .isEqualTo("Companhia de Energia");
     assertThat(
@@ -103,13 +101,13 @@ class AdminSupplierContractIntegrationTest extends AbstractPostgresIntegrationTe
   void listingFiltersByTypeAndStatus() {
     AdminSupplierView utility = energySupplier();
     adminService.registerSupplier(
-        new RegisterSupplierCommand(AdminSupplierType.SOFTWARE, null, "Sistema XPTO"), "admin");
+        new RegisterSupplierCommand("SOFTWARE", null, "Sistema XPTO"), "admin");
 
-    assertThat(adminService.listSuppliers(AdminSupplierType.UTILITY, null))
+    assertThat(adminService.listSuppliers("UTILITY", null))
         .extracting(AdminSupplierView::id)
         .containsExactly(utility.id());
     assertThat(adminService.listSuppliers(null, AdminSupplierStatus.ACTIVE)).hasSize(2);
-    assertThat(adminService.listSuppliers(AdminSupplierType.SOFTWARE, AdminSupplierStatus.INACTIVE))
+    assertThat(adminService.listSuppliers("SOFTWARE", AdminSupplierStatus.INACTIVE))
         .isEmpty();
   }
 
@@ -123,13 +121,13 @@ class AdminSupplierContractIntegrationTest extends AbstractPostgresIntegrationTe
             new RegisterContractCommand(
                 LocalDate.of(2026, 1, 1),
                 LocalDate.of(2026, 12, 31),
-                AdminRecurrence.MONTHLY,
+                "MONTHLY",
                 Money.of(new BigDecimal("840.00"), "BRL"),
                 documentId),
             "admin");
 
     assertThat(contract.documentId()).isEqualTo(documentId);
-    assertThat(contract.recurrence()).isEqualTo(AdminRecurrence.MONTHLY);
+    assertThat(contract.recurrence()).isEqualTo("MONTHLY");
     assertThat(contract.amount()).isEqualTo(Money.of(new BigDecimal("840.00"), "BRL"));
     assertThat(adminService.contractsForSupplier(supplier.id())).hasSize(1);
     assertThat(

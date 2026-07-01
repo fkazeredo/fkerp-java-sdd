@@ -11,7 +11,7 @@ import java.util.UUID;
  * personal data — patrimony has no PII).
  *
  * @param assetId the registered asset's id (value)
- * @param type the asset type
+ * @param type the asset-type cadastro code (was {@code AssetType}; SPEC-0031)
  * @param occurredAt when it was registered (UTC)
  */
-public record AssetRegistered(UUID assetId, AssetType type, Instant occurredAt) {}
+public record AssetRegistered(UUID assetId, String type, Instant occurredAt) {}

@@ -7,7 +7,7 @@ import com.fksoft.domain.billing.BillingInvoiceTransitionInvalidException;
 import com.fksoft.domain.billing.CommissionInvoice;
 import com.fksoft.domain.billing.InvoiceStatus;
 import com.fksoft.domain.billing.TaxAssessment;
-import com.fksoft.domain.billing.TaxRegime;
+import com.fksoft.domain.billing.TaxRegimeCodes;
 import com.fksoft.domain.money.Money;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -36,7 +36,7 @@ class CommissionInvoiceTest {
             commission,
             "3550308",
             "1.05",
-            TaxRegime.SIMPLES_NACIONAL,
+            TaxRegimeCodes.SIMPLES_NACIONAL,
             NOW,
             "dev");
 
@@ -53,12 +53,12 @@ class CommissionInvoiceTest {
             Money.of(new BigDecimal("405.00"), "BRL"),
             "9999999",
             "1.05",
-            TaxRegime.SIMPLES_NACIONAL,
+            TaxRegimeCodes.SIMPLES_NACIONAL,
             NOW,
             "dev");
     TaxAssessment assessment =
         new TaxAssessment(
-            Money.of(new BigDecimal("20.25"), "BRL"), List.of(), TaxRegime.SIMPLES_NACIONAL);
+            Money.of(new BigDecimal("20.25"), "BRL"), List.of(), TaxRegimeCodes.SIMPLES_NACIONAL);
 
     invoice.markIssued("2026/000123", "ABC123", assessment, UUID.randomUUID(), NOW, "dev");
 
@@ -80,7 +80,7 @@ class CommissionInvoiceTest {
                     new TaxAssessment(
                         Money.of(new BigDecimal("20.25"), "BRL"),
                         List.of(),
-                        TaxRegime.SIMPLES_NACIONAL),
+                        TaxRegimeCodes.SIMPLES_NACIONAL),
                     UUID.randomUUID(),
                     NOW,
                     "dev"))
@@ -104,7 +104,7 @@ class CommissionInvoiceTest {
             Money.of(new BigDecimal("405.00"), "BRL"),
             "9999999",
             "1.05",
-            TaxRegime.SIMPLES_NACIONAL,
+            TaxRegimeCodes.SIMPLES_NACIONAL,
             NOW,
             "dev");
 
@@ -119,14 +119,14 @@ class CommissionInvoiceTest {
             Money.of(new BigDecimal("405.00"), "BRL"),
             "9999999",
             "1.05",
-            TaxRegime.SIMPLES_NACIONAL,
+            TaxRegimeCodes.SIMPLES_NACIONAL,
             NOW,
             "dev");
     invoice.markIssued(
         "2026/000123",
         "ABC123",
         new TaxAssessment(
-            Money.of(new BigDecimal("20.25"), "BRL"), List.of(), TaxRegime.SIMPLES_NACIONAL),
+            Money.of(new BigDecimal("20.25"), "BRL"), List.of(), TaxRegimeCodes.SIMPLES_NACIONAL),
         UUID.randomUUID(),
         NOW,
         "dev");

@@ -15,7 +15,7 @@ import java.util.UUID;
  * @param supplierId the supplier the expense belongs to
  * @param period the accounting period ({@code YYYY-MM})
  * @param amount the expense amount (Money)
- * @param kind the expense kind
+ * @param kind the expense-kind cadastro code (was {@code AdminExpenseKind}; SPEC-0031)
  * @param financeEntryId the created Finance ledger entry id (value)
  * @param requiredDocuments the document types required at registration (Compliance), may be empty
  * @param createdAt when it was registered
@@ -25,7 +25,7 @@ public record AdminExpenseView(
     UUID supplierId,
     String period,
     Money amount,
-    AdminExpenseKind kind,
+    String kind,
     UUID financeEntryId,
     List<String> requiredDocuments,
     Instant createdAt) {}

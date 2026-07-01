@@ -17,8 +17,8 @@ public interface AdminExpenseRepository extends JpaRepository<AdminExpense, UUID
    *
    * @param supplierId the supplier
    * @param period the period ({@code YYYY-MM})
-   * @param kind the expense kind
+   * @param kind the expense-kind cadastro code
    * @return whether a duplicate already exists
    */
-  boolean existsBySupplierIdAndPeriodAndKind(UUID supplierId, String period, AdminExpenseKind kind);
+  boolean existsBySupplierIdAndPeriodAndKind(UUID supplierId, String period, String kind);
 }

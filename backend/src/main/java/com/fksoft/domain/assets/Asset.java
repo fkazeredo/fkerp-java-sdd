@@ -34,8 +34,8 @@ public class Asset {
 
   @Id private UUID id;
 
-  @Enumerated(EnumType.STRING)
-  private AssetType type;
+  /** The asset-type cadastro code (was {@code AssetType}; SPEC-0031/DL-0115). */
+  private String type;
 
   private String identifier;
 
@@ -68,9 +68,9 @@ public class Asset {
 
   /**
    * Registers a new asset in {@link AssetStatus#ACTIVE} (BR1). Validates the mandatory data and the
-   * license-specific rule: a {@link AssetType#SOFTWARE_LICENSE} must carry an {@code expiresAt}.
+   * license-specific rule: the {@code SOFTWARE_LICENSE} type code must carry an {@code expiresAt}.
    *
-   * @param type the asset type (required)
+   * @param type the asset-type cadastro code (required; validated by the service)
    * @param identifier the identification/description (required)
    * @param acquisitionDate when it was acquired (required)
    * @param acquisitionCost the acquisition cost (required)
@@ -85,7 +85,7 @@ public class Asset {
    * @throws LicenseExpiryRequiredException when a SOFTWARE_LICENSE has no expiresAt (BR1)
    */
   public static Asset register(
-      AssetType type,
+      String type,
       String identifier,
       LocalDate acquisitionDate,
       Money acquisitionCost,
@@ -96,13 +96,14 @@ public class Asset {
       Instant now,
       String actor) {
     if (type == null
+        || type.isBlank()
         || identifier == null
         || identifier.isBlank()
         || acquisitionDate == null
         || acquisitionCost == null) {
       throw new AssetInvalidException();
     }
-    if (type == AssetType.SOFTWARE_LICENSE && expiresAt == null) {
+    if (AssetCodes.isSoftwareLicense(type) && expiresAt == null) {
       throw new LicenseExpiryRequiredException();
     }
     Asset asset = new Asset();
@@ -155,7 +156,7 @@ public class Asset {
    * @return whether the license expires within the window
    */
   public boolean isLicenseExpiringWithin(LocalDate asOf, int days) {
-    if (type != AssetType.SOFTWARE_LICENSE || expiresAt == null || status != AssetStatus.ACTIVE) {
+    if (!AssetCodes.isSoftwareLicense(type) || expiresAt == null || status != AssetStatus.ACTIVE) {
       return false;
     }
     return !expiresAt.isAfter(asOf.plusDays(days));
@@ -188,8 +189,8 @@ public class Asset {
     return id;
   }
 
-  /** The asset type. */
-  public AssetType type() {
+  /** The asset-type cadastro code. */
+  public String type() {
     return type;
   }
 

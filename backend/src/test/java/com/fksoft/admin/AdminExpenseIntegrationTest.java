@@ -4,11 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fksoft.domain.admin.AdminExpenseDuplicateException;
-import com.fksoft.domain.admin.AdminExpenseKind;
 import com.fksoft.domain.admin.AdminExpenseRegistered;
 import com.fksoft.domain.admin.AdminExpenseView;
 import com.fksoft.domain.admin.AdminService;
-import com.fksoft.domain.admin.AdminSupplierType;
 import com.fksoft.domain.admin.AdminSupplierView;
 import com.fksoft.domain.admin.RegisterExpenseCommand;
 import com.fksoft.domain.admin.RegisterSupplierCommand;
@@ -61,14 +59,14 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
     jdbcTemplate.execute("DELETE FROM system_audit");
   }
 
-  private AdminSupplierView supplier(AdminSupplierType type) {
+  private AdminSupplierView supplier(String type) {
     return adminService.registerSupplier(
         new RegisterSupplierCommand(type, "61695227000193", "Fornecedor " + type), "admin");
   }
 
   @Test
   void registeringAUtilityExpenseCreatesThePayableEntryAndListsTheRequiredDocuments() {
-    AdminSupplierView energy = supplier(AdminSupplierType.UTILITY);
+    AdminSupplierView energy = supplier("UTILITY");
 
     AdminExpenseView expense =
         adminService.registerExpense(
@@ -76,7 +74,7 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
                 energy.id(),
                 PERIOD,
                 Money.of(new BigDecimal("840.00"), "BRL"),
-                AdminExpenseKind.UTILITY),
+                "UTILITY"),
             "admin");
 
     // The Finance entry exists, PAYABLE, UTILITY_EXPENSE, PROVISIONAL, in the period (BR3/DL-0085).
@@ -98,27 +96,27 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
 
   @Test
   void serviceAndAutonomousMapToTheRightTypeAndDocuments() {
-    AdminSupplierView software = supplier(AdminSupplierType.SOFTWARE);
+    AdminSupplierView software = supplier("SOFTWARE");
     AdminExpenseView service =
         adminService.registerExpense(
             new RegisterExpenseCommand(
                 software.id(),
                 PERIOD,
                 Money.of(new BigDecimal("199.00"), "BRL"),
-                AdminExpenseKind.SERVICE),
+                "SERVICE"),
             "admin");
     assertThat(service.requiredDocuments()).containsExactly("NFSE");
     assertThat(financeService.getEntry(service.financeEntryId()).entryType().name())
         .isEqualTo("SERVICE");
 
-    AdminSupplierView person = supplier(AdminSupplierType.SERVICE);
+    AdminSupplierView person = supplier("SERVICE");
     AdminExpenseView autonomous =
         adminService.registerExpense(
             new RegisterExpenseCommand(
                 person.id(),
                 PERIOD,
                 Money.of(new BigDecimal("500.00"), "BRL"),
-                AdminExpenseKind.AUTONOMOUS_SERVICE),
+                "AUTONOMOUS_SERVICE"),
             "admin");
     assertThat(autonomous.requiredDocuments()).containsExactly("RPA");
     assertThat(financeService.getEntry(autonomous.financeEntryId()).entryType().name())
@@ -127,14 +125,14 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
 
   @Test
   void otherKindPostsWithNoMandatoryDocumentAtRegistration() {
-    AdminSupplierView other = supplier(AdminSupplierType.OTHER);
+    AdminSupplierView other = supplier("OTHER");
     AdminExpenseView expense =
         adminService.registerExpense(
             new RegisterExpenseCommand(
                 other.id(),
                 PERIOD,
                 Money.of(new BigDecimal("75.00"), "BRL"),
-                AdminExpenseKind.OTHER),
+                "OTHER"),
             "admin");
     assertThat(expense.requiredDocuments()).isEmpty();
     assertThat(financeService.getEntry(expense.financeEntryId()).entryType().name())
@@ -143,13 +141,13 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
 
   @Test
   void duplicateExpenseIsRejectedWithoutDoublePosting() {
-    AdminSupplierView energy = supplier(AdminSupplierType.UTILITY);
+    AdminSupplierView energy = supplier("UTILITY");
     adminService.registerExpense(
         new RegisterExpenseCommand(
             energy.id(),
             PERIOD,
             Money.of(new BigDecimal("840.00"), "BRL"),
-            AdminExpenseKind.UTILITY),
+            "UTILITY"),
         "admin");
 
     assertThatThrownBy(
@@ -159,7 +157,7 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
                         energy.id(),
                         PERIOD,
                         Money.of(new BigDecimal("840.00"), "BRL"),
-                        AdminExpenseKind.UTILITY),
+                        "UTILITY"),
                     "admin"))
         .isInstanceOf(AdminExpenseDuplicateException.class);
 
@@ -176,14 +174,14 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
   void anAdministrativeExpenseWithoutItsDocumentBlocksTheMonthFromClosing() {
     // The golden rule (BR4 regression): the Compliance vetoes the close while the document is
     // missing.
-    AdminSupplierView energy = supplier(AdminSupplierType.UTILITY);
+    AdminSupplierView energy = supplier("UTILITY");
     AdminExpenseView expense =
         adminService.registerExpense(
             new RegisterExpenseCommand(
                 energy.id(),
                 PERIOD,
                 Money.of(new BigDecimal("840.00"), "BRL"),
-                AdminExpenseKind.UTILITY),
+                "UTILITY"),
             "admin");
 
     // BEFORE attaching the bill: the period cannot close, the admin expense's entry is pending.

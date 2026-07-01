@@ -1,7 +1,6 @@
 package com.fksoft.infra.billing;
 
 import com.fksoft.domain.billing.BillingTaxRegimeConfig;
-import com.fksoft.domain.billing.TaxRegime;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -15,15 +14,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class ConfiguredBillingTaxRegime implements BillingTaxRegimeConfig {
 
-  private final TaxRegime regime;
+  private final String regime;
 
   public ConfiguredBillingTaxRegime(
-      @Value("${billing.tax.regime:SIMPLES_NACIONAL}") TaxRegime regime) {
+      @Value("${billing.tax.regime:SIMPLES_NACIONAL}") String regime) {
     this.regime = regime;
   }
 
   @Override
-  public TaxRegime regime() {
+  public String regime() {
     return regime;
   }
 }

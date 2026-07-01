@@ -1,5 +1,7 @@
 package com.fksoft.domain.assets;
 
+import com.fksoft.domain.cadastro.CadastroType;
+import com.fksoft.domain.cadastro.CadastroValidator;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -31,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AssetService {
 
   private final AssetRepository assetRepository;
+  private final CadastroValidator cadastroValidator;
   private final Clock clock;
   private final ApplicationEventPublisher events;
 
@@ -40,7 +43,7 @@ public class AssetService {
 
   /**
    * Registers an internal asset (BR1), starting it ACTIVE, and publishes {@link AssetRegistered}. A
-   * {@link AssetType#SOFTWARE_LICENSE} must carry an {@code expiresAt} (BR1).
+   * the {@code SOFTWARE_LICENSE} type code must carry an {@code expiresAt} (BR1).
    *
    * @param command the asset details
    * @param actor who registers it (audit)
@@ -53,6 +56,9 @@ public class AssetService {
     if (command == null) {
       throw new AssetInvalidException();
     }
+    // Validate the asset-type reference code against the cadastro (SPEC-0031 BR3/DL-0115) — an
+    // unknown/inactive code is rejected (422) before any write.
+    cadastroValidator.validate(CadastroType.ASSET_TYPE, command.type());
     Instant now = clock.instant();
     Asset asset =
         Asset.register(
@@ -99,11 +105,11 @@ public class AssetService {
    * @return the matching asset views
    */
   @Transactional(readOnly = true)
-  public List<AssetView> list(AssetType type, AssetStatus status, Integer expiringWithinDays) {
+  public List<AssetView> list(String type, AssetStatus status, Integer expiringWithinDays) {
     if (expiringWithinDays != null) {
       LocalDate threshold = LocalDate.now(clock).plusDays(expiringWithinDays);
       return assetRepository.findExpiringWithin(threshold).stream()
-          .filter(a -> type == null || a.type() == type)
+          .filter(a -> type == null || a.type().equals(type))
           .filter(a -> status == null || a.status() == status)
           .map(Asset::toView)
           .toList();

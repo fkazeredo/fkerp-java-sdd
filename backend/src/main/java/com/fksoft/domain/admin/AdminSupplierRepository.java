@@ -15,13 +15,13 @@ public interface AdminSupplierRepository extends JpaRepository<AdminSupplier, UU
   /** All suppliers, newest first. */
   List<AdminSupplier> findAllByOrderByCreatedAtDesc();
 
-  /** All suppliers of a type, newest first. */
-  List<AdminSupplier> findByTypeOrderByCreatedAtDesc(AdminSupplierType type);
+  /** All suppliers of a type (cadastro code), newest first. */
+  List<AdminSupplier> findByTypeOrderByCreatedAtDesc(String type);
 
   /** All suppliers in a status, newest first. */
   List<AdminSupplier> findByStatusOrderByCreatedAtDesc(AdminSupplierStatus status);
 
-  /** All suppliers of a type and status, newest first. */
+  /** All suppliers of a type (cadastro code) and status, newest first. */
   List<AdminSupplier> findByTypeAndStatusOrderByCreatedAtDesc(
-      AdminSupplierType type, AdminSupplierStatus status);
+      String type, AdminSupplierStatus status);
 }

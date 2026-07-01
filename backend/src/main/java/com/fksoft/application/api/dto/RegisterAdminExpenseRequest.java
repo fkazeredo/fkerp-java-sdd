@@ -1,6 +1,5 @@
 package com.fksoft.application.api.dto;
 
-import com.fksoft.domain.admin.AdminExpenseKind;
 import com.fksoft.domain.admin.RegisterExpenseCommand;
 import com.fksoft.domain.money.Money;
 import jakarta.validation.constraints.NotBlank;
@@ -14,13 +13,13 @@ import java.util.UUID;
  * @param supplierId the administrative supplier (required)
  * @param period the accounting period {@code YYYY-MM} (required)
  * @param amount the expense amount (required)
- * @param kind the expense kind (required) — maps to the Finance entry type (DL-0085)
+ * @param kind the expense-kind cadastro code (required) — maps to the Finance entry type (DL-0085)
  */
 public record RegisterAdminExpenseRequest(
     @NotNull UUID supplierId,
     @NotBlank String period,
     @NotNull Money amount,
-    @NotNull AdminExpenseKind kind) {
+    @NotBlank String kind) {
 
   /** Translates this request to the domain command. */
   public RegisterExpenseCommand toCommand() {

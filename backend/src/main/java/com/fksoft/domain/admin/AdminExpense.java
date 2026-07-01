@@ -3,8 +3,6 @@ package com.fksoft.domain.admin;
 import com.fksoft.domain.ModuleInternal;
 import com.fksoft.domain.money.Money;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
@@ -40,8 +38,8 @@ public class AdminExpense {
   private BigDecimal amount;
   private String currency;
 
-  @Enumerated(EnumType.STRING)
-  private AdminExpenseKind kind;
+  /** The expense-kind cadastro code (was {@code AdminExpenseKind}; SPEC-0031/DL-0115). */
+  private String kind;
 
   private UUID financeEntryId;
 
@@ -56,7 +54,7 @@ public class AdminExpense {
    * @param supplierId the supplier the expense belongs to (required)
    * @param period the accounting period ({@code YYYY-MM}, required)
    * @param amount the expense amount (required)
-   * @param kind the expense kind (required)
+   * @param kind the expense-kind cadastro code (required; validated by the service)
    * @param financeEntryId the created Finance ledger entry id (required — set by the service)
    * @param now the creation instant (UTC)
    * @param actor who registers it (audit)
@@ -68,7 +66,7 @@ public class AdminExpense {
       UUID supplierId,
       String period,
       Money amount,
-      AdminExpenseKind kind,
+      String kind,
       UUID financeEntryId,
       Instant now,
       String actor) {
@@ -77,6 +75,7 @@ public class AdminExpense {
         || !PERIOD.matcher(period).matches()
         || amount == null
         || kind == null
+        || kind.isBlank()
         || financeEntryId == null) {
       throw new AdminExpenseInvalidException();
     }

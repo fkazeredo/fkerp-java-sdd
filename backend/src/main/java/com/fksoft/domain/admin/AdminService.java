@@ -1,5 +1,7 @@
 package com.fksoft.domain.admin;
 
+import com.fksoft.domain.cadastro.CadastroType;
+import com.fksoft.domain.cadastro.CadastroValidator;
 import com.fksoft.domain.compliance.DocumentRequirementDirectory;
 import com.fksoft.domain.finance.AccountingPeriodId;
 import com.fksoft.domain.finance.EntryType;
@@ -54,6 +56,7 @@ public class AdminService {
   private final AdminExpenseRepository expenses;
   private final FinanceService financeService;
   private final DocumentRequirementDirectory documentRequirements;
+  private final CadastroValidator cadastroValidator;
   private final SystemAuditService systemAudit;
   private final Clock clock;
   private final ApplicationEventPublisher events;
@@ -74,6 +77,9 @@ public class AdminService {
     if (command == null) {
       throw new AdminSupplierInvalidException();
     }
+    // Validate the supplier-type reference code against the cadastro (SPEC-0031 BR3/DL-0115) — an
+    // unknown/inactive code is rejected (422) before any write.
+    cadastroValidator.validate(CadastroType.ADMIN_SUPPLIER_TYPE, command.type());
     Instant now = clock.instant();
     AdminSupplier supplier =
         AdminSupplier.register(
@@ -106,7 +112,7 @@ public class AdminService {
    * Lists suppliers, optionally filtered by type and/or status, newest first (filters combinable).
    */
   @Transactional(readOnly = true)
-  public List<AdminSupplierView> listSuppliers(AdminSupplierType type, AdminSupplierStatus status) {
+  public List<AdminSupplierView> listSuppliers(String type, AdminSupplierStatus status) {
     List<AdminSupplier> result;
     if (type != null && status != null) {
       result = suppliers.findByTypeAndStatusOrderByCreatedAtDesc(type, status);
@@ -142,6 +148,10 @@ public class AdminService {
     }
     if (!suppliers.existsById(supplierId)) {
       throw new AdminSupplierNotFoundException();
+    }
+    // Recurrence is optional; when present it must be a valid, active cadastro code (SPEC-0031 BR3).
+    if (command.recurrence() != null && !command.recurrence().isBlank()) {
+      cadastroValidator.validate(CadastroType.ADMIN_RECURRENCE, command.recurrence());
     }
     Instant now = clock.instant();
     AdminContract contract =
@@ -212,12 +222,16 @@ public class AdminService {
     if (!suppliers.existsById(command.supplierId())) {
       throw new AdminSupplierNotFoundException();
     }
+    // Validate the expense-kind reference code against the cadastro (SPEC-0031 BR3/DL-0115).
+    cadastroValidator.validate(CadastroType.ADMIN_EXPENSE_KIND, command.kind());
     if (expenses.existsBySupplierIdAndPeriodAndKind(
         command.supplierId(), command.period(), command.kind())) {
       throw new AdminExpenseDuplicateException();
     }
 
-    EntryType entryType = command.kind().entryType();
+    // Map the kind code to the Finance entry type (DL-0085/DL-0115) — behavior preserved via the
+    // AdminExpenseCodes constants; a new code with no wired mapping falls back to OTHER_EXPENSE.
+    EntryType entryType = AdminExpenseCodes.entryTypeFor(command.kind());
     // Generate the AP ledger entry through the Finance facade (BR3/DL-0086) — never an FK.
     LedgerEntryView entry =
         financeService.register(

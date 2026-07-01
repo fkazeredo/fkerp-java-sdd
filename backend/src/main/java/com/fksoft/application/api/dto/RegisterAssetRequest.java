@@ -1,6 +1,5 @@
 package com.fksoft.application.api.dto;
 
-import com.fksoft.domain.assets.AssetType;
 import com.fksoft.domain.assets.RegisterAssetCommand;
 import com.fksoft.domain.money.Money;
 import jakarta.validation.constraints.NotBlank;
@@ -10,10 +9,10 @@ import java.util.UUID;
 
 /**
  * Request body for {@code POST /api/assets} (SPEC-0021 BR1/BR2). The {@code expiresAt} is required
- * for a {@link AssetType#SOFTWARE_LICENSE} (enforced in the domain, BR1); {@code documentId} and
+ * for the {@code SOFTWARE_LICENSE} type code (enforced in the domain, BR1); {@code documentId} and
  * {@code financeEntryId} reference the Compliance vault and the Finance ledger by value.
  *
- * @param type the asset type (required)
+ * @param type the asset-type cadastro code (required)
  * @param identifier the identification/description (required)
  * @param acquisitionDate when it was acquired (required)
  * @param acquisitionCost the acquisition cost (required, Money)
@@ -23,7 +22,7 @@ import java.util.UUID;
  * @param financeEntryId the Finance cost entry id (value), or {@code null}
  */
 public record RegisterAssetRequest(
-    @NotNull AssetType type,
+    @NotBlank String type,
     @NotBlank String identifier,
     @NotNull LocalDate acquisitionDate,
     @NotNull Money acquisitionCost,

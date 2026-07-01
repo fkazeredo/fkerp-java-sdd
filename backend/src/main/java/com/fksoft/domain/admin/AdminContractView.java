@@ -13,7 +13,8 @@ import java.util.UUID;
  * @param supplierId the supplier the contract covers
  * @param validFrom the start of validity
  * @param validUntil the end of validity, or {@code null} when open-ended
- * @param recurrence the recurring-charge cadence, or {@code null}
+ * @param recurrence the recurring-charge cadence cadastro code (was {@code AdminRecurrence}), or
+ *     {@code null}
  * @param amount the recurring amount (Money), or {@code null}
  * @param documentId the contract document id in the Compliance vault (value), or {@code null}
  * @param createdAt when it was registered
@@ -23,7 +24,7 @@ public record AdminContractView(
     UUID supplierId,
     LocalDate validFrom,
     LocalDate validUntil,
-    AdminRecurrence recurrence,
+    String recurrence,
     Money amount,
     UUID documentId,
     Instant createdAt) {}

@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fksoft.domain.billing.MunicipalIssRateProvider;
 import com.fksoft.domain.billing.SimplesNacionalTaxStrategy;
 import com.fksoft.domain.billing.TaxAssessment;
-import com.fksoft.domain.billing.TaxRegime;
+import com.fksoft.domain.billing.TaxRegimeCodes;
 import com.fksoft.domain.billing.TaxRegimeStrategy;
-import com.fksoft.domain.billing.WithholdingKind;
+import com.fksoft.domain.billing.WithholdingKindCodes;
 import com.fksoft.domain.money.Money;
 import java.math.BigDecimal;
 import java.util.List;
@@ -35,7 +35,7 @@ class TaxRegimeStrategyTest {
     TaxAssessment assessment = simples.assess(base, "9999999", "1.05");
 
     assertThat(assessment.iss()).isEqualTo(Money.of(new BigDecimal("20.25"), "BRL"));
-    assertThat(assessment.regime()).isEqualTo(TaxRegime.SIMPLES_NACIONAL);
+    assertThat(assessment.regime()).isEqualTo(TaxRegimeCodes.SIMPLES_NACIONAL);
   }
 
   @Test
@@ -79,15 +79,15 @@ class TaxRegimeStrategyTest {
                 commissionBase.multiply(new BigDecimal("0.05")),
                 List.of(
                     new com.fksoft.domain.billing.Withholding(
-                        WithholdingKind.IRRF, commissionBase.multiply(new BigDecimal("0.015")))),
-                TaxRegime.LUCRO_PRESUMIDO);
+                        WithholdingKindCodes.IRRF, commissionBase.multiply(new BigDecimal("0.015")))),
+                TaxRegimeCodes.LUCRO_PRESUMIDO);
 
     Money base = Money.of(new BigDecimal("405.00"), "BRL");
     TaxAssessment assessment = presumidoStub.assess(base, "9999999", "1.05");
 
-    assertThat(assessment.regime()).isEqualTo(TaxRegime.LUCRO_PRESUMIDO);
+    assertThat(assessment.regime()).isEqualTo(TaxRegimeCodes.LUCRO_PRESUMIDO);
     assertThat(assessment.withholdings()).hasSize(1);
-    assertThat(assessment.withholdings().get(0).kind()).isEqualTo(WithholdingKind.IRRF);
+    assertThat(assessment.withholdings().get(0).kind()).isEqualTo(WithholdingKindCodes.IRRF);
     // 405,00 × 0,015 = 6,075 → HALF_UP → 6,08.
     assertThat(assessment.withholdings().get(0).amount())
         .isEqualTo(Money.of(new BigDecimal("6.08"), "BRL"));

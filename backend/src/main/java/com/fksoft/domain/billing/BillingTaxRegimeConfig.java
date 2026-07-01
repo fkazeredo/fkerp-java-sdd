@@ -9,6 +9,9 @@ package com.fksoft.domain.billing;
  */
 public interface BillingTaxRegimeConfig {
 
-  /** The configured tax regime (default {@link TaxRegime#SIMPLES_NACIONAL}). */
-  TaxRegime regime();
+  /**
+   * The configured tax-regime cadastro code (default {@link TaxRegimeCodes#SIMPLES_NACIONAL}; was
+   * {@code TaxRegime} — SPEC-0031/DL-0115).
+   */
+  String regime();
 }
