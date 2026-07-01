@@ -9,7 +9,8 @@ package com.fksoft.domain.cadastro;
  *
  * <p>This is a <strong>validation</strong>, not a lookup for branching: domain logic that branches
  * on specific codes keeps its own small {@code *Codes} constants (DL-0115). The set of valid,
- * active codes is owned by the cadastro; behavior wired to specific codes stays in the owning module.
+ * active codes is owned by the cadastro; behavior wired to specific codes stays in the owning
+ * module.
  */
 public interface CadastroValidator {
 
@@ -23,8 +24,8 @@ public interface CadastroValidator {
   void validate(CadastroType type, String code);
 
   /**
-   * Whether {@code code} is an active item of {@code type} — the non-throwing form, for callers that
-   * prefer to compose their own error.
+   * Whether {@code code} is an active item of {@code type} — the non-throwing form, for callers
+   * that prefer to compose their own error.
    *
    * @param type the cadastro type
    * @param code the reference code

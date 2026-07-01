@@ -78,8 +78,7 @@ class AssetLicenseExpiryIntegrationTest extends AbstractPostgresIntegrationTest 
     license("Datadog", TODAY.plusDays(90)); // far from expiry
     // A non-license never participates in the license-expiry sweep.
     assetService.register(
-        new RegisterAssetCommand(
-            "EQUIPMENT", "Notebook", TODAY, COST, null, null, null, null),
+        new RegisterAssetCommand("EQUIPMENT", "Notebook", TODAY, COST, null, null, null, null),
         "admin");
 
     assertThat(assetService.flagExpiringLicenses(NOW)).isZero();

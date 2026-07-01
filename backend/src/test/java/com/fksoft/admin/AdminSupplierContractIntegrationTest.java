@@ -59,9 +59,7 @@ class AdminSupplierContractIntegrationTest extends AbstractPostgresIntegrationTe
 
   private AdminSupplierView energySupplier() {
     return adminService.registerSupplier(
-        new RegisterSupplierCommand(
-            "UTILITY", "61695227000193", "Companhia de Energia"),
-        "admin");
+        new RegisterSupplierCommand("UTILITY", "61695227000193", "Companhia de Energia"), "admin");
   }
 
   @Test
@@ -107,8 +105,7 @@ class AdminSupplierContractIntegrationTest extends AbstractPostgresIntegrationTe
         .extracting(AdminSupplierView::id)
         .containsExactly(utility.id());
     assertThat(adminService.listSuppliers(null, AdminSupplierStatus.ACTIVE)).hasSize(2);
-    assertThat(adminService.listSuppliers("SOFTWARE", AdminSupplierStatus.INACTIVE))
-        .isEmpty();
+    assertThat(adminService.listSuppliers("SOFTWARE", AdminSupplierStatus.INACTIVE)).isEmpty();
   }
 
   @Test

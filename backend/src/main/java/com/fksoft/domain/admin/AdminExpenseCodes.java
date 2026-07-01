@@ -11,8 +11,8 @@ import java.util.Map;
  * the <em>wired behavior</em>.
  *
  * <p>A brand-new code the operator adds with no wired mapping falls back to {@link
- * EntryType#OTHER_EXPENSE} (no mandatory document at registration) — it works as pure reference data
- * until a later slice wires it. This is the documented seam of DL-0115.
+ * EntryType#OTHER_EXPENSE} (no mandatory document at registration) — it works as pure reference
+ * data until a later slice wires it. This is the documented seam of DL-0115.
  */
 public final class AdminExpenseCodes {
 
@@ -46,6 +46,9 @@ public final class AdminExpenseCodes {
    * @return the mapped entry type (never {@code null})
    */
   public static EntryType entryTypeFor(String code) {
+    if (code == null) {
+      return EntryType.OTHER_EXPENSE;
+    }
     return ENTRY_TYPE_BY_CODE.getOrDefault(code, EntryType.OTHER_EXPENSE);
   }
 }

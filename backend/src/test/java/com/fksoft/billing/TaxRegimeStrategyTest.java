@@ -79,7 +79,8 @@ class TaxRegimeStrategyTest {
                 commissionBase.multiply(new BigDecimal("0.05")),
                 List.of(
                     new com.fksoft.domain.billing.Withholding(
-                        WithholdingKindCodes.IRRF, commissionBase.multiply(new BigDecimal("0.015")))),
+                        WithholdingKindCodes.IRRF,
+                        commissionBase.multiply(new BigDecimal("0.015")))),
                 TaxRegimeCodes.LUCRO_PRESUMIDO);
 
     Money base = Money.of(new BigDecimal("405.00"), "BRL");

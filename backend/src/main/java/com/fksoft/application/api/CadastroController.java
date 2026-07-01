@@ -27,8 +27,8 @@ import org.springframework.web.bind.annotation.RestController;
  * onto these. Lists the convertible types and the items of a type (reads — authenticated); creates,
  * updates and deactivates items (writes — require {@code ROLE_POLICY_ADMIN}, gated in {@code
  * SecurityConfig} / DL-0115; the delivery layer resolves the acting user for audit). The converted
- * fields elsewhere keep their JSON schema (string) — only these {@code /api/cadastro/*} endpoints are
- * new.
+ * fields elsewhere keep their JSON schema (string) — only these {@code /api/cadastro/*} endpoints
+ * are new.
  */
 @RestController
 @RequestMapping("/api/cadastro")

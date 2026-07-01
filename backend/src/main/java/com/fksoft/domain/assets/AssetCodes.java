@@ -1,8 +1,8 @@
 package com.fksoft.domain.assets;
 
 /**
- * The small set of {@code ASSET_TYPE} code constants whose behavior the domain wires (SPEC-0031 BR5;
- * DL-0115). After {@code AssetType} became an editable cadastro, the one wired rule — a {@code
+ * The small set of {@code ASSET_TYPE} code constants whose behavior the domain wires (SPEC-0031
+ * BR5; DL-0115). After {@code AssetType} became an editable cadastro, the one wired rule — a {@code
  * SOFTWARE_LICENSE} requires an expiry date and drives the license-expiry alert (SPEC-0021 BR1/BR3)
  * — is preserved here as a code constant. The cadastro owns the extensible set + labels; this class
  * owns the wired behavior.

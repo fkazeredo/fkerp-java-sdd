@@ -157,6 +157,12 @@ export const routes: Routes = [
         canDeactivate: [canDeactivateGuard],
       },
       {
+        path: 'cadastro',
+        loadComponent: () =>
+          import('./features/cadastro/cadastro-page').then((m) => m.CadastroPage),
+        canActivate: [authGuard],
+      },
+      {
         path: 'platform',
         loadComponent: () =>
           import('./features/platform/platform-page').then((m) => m.PlatformPage),

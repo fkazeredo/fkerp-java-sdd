@@ -1,0 +1,107 @@
+<section class="page">
+  <h1 class="page__title">{{ 'cadastro.title' | translate }}</h1>
+  <p class="app-muted">{{ 'cadastro.intro' | translate }}</p>
+
+  <!-- Type selector + add-item form -->
+  <div class="app-card">
+    <div class="list__header">
+      <div class="field">
+        <label for="cad-type">{{ 'cadastro.type' | translate }}</label>
+        <p-select
+          inputId="cad-type"
+          name="type"
+          [(ngModel)]="selectedType"
+          (ngModelChange)="loadItems()"
+          [options]="types()"
+          appendTo="body"
+          data-testid="cadastro-type"
+        />
+      </div>
+    </div>
+
+    <form class="form__row" (ngSubmit)="createItem()" #cf="ngForm">
+      <div class="field">
+        <label for="cad-code">{{ 'cadastro.code' | translate }}</label>
+        <input pInputText id="cad-code" name="code" [(ngModel)]="newCode" required data-testid="cadastro-new-code" />
+      </div>
+      <div class="field">
+        <label for="cad-label">{{ 'cadastro.label' | translate }}</label>
+        <input pInputText id="cad-label" name="label" [(ngModel)]="newLabel" required data-testid="cadastro-new-label" />
+      </div>
+      <div class="field">
+        <label for="cad-order">{{ 'cadastro.sortOrder' | translate }}</label>
+        <p-inputNumber inputId="cad-order" name="sortOrder" [(ngModel)]="newSortOrder" />
+      </div>
+      <div class="actions">
+        <p-button
+          type="submit"
+          [label]="'cadastro.add' | translate"
+          icon="pi pi-plus"
+          [loading]="createBusy()"
+          [disabled]="createBusy() || cf.invalid || !selectedType"
+          data-testid="cadastro-add"
+        />
+      </div>
+    </form>
+    @if (createError()) {
+      <p-message severity="error" data-testid="cadastro-create-error">{{ createError() | translate }}</p-message>
+    }
+  </div>
+
+  <!-- Items of the selected type -->
+  <div class="app-card">
+    <h2 class="app-card__title">{{ 'cadastro.items' | translate }}</h2>
+    <app-screen-state
+      [state]="itemsState()"
+      [errorCode]="errorCode()"
+      emptyKey="cadastro.itemsEmpty"
+      (retry)="loadItems()"
+    >
+      <p-table [value]="items()" data-testid="cadastro-table" [rows]="20" [paginator]="items().length > 20">
+        <ng-template #header>
+          <tr>
+            <th>{{ 'cadastro.code' | translate }}</th>
+            <th>{{ 'cadastro.label' | translate }}</th>
+            <th>{{ 'cadastro.sortOrder' | translate }}</th>
+            <th>{{ 'cadastro.status' | translate }}</th>
+            <th>{{ 'cadastro.actions' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-item>
+          <tr [attr.data-testid]="'cadastro-row-' + item.code">
+            <td><code>{{ item.code }}</code></td>
+            <td>
+              <input pInputText name="label-{{ item.id }}" [(ngModel)]="item.label" data-testid="cadastro-edit-label" />
+            </td>
+            <td>
+              <p-inputNumber name="order-{{ item.id }}" [(ngModel)]="item.sortOrder" [showButtons]="false" />
+            </td>
+            <td>
+              <p-tag
+                [value]="(item.active ? 'cadastro.active' : 'cadastro.inactive') | translate"
+                [severity]="activeSeverity(item.active)"
+              />
+            </td>
+            <td class="actions">
+              <p-button
+                [label]="'cadastro.save' | translate"
+                icon="pi pi-check"
+                size="small"
+                (onClick)="saveItem(item)"
+                data-testid="cadastro-save"
+              />
+              <p-button
+                [label]="(item.active ? 'cadastro.deactivate' : 'cadastro.activate') | translate"
+                [icon]="item.active ? 'pi pi-ban' : 'pi pi-undo'"
+                size="small"
+                severity="secondary"
+                (onClick)="toggleActive(item)"
+                data-testid="cadastro-toggle"
+              />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-screen-state>
+  </div>
+</section>

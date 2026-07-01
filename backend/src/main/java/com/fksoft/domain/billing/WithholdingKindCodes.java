@@ -2,8 +2,8 @@ package com.fksoft.domain.billing;
 
 /**
  * The set of {@code WITHHOLDING_KIND} code constants the Billing domain wires (SPEC-0031 BR5;
- * DL-0044/DL-0115). After {@code WithholdingKind} became an editable cadastro, the withholding lines
- * a Presumido/Real strategy may populate are still identified by these codes (the {@link
+ * DL-0044/DL-0115). After {@code WithholdingKind} became an editable cadastro, the withholding
+ * lines a Presumido/Real strategy may populate are still identified by these codes (the {@link
  * WithholdingsCodec} (de)serializes them). Under Simples Nacional the withholdings list is empty
  * (DL-0044). The cadastro owns the extensible set + labels; this class owns the wired behavior.
  */

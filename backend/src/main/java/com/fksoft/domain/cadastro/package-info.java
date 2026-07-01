@@ -9,11 +9,11 @@
  * <p>Spring Modulith application module (the 23rd business module) and a <strong>leaf</strong>: it
  * depends only on its own repository and the {@code error} kernel — no other business module. Other
  * modules validate a code through the public {@link com.fksoft.domain.cadastro.CadastroValidator}
- * port; the {@code code} crosses the boundary as a <strong>value</strong>, never a cross-context FK,
- * and the dependency direction is {@code caller → cadastro}, so the module graph stays
+ * port; the {@code code} crosses the boundary as a <strong>value</strong>, never a cross-context
+ * FK, and the dependency direction is {@code caller → cadastro}, so the module graph stays
  * <strong>acyclic</strong> (Spring Modulith verify). Domain logic that branches on specific codes
- * keeps its own small {@code *Codes} constants in the owning module (DL-0115) — the cadastro owns the
- * extensible set + labels, not the wired behavior.
+ * keeps its own small {@code *Codes} constants in the owning module (DL-0115) — the cadastro owns
+ * the extensible set + labels, not the wired behavior.
  *
  * <p>Types in this base package are the module's public API: the {@link
  * com.fksoft.domain.cadastro.CadastroService} use cases, the {@link

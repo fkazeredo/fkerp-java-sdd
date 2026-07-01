@@ -4,8 +4,8 @@ import com.fksoft.domain.cadastro.UpdateCadastroItemCommand;
 import jakarta.validation.constraints.NotBlank;
 
 /**
- * Request body for {@code PUT /api/cadastro/items/{id}} (SPEC-0031 BR2). Updates the editable fields
- * of an item; the {@code code} and {@code type} never change.
+ * Request body for {@code PUT /api/cadastro/items/{id}} (SPEC-0031 BR2). Updates the editable
+ * fields of an item; the {@code code} and {@code type} never change.
  *
  * @param label the new label in pt-BR (required)
  * @param active the new active flag

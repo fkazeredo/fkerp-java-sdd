@@ -4,8 +4,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Public read view of a cadastro item (SPEC-0031). The delivery layer returns this record, never the
- * {@code CadastroItem} entity (the model stays inside the module).
+ * Public read view of a cadastro item (SPEC-0031). The delivery layer returns this record, never
+ * the {@code CadastroItem} entity (the model stays inside the module).
  *
  * @param id the item id
  * @param type the cadastro type

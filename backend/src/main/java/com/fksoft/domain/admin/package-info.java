@@ -23,8 +23,7 @@
  * the module's public API: the {@link com.fksoft.domain.admin.AdminService} use cases, the
  * commands/ views/value objects, the reference codes wired to behavior ({@link
  * com.fksoft.domain.admin.AdminExpenseCodes}, after the enum→cadastro conversion — SPEC-0031/
- * DL-0115), the events ({@link
- * com.fksoft.domain.admin.AdminSupplierRegistered}/{@link
+ * DL-0115), the events ({@link com.fksoft.domain.admin.AdminSupplierRegistered}/{@link
  * com.fksoft.domain.admin.AdminContractRegistered}/{@link
  * com.fksoft.domain.admin.AdminExpenseRegistered}/{@link
  * com.fksoft.domain.admin.AdminContractExpiring}) and the business exceptions. The implementation

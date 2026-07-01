@@ -16,13 +16,13 @@ import lombok.NoArgsConstructor;
 
 /**
  * A single editable reference-data item (SPEC-0031 BR1; ADR-0019): one {@code code} of a {@link
- * CadastroType}, with a human {@code label} (pt-BR), an {@code active} flag and a {@code sortOrder}.
- * Replaces a former business enum constant. The {@code code} equals the old enum constant name so
- * the wire contract is unchanged (DL-0115).
+ * CadastroType}, with a human {@code label} (pt-BR), an {@code active} flag and a {@code
+ * sortOrder}. Replaces a former business enum constant. The {@code code} equals the old enum
+ * constant name so the wire contract is unchanged (DL-0115).
  *
  * <p>The {@code code} is <strong>immutable</strong> after creation (BR2): a persisted value must
- * keep resolving. Only {@code label}, {@code active} and {@code sortOrder} change. Deactivation is a
- * soft operation — the row is never deleted, preserving round-trip of already-persisted codes.
+ * keep resolving. Only {@code label}, {@code active} and {@code sortOrder} change. Deactivation is
+ * a soft operation — the row is never deleted, preserving round-trip of already-persisted codes.
  * Module-internal.
  */
 @Entity

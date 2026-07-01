@@ -15,8 +15,4 @@ import java.util.UUID;
  * @param documentId the Compliance document id (value), or {@code null}
  */
 public record RegisterContractCommand(
-    LocalDate validFrom,
-    LocalDate validUntil,
-    String recurrence,
-    Money amount,
-    UUID documentId) {}
+    LocalDate validFrom, LocalDate validUntil, String recurrence, Money amount, UUID documentId) {}

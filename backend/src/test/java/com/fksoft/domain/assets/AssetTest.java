@@ -31,16 +31,7 @@ class AssetTest {
     assertThatThrownBy(
             () ->
                 Asset.register(
-                    "EQUIPMENT",
-                    "Notebook",
-                    null,
-                    COST,
-                    null,
-                    null,
-                    null,
-                    null,
-                    NOW,
-                    "admin"))
+                    "EQUIPMENT", "Notebook", null, COST, null, null, null, null, NOW, "admin"))
         .isInstanceOf(AssetInvalidException.class);
   }
 

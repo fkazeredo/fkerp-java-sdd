@@ -71,10 +71,7 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
     AdminExpenseView expense =
         adminService.registerExpense(
             new RegisterExpenseCommand(
-                energy.id(),
-                PERIOD,
-                Money.of(new BigDecimal("840.00"), "BRL"),
-                "UTILITY"),
+                energy.id(), PERIOD, Money.of(new BigDecimal("840.00"), "BRL"), "UTILITY"),
             "admin");
 
     // The Finance entry exists, PAYABLE, UTILITY_EXPENSE, PROVISIONAL, in the period (BR3/DL-0085).
@@ -100,10 +97,7 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
     AdminExpenseView service =
         adminService.registerExpense(
             new RegisterExpenseCommand(
-                software.id(),
-                PERIOD,
-                Money.of(new BigDecimal("199.00"), "BRL"),
-                "SERVICE"),
+                software.id(), PERIOD, Money.of(new BigDecimal("199.00"), "BRL"), "SERVICE"),
             "admin");
     assertThat(service.requiredDocuments()).containsExactly("NFSE");
     assertThat(financeService.getEntry(service.financeEntryId()).entryType().name())
@@ -129,10 +123,7 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
     AdminExpenseView expense =
         adminService.registerExpense(
             new RegisterExpenseCommand(
-                other.id(),
-                PERIOD,
-                Money.of(new BigDecimal("75.00"), "BRL"),
-                "OTHER"),
+                other.id(), PERIOD, Money.of(new BigDecimal("75.00"), "BRL"), "OTHER"),
             "admin");
     assertThat(expense.requiredDocuments()).isEmpty();
     assertThat(financeService.getEntry(expense.financeEntryId()).entryType().name())
@@ -144,20 +135,14 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
     AdminSupplierView energy = supplier("UTILITY");
     adminService.registerExpense(
         new RegisterExpenseCommand(
-            energy.id(),
-            PERIOD,
-            Money.of(new BigDecimal("840.00"), "BRL"),
-            "UTILITY"),
+            energy.id(), PERIOD, Money.of(new BigDecimal("840.00"), "BRL"), "UTILITY"),
         "admin");
 
     assertThatThrownBy(
             () ->
                 adminService.registerExpense(
                     new RegisterExpenseCommand(
-                        energy.id(),
-                        PERIOD,
-                        Money.of(new BigDecimal("840.00"), "BRL"),
-                        "UTILITY"),
+                        energy.id(), PERIOD, Money.of(new BigDecimal("840.00"), "BRL"), "UTILITY"),
                     "admin"))
         .isInstanceOf(AdminExpenseDuplicateException.class);
 
@@ -178,10 +163,7 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
     AdminExpenseView expense =
         adminService.registerExpense(
             new RegisterExpenseCommand(
-                energy.id(),
-                PERIOD,
-                Money.of(new BigDecimal("840.00"), "BRL"),
-                "UTILITY"),
+                energy.id(), PERIOD, Money.of(new BigDecimal("840.00"), "BRL"), "UTILITY"),
             "admin");
 
     // BEFORE attaching the bill: the period cannot close, the admin expense's entry is pending.

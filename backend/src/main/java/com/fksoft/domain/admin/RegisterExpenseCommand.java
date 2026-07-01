@@ -12,5 +12,4 @@ import java.util.UUID;
  * @param amount the expense amount (Money, required)
  * @param kind the expense-kind cadastro code (required) — maps to the Finance entry type (DL-0085)
  */
-public record RegisterExpenseCommand(
-    UUID supplierId, String period, Money amount, String kind) {}
+public record RegisterExpenseCommand(UUID supplierId, String period, Money amount, String kind) {}

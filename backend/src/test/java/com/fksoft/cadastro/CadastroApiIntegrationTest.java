@@ -56,7 +56,8 @@ class CadastroApiIntegrationTest extends AbstractPostgresIntegrationTest {
   @Test
   void listsSeededItemsOfATypeActiveFirst() {
     List<CadastroItemView> items = itemsOf(CadastroType.ADMIN_EXPENSE_KIND);
-    assertThat(items).extracting(CadastroItemView::code)
+    assertThat(items)
+        .extracting(CadastroItemView::code)
         .contains("UTILITY", "AUTONOMOUS_SERVICE", "SERVICE", "OTHER");
     assertThat(items).allMatch(CadastroItemView::active);
   }
@@ -84,7 +85,8 @@ class CadastroApiIntegrationTest extends AbstractPostgresIntegrationTest {
         restTemplate.exchange(
             "/api/cadastro/items/" + created.getBody().id(),
             HttpMethod.PUT,
-            new HttpEntity<>(new UpdateCadastroItemRequest("Veículo da frota", true, 41), bearer(admin)),
+            new HttpEntity<>(
+                new UpdateCadastroItemRequest("Veículo da frota", true, 41), bearer(admin)),
             CadastroItemView.class);
     assertThat(updated.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(updated.getBody()).isNotNull();

@@ -149,7 +149,8 @@ public class AdminService {
     if (!suppliers.existsById(supplierId)) {
       throw new AdminSupplierNotFoundException();
     }
-    // Recurrence is optional; when present it must be a valid, active cadastro code (SPEC-0031 BR3).
+    // Recurrence is optional; when present it must be a valid, active cadastro code (SPEC-0031
+    // BR3).
     if (command.recurrence() != null && !command.recurrence().isBlank()) {
       cadastroValidator.validate(CadastroType.ADMIN_RECURRENCE, command.recurrence());
     }

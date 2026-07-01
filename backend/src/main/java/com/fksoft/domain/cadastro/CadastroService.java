@@ -14,8 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Application service for the Cadastro module (SPEC-0031; ADR-0019): the generic registry of
  * editable reference data. It lists the convertible {@link CadastroType}s, lists/creates/updates/
- * deactivates {@link CadastroItem}s (codes immutable once created; label/active/sortOrder editable),
- * and implements the public {@link CadastroValidator} port other modules use to validate a code.
+ * deactivates {@link CadastroItem}s (codes immutable once created; label/active/sortOrder
+ * editable), and implements the public {@link CadastroValidator} port other modules use to validate
+ * a code.
  *
  * <p>This module is a <strong>leaf</strong>: it depends only on its own repository and the {@code
  * error} kernel — no other business module. The dependency direction is {@code caller → cadastro},
@@ -81,7 +82,8 @@ public class CadastroService implements CadastroValidator {
   }
 
   /**
-   * Updates the editable fields of an item (BR2): label, active and sortOrder. The code is immutable.
+   * Updates the editable fields of an item (BR2): label, active and sortOrder. The code is
+   * immutable.
    *
    * @param id the item id
    * @param command the new editable values
@@ -98,7 +100,13 @@ public class CadastroService implements CadastroValidator {
     CadastroItem item = items.findById(id).orElseThrow(CadastroItemNotFoundException::new);
     item.update(command.label(), command.active(), command.sortOrder(), clock.instant(), actor);
     items.save(item);
-    log.info("CadastroItemUpdated id={} type={} code={} active={} by={}", id, item.type(), item.code(), command.active(), actor);
+    log.info(
+        "CadastroItemUpdated id={} type={} code={} active={} by={}",
+        id,
+        item.type(),
+        item.code(),
+        command.active(),
+        actor);
     return item.toView();
   }
 
@@ -115,7 +123,8 @@ public class CadastroService implements CadastroValidator {
     CadastroItem item = items.findById(id).orElseThrow(CadastroItemNotFoundException::new);
     item.deactivate(clock.instant(), actor);
     items.save(item);
-    log.info("CadastroItemDeactivated id={} type={} code={} by={}", id, item.type(), item.code(), actor);
+    log.info(
+        "CadastroItemDeactivated id={} type={} code={} by={}", id, item.type(), item.code(), actor);
     return item.toView();
   }
 

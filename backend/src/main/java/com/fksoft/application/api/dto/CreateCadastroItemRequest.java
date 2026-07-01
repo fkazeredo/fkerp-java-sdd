@@ -15,10 +15,7 @@ import jakarta.validation.constraints.NotNull;
  * @param sortOrder the display order (lower first)
  */
 public record CreateCadastroItemRequest(
-    @NotNull CadastroType type,
-    @NotBlank String code,
-    @NotBlank String label,
-    int sortOrder) {
+    @NotNull CadastroType type, @NotBlank String code, @NotBlank String label, int sortOrder) {
 
   /** Translates this request to the domain command. */
   public CreateCadastroItemCommand toCommand() {
