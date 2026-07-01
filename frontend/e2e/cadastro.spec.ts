@@ -59,3 +59,31 @@ test('the converted supplier-type code round-trips the same wire value', async (
   const body = await res.json();
   expect(body.type).toBe('UTILITY');
 });
+
+test('the converted goal-metric code (18b) round-trips the same wire value', async ({
+  browser,
+  request,
+}) => {
+  // Slice 18b invariant (SPEC-0031 BR4/DL-0116): a brand goal defined with a known GOAL_METRIC code
+  // returns the same string — no wire change — and an unknown code is rejected (422).
+  const token = await tokenFor(browser, 'dev');
+  const brandRef = `E2E_BRAND_${Date.now()}`;
+  const brand = await request.post('/api/portfolio/brands', {
+    headers: { Authorization: `Bearer ${token}` },
+    data: { brandRef, displayName: 'E2E Brand' },
+  });
+  expect(brand.status()).toBe(201);
+
+  const goal = await request.post(`/api/portfolio/brands/${brandRef}/goals`, {
+    headers: { Authorization: `Bearer ${token}` },
+    data: { period: '2026', metric: 'REVENUE', target: { amount: 1000.0, currency: 'BRL' } },
+  });
+  expect(goal.status()).toBe(201);
+  expect((await goal.json()).metric).toBe('REVENUE');
+
+  const rejected = await request.post(`/api/portfolio/brands/${brandRef}/goals`, {
+    headers: { Authorization: `Bearer ${token}` },
+    data: { period: '2026-05', metric: 'NOT_A_METRIC', targetCount: 10 },
+  });
+  expect(rejected.status()).toBe(422);
+});
