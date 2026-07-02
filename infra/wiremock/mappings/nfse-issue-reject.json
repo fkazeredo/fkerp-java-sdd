@@ -1,0 +1,18 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "POST",
+    "urlPath": "/nfse/issue",
+    "bodyPatterns": [
+      { "matchesJsonPath": "$[?(@.municipalityCode == 'REJECT')]" }
+    ]
+  },
+  "response": {
+    "status": 422,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": {
+      "accepted": false,
+      "rejectionReason": "codigo de servico invalido para o municipio"
+    }
+  }
+}

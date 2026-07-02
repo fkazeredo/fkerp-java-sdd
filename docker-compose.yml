@@ -51,6 +51,23 @@ services:
         condition: service_healthy
     networks: [acme]
 
+  # ---- Integration emulators (SPEC-0016/Phase 19e, DL-0127) ----
+  # Real HTTP emulator of the municipal NFS-e webservice for DEV (not only tests). Opt-in via the
+  # `emulators` compose profile so the default `docker compose up` stays light:
+  #   docker compose --profile emulators up
+  # Then run the app against it with the HTTP adapter:
+  #   BILLING_NFSE_ADAPTER=http  BILLING_NFSE_BASE_URL=http://nfse-emulator:8080
+  # The stub mappings live under infra/wiremock/ (success + a REJECT/timeout by municipality code).
+  nfse-emulator:
+    image: wiremock/wiremock:3.9.1
+    profiles: [emulators]
+    command: ["--verbose", "--global-response-templating"]
+    volumes:
+      - ./infra/wiremock:/home/wiremock:ro
+    ports:
+      - "${NFSE_EMULATOR_PORT:-8090}:8080"
+    networks: [acme]
+
   # ---- Observability stack (SPEC-0027 / Phase 11) ----
 
   prometheus:

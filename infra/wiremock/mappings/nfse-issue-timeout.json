@@ -1,0 +1,16 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "POST",
+    "urlPath": "/nfse/issue",
+    "bodyPatterns": [
+      { "matchesJsonPath": "$[?(@.municipalityCode == 'TIMEOUT')]" }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "fixedDelayMilliseconds": 15000,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": { "accepted": true, "nfseNumber": "SLOW", "verificationCode": "SLOW" }
+  }
+}

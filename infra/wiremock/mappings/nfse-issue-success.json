@@ -1,0 +1,16 @@
+{
+  "priority": 5,
+  "request": {
+    "method": "POST",
+    "urlPath": "/nfse/issue"
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": {
+      "accepted": true,
+      "nfseNumber": "2026/{{randomValue length=6 type='NUMERIC'}}",
+      "verificationCode": "VC-{{randomValue length=8 type='ALPHANUMERIC' uppercase=true}}"
+    }
+  }
+}

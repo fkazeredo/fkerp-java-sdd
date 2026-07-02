@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -28,9 +29,19 @@ import org.springframework.stereotype.Component;
  * failure paths (BR7) without a live dependency: {@code "REJECT"} → REJECTED (422), {@code
  * "TIMEOUT"} → TIMEOUT (502), {@code "UNAVAILABLE"} → UNAVAILABLE (502). Every call has a timeout
  * and an integration log (latency, failure class, no sensitive data).
+ *
+ * <p><strong>Adapter selection (Fase 19e, DL-0127):</strong> this simulated adapter is the
+ * <strong>default</strong> ({@code billing.nfse.adapter=simulated} or unset). Setting {@code
+ * billing.nfse.adapter=http} swaps in {@link HttpMunicipalNfseService}, a genuine HTTP client that
+ * exercises real timeout/retry/circuit-breaker against the emulator (and, later, a real
+ * municipality) — same port, no domain change.
  */
 @Slf4j
 @Component
+@ConditionalOnProperty(
+    name = "billing.nfse.adapter",
+    havingValue = "simulated",
+    matchIfMissing = true)
 public class SimulatedMunicipalNfseService implements NfseGateway {
 
   private final CertificateSigner certificateSigner;
