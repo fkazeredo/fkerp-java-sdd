@@ -33,6 +33,7 @@ public class QuotationSiteInboundAdapter {
    * command. The external shape never escapes this method.
    *
    * @param rawBody the exact request bytes received
+   * @param timestampHeader the {@code X-Signature-Timestamp} header (anti-replay)
    * @param signatureHeader the {@code X-Signature} header
    * @return the translated domain command (signature already verified)
    * @throws com.fksoft.domain.sourcing.IntegrationSignatureInvalidException when the signature is
@@ -40,8 +41,8 @@ public class QuotationSiteInboundAdapter {
    * @throws IntegrationPayloadInvalidException when the payload is malformed or incomplete
    */
   public RegisterInboundQuotationCommand verifyAndTranslate(
-      byte[] rawBody, String signatureHeader) {
-    signatureVerifier.verify(rawBody, signatureHeader);
+      byte[] rawBody, String timestampHeader, String signatureHeader) {
+    signatureVerifier.verify(rawBody, timestampHeader, signatureHeader);
     ExternalQuotationPayload payload = parse(rawBody);
     validate(payload);
     Money price;

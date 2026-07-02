@@ -6,6 +6,7 @@ import com.fksoft.domain.people.EmployeeView;
 import com.fksoft.domain.people.PeopleService;
 import com.fksoft.infra.security.UserContextProvider;
 import com.fksoft.infra.web.PageResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
  * All calls go straight to the {@link PeopleService} domain facade; the delivery layer resolves the
  * acting user for audit.
  */
+@Tag(name = "People", description = "Colaboradores (RH mínimo)")
 @RestController
 @RequestMapping("/api/people/employees")
 @RequiredArgsConstructor

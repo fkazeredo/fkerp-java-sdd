@@ -78,3 +78,10 @@ Trocar o mecanismo de custódia (para AWS/GCP KMS, HSM/A3, Vault) muda **só o a
 com cautela operacional: por isso a reversão é **Cara** (envolve segredo real, rotação e janela de
 migração), ainda que o código de domínio fique intacto. A escolha A1×A3 e KMS×HSM é do dono; até lá, o
 default é o envelope AES-GCM com chave por ambiente.
+
+## Revisão — Fase 19b (2026-07-02)
+
+**MANTIDA + recomendação registrada.** O envelope AES-256-GCM com chave por ambiente segue o
+degrau defensável; para produção, a recomendação da revisão é (a) **certificado A1** (assinatura
+server-side automatizada não funciona com A3/token unattended) e (b) migrar o `SecretCipher`
+para KMS gerenciado quando a hospedagem for definida (checklist 19l). Registrado na SPEC-0023.

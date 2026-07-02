@@ -6,6 +6,7 @@ import com.fksoft.domain.intelligence.InsightView;
 import com.fksoft.domain.intelligence.IntelligenceService;
 import com.fksoft.infra.security.UserContextProvider;
 import com.fksoft.infra.web.PageResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
  * what is worth more). There is, by principle, NO endpoint that makes the DSS act on the operation
  * (the decision endpoint in slice 12b only records the human decision).
  */
+@Tag(name = "Intelligence (DSS)", description = "Insights que aconselham (nunca comandam)")
 @RestController
 @RequestMapping("/api/intelligence/insights")
 @RequiredArgsConstructor

@@ -1,6 +1,7 @@
 package com.fksoft.application.api;
 
 import com.fksoft.infra.integration.payment.PaymentWebhookReceiver;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Accepted}. The endpoint is the same one the mock POSTs to and a real provider would POST to:
  * signed, idempotent, versioned via the path.
  */
+@Tag(name = "Payout Webhook (M2M)", description = "Callback assinado do gateway de pagamento")
 @RestController
 @RequestMapping("/api/webhooks/payouts")
 @RequiredArgsConstructor
@@ -29,8 +31,9 @@ public class PayoutWebhookController {
   @PostMapping(path = "/mock", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<Void> mock(
       @RequestBody byte[] rawBody,
+      @RequestHeader(value = "X-Payment-Signature-Timestamp", required = false) String timestamp,
       @RequestHeader(value = "X-Payment-Signature", required = false) String signature) {
-    receiver.receive(rawBody, signature);
+    receiver.receive(rawBody, timestamp, signature);
     return ResponseEntity.status(HttpStatus.ACCEPTED).build();
   }
 }

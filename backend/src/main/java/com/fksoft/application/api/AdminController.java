@@ -9,6 +9,7 @@ import com.fksoft.domain.admin.AdminService;
 import com.fksoft.domain.admin.AdminSupplierStatus;
 import com.fksoft.domain.admin.AdminSupplierView;
 import com.fksoft.infra.security.UserContextProvider;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.Instant;
 import java.util.List;
@@ -32,6 +33,9 @@ import org.springframework.web.bind.annotation.RestController;
  * {@code SecurityConfig}, DL-0088); the delivery layer resolves the acting user for audit. All
  * calls go straight to {@link AdminService}.
  */
+@Tag(
+    name = "Admin",
+    description = "Fornecedores/contratos administrativos e despesas para o Finance")
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor

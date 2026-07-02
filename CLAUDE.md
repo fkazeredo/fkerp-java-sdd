@@ -27,6 +27,11 @@ Detailed guidelines live in `architecture/` and are loaded on demand (see Routin
    code, no incomplete implementations, no `@Data`/`@Setter` on JPA entities (Lombok
    `@Getter`/`@RequiredArgsConstructor`/`@Slf4j` are welcome for boilerplate), no `*Impl`
    naming, constructor injection only.
+7. **Reference data is a cadastro, not an enum (ADR-0019/SPEC-0031).** A new business enum is
+   only acceptable when it is a **state machine** (`*Status`/lifecycle), **technical**
+   (failure classes, circuit-breaker states) or **fixed by law**. Everything else is a
+   `cadastro` code (`String` validated by `CadastroValidator`, seeded by migration, branching
+   via `*Codes` constants). When keeping an enum, document the keep criterion in the Javadoc.
 
 ## Definition of Done (every meaningful change)
 

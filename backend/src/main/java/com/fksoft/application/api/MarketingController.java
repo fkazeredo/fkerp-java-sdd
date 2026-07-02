@@ -16,6 +16,7 @@ import com.fksoft.domain.marketing.MarketingService;
 import com.fksoft.domain.marketing.SegmentView;
 import com.fksoft.domain.marketing.SubjectRef;
 import com.fksoft.infra.security.UserContextProvider;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -41,6 +42,7 @@ import org.springframework.web.bind.annotation.RestController;
  * preview its reach, create a campaign, and dispatch it — the dispatch filters by consent (BR2) and
  * is idempotent per recipient (BR4). The attribution/erasure endpoints are added in slice 8f-3.
  */
+@Tag(name = "Marketing", description = "Consentimento LGPD, segmentos, campanhas e atribuição")
 @RestController
 @RequestMapping("/api/marketing")
 @RequiredArgsConstructor

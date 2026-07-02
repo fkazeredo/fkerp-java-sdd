@@ -29,3 +29,21 @@ export interface RegisterSourcedOfferRequest {
   integrationLevel: IntegrationLevel;
   externalRef?: string | null;
 }
+
+/** Lifecycle of a quarantined inbound quotation (SPEC-0009 BR10, DL-0120). */
+export type InboundQuarantineStatus = 'QUARANTINED' | 'REPLAYED' | 'DISCARDED';
+
+/** A quotation rejected at the boundary and kept for operator replay (SPEC-0009 BR10, DL-0120). */
+export interface InboundQuarantineView {
+  id: string;
+  externalQuotationId: string;
+  accountDocument: string;
+  productText: string;
+  price: Money;
+  reasonCode: string;
+  status: InboundQuarantineStatus;
+  replayedQuoteId: string | null;
+  receivedAt: string;
+  resolvedAt: string | null;
+  resolvedBy: string | null;
+}

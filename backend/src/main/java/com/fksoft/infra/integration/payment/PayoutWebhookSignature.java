@@ -1,87 +1,65 @@
 package com.fksoft.infra.integration.payment;
 
 import com.fksoft.domain.payout.PayoutWebhookSignatureInvalidException;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.util.HexFormat;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
+import com.fksoft.infra.integration.WebhookSignatures;
+import java.time.Clock;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- * Signs and verifies the payment webhook (ADR 0006; DL-0048): an HMAC-SHA256 of the raw callback
- * body keyed by a shared secret, sent in the {@code X-Payment-Signature} header (hex, optionally
- * prefixed {@code sha256=}). The mock signs with the same scheme a real provider will use, so the
- * verification code is not specific to the mock. Comparison is constant-time. A missing/mismatched
- * signature raises {@link PayoutWebhookSignatureInvalidException} (401) and nothing is processed.
- * Infra-only; the secret lives in configuration, never in the domain.
+ * Signs and verifies the payment webhook (ADR 0006; DL-0048; anti-replay in Fase 19c, DL-0122): an
+ * HMAC-SHA256 of {@code timestamp + "." + rawBody} keyed by a shared secret, in the {@code
+ * X-Payment-Signature} header (hex, optional {@code sha256=} prefix); the timestamp travels in
+ * {@code X-Payment-Signature-Timestamp} (ISO-8601). The mock signs with the same scheme a real
+ * provider will use, so the verification code is not specific to the mock. A missing/mismatched
+ * signature — or a stale timestamp (anti-replay) — raises {@link
+ * PayoutWebhookSignatureInvalidException} (401) and nothing is processed. Delegates the crypto to
+ * the shared {@link WebhookSignatures}; the secret lives in configuration, never in the domain.
  */
 @Slf4j
 @Component
 public class PayoutWebhookSignature {
 
-  private static final String HMAC_ALGORITHM = "HmacSHA256";
-
-  private final byte[] secret;
+  private final WebhookSignatures signatures;
+  private final Clock clock;
 
   public PayoutWebhookSignature(
-      @Value("${integration.payment.webhook-secret:dev-payment-webhook-secret}") String secret) {
-    this.secret = secret.getBytes(StandardCharsets.UTF_8);
+      @Value("${integration.payment.webhook-secret:dev-payment-webhook-secret}") String secret,
+      @Value("${integration.payment.replay-tolerance-seconds:300}") long toleranceSeconds,
+      Clock clock) {
+    this.signatures = new WebhookSignatures(secret, Duration.ofSeconds(toleranceSeconds));
+    this.clock = clock;
   }
 
   /**
-   * Verifies the signature of the raw body. Raises {@link PayoutWebhookSignatureInvalidException}
-   * when the header is absent/blank or the computed HMAC does not match.
+   * Verifies the signature and the anti-replay window.
    *
    * @param rawBody the exact bytes received
-   * @param signatureHeader the {@code X-Payment-Signature} header value (nullable)
+   * @param timestampHeader the {@code X-Payment-Signature-Timestamp} header (ISO-8601; nullable)
+   * @param signatureHeader the {@code X-Payment-Signature} header (nullable)
+   * @throws PayoutWebhookSignatureInvalidException when the signature is absent/invalid or the
+   *     timestamp is missing/stale (replay)
    */
-  public void verify(byte[] rawBody, String signatureHeader) {
-    if (signatureHeader == null || signatureHeader.isBlank()) {
+  public void verify(byte[] rawBody, String timestampHeader, String signatureHeader) {
+    WebhookSignatures.Result result =
+        signatures.verify(rawBody, timestampHeader, signatureHeader, clock.instant());
+    if (result != WebhookSignatures.Result.OK) {
+      if (result == WebhookSignatures.Result.REPLAY) {
+        log.warn("PaymentWebhook rejected: replay/stale timestamp");
+      }
       throw new PayoutWebhookSignatureInvalidException();
     }
-    String provided = stripPrefix(signatureHeader.trim());
-    byte[] expected = hmac(rawBody);
-    byte[] providedBytes = decodeHexOrReject(provided);
-    if (!MessageDigest.isEqual(expected, providedBytes)) {
-      throw new PayoutWebhookSignatureInvalidException();
-    }
   }
 
-  /**
-   * Computes the HMAC-SHA256 of a body with the shared secret — used by the mock/clients to sign.
-   */
-  public String sign(byte[] rawBody) {
-    return HexFormat.of().formatHex(hmac(rawBody));
+  /** Signs {@code timestamp + "." + rawBody} — used by the mock/clients to sign. */
+  public String sign(String timestamp, byte[] rawBody) {
+    return signatures.sign(timestamp, rawBody);
   }
 
-  private byte[] hmac(byte[] rawBody) {
-    try {
-      Mac mac = Mac.getInstance(HMAC_ALGORITHM);
-      mac.init(new SecretKeySpec(secret, HMAC_ALGORITHM));
-      return mac.doFinal(rawBody);
-    } catch (java.security.GeneralSecurityException e) {
-      // Misconfiguration of the algorithm/key is not a client error; do not leak details.
-      log.error("Failed to compute payment webhook HMAC", e);
-      throw new IllegalStateException("cannot compute HMAC");
-    }
-  }
-
-  private static String stripPrefix(String header) {
-    int eq = header.indexOf('=');
-    if (header.regionMatches(true, 0, "sha256=", 0, "sha256=".length())) {
-      return header.substring(eq + 1);
-    }
-    return header;
-  }
-
-  private static byte[] decodeHexOrReject(String hex) {
-    try {
-      return HexFormat.of().parseHex(hex);
-    } catch (IllegalArgumentException invalidHex) {
-      throw new PayoutWebhookSignatureInvalidException();
-    }
+  /** The current instant, so the mock signs with a fresh (in-window) timestamp. */
+  public String now() {
+    return clock.instant().toString();
   }
 }

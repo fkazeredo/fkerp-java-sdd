@@ -871,6 +871,70 @@ of `REFUND_REQUEST`; *"Percent"* instead of `PERCENT`).
 > (payable/receivable) and `Policy layer` (precedence) stay fixed by design; the `/api` contract **did
 > not change**. See SPEC-0031 / ADR-0019 / DL-0118.
 
+### Phase 19a — Who can do what: complete role-based permissions
+
+From this version on, **every action that changes data requires the role of the desk that owns
+it** — being logged in is no longer enough. A few sensitive actions were already role-gated
+(issuing an invoice, closing the month, triggering a job, a directive); now the rule covers the
+**whole system**, and anything not explicitly allowed is **denied by default**. Nothing changes in
+your routine if you already use the system with your desk's role — the menu you see stays the same.
+
+How it works, per role:
+
+- **Operations** — the whole commercial cycle: registering **accounts**, recording **offers**,
+  composing **quotes** (and overriding with a reason), driving **bookings** (confirm, cancel,
+  no-show, complete), **after-sales**, recording the **market rate** on the FX desk, configuring
+  the **cancellation policy**, the day-to-day of **Marketing** and **Portfolio**, recording the
+  **human decision** on an insight (together with the Director) and attaching documents to the
+  **vault**.
+- **Finance** — everything that creates or settles a **financial fact**: ledger entries and the
+  **monthly close**, **commission invoices**, **payouts/settlements/refunds**, the **back-office
+  desk**, recording the **reconciliation settlement** and **purging** a vault document (after the
+  legal retention); it also attaches documents to the vault.
+- **IT** — **People/HR** (employees, journey, payslip), **Time clock** (including the legal AFD
+  upload and the crawl trigger — previously open, now protected), **Assets**, **Platform** (jobs,
+  certificate) and the monitoring metrics.
+- **Director** — the **steering levers**: pinning the **exchange rate**, issuing **directives**,
+  approving the marketing **LGPD erasure**; also sees the Platform/Access surface.
+- **Policy Curator** — **commercial-policy rules** (with the Director) and **Reference data**.
+- **Viewer** — **read-only for real**: sees the screens and reports of their access but **changes
+  nothing**; also does **not** see HR personal data nor download vault document content.
+
+If you attempt an action from another desk, the system **refuses with "access denied"** and
+**records the attempt** in the audit — just as it already did for the sensitive actions. Common
+reads (lists, reports, dashboard) remain open to any authenticated user; **personal data**
+(HR/Time clock) is restricted to IT, for LGPD protection.
+
+> For the technical team: a single `ApiAuthorizationMatrix` with write default-deny and a
+> build-time completeness test; the integration `permitAll` was narrowed to the 2 HMAC-signed
+> webhooks. No data shape changed — only **who may** perform each action. See SPEC-0024 BR18 /
+> DL-0119.
+
+### Phase 19b — Integration quarantine (nothing is lost at the boundary)
+
+Before, when the **quotation site** sent a quotation for an **account that did not exist yet** in
+the system, the quotation was refused and **lost** — if the agency had no registration yet, the
+sale vanished. Now it goes to the **integration quarantine**, on the **"Offer sourcing"** screen:
+
+- **See the quarantine.** On the *Offer sourcing* screen, click **"Load quarantine"**. Each row
+  shows the refused quotation: external id, account document, product, price, the refusal reason
+  and when it arrived.
+- **Replay.** Fix the cause (for example, **register the account** on the *Commercial accounts*
+  screen) and click **"Replay"**: the system runs the normal flow and the integrated quote is
+  created — the row is marked **"Replayed"** with the created quote id. If the cause persists (the
+  account still does not exist), the row stays **"Quarantined"** and nothing is created.
+- **Discard.** If the quotation should not enter the system, click **"Discard"** — the row becomes
+  **"Discarded"** (kept for consultation; it can no longer be replayed).
+
+For the external site nothing changed: it still receives the same refusal. What changed is that
+**the information is no longer lost** — the operations team decides its fate. Quarantine actions
+require the **Operations** role.
+
+> For the technical team: SPEC-0009 BR10 / DL-0120 (revises DL-0017 — the external 422 stands).
+> In this slice the directed decision-log review also **kept, with reinforced justification**,
+> DLs 0009/0029/0049/0058/0070/0074 and **refined DL-0044** (Anexo III×V/Fator R nuance + the
+> `billing.tax.regime-confirmed` flag — see DL-0121).
+
 
 ## 4. Glossary
 
@@ -973,6 +1037,8 @@ of `REFUND_REQUEST`; *"Percent"* instead of `PERCENT`).
 | 0.30.0 | 18b — More reference data (Marketing/Intelligence/Portfolio) + labels on screens | More reference lists become **editable cadastros** on the "Reference data" screen: **Marketing** (consent purpose, subject type), **Intelligence** (insight axis, insight type, verdict) and **Portfolio** (goal metric). **What everyone sees:** the **Marketing, Intelligence and Portfolio** screens now show the **human label** instead of the technical code (e.g. *"FX advisor (promo)"*, *"Converts (keep)"*, *"Revenue (BRL spread)"*) — also fixing, on these screens, the previous code-only display. **Nothing changes in what you record**; the underlying values are the same and **no `/api` contract changed**. (SPEC-0031 / ADR-0019 / DL-0116.) |
 | 0.31.0 | 18c — More reference data (Offer origin/Exchange/Cancellation/Compliance) + labels on screens | More reference lists become **editable cadastros** on the "Reference data" screen: **Offer origin** (provenance, integration level), **Exchange desk** (quote source), **Cancellation** (policy type, charge kind) and **Compliance** (document type, signed format, requirement phase). **What everyone sees:** the **Offer origin, Exchange desk, Cancellation and Compliance** screens now show the **human label** instead of the technical code (e.g. *"External site"*, *"Manual (contingency)"*, *"All sales final"*, *"Time record (AFD)"*). **Nothing changes in behavior** — the integrated quote, penalty windows, the **merchant trap** and the legal retention periods stay the same; the underlying values are identical and **no `/api` contract changed**. (SPEC-0031 / ADR-0019 / DL-0117.) |
 | 0.32.0 | 18d — Last reference data (Finance/Payouts/People/Commercial policy/After-sales) + labels on screens — **closes Phase 18** | The remaining reference lists become **editable cadastros** on the "Reference data" screen: **Finance** (entry type, counterparty type), **Payouts** (payout kind, payee type), **People** (journey discrepancy kind), **Commercial policy** (value type) and **After-sales** (case type, resolution). **What everyone sees:** the **Finance, Payouts, People, Commercial policy and After-sales** screens now show the **human label** instead of the technical code (e.g. *"Supplier settlement"*, *"Refund"*, *"Refund request"*, *"Percent"*). **Nothing changes in behavior** — AP/AR posting and the document to close the month, payout repass/settlement/refund (including the **merchant trap**), after-sales orchestration and parameter math stay the same; `Ledger direction` and `Policy layer` stay fixed by design; the underlying values are identical and **no `/api` contract changed**. With this slice, **every** reference list is editable — Phase 18 is complete. (SPEC-0031 / ADR-0019 / DL-0118.) |
+| 0.33.0 | 19a — Complete role-based permissions | **Every data-changing action now requires the owning desk's role** (Operations/Finance/IT/Director/Curator); anything not explicitly allowed is **denied by default**. The **Viewer** role becomes read-only for real; **HR/Time-clock personal data** is restricted to IT (LGPD) and vault document **content** download no longer applies to Viewer; the time-clock AFD upload and crawl trigger — previously open — now require IT. An attempt without the role = **"access denied" + audit record**. Menus and screens did not change; no data shape changed — only **who may** perform each action. (SPEC-0024 BR18 / DL-0119.) |
+| 0.34.0 | 19b — Integration quarantine + decision-log review | **Quotations from the external site refused at the boundary** (account not registered yet) are **no longer lost**: they enter the **quarantine** on the *Offer sourcing* screen, where operations can **replay** (after registering the account — creates the integrated quote) or **discard**; nothing changed for the external site (same refusal). Actions require the **Operations** role. Behind the scenes, the **directed decision review** confirmed 6 sensitive decisions with market-backed justification and refined the tax one: the **enquadramento** (Anexo III×V/Fator R) is recorded for the accountant and **issuing a real invoice now depends on their confirmation** (production flag). (SPEC-0009 BR10 / DL-0120; SPEC-0016 BR8 / DL-0121.) |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of

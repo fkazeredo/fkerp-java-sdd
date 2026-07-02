@@ -109,6 +109,22 @@ BR17 ASSUMIDO (ver ADR-0018 / DL-0110..0114). **RE-GRADUAÇÃO Fase 17 — OIDC 
      `angular-oauth2-oidc` (code+PKCE); só o `issuer` aponta para o próprio app e o silent-refresh passa
      a ser por **iframe** (o SAS não emite refresh token a client público — DL-0113). **DL-0103
      substituída; DL-0104..0107 reapontadas.** Breaking (Keycloak sai) destacado no release `0.28.0`.
+BR18 ASSUMIDO (ver DL-0119). **Fase 19a — matriz de autorização default-deny.** O catálogo de ações
+     sensíveis (BR10) é estendido a TODA a superfície de escrita: cada `POST/PUT/PATCH/DELETE` sob
+     `/api/**` MUST constar da `ApiAuthorizationMatrix` (registro ordenado em `infra.security`) com o
+     papel dono do balcão — Finance/Billing/Payout/Admin/liquidação da conciliação/expurgo do cofre →
+     `FINANCE`; ciclo comercial (Accounts/Sourcing/Quoting/Booking/AfterSales/Marketing/Portfolio/
+     taxa de mercado/política de cancelamento) → `OPERATIONS`; People/Ponto/Assets/Platform →
+     `IT`; alavancas do diretor (taxa congelada, diretivas, apagamento LGPD) → `DIRECTOR`; cadastros →
+     `POLICY_ADMIN`. **Escrita não mapeada é NEGADA por default** (fallback `denyAll`); a completude é
+     um portão de build (`ApiAuthorizationMatrixCompletenessTest`: todo write endpoint casa com uma
+     regra e toda regra casa com ≥1 endpoint real). Leituras sensíveis também são gated: dados
+     pessoais de People/Ponto → `IT` (LGPD); download de CONTEÚDO do cofre → exclui `VIEWER`;
+     superfície Platform → `IT`/`DIRECTOR`. O blanket `permitAll` de `/api/integration/**` é
+     **estreitado** aos 2 endpoints M2M com HMAC (quotation-site inbound, webhook de payout) — o
+     upload de AFD e o gatilho de crawl (antes alcançáveis SEM credencial) passam a exigir `ROLE_IT`.
+     `ROLE_VIEWER` não escreve nada. O `POST /api/commissioning/preview` (cálculo stateless) permanece
+     para qualquer autenticado, decisão explícita na matriz.
 ```
 
 ## Graduação — Fase 13 (OIDC externo vivo)

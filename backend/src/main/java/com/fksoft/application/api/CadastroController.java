@@ -6,6 +6,7 @@ import com.fksoft.domain.cadastro.CadastroItemView;
 import com.fksoft.domain.cadastro.CadastroService;
 import com.fksoft.domain.cadastro.CadastroType;
 import com.fksoft.infra.security.UserContextProvider;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fields elsewhere keep their JSON schema (string) — only these {@code /api/cadastro/*} endpoints
  * are new.
  */
+@Tag(name = "Cadastro", description = "Dados de referência editáveis (cadastros)")
 @RestController
 @RequestMapping("/api/cadastro")
 @RequiredArgsConstructor

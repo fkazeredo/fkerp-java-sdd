@@ -1,10 +1,13 @@
 package com.fksoft.application.api;
 
 import com.fksoft.domain.sourcing.ConnectorHealthView;
+import com.fksoft.domain.sourcing.InboundQuarantineService;
 import com.fksoft.domain.sourcing.InboundQuotationResult;
+import com.fksoft.domain.sourcing.IntegrationAccountNotFoundException;
 import com.fksoft.domain.sourcing.RegisterInboundQuotationCommand;
 import com.fksoft.domain.sourcing.SourcingService;
 import com.fksoft.infra.integration.quotationsite.QuotationSiteInboundAdapter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,7 +26,14 @@ import org.springframework.web.bind.annotation.RestController;
  * stays in infra — BR6), then drives {@link SourcingService} to create a Quote INTEGRATED
  * idempotently (BR4). Returns {@code 202 Accepted}. The connector is a webhook (a serious external
  * contract): signed, idempotent, versioned via the path.
+ *
+ * <p><strong>Quarantine (BR10, DL-0120 — revises DL-0017):</strong> a business rejection (unknown
+ * account) still answers the same 422, but the translated payload is <strong>kept</strong> in the
+ * inbound quarantine (own transaction) for operator replay — never lost at the boundary. A
+ * signature/payload failure is NOT quarantined: an unauthenticated or malformed payload must not
+ * persist anything.
  */
+@Tag(name = "Quotation Site (M2M)", description = "Webhook de cotação (ramo INTEGRATED)")
 @RestController
 @RequestMapping("/api/integration/quotation-site")
 @RequiredArgsConstructor
@@ -34,14 +44,24 @@ public class QuotationSiteInboundController {
 
   private final QuotationSiteInboundAdapter inboundAdapter;
   private final SourcingService sourcingService;
+  private final InboundQuarantineService quarantineService;
 
   @PostMapping(path = "/inbound", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<InboundQuotationResult> inbound(
       @RequestBody byte[] rawBody,
+      @RequestHeader(value = "X-Signature-Timestamp", required = false) String timestamp,
       @RequestHeader(value = "X-Signature", required = false) String signature) {
-    RegisterInboundQuotationCommand command = inboundAdapter.verifyAndTranslate(rawBody, signature);
-    InboundQuotationResult result = sourcingService.processInbound(command, CONNECTOR_ACTOR);
-    return ResponseEntity.status(HttpStatus.ACCEPTED).body(result);
+    RegisterInboundQuotationCommand command =
+        inboundAdapter.verifyAndTranslate(rawBody, timestamp, signature);
+    try {
+      InboundQuotationResult result = sourcingService.processInbound(command, CONNECTOR_ACTOR);
+      return ResponseEntity.status(HttpStatus.ACCEPTED).body(result);
+    } catch (IntegrationAccountNotFoundException rejected) {
+      // Keep the rejected payload for operator replay (BR10/DL-0120); the wire contract of
+      // DL-0017 (422, nothing created in the core) is unchanged.
+      quarantineService.quarantine(command, rejected.code());
+      throw rejected;
+    }
   }
 
   @GetMapping("/health")

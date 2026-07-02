@@ -13,7 +13,7 @@
 
   <groupId>com.fksoft</groupId>
   <artifactId>acme-travel-erp</artifactId>
-  <version>0.32.0</version>
+  <version>0.36.0</version>
   <name>acme-travel-erp</name>
   <description>ERP Acme Travel — modular monolith (manual commercial core + minimal compliance)</description>
 

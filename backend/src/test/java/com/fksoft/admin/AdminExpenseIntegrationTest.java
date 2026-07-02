@@ -179,7 +179,7 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
     DocumentView bill =
         complianceService.upload(
             DocumentTypeCodes.UTILITY_BILL,
-            "conta-de-luz".getBytes(),
+            pdf("conta-de-luz"),
             "conta.pdf",
             "application/pdf",
             LocalDate.of(2026, 6, 20),
@@ -194,5 +194,15 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
     CloseCheckView after = complianceService.closeCheck(PERIOD);
     assertThat(after.canClose()).isTrue();
     assertThat(after.pending()).isEmpty();
+  }
+
+  /** Prefixes the PDF magic bytes so the storage magic-byte check (Fase 19c/DL-0124) accepts it. */
+  private static byte[] pdf(String content) {
+    byte[] magic = {0x25, 0x50, 0x44, 0x46}; // %PDF
+    byte[] body = content.getBytes();
+    byte[] out = new byte[magic.length + body.length];
+    System.arraycopy(magic, 0, out, 0, magic.length);
+    System.arraycopy(body, 0, out, magic.length, body.length);
+    return out;
   }
 }

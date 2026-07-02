@@ -117,4 +117,85 @@
       </dl>
     }
   </div>
+
+  <!-- Inbound quarantine (SPEC-0009 BR10, DL-0120): rejected payloads kept for replay -->
+  <div class="app-card">
+    <div class="list__header">
+      <h2 class="app-card__title">{{ 'sourcing.quarantine' | translate }}</h2>
+      <p-button
+        [label]="'sourcing.quarantineLoad' | translate"
+        icon="pi pi-refresh"
+        (onClick)="loadQuarantine()"
+        [loading]="quarantineState() === 'loading'"
+        data-testid="quarantine-load"
+      />
+    </div>
+    <p class="app-card__hint">{{ 'sourcing.quarantineHint' | translate }}</p>
+
+    @if (quarantineState() === 'success' && quarantineError(); as qError) {
+      <p-message severity="error" [text]="qError | translate" data-testid="quarantine-error" />
+    }
+    @if (quarantineState() === 'error') {
+      <app-screen-state state="error" [errorCode]="quarantineError()" (retry)="loadQuarantine()" />
+    } @else if (quarantineState() === 'success' && quarantine().length === 0) {
+      <app-screen-state state="empty" emptyKey="sourcing.quarantineEmpty" />
+    } @else if (quarantine().length > 0) {
+      <table class="app-table" data-testid="quarantine-table">
+        <thead>
+          <tr>
+            <th>{{ 'sourcing.externalId' | translate }}</th>
+            <th>{{ 'sourcing.accountDocument' | translate }}</th>
+            <th>{{ 'sourcing.productText' | translate }}</th>
+            <th>{{ 'sourcing.price' | translate }}</th>
+            <th>{{ 'sourcing.reason' | translate }}</th>
+            <th>{{ 'sourcing.receivedAt' | translate }}</th>
+            <th>{{ 'sourcing.status' | translate }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of quarantine(); track entry.id) {
+            <tr>
+              <td>{{ entry.externalQuotationId }}</td>
+              <td>{{ entry.accountDocument }}</td>
+              <td>{{ entry.productText }}</td>
+              <td>{{ format(entry.price) }}</td>
+              <td>{{ entry.reasonCode | translate }}</td>
+              <td>{{ entry.receivedAt }}</td>
+              <td>
+                <p-tag
+                  [value]="'sourcing.status' + entry.status | translate"
+                  [severity]="quarantineSeverity(entry.status)"
+                />
+                @if (entry.replayedQuoteId) {
+                  <small>{{ 'sourcing.replayedQuote' | translate }}: {{ entry.replayedQuoteId }}</small>
+                }
+              </td>
+              <td>
+                @if (entry.status === 'QUARANTINED') {
+                  <p-button
+                    [label]="'sourcing.replay' | translate"
+                    icon="pi pi-play"
+                    size="small"
+                    [loading]="quarantineActing() === entry.id"
+                    (onClick)="replay(entry)"
+                    data-testid="quarantine-replay"
+                  />
+                  <p-button
+                    [label]="'sourcing.discard' | translate"
+                    icon="pi pi-trash"
+                    size="small"
+                    severity="secondary"
+                    [disabled]="quarantineActing() === entry.id"
+                    (onClick)="discard(entry)"
+                    data-testid="quarantine-discard"
+                  />
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
 </section>

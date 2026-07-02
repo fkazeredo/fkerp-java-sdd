@@ -6,6 +6,7 @@ import com.fksoft.domain.platform.PlatformJobService;
 import com.fksoft.domain.platform.ScheduledJobView;
 import com.fksoft.infra.jobs.GovernedJobs;
 import com.fksoft.infra.web.PageResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
  * lock, idempotency and {@code JobRun} history apply); a job already running yields {@code 409}
  * (locked). It responds {@code 202 Accepted} with the recorded run.
  */
+@Tag(name = "Platform Jobs", description = "Governança de jobs (registro, disparo, histórico)")
 @RestController
 @RequestMapping("/api/platform/jobs")
 @RequiredArgsConstructor

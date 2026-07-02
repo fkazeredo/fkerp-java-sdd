@@ -4,6 +4,7 @@ import com.fksoft.application.api.dto.ImportCertificateRequest;
 import com.fksoft.domain.platform.CertificateCustodyService;
 import com.fksoft.domain.platform.CertificateView;
 import com.fksoft.infra.security.UserContextProvider;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
  * certificate material is NEVER returned by any endpoint (BR1, security.md). Importing accepts the
  * secret material (encrypted at rest immediately) and responds with the same secret-free view.
  */
+@Tag(name = "Platform Certificate", description = "Custódia do e-CNPJ (só metadados)")
 @RestController
 @RequestMapping("/api/platform/certificate")
 @RequiredArgsConstructor

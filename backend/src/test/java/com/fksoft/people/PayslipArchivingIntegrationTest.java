@@ -60,7 +60,7 @@ class PayslipArchivingIntegrationTest extends AbstractPostgresIntegrationTest {
     DocumentView document =
         payslipArchivingService.archive(
             employeeId,
-            "HOLERITE 06/2026".getBytes(),
+            pdf("HOLERITE 06/2026"),
             "holerite-2026-06.pdf",
             "application/pdf",
             issuedAt,
@@ -76,6 +76,16 @@ class PayslipArchivingIntegrationTest extends AbstractPostgresIntegrationTest {
     assertThat(row.get("has_personal_data")).isEqualTo(true);
     LocalDate retentionUntil = ((java.sql.Date) row.get("retention_until")).toLocalDate();
     assertThat(ChronoUnit.YEARS.between(issuedAt, retentionUntil)).isEqualTo(5);
+  }
+
+  /** Prefixes the PDF magic bytes so the storage magic-byte check (Fase 19c/DL-0124) accepts it. */
+  private static byte[] pdf(String content) {
+    byte[] magic = {0x25, 0x50, 0x44, 0x46}; // %PDF
+    byte[] body = content.getBytes();
+    byte[] out = new byte[magic.length + body.length];
+    System.arraycopy(magic, 0, out, 0, magic.length);
+    System.arraycopy(body, 0, out, magic.length, body.length);
+    return out;
   }
 
   @Test

@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -12,7 +13,12 @@ import { ApiError } from '../../core/http/api-error';
 import { FormLeaveGuard } from '../../core/guards/can-deactivate.guard';
 import { formatMoney } from '../../core/models/api.models';
 import { ScreenState } from '../../shared/screen-state/screen-state';
-import { IntegrationLevel, OfferOrigin, SourcedOfferView } from './sourcing.models';
+import {
+  InboundQuarantineView,
+  IntegrationLevel,
+  OfferOrigin,
+  SourcedOfferView,
+} from './sourcing.models';
 import { SourcingService } from './sourcing.service';
 
 /**
@@ -132,6 +138,67 @@ export class SourcingPage implements FormLeaveGuard {
         return 'success';
       case 'INBOUND':
         return 'info';
+      default:
+        return 'secondary';
+    }
+  }
+
+  // Inbound quarantine (SPEC-0009 BR10, DL-0120): rejected payloads kept for replay.
+  readonly quarantine = signal<InboundQuarantineView[]>([]);
+  readonly quarantineState = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
+  readonly quarantineError = signal<string | null>(null);
+  readonly quarantineActing = signal<string | null>(null);
+
+  /** Loads the pending inbound quarantine. */
+  loadQuarantine(): void {
+    this.quarantineState.set('loading');
+    this.quarantineError.set(null);
+    this.sourcingService.listQuarantine().subscribe({
+      next: (entries) => {
+        this.quarantine.set(entries);
+        this.quarantineState.set('success');
+      },
+      error: (error: ApiError) => {
+        this.quarantineError.set(error?.code ?? 'error.internal');
+        this.quarantineState.set('error');
+      },
+    });
+  }
+
+  /** Replays a quarantined payload (after the operator fixed the cause). */
+  replay(entry: InboundQuarantineView): void {
+    this.act(entry, this.sourcingService.replayQuarantine(entry.id));
+  }
+
+  /** Discards a quarantined payload. */
+  discard(entry: InboundQuarantineView): void {
+    this.act(entry, this.sourcingService.discardQuarantine(entry.id));
+  }
+
+  private act(entry: InboundQuarantineView, action: Observable<InboundQuarantineView>): void {
+    this.quarantineActing.set(entry.id);
+    this.quarantineError.set(null);
+    action.subscribe({
+      next: (updated) => {
+        this.quarantineActing.set(null);
+        this.quarantine.update((entries) =>
+          entries.map((candidate) => (candidate.id === updated.id ? updated : candidate)),
+        );
+      },
+      error: (error: ApiError) => {
+        this.quarantineActing.set(null);
+        this.quarantineError.set(error?.code ?? 'error.internal');
+      },
+    });
+  }
+
+  /** PrimeNG Tag severity for a quarantine status. */
+  quarantineSeverity(status: InboundQuarantineView['status']): 'warn' | 'success' | 'secondary' {
+    switch (status) {
+      case 'QUARANTINED':
+        return 'warn';
+      case 'REPLAYED':
+        return 'success';
       default:
         return 'secondary';
     }

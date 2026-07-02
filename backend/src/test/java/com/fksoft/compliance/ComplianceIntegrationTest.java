@@ -77,6 +77,24 @@ class ComplianceIntegrationTest extends AbstractPostgresIntegrationTest {
   }
 
   @Test
+  void rejectsAPdfWhoseContentIsNotReallyAPdf() {
+    // Fase 19c/DL-0124: a .pdf whose leading bytes are not %PDF is rejected — the extension alone
+    // is not trusted. filePart(...) prepends %PDF for .pdf, so build the mismatch by hand here.
+    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+    body.add("file", rawFilePart("fake.pdf", "this is plain text, not a pdf".getBytes()));
+    body.add("type", "NFSE");
+    body.add("issuedAt", "2026-06-20");
+
+    ResponseEntity<ApiErrorResponse> response =
+        restTemplate.postForEntity(
+            "/api/compliance/documents", multipart(body), ApiErrorResponse.class);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(response.getBody()).isNotNull();
+    assertThat(response.getBody().code()).isEqualTo("compliance.upload.invalid");
+  }
+
+  @Test
   void attachIsIdempotent() {
     UUID entryId = createEntry("COMMISSION_RECEIVABLE", "2026-06");
     DocumentView document = uploadCommissionInvoice();
@@ -217,7 +235,33 @@ class ComplianceIntegrationTest extends AbstractPostgresIntegrationTest {
     return new HttpEntity<>(body, headers);
   }
 
+  private static final byte[] PDF_MAGIC = {0x25, 0x50, 0x44, 0x46}; // %PDF
+
+  /**
+   * Builds a multipart file part. For a .pdf filename it prepends the PDF magic bytes so the
+   * storage magic-byte validation (Fase 19c/DL-0124) accepts it — the test content stays
+   * recognizable after the header.
+   */
   private static ByteArrayResource filePart(String filename, byte[] content) {
+    byte[] body = content;
+    if (filename != null && filename.toLowerCase().endsWith(".pdf")) {
+      body = new byte[PDF_MAGIC.length + content.length];
+      System.arraycopy(PDF_MAGIC, 0, body, 0, PDF_MAGIC.length);
+      System.arraycopy(content, 0, body, PDF_MAGIC.length, content.length);
+    }
+    return new ByteArrayResource(body) {
+      @Override
+      public String getFilename() {
+        return filename;
+      }
+    };
+  }
+
+  /**
+   * Builds a multipart file part with the content verbatim (no magic-byte prefix) — for the test
+   * that a declared .pdf whose bytes are not really a PDF is rejected.
+   */
+  private static ByteArrayResource rawFilePart(String filename, byte[] content) {
     return new ByteArrayResource(content) {
       @Override
       public String getFilename() {

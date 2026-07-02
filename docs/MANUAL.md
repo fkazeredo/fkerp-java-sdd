@@ -887,6 +887,69 @@ técnico (ex.: *"Liquidação de fornecedor"* em vez de `SUPPLIER_SETTLEMENT`; *
 > validado; `Direção do razão` (a pagar/a receber) e `Camada de política` (precedência) permanecem
 > fixos por design; o contrato `/api` **não mudou**. Ver SPEC-0031 / ADR-0019 / DL-0118.
 
+### Fase 19a — Quem pode fazer o quê: permissões completas por papel
+
+A partir desta versão, **toda ação que altera dados exige o papel do balcão responsável** — não
+basta mais estar logado. Antes, algumas ações sensíveis já exigiam papel (emitir NF, fechar o mês,
+disparar rotina, diretiva); agora a regra vale para **o sistema inteiro**, e o que não está
+explicitamente liberado é **negado por padrão**. Nada muda na sua rotina se você já usa o sistema
+com o papel certo do seu balcão — o menu que você vê continua o mesmo.
+
+Como ficou, por papel:
+
+- **Operacional** — todo o ciclo comercial: cadastrar **contas**, registrar **ofertas**, compor
+  **cotações** (e divergir com justificativa), conduzir **reservas** (confirmar, cancelar, no-show,
+  concluir), **pós-venda**, registrar **taxa de mercado** na mesa de câmbio, configurar a **política
+  de cancelamento**, o dia a dia de **Marketing** e **Portfólio**, registrar a **decisão humana**
+  sobre um insight (junto com o Diretor) e anexar documentos ao **cofre**.
+- **Financeiro** — tudo que cria ou liquida **fato financeiro**: lançamentos e **fechamento** do
+  razão, **notas de comissão**, **repasses/liquidações/reembolsos**, o **balcão administrativo**,
+  registrar a **liquidação da conciliação** e o **expurgo** de documento do cofre (vencida a
+  guarda legal); também anexa documentos ao cofre.
+- **TI** — **Pessoas/RH** (colaboradores, jornada, holerite), **Ponto** (incluindo o envio do
+  arquivo legal AFD e o disparo da coleta — antes abertos, agora protegidos), **Patrimônio**,
+  **Plataforma** (jobs, certificado) e as métricas de monitoramento.
+- **Diretor** — as **alavancas de direção**: congelar a **taxa de câmbio**, emitir **diretivas**,
+  aprovar o **apagamento LGPD** de marketing; vê também a superfície de Plataforma/Acesso.
+- **Curador de Políticas** — **regras de política comercial** (com o Diretor) e os **Cadastros**.
+- **Leitor** — **só consulta**: vê as telas e relatórios do seu acesso, mas **não altera nada**;
+  também **não** vê dados pessoais de RH nem baixa o conteúdo de documentos do cofre.
+
+Se você tentar uma ação de outro balcão, o sistema **recusa com "acesso negado"** e **registra a
+tentativa** na auditoria — como já fazia para as ações sensíveis. Consultas comuns (listas,
+relatórios, painel) continuam abertas a qualquer pessoa autenticada; **dados pessoais** (RH/Ponto)
+ficam restritos à TI, por proteção da LGPD.
+
+> Para o time técnico: matriz única `ApiAuthorizationMatrix` com default-deny de escrita e teste de
+> completude no build; o `permitAll` de integração foi estreitado aos 2 webhooks assinados (HMAC).
+> Nenhum formato de dado mudou — apenas **quem pode** executar cada ação. Ver SPEC-0024 BR18 /
+> DL-0119.
+
+### Fase 19b — Quarentena de integração (nada se perde na fronteira)
+
+Antes, quando o **site de cotação** enviava uma cotação para uma **conta que ainda não existia** no
+sistema, a cotação era recusada e **se perdia** — se a agência ainda não tinha cadastro, a venda
+sumia. Agora ela vai para a **quarentena de integração**, na tela **"Origem de ofertas"**:
+
+- **Ver a quarentena.** Na tela *Origem de ofertas*, clique **"Carregar quarentena"**. Cada linha
+  mostra a cotação recusada: identificação externa, documento da conta, produto, preço, o motivo da
+  recusa e quando chegou.
+- **Reprocessar.** Corrija a causa (por exemplo, **cadastre a conta** na tela *Contas comerciais*) e
+  clique **"Reprocessar"**: o sistema roda o fluxo normal e a cotação integrada é criada — a linha
+  fica marcada **"Reprocessada"** com o número da cotação criada. Se a causa persistir (a conta
+  ainda não existe), a linha continua **"Em quarentena"** e nada é criado.
+- **Descartar.** Se a cotação não deve entrar no sistema, clique **"Descartar"** — a linha fica
+  **"Descartada"** (o registro permanece para consulta, mas não pode mais ser reprocessado).
+
+Para o site externo nada mudou: ele continua recebendo a mesma resposta de recusa. O que mudou é
+que **a informação não se perde mais** — a equipe de operação decide o destino. As ações da
+quarentena exigem o papel **Operacional**.
+
+> Para o time técnico: SPEC-0009 BR10 / DL-0120 (revisa a DL-0017 — o 422 externo permanece).
+> Nesta fatia a revisão dirigida do decision-log também **manteve com justificativa reforçada** as
+> DLs 0009/0029/0049/0058/0070/0074 e **refinou a DL-0044** (nuance Anexo III×V/Fator R + flag
+> `billing.tax.regime-confirmed` — ver DL-0121).
+
 
 ## 4. Glossário
 
@@ -989,6 +1052,8 @@ técnico (ex.: *"Liquidação de fornecedor"* em vez de `SUPPLIER_SETTLEMENT`; *
 | 0.30.0 | 18b — Mais cadastros (Marketing/Inteligência/Portfólio) + rótulos nas telas | Mais listas de referência viram **cadastros editáveis** na tela "Cadastros": **Marketing** (finalidade do consentimento, tipo de titular), **Inteligência** (eixo do insight, tipo de insight, veredito) e **Portfólio** (métrica da meta). **Novidade para todos:** as telas de **Marketing, Inteligência e Portfólio** passam a mostrar o **rótulo em português** no lugar do código técnico (ex.: *"Consultor de câmbio (promoção)"*, *"Converte (manter)"*, *"Receita (spread BRL)"*) — corrigindo também nessas telas o comportamento anterior que exibia o código. **Nada muda no que se registra**; os valores por baixo são os mesmos e **nenhum contrato `/api` mudou**. (SPEC-0031 / ADR-0019 / DL-0116.) |
 | 0.31.0 | 18c — Mais cadastros (Origem de ofertas/Câmbio/Cancelamento/Conformidade) + rótulos nas telas | Mais listas de referência viram **cadastros editáveis** na tela "Cadastros": **Origem de ofertas** (procedência, nível de integração), **Mesa de câmbio** (origem da cotação), **Cancelamento** (tipo de política, natureza da cobrança) e **Conformidade** (tipo de documento, formato assinado, fase do requisito). **Novidade para todos:** as telas de **Origem de ofertas, Mesa de câmbio, Cancelamento e Conformidade** passam a mostrar o **rótulo em português** no lugar do código técnico (ex.: *"Site externo"*, *"Manual (contingência)"*, *"Venda sem reembolso"*, *"Registro de ponto (AFD)"*). **Nada muda no comportamento** — cotação integrada, janelas de multa, a **armadilha do lojista** e os prazos de guarda legal seguem iguais; os valores por baixo são os mesmos e **nenhum contrato `/api` mudou**. (SPEC-0031 / ADR-0019 / DL-0117.) |
 | 0.32.0 | 18d — Últimos cadastros (Financeiro/Repasses/Pessoas/Política comercial/Pós-venda) + rótulos nas telas — **encerra a Fase 18** | As listas de referência restantes viram **cadastros editáveis** na tela "Cadastros": **Financeiro** (tipo de lançamento, tipo de contraparte), **Repasses** (tipo do repasse, tipo de favorecido), **Pessoas** (tipo de divergência da jornada), **Política comercial** (tipo do valor) e **Pós-venda** (tipo do chamado, resolução). **Novidade para todos:** as telas de **Financeiro, Repasses, Pessoas, Política comercial e Pós-venda** passam a mostrar o **rótulo em português** no lugar do código técnico (ex.: *"Liquidação de fornecedor"*, *"Reembolso"*, *"Pedido de reembolso"*, *"Percentual"*). **Nada muda no comportamento** — postagem a pagar/receber e documento no fechamento, repasse/liquidação/reembolso (incluindo a **armadilha do lojista**), orquestração do pós-venda e cálculo dos parâmetros seguem iguais; `Direção do razão` e `Camada de política` continuam fixas por design; os valores por baixo são os mesmos e **nenhum contrato `/api` mudou**. Com esta fatia, **todas** as listas de referência são editáveis — a Fase 18 está concluída. (SPEC-0031 / ADR-0019 / DL-0118.) |
+| 0.33.0 | 19a — Permissões completas por papel | **Toda ação que altera dados passa a exigir o papel do balcão** (Operacional/Financeiro/TI/Diretor/Curador); o que não está explicitamente liberado é **negado por padrão**. O papel **Leitor** vira somente-consulta de fato; **dados pessoais de RH/Ponto** ficam restritos à TI (LGPD) e o download do **conteúdo** de documentos do cofre deixa de valer para o Leitor; o envio do arquivo de ponto (AFD) e o disparo da coleta — antes abertos — agora exigem TI. Tentativa sem o papel = **"acesso negado" + registro na auditoria**. Menus e telas não mudaram; nenhum formato de dado mudou — apenas **quem pode** executar cada ação. (SPEC-0024 BR18 / DL-0119.) |
+| 0.34.0 | 19b — Quarentena de integração + revisão do decision-log | **Cotações do site externo recusadas na fronteira** (conta ainda sem cadastro) **não se perdem mais**: entram na **quarentena** da tela *Origem de ofertas*, onde a operação pode **reprocessar** (após cadastrar a conta — cria a cotação integrada) ou **descartar**; para o site externo nada mudou (mesma recusa). Ações exigem o papel **Operacional**. Nos bastidores, a **revisão dirigida das decisões** confirmou 6 decisões sensíveis com justificativa de mercado e refinou a tributária: o **enquadramento** (Anexo III×V/Fator R) ficou registrado para o contador e a **emissão real de NF passa a depender da confirmação dele** (flag de produção). (SPEC-0009 BR10 / DL-0120; SPEC-0016 BR8 / DL-0121.) |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.

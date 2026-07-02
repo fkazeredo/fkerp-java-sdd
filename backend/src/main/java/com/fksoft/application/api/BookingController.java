@@ -10,6 +10,7 @@ import com.fksoft.domain.booking.CancellationResult;
 import com.fksoft.domain.booking.NoShowResult;
 import com.fksoft.infra.security.UserContextProvider;
 import com.fksoft.infra.web.PageResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
  * REST endpoints for bookings (SPEC-0006): create from a quote and drive the lifecycle through
  * domain-action endpoints. The delivery layer resolves the acting user for audit.
  */
+@Tag(name = "Booking", description = "Reservas: ciclo de vida, cancelamento e no-show")
 @RestController
 @RequestMapping("/api/bookings")
 @RequiredArgsConstructor

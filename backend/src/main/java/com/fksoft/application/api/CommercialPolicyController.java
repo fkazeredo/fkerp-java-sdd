@@ -10,6 +10,7 @@ import com.fksoft.domain.commercialpolicy.ParameterLayer;
 import com.fksoft.domain.commercialpolicy.ParameterScope;
 import com.fksoft.infra.security.UserContext;
 import com.fksoft.infra.security.UserContextProvider;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
  * forwards roles for authorization (the backend is the final authority — security.md). Quoting does
  * NOT use this controller; it consumes the engine through the {@code MarkupProvider} port.
  */
+@Tag(name = "Commercial Policy", description = "Parâmetros governados e diretivas (precedência)")
 @RestController
 @RequestMapping("/api/commercial-policy")
 @RequiredArgsConstructor

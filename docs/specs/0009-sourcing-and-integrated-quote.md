@@ -54,6 +54,9 @@ BR6  O domínio MUST NOT depender do DTO do site externo: a tradução vive na A
 BR7  ASSUMIDO (2026-06-29, ver DL-0017): se a Account do documento do inbound NÃO existir, a entrada é
      REJEITADA com `integration.account.not-found` (422) e nada é criado — não cria conta provisória
      nem enfileira para curadoria (decisão de negócio reversível).
+     **REVISADA na Fase 19b (ver DL-0120 e BR10):** o contrato externo (422, nada criado no núcleo)
+     permanece, mas o payload rejeitado passa a ser PRESERVADO em quarentena para replay operacional
+     — a rejeição não perde mais o dado na fronteira.
 BR8  ASSUMIDO (2026-06-29, ver DL-0016): a assinatura do webhook é HMAC-SHA256 do corpo bruto com
      segredo compartilhado, no header `X-Signature` (hex, prefixo `sha256=` aceito), comparação em
      tempo constante. A versão do contrato trafega no path (v1 implícita).
@@ -61,6 +64,15 @@ BR9  ASSUMIDO (2026-06-29, ver DL-0018): o ramo INTEGRATED reusa o agregado `Quo
      (`composeIntegrated`); override não se aplica a INTEGRATED (`quoting.override.not-applicable`,
      409). ASSUMIDO (ver DL-0019): resiliência proporcional — a ACL é de entrada (sem chamada de
      saída), logo classificação de falha + idempotência + observabilidade, sem circuit breaker.
+BR10 ASSUMIDO (2026-07-02, ver DL-0120 — Fase 19b, revisa a DL-0017): **quarentena de inbound**
+     (exception queue). Uma rejeição de NEGÓCIO do inbound (conta desconhecida) MUST preservar o
+     payload traduzido em `inbound_quarantine` (transação própria — a linha sobrevive ao 422),
+     idempotente por `externalQuotationId` (um pendente por id; índice único parcial). O operador
+     (papel OPERATIONS) MUST poder listar, **reprocessar** (roda o fluxo normal; sucesso marca
+     REPLAYED e vincula o quote; causa persistente mantém QUARANTINED) e **descartar** (DISCARDED).
+     Transição sobre entrada resolvida => 409 `sourcing.quarantine.not-pending`. Falha de
+     assinatura/payload NÃO quarentena nada (payload não-autenticado não persiste). O status
+     (QUARANTINED→REPLAYED|DISCARDED) é máquina de estado e permanece enum (critério Fase 18).
 ```
 
 ## Input/Output Examples

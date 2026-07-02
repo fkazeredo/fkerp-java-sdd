@@ -1,10 +1,15 @@
 package com.fksoft.application.api;
 
 import com.fksoft.application.api.dto.RegisterSourcedOfferRequest;
+import com.fksoft.domain.sourcing.InboundQuarantineService;
+import com.fksoft.domain.sourcing.InboundQuarantineStatus;
+import com.fksoft.domain.sourcing.InboundQuarantineView;
 import com.fksoft.domain.sourcing.SourcedOfferView;
 import com.fksoft.domain.sourcing.SourcingService;
 import com.fksoft.infra.security.UserContextProvider;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,19 +19,24 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST endpoints for sourced offers (SPEC-0009): manually register an offer's provenance and fetch
- * it. The delivery layer resolves the acting user for audit. The inbound webhook (the ACL) is a
- * separate controller ({@code QuotationSiteInboundController}, Slice 8c).
+ * it, plus the <strong>inbound quarantine</strong> operation (BR10, DL-0120): list the payloads
+ * rejected at the boundary, replay one after fixing the cause, or discard it. The delivery layer
+ * resolves the acting user for audit. The inbound webhook (the ACL) is a separate controller
+ * ({@code QuotationSiteInboundController}, Slice 8c).
  */
+@Tag(name = "Sourcing", description = "Procedência da oferta e quarentena de inbound")
 @RestController
 @RequestMapping("/api/sourcing")
 @RequiredArgsConstructor
 public class SourcingController {
 
   private final SourcingService sourcingService;
+  private final InboundQuarantineService quarantineService;
   private final UserContextProvider userContextProvider;
 
   @PostMapping("/offers")
@@ -47,5 +57,24 @@ public class SourcingController {
   @GetMapping("/offers/{id}")
   public SourcedOfferView get(@PathVariable UUID id) {
     return sourcingService.getById(id);
+  }
+
+  /** Lists the inbound quarantine (BR10/DL-0120), optionally by status, newest first. */
+  @GetMapping("/inbound-quarantine")
+  public List<InboundQuarantineView> quarantine(
+      @RequestParam(value = "status", required = false) InboundQuarantineStatus status) {
+    return quarantineService.list(status);
+  }
+
+  /** Replays a quarantined inbound payload after the operator fixed the cause (BR10/DL-0120). */
+  @PostMapping("/inbound-quarantine/{id}/replay")
+  public InboundQuarantineView replay(@PathVariable UUID id) {
+    return quarantineService.replay(id, userContextProvider.currentUser().username());
+  }
+
+  /** Discards a quarantined inbound payload (BR10/DL-0120). */
+  @PostMapping("/inbound-quarantine/{id}/discard")
+  public InboundQuarantineView discard(@PathVariable UUID id) {
+    return quarantineService.discard(id, userContextProvider.currentUser().username());
   }
 }

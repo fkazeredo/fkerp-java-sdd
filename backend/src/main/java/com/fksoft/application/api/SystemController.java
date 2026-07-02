@@ -2,6 +2,7 @@ package com.fksoft.application.api;
 
 import com.fksoft.application.api.dto.SystemHealthResponse;
 import com.fksoft.infra.health.DatabaseHealthProbe;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
  * {@code 503} with {@code db: DOWN} otherwise. The delivery layer may depend on infra (ADR 0012),
  * so it uses the technical {@link DatabaseHealthProbe}.
  */
+@Tag(name = "System", description = "Saúde do sistema")
 @RestController
 @RequestMapping("/api/system")
 @RequiredArgsConstructor

@@ -7,6 +7,7 @@ import com.fksoft.domain.accounts.AccountStatus;
 import com.fksoft.domain.accounts.AccountView;
 import com.fksoft.infra.security.UserContextProvider;
 import com.fksoft.infra.web.PageResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
  * REST endpoints for commercial accounts (SPEC-0002). The delivery layer owns the {@code
  * UserContext}: it resolves the acting user and passes it to the application service for audit.
  */
+@Tag(name = "Accounts", description = "Contas comerciais (agência/agente): cadastro e consulta")
 @RestController
 @RequestMapping("/api/accounts")
 @RequiredArgsConstructor

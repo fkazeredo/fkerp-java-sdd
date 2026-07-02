@@ -65,3 +65,10 @@ Reversão **cara**: se o negócio definir que o fornecedor é pago **só** em um
 modelagem do agregado (uma das colunas deixa de existir), o evento e o que a conciliação espera — e
 liquidações já gravadas ficam com semântica diferente (dado histórico). Por isso **Reversibilidade=Cara**:
 mexe na tese econômica de câmbio que três contextos (Payout/Reconciliation/Exchange) compartilham.
+
+## Revisão — Fase 19b (2026-07-02)
+
+**MANTIDA.** O par `amount` (moeda estrangeira) + `settlementRate` + `settledBrl` é compatível
+com o fluxo cambial real brasileiro (contrato de câmbio; marco legal da Lei 14.286/2021). Custos
+de liquidação (IOF/spread bancário) entram como campos opcionais na fatia de forwards (19h),
+fechando o seam sem mudar a tese. O fluxo bancário real segue Open Question (checklist 19l).

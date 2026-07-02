@@ -11,6 +11,7 @@ import com.fksoft.domain.finance.PeriodView;
 import com.fksoft.domain.finance.TrialBalanceView;
 import com.fksoft.infra.security.UserContextProvider;
 import com.fksoft.infra.web.PageResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
  * run the monthly close (which respects the Compliance veto). The delivery layer resolves the
  * acting user for audit and maps the {@code YYYY-MM} path to the period value object.
  */
+@Tag(name = "Finance", description = "Razão a pagar/receber, fechamento e balancete")
 @RestController
 @RequestMapping("/api/finance")
 @RequiredArgsConstructor

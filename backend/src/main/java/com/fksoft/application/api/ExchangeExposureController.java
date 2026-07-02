@@ -3,6 +3,7 @@ package com.fksoft.application.api;
 import com.fksoft.domain.exchange.ExchangeExposureService;
 import com.fksoft.domain.exchange.LiveExposureView;
 import com.fksoft.domain.exchange.PromoFxResultView;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
  * (aggregate subsidy + drift with the drift alert) and the promo-fx result for a period (subsidy ×
  * drift × gap). Both are read-models/projections.
  */
+@Tag(name = "Exchange Exposure", description = "Exposição do livro: subsídio e drift")
 @RestController
 @RequestMapping("/api/exchange")
 @RequiredArgsConstructor

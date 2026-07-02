@@ -4,6 +4,7 @@ import com.fksoft.domain.platform.AuditType;
 import com.fksoft.domain.platform.SystemAuditService;
 import com.fksoft.domain.platform.SystemAuditView;
 import com.fksoft.infra.web.PageResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
  * /api/platform/audit} returns the append-only trail filtered by actor, type and time window,
  * newest first, paginated. The detail is metadata only — never secret material (BR1).
  */
+@Tag(name = "Platform Audit", description = "Auditoria de sistema (append-only)")
 @RestController
 @RequestMapping("/api/platform/audit")
 @RequiredArgsConstructor

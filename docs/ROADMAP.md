@@ -305,6 +305,29 @@ que ramifica usa constantes de `code`; seeds preservam os valores. 4 fatias por 
 
 ---
 
+## FASE 19 — Refactoring de maturidade (production readiness ampliado) · plano aprovado 2026-07-02
+
+Decisão do dono após 7 relatórios de análise ponta a ponta (domínio×cliente, decision-log×mercado,
+arquitetura, segurança, QA, CI/CD, observabilidade): o ERP é *production-shaped*, não
+*production-ready*. A fase fecha essa distância em **12 fatias**, cada uma com spec/DL/ADR + gates
+verdes + release MINOR: **19a** autorização default-deny por papel (matriz completa + completude
+como portão) ✅ `0.33.0` · **19b** revisão do decision-log aplicada (quarentena de inbound
+DL-0017-bis; anexo/Fator-R + flag de emissão DL-0044-bis) · **19c** segredos fail-fast + anti-replay
+nos webhooks + upload/cofre hardening + lockout no form login + silent-refresh same-origin ·
+**19d** documentação de API real (springdoc anotado, Authorize PKCE, snapshot de contrato + teste
+de drift) · **19e** emulação das integrações (Portal de Experiências/Locação, GDS, NFS-e, gateway —
+adaptadores HTTP com timeout/retry/breaker contra emuladores; ERP servindo câmbio como Open-Host) ·
+**19f** migração de bibliotecas (Jackson 3 sem a ponte, Boot 4.1.x) · **19g** multi-instância/HA
+(JWK persistido, AS/sessão em JDBC, fila DB-backed; revisa ADR-0002) · **19h** hedge cambial
+(`ForwardContract`, cobertura hedged/unhedged, `HedgeAdvisor` no DSS) · **19i** QA hardening
+(concorrência, PIT, jqwik, branch gates, timezone) · **19j** aderência à arquitetura & design de
+código (auditoria doc×código + fitness functions novas + endpoint agregado de dashboard) ·
+**19k** CI/CD supply-chain (CodeQL/Dependabot/imagem GHCR) + observabilidade (conserto do scrape,
+alerting) · **19l** postura de produção (perfil prod, TLS/reverse proxy, backup/DR, checklist de
+Open Questions ao dono).
+
+---
+
 ## Perguntas em aberto que **travam** fatias (da Parte 13 do redesenho)
 
 | # | Pergunta | Trava a fatia |

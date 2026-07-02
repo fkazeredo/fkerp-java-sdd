@@ -1,12 +1,117 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.32.0.md`](0.32.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.36.0.md`](0.36.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.36.0 — Phase 19d · Real API documentation (springdoc)
+
+**MINOR — documentation quality. No endpoint/JSON shape changed; only the doc content and a
+committed contract snapshot.**
+
+springdoc was already in the stack but empty. This slice makes the API docs real and usable.
+
+- **`@Tag` on all 37 controllers** (business name + description) → the Swagger UI groups the API by
+  context. **Fitness function** (ArchUnit): every `@RestController` must carry an `@Tag`.
+- **Error contract documented globally** (`GlobalErrorResponsesCustomizer`): the stable
+  `{ code, message, fields }` envelope (ADR 0011) + 400/401/403/404/409/422 on every operation,
+  without repeating `@ApiResponse` on ~75 endpoints.
+- **Working Authorize button**: OAuth2 **Authorization Code + PKCE** against the self-hosted AS
+  (client `acme-erp-web`, ADR-0018) — an operator logs in from the Swagger UI and tries a role-gated
+  endpoint; a `bearerAuth` scheme also allows pasting a token.
+- **Slim `Info.description`**: the changelog moved back to `docs/release-notes/` (single source).
+- **Committed contract snapshot** (`docs/api/openapi.json`) + **drift test**
+  (`OpenApiSnapshotIntegrationTest`): changing the contract without updating the snapshot fails the
+  build (regenerate with `-Dopenapi.snapshot.write=true`). Generalizes the Phase-18 contract
+  invariant to the whole API.
+- Gates green: backend `./mvnw verify` (ArchUnit **18** with the `@Tag` rule + the snapshot drift
+  test). Follow-up: per-endpoint `@Operation` summaries are incremental.
+
+---
+
+## 0.35.0 — Phase 19c · Hardening (secrets fail-fast, webhook anti-replay, vault upload, login lockout)
+
+**MINOR — security hardening. No user-facing `/api` shape changed; the 2 M2M webhooks now require a
+timestamp header (breaking for the machine peers, which are ours/emulated).**
+
+Third slice of Phase 19: closes the behind-the-scenes security risks the audit flagged. Nothing
+end-user-visible changes (the MANUAL is untouched — Rule Zero).
+
+- **Webhook anti-replay (DL-0122):** the HMAC now signs **`timestamp + "." + body`** with a
+  tolerance window (default 300s), via a single shared `WebhookSignatures` helper (de-duplicating
+  the two verifiers). A validly-signed body can no longer be replayed forever. New timestamp header
+  required on both webhooks.
+- **Production fail-fast (DL-0123):** `ProdReadinessValidator` (prod profile) **refuses to boot**
+  with a dev/blank secret (webhook secrets, `PLATFORM_SECRET_KEY`, the `acme` DB password), an
+  `http://` issuer, or `billing.tax.regime-confirmed=false` (the real-NFS-e gate — DL-0121). No
+  secret value is logged.
+- **Vault upload hardening (DL-0124):** binary uploads (pdf/png/jpg) are validated by **magic
+  bytes** — closing the doc↔code gap where "never trust the extension alone" was only Javadoc;
+  `fileRef` is validated as a UUID on read/delete (path-traversal defense in depth).
+- **Login lockout (DL-0125):** brute-force protection on the embedded AS form login — **5
+  consecutive failures → 15-minute lock** (DB counter, V38) via `accountLocked` in the
+  `UserDetailsService`; generic error (BR4). Plus a minimal password policy (≥8, not a single
+  repeated char).
+- Gates green: backend `./mvnw verify` **552 tests** (+24), ArchUnit/Modulith/Spotless/Checkstyle/
+  JaCoCo unchanged. Migration V38.
+
+---
+
+## 0.34.0 — Phase 19b · Integration quarantine + directed decision-log review
+
+**MINOR — new capability. The webhook wire contract is unchanged; new endpoints are additive.**
+
+Second slice of Phase 19: the owner-requested **serious decision-log review**, researched per
+decision and applied in code.
+
+- **Integration quarantine (DL-0120, revises DL-0017):** an inbound quotation rejected for an
+  unknown account is **no longer lost** — the external 422 stands, but the translated payload is
+  kept in `inbound_quarantine` (own transaction, idempotent per external id, partial unique
+  index). The *Offer sourcing* screen gains a quarantine section: list, **replay** (creates the
+  INTEGRATED quote once the cause is fixed; a persisting cause keeps it pending) and **discard**.
+  Signature failures quarantine **nothing**. Migration **V37**; 5 new backend E2E tests.
+- **Tax refinement (DL-0121, refines DL-0044):** research found the risk-raising nuance — travel
+  agency (CNAE 7911-2/00) → Anexo III without Fator R, but **commercial representation (GSA
+  revenue) → Anexo V with Fator R**. Recorded in SPEC-0016 (Q7) for the accountant + new
+  **`billing.tax.regime-confirmed`** flag (default `false`) that the 19c production-readiness
+  validator will require before real NFS-e issuance.
+- **Kept with reinforced justification** (review addendum in each DL file): DL-0009 (price
+  formula), DL-0029 (REP-P), DL-0049 (settlementRate/FX legal framework), DL-0058 (LGPD
+  tombstone), DL-0070 (CLT art. 59), DL-0074 (AES-GCM + **A1**/KMS recommendation).
+- **Enum→cadastro made a standing rule** (owner request): CLAUDE.md invariant 7 +
+  `architecture/backend.md` "Enums vs cadastro" section (ADR-0019 codified).
+
+---
+
+## 0.33.0 — Phase 19a · Default-deny role-based authorization (full matrix)
+
+**MINOR — security hardening. No data shape changed; the authorization STATUS changes for callers
+without the owning desk's role (2xx → 403), highlighted below.**
+
+First slice of **Phase 19 (maturity refactoring)**: the role enforcement that covered only ~8 routes
+(DL-0082) now covers the **entire API surface** with **default-deny** for anything unmapped.
+SPEC-0024 BR18; DL-0119.
+
+- **Single ordered matrix** (`ApiAuthorizationMatrix`): every write endpoint carries its owning
+  desk — **Finance** (ledger/invoices/payouts/back-office/reconciliation settlement/vault purge),
+  **Operations** (accounts/offers/quotes/bookings/after-sales/market rate/cancellation
+  policy/marketing/portfolio), **IT** (people/time-clock/assets/platform), **Director** (pinned
+  rate, directives, LGPD erasure), **Policy Curator** (reference data). **Viewer writes nothing.**
+- **Default-deny:** `POST/PUT/PATCH/DELETE /api/**` outside the matrix is refused; completeness is
+  a **build gate** (`ApiAuthorizationMatrixCompletenessTest` — no orphan write, no stale rule).
+- **Closed hole:** the blanket `permitAll` on `/api/integration/**` left the **AFD upload** and the
+  **crawl trigger** reachable with **no credentials**; only the 2 HMAC-signed webhooks remain M2M
+  and the point endpoints now require **IT**.
+- **Sensitive reads** gated too: People/Time-clock personal data → IT (LGPD); vault document
+  **content** download excludes Viewer; Platform surface → IT/Director.
+- Gates green: backend `./mvnw verify` **523 tests** (+10), ArchUnit/Modulith/Spotless/Checkstyle/
+  JaCoCo unchanged; the accounts E2E journey now signs in as `ops` (the owning desk).
 
 ---
 
