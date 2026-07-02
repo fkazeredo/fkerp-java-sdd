@@ -1,12 +1,37 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.35.0.md`](0.35.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.36.0.md`](0.36.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.36.0 — Phase 19d · Real API documentation (springdoc)
+
+**MINOR — documentation quality. No endpoint/JSON shape changed; only the doc content and a
+committed contract snapshot.**
+
+springdoc was already in the stack but empty. This slice makes the API docs real and usable.
+
+- **`@Tag` on all 37 controllers** (business name + description) → the Swagger UI groups the API by
+  context. **Fitness function** (ArchUnit): every `@RestController` must carry an `@Tag`.
+- **Error contract documented globally** (`GlobalErrorResponsesCustomizer`): the stable
+  `{ code, message, fields }` envelope (ADR 0011) + 400/401/403/404/409/422 on every operation,
+  without repeating `@ApiResponse` on ~75 endpoints.
+- **Working Authorize button**: OAuth2 **Authorization Code + PKCE** against the self-hosted AS
+  (client `acme-erp-web`, ADR-0018) — an operator logs in from the Swagger UI and tries a role-gated
+  endpoint; a `bearerAuth` scheme also allows pasting a token.
+- **Slim `Info.description`**: the changelog moved back to `docs/release-notes/` (single source).
+- **Committed contract snapshot** (`docs/api/openapi.json`) + **drift test**
+  (`OpenApiSnapshotIntegrationTest`): changing the contract without updating the snapshot fails the
+  build (regenerate with `-Dopenapi.snapshot.write=true`). Generalizes the Phase-18 contract
+  invariant to the whole API.
+- Gates green: backend `./mvnw verify` (ArchUnit **18** with the `@Tag` rule + the snapshot drift
+  test). Follow-up: per-endpoint `@Operation` summaries are incremental.
 
 ---
 

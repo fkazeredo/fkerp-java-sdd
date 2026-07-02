@@ -12,6 +12,7 @@ import com.fksoft.domain.portfolio.GoalProgress;
 import com.fksoft.domain.portfolio.GoalView;
 import com.fksoft.domain.portfolio.PortfolioService;
 import com.fksoft.infra.security.UserContextProvider;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
@@ -38,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>Slice 8g-2 adds the goals and the realized-vs-goal endpoints.
  */
+@Tag(name = "Portfolio", description = "Marcas representadas, contratos e metas")
 @RestController
 @RequestMapping("/api/portfolio")
 @RequiredArgsConstructor

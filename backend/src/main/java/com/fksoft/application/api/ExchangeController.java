@@ -7,6 +7,7 @@ import com.fksoft.domain.exchange.ExchangeRateService;
 import com.fksoft.domain.exchange.PinnedSellRateView;
 import com.fksoft.infra.security.UserContextProvider;
 import com.fksoft.infra.web.PageResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
  * REST endpoints for the frozen sell rate (SPEC-0003). Pinning is append-only; reads serve the
  * prevailing rate and the history. The delivery layer resolves the acting user for audit.
  */
+@Tag(name = "Exchange", description = "Câmbio: taxa congelada de venda (Open-Host)")
 @RestController
 @RequestMapping("/api/exchange/pinned-rates")
 @RequiredArgsConstructor

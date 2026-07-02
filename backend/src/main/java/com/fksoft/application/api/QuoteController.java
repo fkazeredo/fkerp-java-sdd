@@ -7,6 +7,7 @@ import com.fksoft.domain.quoting.ComposeQuoteCommand;
 import com.fksoft.domain.quoting.QuoteService;
 import com.fksoft.domain.quoting.QuoteView;
 import com.fksoft.infra.security.UserContextProvider;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
  * REST endpoints for quotes (SPEC-0005): compose a MANUAL quote, apply a price override with a
  * reason, and fetch a quote with its override history. The delivery layer resolves the acting user.
  */
+@Tag(name = "Quoting", description = "Composição da cotação, sugestão e override")
 @RestController
 @RequestMapping("/api/quotes")
 @RequiredArgsConstructor

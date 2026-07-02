@@ -6,6 +6,7 @@ import com.fksoft.domain.compliance.ComplianceService;
 import com.fksoft.domain.compliance.ComplianceUploadInvalidException;
 import com.fksoft.domain.compliance.DocumentView;
 import com.fksoft.infra.security.UserContextProvider;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -31,6 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
  * link, attach it to an entry, fetch metadata/content, run the period close-check, and purge
  * (guarded by retention). The delivery layer resolves the acting user for audit.
  */
+@Tag(name = "Compliance", description = "Cofre de documentos, anexo obrigatório e retenção")
 @RestController
 @RequestMapping("/api/compliance")
 @RequiredArgsConstructor

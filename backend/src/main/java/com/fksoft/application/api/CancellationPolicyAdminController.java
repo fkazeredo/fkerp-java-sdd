@@ -4,6 +4,7 @@ import com.fksoft.application.api.dto.CancellationPolicyRequest;
 import com.fksoft.domain.booking.CancellationPolicyAdminService;
 import com.fksoft.domain.booking.CancellationPolicyView;
 import com.fksoft.infra.security.UserContextProvider;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
  * today the dev {@code UserContextProvider} stands in). The delivery layer resolves the acting user
  * for audit.
  */
+@Tag(name = "Cancellation Policy", description = "Política de cancelamento por produto")
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor

@@ -34,6 +34,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 @AnalyzeClasses(packages = "com.fksoft", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
 
+  /**
+   * Every REST controller MUST carry an {@code @Tag} so the generated OpenAPI/Swagger UI groups it
+   * (SPEC-0024 Fase 19d, DL-0126). This is the completeness fitness function for the API docs: a
+   * new controller without a tag fails the build, so the docs cannot silently drift from the API.
+   */
+  @ArchTest
+  static final ArchRule REST_CONTROLLERS_ARE_TAGGED_FOR_OPENAPI =
+      classes()
+          .that()
+          .areAnnotatedWith(org.springframework.web.bind.annotation.RestController.class)
+          .should()
+          .beAnnotatedWith(io.swagger.v3.oas.annotations.tags.Tag.class)
+          .as("every @RestController must carry an @Tag for the OpenAPI docs (DL-0126)");
+
   /** The pure domain core must not depend on delivery (application) or infra (ADR 0012). */
   @ArchTest
   static final ArchRule DOMAIN_MUST_NOT_DEPEND_ON_DELIVERY_OR_INFRA =

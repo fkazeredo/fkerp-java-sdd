@@ -7,6 +7,7 @@ import com.fksoft.domain.sourcing.IntegrationAccountNotFoundException;
 import com.fksoft.domain.sourcing.RegisterInboundQuotationCommand;
 import com.fksoft.domain.sourcing.SourcingService;
 import com.fksoft.infra.integration.quotationsite.QuotationSiteInboundAdapter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
  * signature/payload failure is NOT quarantined: an unauthenticated or malformed payload must not
  * persist anything.
  */
+@Tag(name = "Quotation Site (M2M)", description = "Webhook de cotação (ramo INTEGRATED)")
 @RestController
 @RequestMapping("/api/integration/quotation-site")
 @RequiredArgsConstructor

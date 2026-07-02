@@ -6,6 +6,7 @@ import com.fksoft.domain.assets.AssetService;
 import com.fksoft.domain.assets.AssetStatus;
 import com.fksoft.domain.assets.AssetView;
 import com.fksoft.infra.security.UserContextProvider;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.Instant;
 import java.util.List;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
  * (DL-0066). All calls go straight to {@link AssetService}; the delivery layer resolves the acting
  * user for audit. Assets never prices a sale — there is no commercial endpoint here (BR5).
  */
+@Tag(name = "Assets", description = "Patrimônio interno: equipamentos e licenças")
 @RestController
 @RequestMapping("/api/assets")
 @RequiredArgsConstructor

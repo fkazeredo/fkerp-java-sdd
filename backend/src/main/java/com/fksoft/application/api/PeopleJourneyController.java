@@ -7,6 +7,7 @@ import com.fksoft.domain.people.JourneyView;
 import com.fksoft.domain.people.PeopleService;
 import com.fksoft.domain.people.TimeBankView;
 import com.fksoft.infra.web.PageResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
  * process and read a collaborator period journey, read the time-bank and browse the discrepancy
  * treatment queue. All calls go straight to the {@link PeopleService} domain facade.
  */
+@Tag(name = "People Journey", description = "Jornada e banco de horas")
 @RestController
 @RequestMapping("/api/people")
 @RequiredArgsConstructor

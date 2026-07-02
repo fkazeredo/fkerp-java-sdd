@@ -2,6 +2,7 @@ package com.fksoft.application.api;
 
 import com.fksoft.domain.people.PointSnapshotView;
 import com.fksoft.infra.integration.pointclock.PointClockCrawler;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
  * snapshot (failure was classified, dead-lettered and a {@code PointCrawlingFailed} event published
  * — never a fake snapshot).
  */
+@Tag(name = "Point Crawl", description = "Disparo da coleta de ponto")
 @RestController
 @RequestMapping("/api/integration/point")
 @RequiredArgsConstructor

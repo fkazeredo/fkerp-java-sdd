@@ -5,6 +5,7 @@ import com.fksoft.domain.people.PointCrawlRunView;
 import com.fksoft.domain.people.PointSnapshotService;
 import com.fksoft.domain.people.PointSnapshotView;
 import com.fksoft.infra.web.PageResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
  * snapshot and list the crawl-run execution history (BR7). The collection itself is driven by the
  * crawler job/adapter (see {@code PointCrawlController}), not by a public write here.
  */
+@Tag(name = "Point", description = "Espelho e histórico de ponto (leitura)")
 @RestController
 @RequestMapping("/api/integration/point")
 @RequiredArgsConstructor

@@ -11,6 +11,7 @@ import com.fksoft.domain.payout.PayoutView;
 import com.fksoft.infra.integration.payment.PayoutExecutionService;
 import com.fksoft.infra.security.UserContextProvider;
 import com.fksoft.infra.web.PageResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Payout facade, the payment ACL and the Compliance receipt; create/read go straight to the {@link
  * PayoutService} domain facade. The delivery layer resolves the acting user for audit.
  */
+@Tag(name = "Payout", description = "Repasse ao agente, liquidação e reembolso")
 @RestController
 @RequestMapping("/api/payouts")
 @RequiredArgsConstructor

@@ -7,6 +7,7 @@ import com.fksoft.domain.exchange.MarketRateService;
 import com.fksoft.domain.exchange.MarketRateSourceCodes;
 import com.fksoft.infra.security.UserContextProvider;
 import com.fksoft.infra.web.PageResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
  * the {@code MarketRateProvider} port (future adapter); this controller is the manual contingency
  * registration (DL-0025) plus reads of the prevailing market rate and the observation history.
  */
+@Tag(name = "Market Rate", description = "Registro de taxa de mercado (contingência)")
 @RestController
 @RequestMapping("/api/exchange/market-rates")
 @RequiredArgsConstructor

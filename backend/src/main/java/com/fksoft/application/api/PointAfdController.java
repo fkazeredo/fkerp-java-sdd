@@ -4,6 +4,7 @@ import com.fksoft.domain.compliance.DocumentView;
 import com.fksoft.domain.people.PointAfdInvalidException;
 import com.fksoft.infra.integration.pointclock.AfdIngestionService;
 import com.fksoft.infra.security.UserContextProvider;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.IOException;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
  * Created} with the archived vault document, or {@code 400 point.afd.invalid} when verification
  * fails — a tampered artifact never enters the vault (BR4).
  */
+@Tag(name = "Point AFD (M2M)", description = "Ingestão do AFD/AEJ legal assinado")
 @RestController
 @RequestMapping("/api/integration/point")
 @RequiredArgsConstructor

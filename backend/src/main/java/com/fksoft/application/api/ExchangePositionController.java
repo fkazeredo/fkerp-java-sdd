@@ -2,6 +2,7 @@ package com.fksoft.application.api;
 
 import com.fksoft.domain.exchange.FxPositionService;
 import com.fksoft.domain.exchange.FxPositionView;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Positions are not created by API — they are born from {@code BookingConfirmed} — so this exposes
  * only the read keyed by booking.
  */
+@Tag(name = "Exchange Position", description = "Posição cambial por reserva")
 @RestController
 @RequestMapping("/api/exchange/positions")
 @RequiredArgsConstructor

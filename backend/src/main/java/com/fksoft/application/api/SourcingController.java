@@ -7,6 +7,7 @@ import com.fksoft.domain.sourcing.InboundQuarantineView;
 import com.fksoft.domain.sourcing.SourcedOfferView;
 import com.fksoft.domain.sourcing.SourcingService;
 import com.fksoft.infra.security.UserContextProvider;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
  * resolves the acting user for audit. The inbound webhook (the ACL) is a separate controller
  * ({@code QuotationSiteInboundController}, Slice 8c).
  */
+@Tag(name = "Sourcing", description = "Procedência da oferta e quarentena de inbound")
 @RestController
 @RequestMapping("/api/sourcing")
 @RequiredArgsConstructor

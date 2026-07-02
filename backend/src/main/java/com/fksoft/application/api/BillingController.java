@@ -6,6 +6,7 @@ import com.fksoft.domain.billing.BillingService;
 import com.fksoft.domain.billing.CommissionInvoiceView;
 import com.fksoft.infra.integration.nfse.BillingIssuanceService;
 import com.fksoft.infra.security.UserContextProvider;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
  * straight to the {@link BillingService} domain facade. The delivery layer resolves the acting user
  * for audit.
  */
+@Tag(name = "Billing", description = "Nota fiscal de comissão (NFS-e), ISS e retenções")
 @RestController
 @RequestMapping("/api/billing")
 @RequiredArgsConstructor

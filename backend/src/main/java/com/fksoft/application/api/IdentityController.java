@@ -9,6 +9,7 @@ import com.fksoft.domain.platform.SystemAuditView;
 import com.fksoft.infra.security.UserContext;
 import com.fksoft.infra.security.UserContextProvider;
 import com.fksoft.infra.web.PageResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,7 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>The backend is the authorization authority (security.md); the frontend only mirrors the
  * token's user/roles for display and routing.
  */
+@Tag(name = "Identity", description = "Usuário atual, papéis e auditoria de acesso")
 @RestController
 @RequestMapping("/api/identity")
 @RequiredArgsConstructor

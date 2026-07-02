@@ -4,6 +4,7 @@ import com.fksoft.domain.compliance.DocumentView;
 import com.fksoft.domain.people.EmployeeInvalidException;
 import com.fksoft.infra.integration.payroll.PayslipArchivingService;
 import com.fksoft.infra.security.UserContextProvider;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -26,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
  * {@code 201 Created} with the archived vault document. People keeps only the {@code documentId} by
  * value — it never becomes a vault (BR6).
  */
+@Tag(name = "People Payslip", description = "Arquivamento de holerite no cofre")
 @RestController
 @RequestMapping("/api/people/employees")
 @RequiredArgsConstructor

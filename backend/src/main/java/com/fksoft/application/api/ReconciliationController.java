@@ -7,6 +7,7 @@ import com.fksoft.domain.reconciliation.ReconciliationService;
 import com.fksoft.domain.reconciliation.SettlementInput;
 import com.fksoft.infra.security.UserContextProvider;
 import com.fksoft.infra.web.PageResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
  * {@code BookingConfirmed}); the API reads them (ordered by discrepancy) and records the realized
  * settlement.
  */
+@Tag(name = "Reconciliation", description = "Conciliação: casa as pontas e ganho/perda cambial")
 @RestController
 @RequestMapping("/api/reconciliation")
 @RequiredArgsConstructor

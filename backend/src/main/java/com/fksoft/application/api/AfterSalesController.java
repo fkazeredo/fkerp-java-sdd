@@ -9,6 +9,7 @@ import com.fksoft.domain.aftersales.SupportCaseStatus;
 import com.fksoft.domain.aftersales.SupportCaseView;
 import com.fksoft.infra.security.UserContextProvider;
 import com.fksoft.infra.web.PageResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,9 @@ import org.springframework.web.bind.annotation.RestController;
  * domain facade, which owns the orchestration. The delivery layer resolves the acting user for
  * audit.
  */
+@Tag(
+    name = "AfterSales",
+    description = "Pós-venda: chamados, SLA e resolução (reembolso/cancelamento)")
 @RestController
 @RequestMapping("/api/aftersales/cases")
 @RequiredArgsConstructor
