@@ -1,12 +1,40 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.40.0.md`](0.40.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.41.0.md`](0.41.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.41.0 — Phase 19i · QA hardening (concurrency, mutation, properties, timezone, floors)
+
+**MINOR — quality hardening. One accidental 500 becomes a documented 409; no shape changes.**
+
+The slice tests what the QA audit flagged as weak — and **found and closed a real concurrency
+hole**: an entry registration racing the monthly close could **slip into the just-sealed period**
+(`register` read the period without a lock). `register`/`postFromCharge` now take the **same
+period row lock** as `closePeriod`; the regression was proven red → green. DL-0131/DL-0132.
+
+- **Optimistic conflicts now answer 409** (`error.conflict`) instead of 500.
+- **Races proven**: 4 threads on payout execute → exactly ONE begins (pessimistic lock);
+  close×register serializes on the period lock.
+- **Timezone hardening**: the accounting period derives from `occurredAt` **at UTC** (proven under
+  São Paulo and Moscow default zones at month boundaries); the 72h SLA window flips at the exact
+  second.
+- **Property-based tests (jqwik)**: `Money` invariants and the `InstallmentPlan` cent distribution
+  verified with 1000 cases per property.
+- **Mutation testing (PIT)**: a `mutation` profile over the money-math domain — **185 mutants, 68%
+  killed (test strength 89%)**, threshold 60 fails below; **own CI job** with the report as an
+  artifact.
+- **Raised floors**: JaCoCo **BRANCH ≥ 0.65** (new; measured 0.689); Vitest statements 70 /
+  lines 75 / functions 49.
+- **E2E**: 24/24 green on a clean isolated stack (evidence in
+  `docs/test-report/phase-19i-qa-hardening.md`); one fragile locator union fixed in the suite (not
+  an app regression).
 
 ---
 

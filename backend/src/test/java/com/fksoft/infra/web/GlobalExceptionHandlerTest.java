@@ -51,6 +51,14 @@ class GlobalExceptionHandlerTest {
         .andExpect(jsonPath("$.code").value("error.internal"));
   }
 
+  @Test
+  void mapsOptimisticLockConflictToConflictNotServerError() throws Exception {
+    mockMvc
+        .perform(get("/__test__/stale"))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.code").value("error.conflict"));
+  }
+
   /** Minimal controller used only to trigger the handlers under test. */
   @RestController
   static class SampleController {
@@ -63,6 +71,11 @@ class GlobalExceptionHandlerTest {
     @GetMapping("/__test__/boom")
     String boom() {
       throw new IllegalStateException("boom");
+    }
+
+    @GetMapping("/__test__/stale")
+    String stale() {
+      throw new org.springframework.orm.ObjectOptimisticLockingFailureException(Object.class, "id");
     }
   }
 

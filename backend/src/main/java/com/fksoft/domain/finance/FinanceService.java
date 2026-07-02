@@ -70,8 +70,14 @@ public class FinanceService implements LedgerDirectory {
     cadastroValidator.validate(CadastroType.ENTRY_TYPE, entryType);
     cadastroValidator.validate(CadastroType.PARTY_TYPE, party.type());
     String period = periodId.value();
+    // Lock the period row (same lock closePeriod takes) so a register racing a close serializes:
+    // either the entry lands before the seal, or it re-reads CLOSED and is rejected (BR4). Without
+    // the lock an entry could slip into a period sealed between the read and the insert
+    // (SPEC-0015 BR4-bis, Fase 19i/DL-0131).
     AccountingPeriod accountingPeriod =
-        periods.findById(period).orElseGet(() -> periods.save(AccountingPeriod.open(period)));
+        periods
+            .findByIdForUpdate(period)
+            .orElseGet(() -> periods.save(AccountingPeriod.open(period)));
     if (accountingPeriod.isClosed()) {
       throw new FinancePeriodClosedException();
     }
@@ -121,8 +127,12 @@ public class FinanceService implements LedgerDirectory {
       return; // already posted — idempotent no-op (DL-0041)
     }
     String period = YearMonth.from(occurredAt.atZone(ZoneOffset.UTC)).toString();
+    // Same period lock as register/closePeriod (BR4-bis, Fase 19i/DL-0131): a posting racing the
+    // monthly close serializes instead of slipping an entry into the just-sealed period.
     AccountingPeriod accountingPeriod =
-        periods.findById(period).orElseGet(() -> periods.save(AccountingPeriod.open(period)));
+        periods
+            .findByIdForUpdate(period)
+            .orElseGet(() -> periods.save(AccountingPeriod.open(period)));
     if (accountingPeriod.isClosed()) {
       log.info(
           "LedgerPostingSkippedClosedPeriod sourceRef={} chargeKind={} period={}",

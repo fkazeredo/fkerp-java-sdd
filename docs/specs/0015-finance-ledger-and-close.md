@@ -47,6 +47,10 @@ BR3  AccountingPeriod.status: OPEN → CLOSING → CLOSED. closePeriod(period) M
        (b) se canClose=false, **falhar** com finance.period.cannot-close listando as pendências (não
            fecha); (c) se canClose=true, marcar CLOSED e publicar PeriodClosed.
 BR4  Lançamento em período CLOSED MUST ser rejeitado (finance.period.closed); ajustes vão para período aberto.
+     REVISADO na Fase 19i (DL-0131): register/postFromCharge tomam o MESMO lock de linha do período
+     que o closePeriod — um lançamento correndo contra o fechamento serializa (ou entra antes do
+     selo, ou relê CLOSED e é rejeitado); antes do lock uma entrada podia escorregar para o período
+     recém-selado (regressão provada vermelho→verde).
 BR5  Eventos de negócio viram lançamentos (consumo idempotente). **ASSUMIDO (ver DL-0041):** consome-se
      o que já é publicado e órfão de lançamento — os eventos do Booking (SPEC-0010):
        CancellationCharged.PENALTY → RECEIVABLE/PENALTY;

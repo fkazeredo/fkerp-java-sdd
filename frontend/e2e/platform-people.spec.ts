@@ -26,14 +26,15 @@ test('an IT operator opens the Platform screen (certificate metadata, jobs) and 
   ).toBeVisible();
 
   // The certificate card shows metadata only (or the empty state when none is custodied) —
-  // never a private key/password.
+  // never a private key/password. `.first()` applies to the UNION: with a populated section next
+  // to another section's empty state both alternatives can match at once (strict mode).
   await expect(
-    page.getByTestId('platform-certificate').or(page.getByTestId('state-empty').first()),
+    page.getByTestId('platform-certificate').or(page.getByTestId('state-empty')).first(),
   ).toBeVisible();
 
   // The governed-job catalog renders (populated table or the shared empty state).
   await expect(
-    page.getByTestId('platform-jobs-table').or(page.getByTestId('state-empty').first()),
+    page.getByTestId('platform-jobs-table').or(page.getByTestId('state-empty')).first(),
   ).toBeVisible();
 
   // People screen — reachable by URL (backend read is authenticated).

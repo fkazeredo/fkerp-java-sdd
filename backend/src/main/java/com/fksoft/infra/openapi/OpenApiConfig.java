@@ -46,7 +46,7 @@ public class OpenApiConfig {
         .info(
             new Info()
                 .title("Acme Travel ERP API")
-                .version("0.40.0")
+                .version("0.41.0")
                 .description(
                     """
                     ERP Acme Travel — modular monolith (Spring Boot, hexagonal, Spring Modulith).
