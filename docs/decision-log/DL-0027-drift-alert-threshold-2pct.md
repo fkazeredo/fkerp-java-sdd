@@ -56,3 +56,11 @@ Sem um default defensável, o relatório `LiveExposure` não consegue sinalizar 
 Reversão **barata**: trocar o valor do default (ou alternar para teto absoluto) é mudar uma constante e o
 teste do limite; nenhuma migração nem mudança de contrato. Graduar para parâmetro governado real entra com
 a SPEC-0014.
+
+## Revisão — Fase 19h (2026-07-02)
+
+**REVISADA (ver DL-0130 / SPEC-0032 BR5).** O percentual de 2% e o caráter "alerta, não bloqueia"
+permanecem, mas a **base** do limiar muda: passa a ser a exposição **descoberta**
+(`unhedgedExposureBase` — a base BRL-no-freeze abatida da cobertura dos forwards OPEN por moeda),
+e o alerta exige descoberto > 0. Um livro totalmente coberto não alerta — a parcela travada com o
+banco não sofre drift econômico.

@@ -4,11 +4,13 @@ import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../../core/config/api';
 import { PageResponse } from '../../core/models/api.models';
 import {
+  ForwardContractView,
   FxPositionView,
   LiveExposureView,
   MarketRateResponse,
   PromoFxResultView,
   RecordMarketRateRequest,
+  RegisterForwardRequest,
 } from './exchange.models';
 
 /**
@@ -58,5 +60,30 @@ export class ExchangeDeskService {
     return this.http.get<PromoFxResultView>(`${API_BASE_URL}/exchange/reports/promo-fx`, {
       params,
     });
+  }
+
+  /** Lists FX forward contracts (SPEC-0032), newest first. */
+  listForwards(): Observable<ForwardContractView[]> {
+    return this.http.get<ForwardContractView[]>(`${API_BASE_URL}/exchange/forwards`);
+  }
+
+  /** Registers a forward (treasury hedge — Director/Finance). */
+  registerForward(request: RegisterForwardRequest): Observable<ForwardContractView> {
+    return this.http.post<ForwardContractView>(`${API_BASE_URL}/exchange/forwards`, request);
+  }
+
+  /** Settles a forward at the effective market rate. */
+  settleForward(id: string, effectiveRate: number): Observable<ForwardContractView> {
+    return this.http.post<ForwardContractView>(`${API_BASE_URL}/exchange/forwards/${id}/settle`, {
+      effectiveRate,
+    });
+  }
+
+  /** Cancels an OPEN forward (stops counting as coverage). */
+  cancelForward(id: string): Observable<ForwardContractView> {
+    return this.http.post<ForwardContractView>(
+      `${API_BASE_URL}/exchange/forwards/${id}/cancel`,
+      null,
+    );
   }
 }

@@ -1,12 +1,37 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.39.0.md`](0.39.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.40.0.md`](0.40.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.40.0 — Phase 19h · FX hedge: forward contracts
+
+**MINOR — new capability. Additive API changes only.**
+
+Treasury gains the instrument to **neutralize** the risk SPEC-0011 measures: the **forward
+contract**, registered manually, locking a future purchase rate for a foreign-currency notional.
+OPEN forwards count as **coverage**: the drift alert now watches only the **unhedged** exposure —
+a fully hedged book never alerts, because the leg locked with the bank carries no economic drift.
+New SPEC-0032; DL-0130 (revising DL-0027's alert base).
+
+- **`ForwardContract`** (migration **V40**): currency, notional, contract rate, trade/maturity
+  dates, counterparty; state machine `OPEN → SETTLED/CANCELLED`. Settling records the effective
+  rate and the realized result `(settledRate − contractRate) × notional`.
+- **Per-currency coverage in `LiveExposure`**: new `openForwards` and `unhedgedExposureBase`
+  fields; the 2% threshold now applies to the unhedged base.
+- **FX desk extended**: forwards book (register/settle/cancel) plus the unhedged exposure on the
+  same screen. Writes restricted to DIRECTOR/FINANCE (19a matrix).
+- New endpoints: `POST /api/exchange/forwards`, `POST /{id}/settle`, `POST /{id}/cancel`,
+  `GET /api/exchange/forwards?status=`.
+- The `HedgeAdvisor` DSS insight is consciously deferred to Phase 20c (real DSS models).
+- Tests: full lifecycle + 400/409; a full hedge silences the alert (unhedged base → 0.00); a
+  partial hedge scales the threshold proportionally and keeps alerting while drift still crosses.
 
 ---
 

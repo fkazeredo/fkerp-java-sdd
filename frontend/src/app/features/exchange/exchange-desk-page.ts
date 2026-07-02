@@ -13,6 +13,7 @@ import { FormLeaveGuard } from '../../core/guards/can-deactivate.guard';
 import { formatMoney } from '../../core/models/api.models';
 import { ScreenState, ScreenStateKind } from '../../shared/screen-state/screen-state';
 import {
+  ForwardContractView,
   FxPositionView,
   LiveExposureView,
   MarketRateResponse,
@@ -85,6 +86,7 @@ export class ExchangeDeskPage implements OnInit, FormLeaveGuard {
   ngOnInit(): void {
     this.loadExposure();
     this.loadRates();
+    this.loadForwards();
   }
 
   /** Whether the record-rate form holds unsaved input (SPEC-0026 BR9). */
@@ -180,5 +182,112 @@ export class ExchangeDeskPage implements OnInit, FormLeaveGuard {
         this.promoState.set('error');
       },
     });
+  }
+
+  // FX forwards — the treasury hedge (SPEC-0032, 19h). OPEN forwards reduce the unhedged
+  // exposure the drift alert watches.
+  readonly forwards = signal<ForwardContractView[]>([]);
+  readonly forwardsState = signal<'loading' | 'success' | 'error'>('loading');
+  readonly forwardsError = signal<string | null>(null);
+  readonly forwardActing = signal<string | null>(null);
+  fwCurrency = 'USD';
+  fwNotional: number | null = null;
+  fwRate: number | null = null;
+  fwTradeDate = '';
+  fwMaturityDate = '';
+  fwCounterparty = '';
+  fwSettleRate: number | null = null;
+  readonly registeringForward = signal(false);
+  readonly forwardFormError = signal<string | null>(null);
+
+  /** Loads the forwards book. */
+  loadForwards(): void {
+    this.forwardsState.set('loading');
+    this.deskService.listForwards().subscribe({
+      next: (list) => {
+        this.forwards.set(list);
+        this.forwardsState.set('success');
+      },
+      error: (error: ApiError) => {
+        this.forwardsError.set(error?.code ?? 'error.internal');
+        this.forwardsState.set('error');
+      },
+    });
+  }
+
+  /** Registers a forward, then reloads the book and the exposure (coverage changed). */
+  registerForward(): void {
+    if (this.fwNotional == null || this.fwRate == null || !this.fwTradeDate || !this.fwMaturityDate) {
+      return;
+    }
+    this.registeringForward.set(true);
+    this.forwardFormError.set(null);
+    this.deskService
+      .registerForward({
+        currency: this.fwCurrency,
+        notional: this.fwNotional,
+        contractRate: this.fwRate,
+        tradeDate: this.fwTradeDate,
+        maturityDate: this.fwMaturityDate,
+        counterparty: this.fwCounterparty,
+      })
+      .subscribe({
+        next: () => {
+          this.registeringForward.set(false);
+          this.fwNotional = null;
+          this.fwRate = null;
+          this.fwCounterparty = '';
+          this.loadForwards();
+          this.loadExposure();
+        },
+        error: (error: ApiError) => {
+          this.registeringForward.set(false);
+          this.forwardFormError.set(error?.code ?? 'error.internal');
+        },
+      });
+  }
+
+  /** Settles an OPEN forward at the effective rate, then reloads book + exposure. */
+  settleForward(forward: ForwardContractView): void {
+    if (this.fwSettleRate == null) {
+      return;
+    }
+    this.actOnForward(forward, this.deskService.settleForward(forward.id, this.fwSettleRate));
+  }
+
+  /** Cancels an OPEN forward (stops counting as coverage). */
+  cancelForward(forward: ForwardContractView): void {
+    this.actOnForward(forward, this.deskService.cancelForward(forward.id));
+  }
+
+  private actOnForward(
+    forward: ForwardContractView,
+    action: ReturnType<ExchangeDeskService['cancelForward']>,
+  ): void {
+    this.forwardActing.set(forward.id);
+    this.forwardFormError.set(null);
+    action.subscribe({
+      next: () => {
+        this.forwardActing.set(null);
+        this.loadForwards();
+        this.loadExposure();
+      },
+      error: (error: ApiError) => {
+        this.forwardActing.set(null);
+        this.forwardFormError.set(error?.code ?? 'error.internal');
+      },
+    });
+  }
+
+  /** PrimeNG Tag severity for a forward status. */
+  forwardSeverity(status: ForwardContractView['status']): 'info' | 'success' | 'secondary' {
+    switch (status) {
+      case 'OPEN':
+        return 'info';
+      case 'SETTLED':
+        return 'success';
+      default:
+        return 'secondary';
+    }
   }
 }

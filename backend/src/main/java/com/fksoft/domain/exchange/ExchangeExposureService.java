@@ -34,13 +34,17 @@ public class ExchangeExposureService {
   private static final BigDecimal DRIFT_ALERT_PCT = new BigDecimal("0.02");
 
   private final FxPositionRepository repository;
+  private final ForwardContractRepository forwardRepository;
   private final MarketRateProvider marketRateProvider;
   private final Clock clock;
   private final ApplicationEventPublisher events;
 
   /**
    * The book's live exposure: the aggregate of OPEN positions (subsidy + current drift, BR6) and
-   * the drift alert (BR9). Publishes {@code BookPositionDrifted} when the alert is on. Projection
+   * the drift alert (BR9). Fase 19h (SPEC-0032/DL-0130 — revisa a DL-0027): OPEN forward contracts
+   * count as <strong>coverage</strong>, so the alert threshold is computed over the
+   * <strong>unhedged</strong> exposure only — a fully hedged book never alerts on drift (the
+   * covered leg is locked). Publishes {@code BookPositionDrifted} when the alert is on. Projection
    * only.
    *
    * @return the live exposure read-model
@@ -52,17 +56,46 @@ public class ExchangeExposureService {
 
     BigDecimal subsidy = BigDecimal.ZERO;
     BigDecimal drift = BigDecimal.ZERO;
-    BigDecimal exposureBase = BigDecimal.ZERO;
+    // Per-currency foreign exposure and its BRL-at-freeze value, to apportion the hedge coverage.
+    java.util.Map<String, BigDecimal> foreignByCurrency = new java.util.HashMap<>();
+    java.util.Map<String, BigDecimal> baseBrlByCurrency = new java.util.HashMap<>();
     for (FxPosition position : open) {
       subsidy = subsidy.add(position.subsidyBrl());
       drift = drift.add(position.driftAt(currentMarketRate(position, asOf)));
-      exposureBase = exposureBase.add(position.exposureValueAtFreeze());
+      foreignByCurrency.merge(position.currency(), position.foreignAmount(), BigDecimal::add);
+      baseBrlByCurrency.merge(
+          position.currency(), position.exposureValueAtFreeze(), BigDecimal::add);
     }
     subsidy = subsidy.setScale(MONEY_SCALE, RoundingMode.HALF_UP);
     drift = drift.setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+
+    // Coverage (SPEC-0032): OPEN forward notionals per currency reduce the unhedged share; the
+    // BRL-at-freeze base of each currency is scaled by its uncovered fraction.
+    List<ForwardContract> forwards =
+        forwardRepository.findByStatusOrderByMaturityDateAsc(ForwardStatus.OPEN);
+    BigDecimal exposureBase = BigDecimal.ZERO;
+    BigDecimal unhedgedBase = BigDecimal.ZERO;
+    for (var entry : baseBrlByCurrency.entrySet()) {
+      String currency = entry.getKey();
+      BigDecimal baseBrl = entry.getValue();
+      BigDecimal foreign = foreignByCurrency.getOrDefault(currency, BigDecimal.ZERO);
+      BigDecimal hedged =
+          forwards.stream()
+              .filter(forward -> forward.currency().equals(currency))
+              .map(ForwardContract::notional)
+              .reduce(BigDecimal.ZERO, BigDecimal::add);
+      exposureBase = exposureBase.add(baseBrl);
+      if (foreign.signum() <= 0) {
+        continue;
+      }
+      BigDecimal uncoveredForeign = foreign.subtract(hedged).max(BigDecimal.ZERO);
+      BigDecimal uncoveredFraction = uncoveredForeign.divide(foreign, 8, RoundingMode.HALF_UP);
+      unhedgedBase = unhedgedBase.add(baseBrl.multiply(uncoveredFraction));
+    }
+    unhedgedBase = unhedgedBase.setScale(MONEY_SCALE, RoundingMode.HALF_UP);
     BigDecimal threshold =
-        exposureBase.multiply(DRIFT_ALERT_PCT).setScale(MONEY_SCALE, RoundingMode.HALF_UP);
-    boolean alert = drift.abs().compareTo(threshold) > 0;
+        unhedgedBase.multiply(DRIFT_ALERT_PCT).setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+    boolean alert = drift.abs().compareTo(threshold) > 0 && unhedgedBase.signum() > 0;
     BigDecimal total = subsidy.add(drift).setScale(MONEY_SCALE, RoundingMode.HALF_UP);
 
     if (alert) {
@@ -78,7 +111,9 @@ public class ExchangeExposureService {
         Money.of(drift, BOOK_CURRENCY),
         Money.of(total, BOOK_CURRENCY),
         Money.of(threshold, BOOK_CURRENCY),
-        alert);
+        alert,
+        forwards.size(),
+        Money.of(unhedgedBase, BOOK_CURRENCY));
   }
 
   /**

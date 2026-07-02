@@ -77,6 +77,8 @@ public final class ApiAuthorizationMatrix {
           // --- Director levers (DL-0082; OVERVIEW 3.4). The pinned sell rate is THE director
           // decision; the LGPD erasure is destructive (DL-0058) and equally directorial.
           Rule.roles(HttpMethod.POST, "/api/exchange/pinned-rates", "DIRECTOR"),
+          // FX forwards are treasury commitments (SPEC-0032/DL-0130): director or finance.
+          Rule.roles(HttpMethod.POST, "/api/exchange/forwards/**", "DIRECTOR", "FINANCE"),
           Rule.roles(HttpMethod.POST, "/api/commercial-policy/directives", "DIRECTOR"),
           Rule.roles(HttpMethod.POST, "/api/marketing/erasure", "DIRECTOR"),
           Rule.roles(HttpMethod.POST, "/api/commercial-policy/rules", "DIRECTOR", "POLICY_ADMIN"),

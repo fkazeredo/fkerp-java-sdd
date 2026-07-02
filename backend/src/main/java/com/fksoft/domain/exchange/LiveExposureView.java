@@ -14,8 +14,10 @@ import java.time.Instant;
  * @param accruedSubsidy the sum of the positions' subsidies (BRL)
  * @param markToMarketDrift the sum of the positions' current drifts (BRL)
  * @param totalExposure accruedSubsidy + markToMarketDrift (BRL)
- * @param driftThreshold the alert threshold in BRL (2% of the open foreign exposure)
- * @param driftAlert whether |markToMarketDrift| exceeded the threshold
+ * @param driftThreshold the alert threshold in BRL (2% of the UNHEDGED exposure — SPEC-0032)
+ * @param driftAlert whether |markToMarketDrift| exceeded the threshold (uncovered book only)
+ * @param openForwards the number of OPEN forward contracts counting as coverage (SPEC-0032)
+ * @param unhedgedExposureBase the BRL-at-freeze exposure NOT covered by forwards (threshold base)
  */
 public record LiveExposureView(
     Instant asOf,
@@ -24,4 +26,6 @@ public record LiveExposureView(
     Money markToMarketDrift,
     Money totalExposure,
     Money driftThreshold,
-    boolean driftAlert) {}
+    boolean driftAlert,
+    long openForwards,
+    Money unhedgedExposureBase) {}

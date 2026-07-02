@@ -56,6 +56,8 @@ BR8  ASSUMIDO (ver DL-0026): congelamento é global por par de moeda no v1; as p
      par/livro (sem escopo agência/produto).
 BR9  ASSUMIDO (ver DL-0027): limite de alerta de drift = |drift| > 2% da exposição estrangeira aberta
      do livro (Σ |foreignAmount × marketAtFreeze| das posições OPEN); alerta, não bloqueia.
+     REVISADO na Fase 19h (SPEC-0032 BR5 / DL-0130): a base do limiar passa a ser a exposição
+     DESCOBERTA (abatida a cobertura dos forwards OPEN por moeda); livro 100% coberto não alerta.
 BR10 ASSUMIDO (ver DL-0025): taxa de mercado entra por porta MarketRateProvider + registro manual de
      contingência no v1 (feed externo = adapter/ACL futuro).
 BR11 ASSUMIDO (ver DL-0028): a FxPosition é dirigida por Reconciliation (que segura a proveniência

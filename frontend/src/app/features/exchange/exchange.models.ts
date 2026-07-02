@@ -55,7 +55,7 @@ export interface FxPositionView {
   openedAt: string;
 }
 
-/** The book's live FX exposure (SPEC-0011 BR6). */
+/** The book's live FX exposure (SPEC-0011 BR6; coverage fields from SPEC-0032/19h). */
 export interface LiveExposureView {
   asOf: string;
   openPositions: number;
@@ -64,6 +64,38 @@ export interface LiveExposureView {
   totalExposure: Money;
   driftThreshold: Money;
   driftAlert: boolean;
+  openForwards: number;
+  unhedgedExposureBase: Money;
+}
+
+/** Lifecycle of an FX forward contract (SPEC-0032). */
+export type ForwardStatus = 'OPEN' | 'SETTLED' | 'CANCELLED';
+
+/** An FX forward contract — the treasury hedge instrument (SPEC-0032, 19h). */
+export interface ForwardContractView {
+  id: string;
+  currency: string;
+  notional: number;
+  contractRate: number;
+  tradeDate: string;
+  maturityDate: string;
+  counterparty: string;
+  status: ForwardStatus;
+  settledRate: number | null;
+  settlementResultBrl: number | null;
+  settledAt: string | null;
+  cancelledAt: string | null;
+  createdAt: string;
+}
+
+/** Body for `POST /api/exchange/forwards`. */
+export interface RegisterForwardRequest {
+  currency: string;
+  notional: number;
+  contractRate: number;
+  tradeDate: string;
+  maturityDate: string;
+  counterparty: string;
 }
 
 /** The FX promo result for a period (SPEC-0011, OVERVIEW 8.2-C). */
