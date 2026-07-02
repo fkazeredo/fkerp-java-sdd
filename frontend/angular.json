@@ -77,9 +77,9 @@
             "coverage": true,
             "coverageReporters": ["text-summary", "html", "lcov"],
             "coverageThresholds": {
-              "statements": 65,
-              "lines": 65,
-              "functions": 48,
+              "statements": 70,
+              "lines": 75,
+              "functions": 49,
               "branches": 55
             }
           }

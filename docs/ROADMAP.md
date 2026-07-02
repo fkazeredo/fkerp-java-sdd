@@ -322,7 +322,7 @@ Boot 4.1.0) ✅ `0.38.0` · **19g** multi-instância/HA (JWK persistido, AS/sess
 ADR-0002 → ADR-0020) ✅ `0.39.0` · **19h** hedge cambial (`ForwardContract`, cobertura
 hedged/unhedged, alerta sobre o descoberto; `HedgeAdvisor` adiado à 20c — DL-0130) ✅ `0.40.0` ·
 **19i** QA hardening
-(concorrência, PIT, jqwik, branch gates, timezone) · **19j** aderência à arquitetura & design de
+(concorrência, PIT, jqwik, branch gates, timezone) ✅ `0.41.0` · **19j** aderência à arquitetura & design de
 código (auditoria doc×código + fitness functions novas + endpoint agregado de dashboard) ·
 **19k** CI/CD supply-chain (CodeQL/Dependabot/imagem GHCR) + observabilidade (conserto do scrape,
 alerting) · **19l** postura de produção (perfil prod, TLS/reverse proxy, backup/DR, checklist de

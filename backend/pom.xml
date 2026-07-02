@@ -13,7 +13,7 @@
 
   <groupId>com.fksoft</groupId>
   <artifactId>acme-travel-erp</artifactId>
-  <version>0.40.0</version>
+  <version>0.41.0</version>
   <name>acme-travel-erp</name>
   <description>ERP Acme Travel — modular monolith (manual commercial core + minimal compliance)</description>
 
@@ -32,6 +32,13 @@
          verify. A defensible floor the current code already passes — a real drop below it FAILS the
          build (BR2). Not a cosmetic 100% bar (testing.md: coverage is a signal, not the goal). -->
     <jacoco.min.instruction.ratio>0.80</jacoco.min.instruction.ratio>
+    <!-- Fase 19i (DL-0132): BRANCH floor added next to the INSTRUCTION one — branches are where
+         missed else/error paths hide. Current coverage is ~0.69; the floor is the defensible
+         non-regression bar below it. -->
+    <jacoco.min.branch.ratio>0.65</jacoco.min.branch.ratio>
+    <jqwik.version>1.9.2</jqwik.version>
+    <pitest.version>1.17.3</pitest.version>
+    <pitest-junit5.version>1.2.2</pitest-junit5.version>
   </properties>
 
   <dependencyManagement>
@@ -163,6 +170,14 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- Fase 19i (DL-0132): property-based testing for the money-math invariants (Money,
+         InstallmentPlan cent distribution) — jqwik runs on the JUnit platform under Surefire. -->
+    <dependency>
+      <groupId>net.jqwik</groupId>
+      <artifactId>jqwik</artifactId>
+      <version>${jqwik.version}</version>
       <scope>test</scope>
     </dependency>
     <!-- Phase 14 (ADR 0017/DL-0108): Spring Boot 4 moved TestRestTemplate to spring-boot-resttestclient and no
@@ -394,6 +409,11 @@
                       <value>COVEREDRATIO</value>
                       <minimum>${jacoco.min.instruction.ratio}</minimum>
                     </limit>
+                    <limit>
+                      <counter>BRANCH</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>${jacoco.min.branch.ratio}</minimum>
+                    </limit>
                   </limits>
                 </rule>
               </rules>
@@ -403,4 +423,60 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <!-- Fase 19i (DL-0132): mutation testing (PIT) over the money-math domain packages, run by its
+         own CI job via `./mvnw -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage`.
+         Deliberately scoped to the pure domain classes exercised by the fast unit/property tests in
+         the same packages (no Spring context, no Testcontainers per mutant) so the run stays in
+         minutes. The threshold FAILS the run when the killed-mutant score drops below the floor —
+         coverage says a line ran; mutation says the assertions would notice it being wrong. -->
+    <profile>
+      <id>mutation</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-maven</artifactId>
+            <version>${pitest.version}</version>
+            <dependencies>
+              <dependency>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-junit5-plugin</artifactId>
+                <version>${pitest-junit5.version}</version>
+              </dependency>
+            </dependencies>
+            <configuration>
+              <targetClasses>
+                <param>com.fksoft.domain.money.*</param>
+                <param>com.fksoft.domain.payout.InstallmentPlan</param>
+                <param>com.fksoft.domain.payout.Payout</param>
+                <param>com.fksoft.domain.payout.PayoutInstallment</param>
+                <param>com.fksoft.domain.commissioning.*</param>
+                <param>com.fksoft.domain.exchange.FxPosition</param>
+                <param>com.fksoft.domain.exchange.ForwardContract</param>
+                <param>com.fksoft.domain.exchange.CurrencyPair</param>
+                <param>com.fksoft.domain.finance.LedgerEntry</param>
+                <param>com.fksoft.domain.finance.AccountingPeriod</param>
+              </targetClasses>
+              <targetTests>
+                <param>com.fksoft.domain.money.*</param>
+                <param>com.fksoft.domain.payout.*</param>
+                <param>com.fksoft.domain.commissioning.*</param>
+                <param>com.fksoft.domain.exchange.*</param>
+                <param>com.fksoft.domain.finance.*</param>
+                <param>com.fksoft.domain.aftersales.*</param>
+              </targetTests>
+              <excludedTestClasses>
+                <param>com.fksoft.**.*IntegrationTest</param>
+              </excludedTestClasses>
+              <mutationThreshold>60</mutationThreshold>
+              <timestampedReports>false</timestampedReports>
+              <failWhenNoMutations>true</failWhenNoMutations>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

@@ -1,12 +1,13 @@
 # 0028 - Qualidade & E2E (Playwright em stack isolada + cobertura JaCoCo/Vitest + caminhos tristes + job de E2E no CI)
 
 Status: Approved
-Fase: 12
+Fase: 12 · **estendida na Fase 19i (QA hardening — BR8–BR11)**
 Related ADRs: 0015 (SemVer — esta fase é PATCH: tooling de teste/CI/cobertura, sem mudar contrato
 nem feature de produto), 0012 (camadas — testes e tooling vivem fora do domínio), 0014 (módulos)
 Related DLs: DL-0099 (limiar de cobertura backend JaCoCo), DL-0100 (limiar de cobertura frontend
 Vitest), DL-0101 (isolamento do stack E2E — Postgres efêmero, porta 4201, teardown limpa o volume),
-DL-0102 (Playwright + jornadas/caminhos tristes + job de E2E no CI)
+DL-0102 (Playwright + jornadas/caminhos tristes + job de E2E no CI), **DL-0131 (concorrência:
+lock do período no register/post + conflito otimista→409), DL-0132 (PIT + jqwik + pisos BRANCH)**
 
 ## Goal
 
@@ -130,6 +131,37 @@ ponta); **E2E só para fluxos críticos**.
 - **BR7 — Versão (PATCH).** A entrega é tooling de teste/CI/cobertura, sem mudar contrato nem feature de
   produto → **PATCH** `0.22.1` (ADR 0015). A OpenAPI acompanha a versão do pom.
 
+### Business Rules — Fase 19i (QA hardening)
+
+- **BR8 — Mutation testing como portão (gradua o "Future" desta spec).** Profile Maven `mutation`
+  roda o **PIT** sobre as classes de matemática de dinheiro (`domain.money`, `InstallmentPlan`/
+  `Payout`/`PayoutInstallment`, `domain.commissioning`, `FxPosition`/`ForwardContract`/
+  `CurrencyPair`, `LedgerEntry`/`AccountingPeriod`) usando **só os testes unitários/propriedade
+  rápidos** (sem Spring/Testcontainers por mutante). `mutationThreshold=60` **quebra a execução**
+  abaixo do piso; **job próprio no CI** (`ci.yml` → `mutation`) com relatório como artefato.
+  Cobertura diz que a linha rodou; mutação diz que as asserções percebem quando ela erra.
+  ASSUMIDO (ver DL-0132; primeira medição: 185 mutantes, 126 mortos = 68%, test strength 89%).
+- **BR9 — Conflito otimista é 409, não 500.** Uma escrita que perde a corrida do `@Version`
+  (`OptimisticLockingFailureException`) responde **409 `error.conflict`** (i18n pt/en) pelo
+  handler global — o cliente recarrega e tenta de novo. Coberto por teste do handler.
+- **BR10 — Invariantes de concorrência testados de verdade.** (a) N threads disputando
+  `beginInstallmentExecution` do payout começam **exatamente uma** execução (lock pessimista;
+  perdedores recebem a rejeição de domínio); (b) um `register`/`postFromCharge` correndo contra o
+  fechamento do período **serializa no lock da linha do período** — ou entra antes do selo, ou
+  relê CLOSED e é rejeitado (SPEC-0015 BR4); a regressão provou o furo antes do lock (entrada
+  escorregava para o período selado) e o fix fecha (teste vermelho→verde, DL-0131).
+- **BR11 — Blindagem de timezone.** O período contábil deriva de `occurredAt` **em UTC** (nunca do
+  fuso default da JVM — provado com default São Paulo e Moscou nos limites de mês) e a janela de
+  SLA de 72h é aritmética exata de instantes (vira no segundo seguinte ao deadline, sob qualquer
+  fuso default). Propriedades de `Money` (normalização escala 2 HALF_UP, add/subtract inversos,
+  identidade do zero, moedas não misturam) e da distribuição de centavos do `InstallmentPlan`
+  (soma exata ao centavo para qualquer total×parcelas) verificadas por **jqwik** (1000 casos por
+  propriedade).
+- **BR12 — Pisos elevados.** JaCoCo ganha piso de **BRANCH ≥ 0,65** (medido 0,689) ao lado do de
+  INSTRUCTION; Vitest sobe para statements 70 / lines 75 / functions 49 (branches permanece 55 —
+  folga real de 0,67pp; subir seria barra cosmética). Pisos continuam sendo o não-regresso
+  defensável que o código atual passa (BR2).
+
 ## Acceptance Criteria (jornadas E2E + portões de cobertura)
 
 > Cada AC de E2E é um spec do Playwright; cada AC de cobertura é uma regra de `check` que quebra o build.
@@ -187,6 +219,7 @@ negócio que esta fase tocaria já estão fechadas nas specs das fases anteriore
 ## Out of Scope / Future
 
 - Multi-browser, mobile viewport, visual regression (Playwright screenshots comparados).
-- Mutation testing (PIT) e elevação incremental do limiar de cobertura.
+- ~~Mutation testing (PIT) e elevação incremental do limiar de cobertura.~~ → **GRADUADO na Fase
+  19i** (BR8/BR12, DL-0132).
 - Testes de carga/performance/segurança automatizados.
 - Tracing distribuído nos testes (não há saltos de rede num monólito modular).

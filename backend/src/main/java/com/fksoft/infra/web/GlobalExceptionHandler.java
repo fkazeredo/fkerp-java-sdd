@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -100,6 +101,20 @@ public class GlobalExceptionHandler {
     String message = resolve("resource.not-found", new Object[0]);
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
         .body(ApiErrorResponse.of("resource.not-found", message));
+  }
+
+  /**
+   * A lost optimistic-lock race ({@code @Version} conflict — two writers picked up the same state
+   * and the second save is stale) maps to {@code 409}: the caller should reload and retry, not
+   * receive a {@code 500} (SPEC-0028 BR9, Fase 19i).
+   */
+  @ExceptionHandler(OptimisticLockingFailureException.class)
+  public ResponseEntity<ApiErrorResponse> handleOptimisticConflict(
+      OptimisticLockingFailureException ex) {
+    String message = resolve("error.conflict", new Object[0]);
+    log.info("Optimistic lock conflict: {}", ex.getMessage());
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .body(ApiErrorResponse.of("error.conflict", message));
   }
 
   /** Last-resort handler: never leaks internal details; logs the cause for diagnosis. */
