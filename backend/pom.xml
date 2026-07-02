@@ -7,20 +7,20 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>4.0.7</version>
+    <version>4.1.0</version>
     <relativePath/>
   </parent>
 
   <groupId>com.fksoft</groupId>
   <artifactId>acme-travel-erp</artifactId>
-  <version>0.37.0</version>
+  <version>0.38.0</version>
   <name>acme-travel-erp</name>
   <description>ERP Acme Travel — modular monolith (manual commercial core + minimal compliance)</description>
 
   <properties>
     <java.version>21</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <spring-modulith.version>2.0.7</spring-modulith.version>
+    <spring-modulith.version>2.1.0</spring-modulith.version>
     <springdoc.version>3.0.3</springdoc.version>
     <testcontainers.version>1.21.4</testcontainers.version>
     <archunit.version>1.4.2</archunit.version>
@@ -56,14 +56,11 @@
   </dependencyManagement>
 
   <dependencies>
-    <!-- Phase 14 (ADR 0017/DL-0108): classic compatibility starter restores the pre-4.0 classpath
-         (Jackson 2 default, classic starter aggregation). It keeps the 22 production uses of Jackson 2
-         (jsonb codecs, integration adapters) unchanged on Boot 4 — production serialization is
-         identical, no contract change. Migrating production to Jackson 3 is tracked debt (DL-0108). -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-classic</artifactId>
-    </dependency>
+    <!-- Phase 19f (DL-0128): the Jackson-2 compatibility bridge (spring-boot-starter-classic) was
+         REMOVED. Production now runs on Jackson 3 (tools.jackson), the Spring Boot 4 default — the
+         tracked debt of DL-0108 is paid. JSON is byte-identical (the OpenAPI snapshot drift gate and
+         the Fase-18 contract invariant prove it); the annotations package (com.fasterxml.jackson.
+         annotation) is unchanged in Jackson 3, so DTO annotations stay valid. -->
 
     <!-- Web / persistence / validation / actuator -->
     <dependency>
@@ -119,10 +116,14 @@
       <artifactId>spring-security-oauth2-jose</artifactId>
     </dependency>
 
-    <!-- Migrations -->
+    <!-- Migrations. Boot 4 modularized auto-configuration (DL-0128): the removed
+         spring-boot-starter-classic used to bundle every auto-config module, incl. Flyway's. With
+         plain flyway-core Flyway is no longer auto-configured, so we use the modular
+         spring-boot-starter-flyway (brings flyway-core + its auto-config). flyway-database-postgresql
+         stays for Postgres 16 support. -->
     <dependency>
-      <groupId>org.flywaydb</groupId>
-      <artifactId>flyway-core</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-flyway</artifactId>
     </dependency>
     <dependency>
       <groupId>org.flywaydb</groupId>

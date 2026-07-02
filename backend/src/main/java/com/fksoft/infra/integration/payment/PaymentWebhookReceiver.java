@@ -1,6 +1,5 @@
 package com.fksoft.infra.integration.payment;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fksoft.domain.payout.PaymentOutcome;
 import com.fksoft.domain.payout.PayoutWebhookSignatureInvalidException;
 import com.fksoft.infra.integration.payment.PayoutExecutionService.WebhookConfirmation;
@@ -10,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * The Anti-Corruption Layer of the payment webhook (ADR 0006; DL-0048): it verifies the HMAC
@@ -94,10 +94,9 @@ public class PaymentWebhookReceiver {
   private PaymentWebhookPayload parse(byte[] rawBody) {
     try {
       return objectMapper.readValue(rawBody, PaymentWebhookPayload.class);
-    } catch (java.io.IOException malformed) {
+    } catch (tools.jackson.core.JacksonException malformed) {
       // A malformed body that passed the signature is a provider contract error; reject as
-      // 401-class
-      // since we cannot trust it. (The mock always sends a well-formed body.)
+      // 401-class since we cannot trust it. (The mock always sends a well-formed body.)
       throw new PayoutWebhookSignatureInvalidException();
     }
   }

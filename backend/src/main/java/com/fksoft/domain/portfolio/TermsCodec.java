@@ -1,10 +1,10 @@
 package com.fksoft.domain.portfolio;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import java.util.TreeMap;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Serializes the reference commercial {@code terms} of a representation contract to/from the {@code
@@ -27,7 +27,7 @@ final class TermsCodec {
     }
     try {
       return MAPPER.writeValueAsString(new TreeMap<>(terms));
-    } catch (JsonProcessingException badJson) {
+    } catch (JacksonException badJson) {
       throw new RepresentationContractInvalidException();
     }
   }
@@ -39,7 +39,7 @@ final class TermsCodec {
     }
     try {
       return MAPPER.readValue(json, MAP_TYPE);
-    } catch (JsonProcessingException badJson) {
+    } catch (JacksonException badJson) {
       throw new RepresentationContractInvalidException();
     }
   }

@@ -1,6 +1,5 @@
 package com.fksoft.infra.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fksoft.infra.web.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Returns the stable {@link ApiErrorResponse} with a <strong>generic</strong> {@code 401} when a

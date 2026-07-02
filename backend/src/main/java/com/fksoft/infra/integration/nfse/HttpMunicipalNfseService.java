@@ -1,6 +1,5 @@
 package com.fksoft.infra.integration.nfse;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fksoft.domain.billing.CertificateSigner;
 import com.fksoft.domain.billing.NfseCancellation;
 import com.fksoft.domain.billing.NfseFailureClass;
@@ -29,6 +28,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * The <strong>real HTTP</strong> Anti-Corruption Layer adapter for the municipal NFS-e webservice
@@ -205,7 +205,7 @@ public class HttpMunicipalNfseService implements NfseGateway {
   private String serialize(Object body) {
     try {
       return objectMapper.writeValueAsString(body);
-    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+    } catch (tools.jackson.core.JacksonException e) {
       throw new NfseTransmissionException(NfseFailureClass.UNAVAILABLE, "cannot serialize request");
     }
   }
@@ -213,7 +213,7 @@ public class HttpMunicipalNfseService implements NfseGateway {
   private <T> T deserialize(String responseBody, Class<T> type) {
     try {
       return objectMapper.readValue(responseBody, type);
-    } catch (IOException malformed) {
+    } catch (tools.jackson.core.JacksonException malformed) {
       throw new NfseTransmissionException(
           NfseFailureClass.UNAVAILABLE, "malformed municipal response");
     }

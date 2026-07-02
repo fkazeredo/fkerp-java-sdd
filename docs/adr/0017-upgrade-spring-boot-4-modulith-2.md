@@ -1,9 +1,12 @@
-# ADR 0017: Upgrade da stack para Spring Boot 4.0 (Spring Framework 7, Spring Modulith 2.0)
+# ADR 0017: Upgrade da stack para Spring Boot 4 (Spring Framework 7, Spring Modulith 2)
 
 ## Status
 
-Accepted (Fase 14 — ADR + chore de infra; substitui a decisão de versão da DL-0002; sem mudança de
-contrato)
+Accepted (Fase 14 — Boot 4.0.7; substitui a decisão de versão da DL-0002).
+**ATUALIZADO na Fase 19f (2026-07-02, DL-0128): Spring Boot 4.0.7 → 4.1.0, Spring Modulith 2.0.7 →
+2.1.0, e a ponte `spring-boot-starter-classic` REMOVIDA — produção migrada para Jackson 3
+(`tools.jackson`), quitando o débito da DL-0108. Decisão do dono; sem mudança de contrato (provado
+pelo snapshot OpenAPI + invariante de contrato + suíte).**
 
 ## Context
 

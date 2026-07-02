@@ -3,7 +3,6 @@ package com.fksoft.infra.integration.quotationsite;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.sourcing.IntegrationPayloadInvalidException;
 import com.fksoft.domain.sourcing.IntegrationSignatureInvalidException;
@@ -14,6 +13,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Unit tests for the ACL translation (SPEC-0009 BR6): the external payload is verified and
