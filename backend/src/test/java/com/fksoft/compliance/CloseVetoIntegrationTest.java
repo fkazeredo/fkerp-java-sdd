@@ -6,10 +6,10 @@ import com.fksoft.application.api.dto.AttachDocumentRequest;
 import com.fksoft.application.api.dto.CreateLedgerEntryRequest;
 import com.fksoft.application.api.dto.CreateLedgerEntryRequest.PartyRequest;
 import com.fksoft.domain.compliance.DocumentView;
-import com.fksoft.domain.finance.EntryType;
+import com.fksoft.domain.finance.EntryTypeCodes;
 import com.fksoft.domain.finance.LedgerDirection;
 import com.fksoft.domain.finance.LedgerEntryView;
-import com.fksoft.domain.finance.PartyType;
+import com.fksoft.domain.finance.PartyTypeCodes;
 import com.fksoft.domain.finance.PeriodStatus;
 import com.fksoft.domain.finance.PeriodView;
 import com.fksoft.domain.money.Money;
@@ -91,9 +91,9 @@ class CloseVetoIntegrationTest extends AbstractPostgresIntegrationTest {
                 "/api/finance/entries",
                 new CreateLedgerEntryRequest(
                     LedgerDirection.RECEIVABLE,
-                    new PartyRequest("ag-1", PartyType.AGENCY),
+                    new PartyRequest("ag-1", PartyTypeCodes.AGENCY),
                     Money.of(new BigDecimal("2700.00"), "BRL"),
-                    EntryType.COMMISSION_RECEIVABLE,
+                    EntryTypeCodes.COMMISSION_RECEIVABLE,
                     period),
                 LedgerEntryView.class)
             .getBody();

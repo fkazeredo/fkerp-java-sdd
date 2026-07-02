@@ -21,14 +21,14 @@ class SupportCaseTest {
   private static final Instant FIRST_RESPONSE_DUE = OPENED.plus(Duration.ofHours(24));
   private static final Instant DUE = OPENED.plus(Duration.ofHours(72));
 
-  private SupportCase newCase(SupportCaseType type) {
+  private SupportCase newCase(String type) {
     return SupportCase.open(
         UUID.randomUUID().toString(), type, "summary", FIRST_RESPONSE_DUE, DUE, OPENED, "agent");
   }
 
   @Test
   void opensInOpenStatusWithTheGivenDeadlines() {
-    SupportCase supportCase = newCase(SupportCaseType.COMPLAINT);
+    SupportCase supportCase = newCase(SupportCaseTypeCodes.COMPLAINT);
     assertThat(supportCase.status()).isEqualTo(SupportCaseStatus.OPEN);
     assertThat(supportCase.dueAt()).isEqualTo(DUE);
     assertThat(supportCase.isBreached()).isFalse();
@@ -41,13 +41,19 @@ class SupportCaseTest {
     assertThatThrownBy(
             () ->
                 SupportCase.open(
-                    "  ", SupportCaseType.INFO, null, FIRST_RESPONSE_DUE, DUE, OPENED, "agent"))
+                    "  ",
+                    SupportCaseTypeCodes.INFO,
+                    null,
+                    FIRST_RESPONSE_DUE,
+                    DUE,
+                    OPENED,
+                    "agent"))
         .isInstanceOf(SupportCaseInvalidException.class);
   }
 
   @Test
   void walksTheValidLifecycle() {
-    SupportCase supportCase = newCase(SupportCaseType.CHANGE_REQUEST);
+    SupportCase supportCase = newCase(SupportCaseTypeCodes.CHANGE_REQUEST);
     supportCase.transitionTo(SupportCaseStatus.IN_PROGRESS, OPENED.plusSeconds(60), "agent");
     supportCase.transitionTo(SupportCaseStatus.WAITING, OPENED.plusSeconds(120), "agent");
     supportCase.transitionTo(SupportCaseStatus.IN_PROGRESS, OPENED.plusSeconds(180), "agent");
@@ -56,7 +62,7 @@ class SupportCaseTest {
 
   @Test
   void rejectsAnInvalidTransitionWithTheSpecificException() {
-    SupportCase supportCase = newCase(SupportCaseType.INFO);
+    SupportCase supportCase = newCase(SupportCaseTypeCodes.INFO);
     assertThatThrownBy(
             () ->
                 supportCase.transitionTo(SupportCaseStatus.CLOSED, OPENED.plusSeconds(1), "agent"))
@@ -66,9 +72,9 @@ class SupportCaseTest {
 
   @Test
   void reopeningFromResolvedIncrementsTheReopenCountAndClearsResolution() {
-    SupportCase supportCase = newCase(SupportCaseType.COMPLAINT);
+    SupportCase supportCase = newCase(SupportCaseTypeCodes.COMPLAINT);
     supportCase.resolve(
-        CaseResolution.RESOLVED_NO_ACTION, null, null, null, OPENED.plusSeconds(60), "agent");
+        CaseResolutionCodes.RESOLVED_NO_ACTION, null, null, null, OPENED.plusSeconds(60), "agent");
     assertThat(supportCase.status()).isEqualTo(SupportCaseStatus.RESOLVED);
 
     supportCase.transitionTo(SupportCaseStatus.IN_PROGRESS, OPENED.plusSeconds(120), "agent");
@@ -79,11 +85,11 @@ class SupportCaseTest {
 
   @Test
   void accumulatesCostToServeFromHandlingAndRefund() {
-    SupportCase supportCase = newCase(SupportCaseType.REFUND_REQUEST);
+    SupportCase supportCase = newCase(SupportCaseTypeCodes.REFUND_REQUEST);
     supportCase.accrueCost(
         Money.of(new BigDecimal("15.00"), "BRL"), OPENED.plusSeconds(30), "agent");
     supportCase.resolve(
-        CaseResolution.REFUND_APPROVED,
+        CaseResolutionCodes.REFUND_APPROVED,
         Money.of(new BigDecimal("5.00"), "BRL"),
         Money.of(new BigDecimal("480.00"), "BRL"),
         UUID.randomUUID(),
@@ -100,7 +106,7 @@ class SupportCaseTest {
 
   @Test
   void marksBreachOnlyWhenDuePassedAndNotTerminalAndIdempotently() {
-    SupportCase supportCase = newCase(SupportCaseType.REFUND_REQUEST);
+    SupportCase supportCase = newCase(SupportCaseTypeCodes.REFUND_REQUEST);
     // Pick it up so the governing deadline is resolution (DUE), not first response.
     supportCase.transitionTo(SupportCaseStatus.IN_PROGRESS, OPENED.plusSeconds(1), "agent");
 
@@ -118,7 +124,7 @@ class SupportCaseTest {
 
   @Test
   void breachesTheFirstResponseDeadlineWhileStillOpen() {
-    SupportCase supportCase = newCase(SupportCaseType.COMPLAINT);
+    SupportCase supportCase = newCase(SupportCaseTypeCodes.COMPLAINT);
     // While OPEN, the effective deadline is the earlier first-response one (24h), not resolution.
     assertThat(supportCase.effectiveBreachDeadline()).isEqualTo(FIRST_RESPONSE_DUE);
 
@@ -129,7 +135,7 @@ class SupportCaseTest {
 
   @Test
   void oncePickedUpTheEffectiveDeadlineIsResolution() {
-    SupportCase supportCase = newCase(SupportCaseType.COMPLAINT);
+    SupportCase supportCase = newCase(SupportCaseTypeCodes.COMPLAINT);
     supportCase.transitionTo(SupportCaseStatus.IN_PROGRESS, OPENED.plusSeconds(60), "agent");
     // No longer OPEN → first response was given; the effective deadline is resolution (72h).
     assertThat(supportCase.effectiveBreachDeadline()).isEqualTo(DUE);
@@ -139,9 +145,9 @@ class SupportCaseTest {
 
   @Test
   void doesNotMarkBreachOnAResolvedCase() {
-    SupportCase supportCase = newCase(SupportCaseType.COMPLAINT);
+    SupportCase supportCase = newCase(SupportCaseTypeCodes.COMPLAINT);
     supportCase.resolve(
-        CaseResolution.RESOLVED_NO_ACTION, null, null, null, OPENED.plusSeconds(60), "agent");
+        CaseResolutionCodes.RESOLVED_NO_ACTION, null, null, null, OPENED.plusSeconds(60), "agent");
     assertThat(supportCase.markBreachedIfDue(DUE.plusSeconds(1))).isFalse();
     assertThat(supportCase.isBreached()).isFalse();
   }

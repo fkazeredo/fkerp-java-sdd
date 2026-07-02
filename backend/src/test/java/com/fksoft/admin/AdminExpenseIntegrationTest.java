@@ -79,7 +79,7 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
     assertThat(expense.requiredDocuments()).containsExactly("UTILITY_BILL");
     var entry = financeService.getEntry(expense.financeEntryId());
     assertThat(entry.direction()).isEqualTo(LedgerDirection.PAYABLE);
-    assertThat(entry.entryType().name()).isEqualTo("UTILITY_EXPENSE");
+    assertThat(entry.entryType()).isEqualTo("UTILITY_EXPENSE");
     assertThat(entry.status()).isEqualTo(EntryStatus.PROVISIONAL);
     assertThat(entry.period()).isEqualTo(PERIOD);
 
@@ -100,8 +100,7 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
                 software.id(), PERIOD, Money.of(new BigDecimal("199.00"), "BRL"), "SERVICE"),
             "admin");
     assertThat(service.requiredDocuments()).containsExactly("NFSE");
-    assertThat(financeService.getEntry(service.financeEntryId()).entryType().name())
-        .isEqualTo("SERVICE");
+    assertThat(financeService.getEntry(service.financeEntryId()).entryType()).isEqualTo("SERVICE");
 
     AdminSupplierView person = supplier("SERVICE");
     AdminExpenseView autonomous =
@@ -113,7 +112,7 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
                 "AUTONOMOUS_SERVICE"),
             "admin");
     assertThat(autonomous.requiredDocuments()).containsExactly("RPA");
-    assertThat(financeService.getEntry(autonomous.financeEntryId()).entryType().name())
+    assertThat(financeService.getEntry(autonomous.financeEntryId()).entryType())
         .isEqualTo("AUTONOMOUS_SERVICE");
   }
 
@@ -126,7 +125,7 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
                 other.id(), PERIOD, Money.of(new BigDecimal("75.00"), "BRL"), "OTHER"),
             "admin");
     assertThat(expense.requiredDocuments()).isEmpty();
-    assertThat(financeService.getEntry(expense.financeEntryId()).entryType().name())
+    assertThat(financeService.getEntry(expense.financeEntryId()).entryType())
         .isEqualTo("OTHER_EXPENSE");
   }
 

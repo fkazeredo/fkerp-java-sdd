@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.payout.CreatePayoutCommand;
 import com.fksoft.domain.payout.Payee;
-import com.fksoft.domain.payout.PayeeType;
+import com.fksoft.domain.payout.PayeeTypeCodes;
 import com.fksoft.domain.payout.PaymentOutcome;
-import com.fksoft.domain.payout.PayoutKind;
+import com.fksoft.domain.payout.PayoutKindCodes;
 import com.fksoft.domain.payout.PayoutService;
 import com.fksoft.domain.payout.PayoutStatus;
 import com.fksoft.domain.payout.PayoutView;
@@ -115,8 +115,8 @@ class PayoutExecutionWebhookIntegrationTest extends AbstractPostgresIntegrationT
   private PayoutView createAgentCommission(BigDecimal amount) {
     return payoutService.create(
         new CreatePayoutCommand(
-            PayoutKind.AGENT_COMMISSION,
-            new Payee("ag-1", PayeeType.AGENT),
+            PayoutKindCodes.AGENT_COMMISSION,
+            new Payee("ag-1", PayeeTypeCodes.AGENT),
             null,
             null,
             Money.of(amount, "BRL"),

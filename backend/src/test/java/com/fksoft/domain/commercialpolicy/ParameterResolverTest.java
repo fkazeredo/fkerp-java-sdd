@@ -173,7 +173,7 @@ class ParameterResolverTest {
         layer,
         scope,
         value,
-        ParameterValueType.PERCENT,
+        ParameterValueTypeCodes.PERCENT,
         validFrom,
         validUntil,
         "tester",

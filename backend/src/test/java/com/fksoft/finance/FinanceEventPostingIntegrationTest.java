@@ -9,7 +9,7 @@ import com.fksoft.domain.booking.ChargeKindCodes;
 import com.fksoft.domain.booking.CostBearer;
 import com.fksoft.domain.booking.MerchantObligationIncurred;
 import com.fksoft.domain.booking.NoShowCharged;
-import com.fksoft.domain.finance.EntryType;
+import com.fksoft.domain.finance.EntryTypeCodes;
 import com.fksoft.domain.finance.LedgerDirection;
 import com.fksoft.domain.money.Money;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
@@ -75,7 +75,7 @@ class FinanceEventPostingIntegrationTest extends AbstractPostgresIntegrationTest
         .anySatisfy(
             r -> {
               assertThat(r.get("direction")).isEqualTo(LedgerDirection.RECEIVABLE.name());
-              assertThat(r.get("entry_type")).isEqualTo(EntryType.PENALTY.name());
+              assertThat(r.get("entry_type")).isEqualTo(EntryTypeCodes.PENALTY);
               assertThat((BigDecimal) r.get("amount")).isEqualByComparingTo("1350.00");
               assertThat(r.get("currency")).isEqualTo("BRL");
               assertThat(r.get("period")).isEqualTo("2026-06");
@@ -85,7 +85,7 @@ class FinanceEventPostingIntegrationTest extends AbstractPostgresIntegrationTest
         .anySatisfy(
             r -> {
               assertThat(r.get("direction")).isEqualTo(LedgerDirection.PAYABLE.name());
-              assertThat(r.get("entry_type")).isEqualTo(EntryType.REFUND.name());
+              assertThat(r.get("entry_type")).isEqualTo(EntryTypeCodes.REFUND);
               assertThat((BigDecimal) r.get("amount")).isEqualByComparingTo("2700.00");
             });
   }
@@ -148,18 +148,18 @@ class FinanceEventPostingIntegrationTest extends AbstractPostgresIntegrationTest
     assertThat(rows).hasSize(2);
     long supplierEntries =
         rows.stream()
-            .filter(r -> EntryType.SUPPLIER_SETTLEMENT.name().equals(r.get("entry_type")))
+            .filter(r -> EntryTypeCodes.SUPPLIER_SETTLEMENT.equals(r.get("entry_type")))
             .count();
     assertThat(supplierEntries).isEqualTo(1);
     assertThat(rows)
         .anySatisfy(
             r -> {
-              assertThat(r.get("entry_type")).isEqualTo(EntryType.SUPPLIER_SETTLEMENT.name());
+              assertThat(r.get("entry_type")).isEqualTo(EntryTypeCodes.SUPPLIER_SETTLEMENT);
               assertThat(r.get("direction")).isEqualTo(LedgerDirection.PAYABLE.name());
               assertThat((BigDecimal) r.get("amount")).isEqualByComparingTo("500.00");
               assertThat(r.get("currency")).isEqualTo("USD");
             })
-        .anySatisfy(r -> assertThat(r.get("entry_type")).isEqualTo(EntryType.REFUND.name()));
+        .anySatisfy(r -> assertThat(r.get("entry_type")).isEqualTo(EntryTypeCodes.REFUND));
   }
 
   @Test
@@ -191,6 +191,6 @@ class FinanceEventPostingIntegrationTest extends AbstractPostgresIntegrationTest
             "SELECT direction, entry_type FROM ledger_entries WHERE party_id = ?",
             charged.toString());
     assertThat(row.get("direction")).isEqualTo(LedgerDirection.RECEIVABLE.name());
-    assertThat(row.get("entry_type")).isEqualTo(EntryType.PENALTY.name());
+    assertThat(row.get("entry_type")).isEqualTo(EntryTypeCodes.PENALTY);
   }
 }

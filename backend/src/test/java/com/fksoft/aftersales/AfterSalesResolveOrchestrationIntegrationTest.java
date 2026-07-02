@@ -12,19 +12,19 @@ import com.fksoft.application.api.dto.CreateBookingRequest.LocatorRequest;
 import com.fksoft.application.api.dto.PinRateRequest;
 import com.fksoft.domain.accounts.LegalType;
 import com.fksoft.domain.aftersales.AfterSalesService;
-import com.fksoft.domain.aftersales.CaseResolution;
+import com.fksoft.domain.aftersales.CaseResolutionCodes;
 import com.fksoft.domain.aftersales.OpenCaseCommand;
 import com.fksoft.domain.aftersales.ResolveCaseCommand;
 import com.fksoft.domain.aftersales.SupportCaseRefundDuplicateException;
 import com.fksoft.domain.aftersales.SupportCaseStatus;
-import com.fksoft.domain.aftersales.SupportCaseType;
+import com.fksoft.domain.aftersales.SupportCaseTypeCodes;
 import com.fksoft.domain.aftersales.SupportCaseView;
 import com.fksoft.domain.booking.BookingView;
 import com.fksoft.domain.booking.CancellationTypeCodes;
 import com.fksoft.domain.booking.CostBearer;
 import com.fksoft.domain.booking.LocatorOrigin;
 import com.fksoft.domain.money.Money;
-import com.fksoft.domain.payout.PayoutKind;
+import com.fksoft.domain.payout.PayoutKindCodes;
 import com.fksoft.domain.quoting.QuoteView;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
 import java.math.BigDecimal;
@@ -99,13 +99,13 @@ class AfterSalesResolveOrchestrationIntegrationTest extends AbstractPostgresInte
     SupportCaseView opened =
         afterSalesService.open(
             new OpenCaseCommand(
-                bookingId.toString(), SupportCaseType.REFUND_REQUEST, "voo cancelado"),
+                bookingId.toString(), SupportCaseTypeCodes.REFUND_REQUEST, "voo cancelado"),
             "agent");
     SupportCaseView resolved =
         afterSalesService.resolve(
             opened.id(),
             new ResolveCaseCommand(
-                CaseResolution.REFUND_APPROVED,
+                CaseResolutionCodes.REFUND_APPROVED,
                 Money.of(new BigDecimal("480.00"), "BRL"),
                 Money.of(new BigDecimal("12.00"), "BRL"),
                 null,
@@ -130,7 +130,7 @@ class AfterSalesResolveOrchestrationIntegrationTest extends AbstractPostgresInte
                 afterSalesService.resolve(
                     opened.id(),
                     new ResolveCaseCommand(
-                        CaseResolution.REFUND_APPROVED,
+                        CaseResolutionCodes.REFUND_APPROVED,
                         Money.of(new BigDecimal("480.00"), "BRL"),
                         null,
                         null,
@@ -148,14 +148,16 @@ class AfterSalesResolveOrchestrationIntegrationTest extends AbstractPostgresInte
     SupportCaseView opened =
         afterSalesService.open(
             new OpenCaseCommand(
-                bookingId.toString(), SupportCaseType.CANCELLATION_REQUEST, "cliente desistiu"),
+                bookingId.toString(),
+                SupportCaseTypeCodes.CANCELLATION_REQUEST,
+                "cliente desistiu"),
             "agent");
 
     SupportCaseView resolved =
         afterSalesService.resolve(
             opened.id(),
             new ResolveCaseCommand(
-                CaseResolution.CANCEL_APPROVED,
+                CaseResolutionCodes.CANCEL_APPROVED,
                 null,
                 null,
                 java.time.Instant.now().plus(java.time.Duration.ofHours(5)),
@@ -184,7 +186,7 @@ class AfterSalesResolveOrchestrationIntegrationTest extends AbstractPostgresInte
         jdbcTemplate.queryForObject(
             "SELECT count(*) FROM payouts WHERE kind = ? AND origin_ref = ?",
             Integer.class,
-            PayoutKind.REFUND.name(),
+            PayoutKindCodes.REFUND,
             caseId.toString());
     return count == null ? 0 : count;
   }

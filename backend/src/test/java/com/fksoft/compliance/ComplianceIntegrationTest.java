@@ -7,10 +7,9 @@ import com.fksoft.application.api.dto.CreateLedgerEntryRequest;
 import com.fksoft.application.api.dto.CreateLedgerEntryRequest.PartyRequest;
 import com.fksoft.domain.compliance.CloseCheckView;
 import com.fksoft.domain.compliance.DocumentView;
-import com.fksoft.domain.finance.EntryType;
 import com.fksoft.domain.finance.LedgerDirection;
 import com.fksoft.domain.finance.LedgerEntryView;
-import com.fksoft.domain.finance.PartyType;
+import com.fksoft.domain.finance.PartyTypeCodes;
 import com.fksoft.domain.money.Money;
 import com.fksoft.infra.web.ApiErrorResponse;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
@@ -201,9 +200,9 @@ class ComplianceIntegrationTest extends AbstractPostgresIntegrationTest {
                 "/api/finance/entries",
                 new CreateLedgerEntryRequest(
                     LedgerDirection.RECEIVABLE,
-                    new PartyRequest("ag-1", PartyType.AGENCY),
+                    new PartyRequest("ag-1", PartyTypeCodes.AGENCY),
                     Money.of(new BigDecimal("2700.00"), "BRL"),
-                    EntryType.valueOf(entryType),
+                    entryType,
                     period),
                 LedgerEntryView.class)
             .getBody();

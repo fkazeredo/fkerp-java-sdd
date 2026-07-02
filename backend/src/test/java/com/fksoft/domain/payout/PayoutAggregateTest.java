@@ -24,8 +24,8 @@ class PayoutAggregateTest {
     Payout payout =
         Payout.open(
             command(
-                PayoutKind.SUPPLIER_SETTLEMENT,
-                new Payee("sup-12", PayeeType.SUPPLIER),
+                PayoutKindCodes.SUPPLIER_SETTLEMENT,
+                new Payee("sup-12", PayeeTypeCodes.SUPPLIER),
                 Money.of(new BigDecimal("500.00"), "USD"),
                 new BigDecimal("5.70"),
                 null),
@@ -43,8 +43,8 @@ class PayoutAggregateTest {
             () ->
                 Payout.open(
                     command(
-                        PayoutKind.REFUND,
-                        new Payee("cust-1", PayeeType.CUSTOMER),
+                        PayoutKindCodes.REFUND,
+                        new Payee("cust-1", PayeeTypeCodes.CUSTOMER),
                         Money.of(new BigDecimal("100.00"), "BRL"),
                         null,
                         null),
@@ -58,8 +58,8 @@ class PayoutAggregateTest {
     Payout payout =
         Payout.open(
             new CreatePayoutCommand(
-                PayoutKind.REFUND,
-                new Payee("cust-1", PayeeType.CUSTOMER),
+                PayoutKindCodes.REFUND,
+                new Payee("cust-1", PayeeTypeCodes.CUSTOMER),
                 "b-1",
                 "cancellation-charge-9",
                 Money.of(new BigDecimal("100.00"), "BRL"),
@@ -71,7 +71,7 @@ class PayoutAggregateTest {
             "dev");
 
     assertThat(payout.originRef()).isEqualTo("cancellation-charge-9");
-    assertThat(payout.kind()).isEqualTo(PayoutKind.REFUND);
+    assertThat(payout.kind()).isEqualTo(PayoutKindCodes.REFUND);
   }
 
   @Test
@@ -79,8 +79,8 @@ class PayoutAggregateTest {
     Payout payout =
         Payout.open(
             new CreatePayoutCommand(
-                PayoutKind.AGENT_COMMISSION,
-                new Payee("ag-1", PayeeType.AGENT),
+                PayoutKindCodes.AGENT_COMMISSION,
+                new Payee("ag-1", PayeeTypeCodes.AGENT),
                 null,
                 null,
                 Money.of(new BigDecimal("90.00"), "BRL"),
@@ -111,8 +111,8 @@ class PayoutAggregateTest {
     Payout payout =
         Payout.open(
             command(
-                PayoutKind.AGENT_COMMISSION,
-                new Payee("ag-1", PayeeType.AGENT),
+                PayoutKindCodes.AGENT_COMMISSION,
+                new Payee("ag-1", PayeeTypeCodes.AGENT),
                 Money.of(new BigDecimal("50.00"), "BRL"),
                 null,
                 null),
@@ -131,8 +131,8 @@ class PayoutAggregateTest {
     Payout payout =
         Payout.open(
             command(
-                PayoutKind.AGENT_COMMISSION,
-                new Payee("ag-1", PayeeType.AGENT),
+                PayoutKindCodes.AGENT_COMMISSION,
+                new Payee("ag-1", PayeeTypeCodes.AGENT),
                 Money.of(new BigDecimal("50.00"), "BRL"),
                 null,
                 null),
@@ -152,8 +152,8 @@ class PayoutAggregateTest {
             () ->
                 Payout.open(
                     command(
-                        PayoutKind.AGENT_COMMISSION,
-                        new Payee("ag-1", PayeeType.AGENT),
+                        PayoutKindCodes.AGENT_COMMISSION,
+                        new Payee("ag-1", PayeeTypeCodes.AGENT),
                         Money.of(new BigDecimal("0.00"), "BRL"),
                         null,
                         null),
@@ -168,8 +168,8 @@ class PayoutAggregateTest {
             () ->
                 Payout.open(
                     command(
-                        PayoutKind.SUPPLIER_SETTLEMENT,
-                        new Payee("sup-1", PayeeType.SUPPLIER),
+                        PayoutKindCodes.SUPPLIER_SETTLEMENT,
+                        new Payee("sup-1", PayeeTypeCodes.SUPPLIER),
                         Money.of(new BigDecimal("500.00"), "USD"),
                         new BigDecimal("0.000000"),
                         null),
@@ -179,7 +179,7 @@ class PayoutAggregateTest {
   }
 
   private static CreatePayoutCommand command(
-      PayoutKind kind,
+      String kind,
       Payee payee,
       Money amount,
       BigDecimal settlementRate,

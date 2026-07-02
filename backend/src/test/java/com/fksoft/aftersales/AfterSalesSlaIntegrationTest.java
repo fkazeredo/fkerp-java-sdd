@@ -5,13 +5,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fksoft.domain.aftersales.AfterSalesService;
 import com.fksoft.domain.aftersales.OpenCaseCommand;
 import com.fksoft.domain.aftersales.SupportCaseStatus;
-import com.fksoft.domain.aftersales.SupportCaseType;
+import com.fksoft.domain.aftersales.SupportCaseTypeCodes;
 import com.fksoft.domain.aftersales.SupportCaseView;
 import com.fksoft.domain.commercialpolicy.CommercialPolicyService;
 import com.fksoft.domain.commercialpolicy.DefineRuleCommand;
 import com.fksoft.domain.commercialpolicy.ParameterLayer;
 import com.fksoft.domain.commercialpolicy.ParameterScope;
-import com.fksoft.domain.commercialpolicy.ParameterValueType;
+import com.fksoft.domain.commercialpolicy.ParameterValueTypeCodes;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
 import java.time.Duration;
 import java.util.Set;
@@ -44,7 +44,7 @@ class AfterSalesSlaIntegrationTest extends AbstractPostgresIntegrationTest {
   void doesNotBreachAStandardCaseWhileWithinTheResolutionSla() {
     SupportCaseView opened =
         afterSalesService.open(
-            new OpenCaseCommand("b71", SupportCaseType.COMPLAINT, "dentro do SLA"), "agent");
+            new OpenCaseCommand("b71", SupportCaseTypeCodes.COMPLAINT, "dentro do SLA"), "agent");
     // Pick it up (first response given) so the governing deadline is now resolution (72h).
     afterSalesService.transition(opened.id(), SupportCaseStatus.IN_PROGRESS, "agent");
 
@@ -59,7 +59,7 @@ class AfterSalesSlaIntegrationTest extends AbstractPostgresIntegrationTest {
   void breachesAStandardResolutionSlaWhenTheDeadlinePassed() {
     SupportCaseView opened =
         afterSalesService.open(
-            new OpenCaseCommand("b71", SupportCaseType.COMPLAINT, "estourou"), "agent");
+            new OpenCaseCommand("b71", SupportCaseTypeCodes.COMPLAINT, "estourou"), "agent");
     afterSalesService.transition(opened.id(), SupportCaseStatus.IN_PROGRESS, "agent");
 
     // Evaluate one second AFTER the resolution deadline → breached, alert flag set.
@@ -76,7 +76,7 @@ class AfterSalesSlaIntegrationTest extends AbstractPostgresIntegrationTest {
   void breachesTheTighterRefundSlaForACancellationOrRefundCase() {
     SupportCaseView refundCase =
         afterSalesService.open(
-            new OpenCaseCommand("b80", SupportCaseType.REFUND_REQUEST, "reembolso"), "agent");
+            new OpenCaseCommand("b80", SupportCaseTypeCodes.REFUND_REQUEST, "reembolso"), "agent");
     afterSalesService.transition(refundCase.id(), SupportCaseStatus.IN_PROGRESS, "agent");
     // The refund SLA is 48h (vs 72h standard): a case is breached past its own (tighter) deadline.
     assertThat(Duration.between(refundCase.openedAt(), refundCase.dueAt()))
@@ -90,7 +90,7 @@ class AfterSalesSlaIntegrationTest extends AbstractPostgresIntegrationTest {
   void firstResponseDeadlineIsTighterThanResolution() {
     SupportCaseView opened =
         afterSalesService.open(
-            new OpenCaseCommand("b71", SupportCaseType.CHANGE_REQUEST, null), "agent");
+            new OpenCaseCommand("b71", SupportCaseTypeCodes.CHANGE_REQUEST, null), "agent");
     // First response (24h) is due well before resolution (72h) — the SLA exposes both deadlines.
     assertThat(opened.firstResponseDueAt()).isBefore(opened.dueAt());
     assertThat(Duration.between(opened.openedAt(), opened.firstResponseDueAt()))
@@ -101,7 +101,7 @@ class AfterSalesSlaIntegrationTest extends AbstractPostgresIntegrationTest {
   void breachesTheFirstResponseSlaWhileStillOpenBeforeResolutionIsDue() {
     SupportCaseView opened =
         afterSalesService.open(
-            new OpenCaseCommand("b71", SupportCaseType.COMPLAINT, "sem 1a resposta"), "agent");
+            new OpenCaseCommand("b71", SupportCaseTypeCodes.COMPLAINT, "sem 1a resposta"), "agent");
 
     // Evaluate AFTER the 24h first-response deadline but BEFORE the 72h resolution deadline.
     int breached = afterSalesService.markBreaches(opened.firstResponseDueAt().plusSeconds(1));
@@ -114,7 +114,7 @@ class AfterSalesSlaIntegrationTest extends AbstractPostgresIntegrationTest {
   void theSweepIsIdempotentAndSkipsResolvedCases() {
     SupportCaseView opened =
         afterSalesService.open(
-            new OpenCaseCommand("b71", SupportCaseType.COMPLAINT, null), "agent");
+            new OpenCaseCommand("b71", SupportCaseTypeCodes.COMPLAINT, null), "agent");
 
     assertThat(afterSalesService.markBreaches(opened.dueAt().plusSeconds(1))).isEqualTo(1);
     // A second sweep does not re-flag the same case (idempotent — no duplicate alert).
@@ -130,7 +130,7 @@ class AfterSalesSlaIntegrationTest extends AbstractPostgresIntegrationTest {
             ParameterLayer.DIRECTIVE,
             ParameterScope.global(),
             "1",
-            ParameterValueType.NUMBER,
+            ParameterValueTypeCodes.NUMBER,
             null,
             null,
             "tighten after-sales resolution SLA for the quarter"),
@@ -140,7 +140,7 @@ class AfterSalesSlaIntegrationTest extends AbstractPostgresIntegrationTest {
     // A new standard case now uses the OVERRIDDEN 1h deadline, not the 72h system default.
     SupportCaseView opened =
         afterSalesService.open(
-            new OpenCaseCommand("b71", SupportCaseType.COMPLAINT, "sob diretiva"), "agent");
+            new OpenCaseCommand("b71", SupportCaseTypeCodes.COMPLAINT, "sob diretiva"), "agent");
 
     assertThat(Duration.between(opened.openedAt(), opened.dueAt())).isEqualTo(Duration.ofHours(1));
 
