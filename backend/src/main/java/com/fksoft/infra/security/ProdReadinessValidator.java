@@ -37,6 +37,7 @@ public class ProdReadinessValidator implements ApplicationListener<ApplicationRe
   private final String dbPassword;
   private final String issuerUri;
   private final boolean billingRegimeConfirmed;
+  private final String oidcJwkPrivateKey;
 
   public ProdReadinessValidator(
       @Value("${integration.quotation-site.secret:}") String quotationSecret,
@@ -44,13 +45,15 @@ public class ProdReadinessValidator implements ApplicationListener<ApplicationRe
       @Value("${platform.secret.key:}") String platformKey,
       @Value("${spring.datasource.password:}") String dbPassword,
       @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}") String issuerUri,
-      @Value("${billing.tax.regime-confirmed:false}") boolean billingRegimeConfirmed) {
+      @Value("${billing.tax.regime-confirmed:false}") boolean billingRegimeConfirmed,
+      @Value("${app.oidc.jwk.private-key:}") String oidcJwkPrivateKey) {
     this.quotationSecret = quotationSecret;
     this.paymentSecret = paymentSecret;
     this.platformKey = platformKey;
     this.dbPassword = dbPassword;
     this.issuerUri = issuerUri;
     this.billingRegimeConfirmed = billingRegimeConfirmed;
+    this.oidcJwkPrivateKey = oidcJwkPrivateKey;
   }
 
   @Override
@@ -85,6 +88,12 @@ public class ProdReadinessValidator implements ApplicationListener<ApplicationRe
       problems.add(
           "billing.tax.regime-confirmed is false — the accountant must confirm the tax regime"
               + " (Anexo III×V / Fator R, DL-0121) before a real NFS-e can be issued in production");
+    }
+    if (isBlank(oidcJwkPrivateKey)) {
+      problems.add(
+          "app.oidc.jwk.private-key (OIDC_JWK_PRIVATE_KEY) is unset — production must use a"
+              + " persisted signing key (DL-0129/ADR-0020) or every restart/replica invalidates all"
+              + " sessions/tokens");
     }
 
     if (!problems.isEmpty()) {

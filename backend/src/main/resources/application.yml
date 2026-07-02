@@ -46,6 +46,20 @@ app:
   version: @project.version@
   oidc:
     issuer: ${OIDC_ISSUER_URI:}
+    # Persisted signing key (Fase 19g/DL-0129/ADR-0020): base64 DER PKCS#8 RSA private key + stable
+    # kid, shared by every instance so restarts/replicas keep tokens valid. Empty => an EPHEMERAL
+    # key is generated (dev/test only); production REQUIRES it (ProdReadinessValidator). Generate:
+    #   openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 | \
+    #     openssl pkcs8 -topk8 -nocrypt -outform DER | base64 -w0
+    jwk:
+      private-key: ${OIDC_JWK_PRIVATE_KEY:}
+      key-id: ${OIDC_JWK_KEY_ID:}
+
+# Form-login session in Postgres (Fase 19g/DL-0129): any instance serves the OAuth2 browser flow
+# without sticky sessions. Schema is owned by Flyway (V39) — never auto-initialized.
+spring.session:
+  jdbc:
+    initialize-schema: never
 
 management:
   endpoints:

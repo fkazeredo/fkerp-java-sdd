@@ -5,10 +5,6 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,7 +25,6 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
-import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
@@ -183,9 +178,17 @@ public class AuthorizationServerConfig {
    * frontend changes only its {@code issuer}. Access token lives 5 minutes (mirrors the old realm).
    */
   @Bean
-  public RegisteredClientRepository registeredClientRepository() {
+  public RegisteredClientRepository registeredClientRepository(
+      org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
+    // Fase 19g (DL-0129/ADR-0020): client registrations live in Postgres (V39) so every instance
+    // shares them. The SPA client is bootstrapped idempotently: JdbcRegisteredClientRepository.save
+    // is an upsert by client id lookup, so a restart/replica never duplicates it.
+    var repository =
+        new org.springframework.security.oauth2.server.authorization.client
+            .JdbcRegisteredClientRepository(jdbcTemplate);
+    RegisteredClient existing = repository.findByClientId(SPA_CLIENT_ID);
     RegisteredClient spa =
-        RegisteredClient.withId(UUID.randomUUID().toString())
+        RegisteredClient.withId(existing != null ? existing.getId() : UUID.randomUUID().toString())
             .clientId(SPA_CLIENT_ID)
             .clientName("Acme Travel ERP — Web SPA")
             .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
@@ -208,7 +211,22 @@ public class AuthorizationServerConfig {
                     .accessTokenTimeToLive(java.time.Duration.ofMinutes(5))
                     .build())
             .build();
-    return new InMemoryRegisteredClientRepository(spa);
+    repository.save(spa);
+    return repository;
+  }
+
+  /**
+   * Authorization state (codes, access/refresh tokens under issuance) in Postgres (V39) so any
+   * instance can complete a flow another instance started and a restart loses nothing (Fase 19g,
+   * DL-0129/ADR-0020).
+   */
+  @Bean
+  public org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService
+      authorizationService(
+          org.springframework.jdbc.core.JdbcTemplate jdbcTemplate,
+          RegisteredClientRepository registeredClientRepository) {
+    return new org.springframework.security.oauth2.server.authorization
+        .JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository);
   }
 
   /**
@@ -236,32 +254,19 @@ public class AuthorizationServerConfig {
   }
 
   /**
-   * The RSA key that signs the tokens (RS256), served by the AS JWK set ({@code /oauth2/jwks}). It
-   * is generated at boot (the app is single-instance — ADR 0002); tokens are invalidated on
-   * restart. A persisted/externalized key is a documented seam for a multi-instance production (out
-   * of scope — Rule Zero).
+   * The RSA key that signs the tokens (RS256), served by the AS JWK set ({@code /oauth2/jwks}).
+   * Fase 19g (DL-0129/ADR-0020): the key is loaded from configuration ({@code
+   * app.oidc.jwk.private-key} / {@code OIDC_JWK_PRIVATE_KEY}, base64 DER PKCS#8) with a stable
+   * {@code kid}, so restarts and replicas share the SAME key — tokens survive a restart and any
+   * instance validates any instance's tokens. When unset (dev/test), an ephemeral key is generated
+   * (the pre-19g behavior); production requires the persisted key ({@code ProdReadinessValidator}).
    */
   @Bean
-  public JWKSource<SecurityContext> jwkSource() {
-    KeyPair keyPair = generateRsaKey();
-    RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-    RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-    RSAKey rsaKey =
-        new RSAKey.Builder(publicKey)
-            .privateKey(privateKey)
-            .keyID(UUID.randomUUID().toString())
-            .build();
+  public JWKSource<SecurityContext> jwkSource(
+      @Value("${app.oidc.jwk.private-key:}") String privateKeyBase64,
+      @Value("${app.oidc.jwk.key-id:}") String keyId) {
+    RSAKey rsaKey = PersistedJwk.load(privateKeyBase64, keyId);
     return new ImmutableJWKSet<>(new JWKSet(rsaKey));
-  }
-
-  private static KeyPair generateRsaKey() {
-    try {
-      KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-      keyPairGenerator.initialize(2048);
-      return keyPairGenerator.generateKeyPair();
-    } catch (Exception ex) {
-      throw new IllegalStateException("RSA key generation failed for the authorization server", ex);
-    }
   }
 
   /**
