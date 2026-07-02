@@ -1,10 +1,10 @@
 package com.fksoft.domain.marketing;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import java.util.TreeMap;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Serializes the validated {@link SegmentCriteria} to/from the {@code criteria_json} jsonb column
@@ -25,7 +25,7 @@ final class SegmentCriteriaCodec {
   static String encode(SegmentCriteria criteria) {
     try {
       return MAPPER.writeValueAsString(new TreeMap<>(criteria.fields()));
-    } catch (JsonProcessingException badJson) {
+    } catch (JacksonException badJson) {
       throw new SegmentInvalidException();
     }
   }
@@ -38,7 +38,7 @@ final class SegmentCriteriaCodec {
     try {
       Map<String, String> fields = MAPPER.readValue(json, MAP_TYPE);
       return new SegmentCriteria(fields);
-    } catch (JsonProcessingException badJson) {
+    } catch (JacksonException badJson) {
       throw new SegmentInvalidException();
     }
   }

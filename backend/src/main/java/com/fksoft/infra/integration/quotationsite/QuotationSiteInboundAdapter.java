@@ -1,12 +1,12 @@
 package com.fksoft.infra.integration.quotationsite;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.sourcing.IntegrationPayloadInvalidException;
 import com.fksoft.domain.sourcing.RegisterInboundQuotationCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * The Anti-Corruption Layer for the quotation-site webhook (SPEC-0009): it verifies the signature
@@ -61,7 +61,7 @@ public class QuotationSiteInboundAdapter {
   private ExternalQuotationPayload parse(byte[] rawBody) {
     try {
       return objectMapper.readValue(rawBody, ExternalQuotationPayload.class);
-    } catch (java.io.IOException malformed) {
+    } catch (tools.jackson.core.JacksonException malformed) {
       throw new IntegrationPayloadInvalidException();
     }
   }

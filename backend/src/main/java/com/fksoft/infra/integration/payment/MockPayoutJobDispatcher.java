@@ -1,13 +1,13 @@
 package com.fksoft.infra.integration.payment;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Clock;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Delivers the due mock payments as <strong>signed webhooks</strong> (ADR 0006; DL-0048): the async
@@ -82,7 +82,7 @@ public class MockPayoutJobDispatcher {
   private byte[] serialize(PaymentWebhookPayload payload) {
     try {
       return objectMapper.writeValueAsBytes(payload);
-    } catch (JsonProcessingException impossible) {
+    } catch (JacksonException impossible) {
       throw new IllegalStateException("cannot serialize mock payment webhook", impossible);
     }
   }

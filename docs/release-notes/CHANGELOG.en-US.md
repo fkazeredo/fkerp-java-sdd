@@ -1,12 +1,32 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.37.0.md`](0.37.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.38.0.md`](0.38.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.38.0 — Phase 19f · Library migration (Spring Boot 4.1 + Jackson 3)
+
+**MINOR — stack chore. No `/api` shape changed (byte-identical OpenAPI snapshot).**
+
+Owner request: **Spring Boot 4.1 + updated Jackson**. Pays the tracked debt of DL-0108 (the Jackson 2
+compatibility bridge). DL-0128; ADR-0017 updated.
+
+- **Spring Boot 4.0.7 → 4.1.0**, **Spring Modulith 2.0.7 → 2.1.0**, springdoc 3.0.3, Java 21 LTS.
+- **Jackson 2 → Jackson 3** (`tools.jackson`): removed `spring-boot-starter-classic`; production runs
+  on Boot 4's default serializer. 9 main files + 2 tests migrated (`ObjectMapper`/`TypeReference` →
+  `tools.jackson`; checked `JsonProcessingException` → unchecked `JacksonException`). Annotations stay
+  in `com.fasterxml.jackson.annotation` (unchanged in Jackson 3).
+- **Flyway modularization** (Boot 4 split auto-config into modules): removing the classic starter
+  un-configured plain `flyway-core` (empty schema → 303 failing tests); fixed with the modular
+  **`spring-boot-starter-flyway`**.
+- **Byte-identical contract**: the OpenAPI snapshot drift gate, the Phase-18 invariant and the full
+  suite prove the JSON is unchanged. Gates green on the new stack.
 
 ---
 

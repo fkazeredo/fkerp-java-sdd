@@ -1,6 +1,5 @@
 package com.fksoft.infra.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fksoft.domain.identity.IdentityService;
 import com.fksoft.infra.web.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Returns the stable {@link ApiErrorResponse} with {@code 403} when an authenticated user lacks the

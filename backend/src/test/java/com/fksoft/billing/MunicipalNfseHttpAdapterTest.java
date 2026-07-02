@@ -97,7 +97,7 @@ class MunicipalNfseHttpAdapterTest {
             .requestFactory(factory)
             .build();
     return new HttpMunicipalNfseService(
-        signer, new com.fasterxml.jackson.databind.ObjectMapper(), client, maxRetries, breaker);
+        signer, new tools.jackson.databind.ObjectMapper(), client, maxRetries, breaker);
   }
 
   private OutboundCircuitBreaker breaker(int threshold) {
