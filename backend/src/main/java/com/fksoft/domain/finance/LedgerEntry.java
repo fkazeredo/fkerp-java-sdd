@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+// EntryType/PartyType became editable cadastros (SPEC-0031/DL-0118): stored as String codes.
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -36,15 +37,15 @@ public class LedgerEntry {
 
   private String partyId;
 
-  @Enumerated(EnumType.STRING)
-  private PartyType partyType;
+  /** The party-type cadastro code (was {@code PartyType}; SPEC-0031/DL-0118). */
+  private String partyType;
 
   private BigDecimal amount;
 
   private String currency;
 
-  @Enumerated(EnumType.STRING)
-  private EntryType entryType;
+  /** The entry-type cadastro code (was {@code EntryType}; SPEC-0031/DL-0118). */
+  private String entryType;
 
   private String period;
 
@@ -67,7 +68,7 @@ public class LedgerEntry {
    * @param direction PAYABLE or RECEIVABLE
    * @param party the counterparty
    * @param amount the amount (original currency)
-   * @param entryType the business type
+   * @param entryType the business type (entry-type cadastro code)
    * @param period the period ({@code YYYY-MM})
    * @param now creation instant (UTC)
    * @param actor who registered it (audit)
@@ -77,7 +78,7 @@ public class LedgerEntry {
       LedgerDirection direction,
       Party party,
       Money amount,
-      EntryType entryType,
+      String entryType,
       String period,
       Instant now,
       String actor) {

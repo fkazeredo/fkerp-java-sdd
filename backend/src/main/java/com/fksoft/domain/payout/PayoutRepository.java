@@ -31,7 +31,7 @@ public interface PayoutRepository extends JpaRepository<Payout, UUID> {
           + "and (:payee is null or p.payeeId = :payee) "
           + "order by p.createdAt desc")
   Page<Payout> search(
-      @Param("kind") PayoutKind kind,
+      @Param("kind") String kind,
       @Param("status") PayoutStatus status,
       @Param("payee") String payee,
       Pageable pageable);

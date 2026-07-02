@@ -211,9 +211,14 @@ public class OpenApiConfig {
                         + " module (seeded by V34). Phase 18c (SPEC-0031 / DL-0117) converts the Sourcing"
                         + " (OfferOrigin, IntegrationLevel), Exchange (MarketRateSource), Booking (ChargeKind,"
                         + " CancellationType) and Compliance (DocumentType, SignedFormat, RequirementPhase)"
-                        + " reference enums to validated string codes (seeded by V35). The converted fields"
-                        + " keep their JSON schema (string), so NO existing /api contract changes; the"
-                        + " Sourcing/Exchange/Booking/Compliance screens now render the cadastro label.")
-                .version("0.31.0"));
+                        + " reference enums to validated string codes (seeded by V35). Phase 18d (SPEC-0031"
+                        + " / DL-0118) CLOSES Phase 18, converting the Finance (EntryType, PartyType), Payout"
+                        + " (PayeeType, PayoutKind), People (DiscrepancyKind), CommercialPolicy"
+                        + " (ParameterValueType) and AfterSales (SupportCaseType, CaseResolution) reference"
+                        + " enums to validated string codes (seeded by V36). The converted fields keep their"
+                        + " JSON schema (string), so NO existing /api contract changes; the"
+                        + " Finance/Payout/People/CommercialPolicy/AfterSales screens now render the cadastro"
+                        + " label.")
+                .version("0.32.0"));
   }
 }

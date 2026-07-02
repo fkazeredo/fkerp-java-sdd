@@ -12,13 +12,10 @@ import java.util.List;
  * @param contractedMinutes the contracted minutes for the period
  * @param balanceMinutes the balance ({@code worked - contracted}; positive = extras, negative =
  *     faltas)
- * @param discrepancies the discrepancy kinds detected (possibly empty; never null)
+ * @param discrepancies the discrepancy-kind cadastro codes detected (possibly empty; never null)
  */
 public record JourneyComputation(
-    int workedMinutes,
-    int contractedMinutes,
-    int balanceMinutes,
-    List<DiscrepancyKind> discrepancies) {
+    int workedMinutes, int contractedMinutes, int balanceMinutes, List<String> discrepancies) {
 
   /** Whether any discrepancy was detected (an alert is due). */
   public boolean hasDiscrepancies() {

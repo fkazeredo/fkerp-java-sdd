@@ -234,7 +234,7 @@ public class PeopleService {
    */
   private void raiseDiscrepancies(
       UUID employeeId, String period, JourneyComputation computation, Instant now) {
-    for (DiscrepancyKind kind : computation.discrepancies()) {
+    for (String kind : computation.discrepancies()) {
       if (discrepancies.existsByEmployeeIdAndPeriodAndKind(employeeId, period, kind)) {
         continue;
       }

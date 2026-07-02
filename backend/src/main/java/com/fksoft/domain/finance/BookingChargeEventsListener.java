@@ -51,7 +51,7 @@ class BookingChargeEventsListener {
                 LedgerDirection.RECEIVABLE,
                 agency(event.bookingId()),
                 charge.amount(),
-                EntryType.PENALTY,
+                EntryTypeCodes.PENALTY,
                 event.occurredAt());
         case ChargeKindCodes.CUSTOMER_REFUND ->
             financeService.postFromCharge(
@@ -60,7 +60,7 @@ class BookingChargeEventsListener {
                 LedgerDirection.PAYABLE,
                 agency(event.bookingId()),
                 charge.amount(),
-                EntryType.REFUND,
+                EntryTypeCodes.REFUND,
                 event.occurredAt());
         case ChargeKindCodes.SUPPLIER -> {
           // Posted from MerchantObligationIncurred (single source of truth) — skip here.
@@ -86,7 +86,7 @@ class BookingChargeEventsListener {
         LedgerDirection.PAYABLE,
         supplier(event.bookingId()),
         event.supplierCharge().amount(),
-        EntryType.SUPPLIER_SETTLEMENT,
+        EntryTypeCodes.SUPPLIER_SETTLEMENT,
         event.occurredAt());
   }
 
@@ -105,7 +105,7 @@ class BookingChargeEventsListener {
         LedgerDirection.RECEIVABLE,
         agency(event.bookingId()),
         event.fee(),
-        EntryType.PENALTY,
+        EntryTypeCodes.PENALTY,
         event.occurredAt());
   }
 
@@ -114,10 +114,10 @@ class BookingChargeEventsListener {
   }
 
   private static Party agency(UUID bookingId) {
-    return new Party(bookingId.toString(), PartyType.AGENCY);
+    return new Party(bookingId.toString(), PartyTypeCodes.AGENCY);
   }
 
   private static Party supplier(UUID bookingId) {
-    return new Party(bookingId.toString(), PartyType.SUPPLIER);
+    return new Party(bookingId.toString(), PartyTypeCodes.SUPPLIER);
   }
 }

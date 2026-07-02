@@ -1,9 +1,8 @@
 package com.fksoft.application.api.dto;
 
 import com.fksoft.domain.money.Money;
-import com.fksoft.domain.payout.PayeeType;
-import com.fksoft.domain.payout.PayoutKind;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -25,7 +24,7 @@ import java.util.List;
  * @param installments an explicit installment plan (due date + amount each), or {@code null}
  */
 public record CreatePayoutRequest(
-    @NotNull PayoutKind kind,
+    @NotBlank String kind,
     @NotNull @Valid PayeeRequest payee,
     String bookingId,
     String originRef,
@@ -40,7 +39,7 @@ public record CreatePayoutRequest(
    * @param id the payee's external id (required)
    * @param type the payee kind (required)
    */
-  public record PayeeRequest(@NotNull String id, @NotNull PayeeType type) {}
+  public record PayeeRequest(@NotBlank String id, @NotBlank String type) {}
 
   /**
    * One explicit installment.

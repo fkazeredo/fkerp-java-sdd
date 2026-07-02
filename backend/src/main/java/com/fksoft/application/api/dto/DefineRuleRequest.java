@@ -4,7 +4,6 @@ import com.fksoft.domain.commercialpolicy.DefineRuleCommand;
 import com.fksoft.domain.commercialpolicy.ParameterKey;
 import com.fksoft.domain.commercialpolicy.ParameterLayer;
 import com.fksoft.domain.commercialpolicy.ParameterScope;
-import com.fksoft.domain.commercialpolicy.ParameterValueType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
@@ -29,7 +28,7 @@ public record DefineRuleRequest(
     @NotBlank String key,
     @NotNull ParameterLayer layer,
     @NotBlank String value,
-    @NotNull ParameterValueType type,
+    @NotBlank String type,
     UUID accountId,
     String productRef,
     String channel,

@@ -12,7 +12,7 @@ public interface JourneyDiscrepancyRepository
     extends JpaRepository<JourneyDiscrepancyRecord, UUID> {
 
   /** Whether an alert of this kind already exists for the (employee, period) (no dup, DL-0071). */
-  boolean existsByEmployeeIdAndPeriodAndKind(UUID employeeId, String period, DiscrepancyKind kind);
+  boolean existsByEmployeeIdAndPeriodAndKind(UUID employeeId, String period, String kind);
 
   /** Counts the open discrepancies of a collaborator's period (time-bank view). */
   int countByEmployeeIdAndPeriodAndStatus(UUID employeeId, String period, DiscrepancyStatus status);

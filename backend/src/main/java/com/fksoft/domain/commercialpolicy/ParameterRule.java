@@ -52,9 +52,9 @@ public class ParameterRule {
   @Column(name = "value_text")
   private String valueText;
 
-  @Enumerated(EnumType.STRING)
+  /** The value-type cadastro code (was {@code ParameterValueType}; SPEC-0031/DL-0118). */
   @Column(name = "value_type")
-  private ParameterValueType valueType;
+  private String valueType;
 
   @Column(name = "valid_from")
   private LocalDate validFrom;
@@ -80,7 +80,7 @@ public class ParameterRule {
    * @param layer the governance layer
    * @param scope the scope matcher
    * @param valueText the value text
-   * @param valueType the value type
+   * @param valueType the value-type cadastro code
    * @param validFrom effectivity start
    * @param validUntil effectivity end, or {@code null} for open-ended
    * @param definedBy who authored it (audit)
@@ -93,7 +93,7 @@ public class ParameterRule {
       ParameterLayer layer,
       ParameterScope scope,
       String valueText,
-      ParameterValueType valueType,
+      String valueType,
       LocalDate validFrom,
       LocalDate validUntil,
       String definedBy,

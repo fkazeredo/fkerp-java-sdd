@@ -1,8 +1,7 @@
 package com.fksoft.application.api.dto;
 
-import com.fksoft.domain.aftersales.CaseResolution;
 import com.fksoft.domain.money.Money;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import java.time.Instant;
 
 /**
@@ -18,7 +17,7 @@ import java.time.Instant;
  * @param cancellationReason the cancellation reason passed to Booking, or {@code null}
  */
 public record ResolveCaseRequest(
-    @NotNull CaseResolution resolution,
+    @NotBlank String resolution,
     Money amount,
     Money handlingCost,
     Instant serviceStartsAt,

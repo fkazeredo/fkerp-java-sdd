@@ -12,7 +12,7 @@ import java.util.List;
  * is mandatory for a {@code REFUND} (BR7). The installment plan is optional (DL-0050): give an
  * explicit {@code installments} list OR an {@code installmentCount} OR neither (à vista).
  *
- * @param kind the payout kind
+ * @param kind the payout kind (payout-kind cadastro code)
  * @param payee who is paid
  * @param bookingId the related booking (value), or {@code null}
  * @param originRef the origin obligation reference — required for REFUND (BR7), else {@code null}
@@ -24,7 +24,7 @@ import java.util.List;
  *     split
  */
 public record CreatePayoutCommand(
-    PayoutKind kind,
+    String kind,
     Payee payee,
     String bookingId,
     String originRef,

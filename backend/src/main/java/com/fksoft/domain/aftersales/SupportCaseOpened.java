@@ -12,5 +12,4 @@ import java.util.UUID;
  * @param type the case type
  * @param occurredAt when it was opened
  */
-public record SupportCaseOpened(
-    UUID caseId, String bookingId, SupportCaseType type, Instant occurredAt) {}
+public record SupportCaseOpened(UUID caseId, String bookingId, String type, Instant occurredAt) {}

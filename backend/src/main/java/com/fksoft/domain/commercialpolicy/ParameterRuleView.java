@@ -14,7 +14,7 @@ import java.util.UUID;
  * @param layer the governance layer
  * @param scope the scope matcher
  * @param value the value text
- * @param type the value type
+ * @param type the value-type cadastro code
  * @param validFrom effectivity start
  * @param validUntil effectivity end, or {@code null} when open-ended
  * @param definedBy who authored the rule (audit)
@@ -27,7 +27,7 @@ public record ParameterRuleView(
     ParameterLayer layer,
     ParameterScope scope,
     String value,
-    ParameterValueType type,
+    String type,
     LocalDate validFrom,
     LocalDate validUntil,
     String definedBy,

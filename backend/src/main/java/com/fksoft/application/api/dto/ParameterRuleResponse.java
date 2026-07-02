@@ -48,7 +48,7 @@ public record ParameterRuleResponse(
         view.scope().productRef(),
         view.scope().channel(),
         view.value(),
-        view.type().name(),
+        view.type(),
         view.validFrom(),
         view.validUntil(),
         view.definedBy(),

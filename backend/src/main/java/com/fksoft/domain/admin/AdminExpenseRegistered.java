@@ -11,7 +11,7 @@ import java.util.UUID;
  *
  * @param expenseId the administrative expense id
  * @param financeEntryId the created Finance ledger entry id (value)
- * @param entryType the Finance entry type the expense posted as ({@code EntryType.name()})
+ * @param entryType the Finance entry-type cadastro code the expense posted as (SPEC-0031/DL-0118)
  * @param occurredAt when it was registered
  */
 public record AdminExpenseRegistered(

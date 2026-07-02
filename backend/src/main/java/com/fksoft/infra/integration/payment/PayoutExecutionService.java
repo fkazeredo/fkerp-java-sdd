@@ -7,7 +7,7 @@ import com.fksoft.domain.money.Money;
 import com.fksoft.domain.payout.PaymentGateway;
 import com.fksoft.domain.payout.PaymentInstruction;
 import com.fksoft.domain.payout.PaymentOutcome;
-import com.fksoft.domain.payout.PayoutKind;
+import com.fksoft.domain.payout.PayoutKindCodes;
 import com.fksoft.domain.payout.PayoutService;
 import com.fksoft.domain.payout.PayoutService.InstallmentToExecute;
 import com.fksoft.domain.payout.PayoutView;
@@ -99,7 +99,7 @@ public class PayoutExecutionService {
    */
   private UUID archiveReceipt(PayoutView payout, int installmentSeq) {
     String type =
-        payout.kind() == PayoutKind.REFUND
+        PayoutKindCodes.isRefund(payout.kind())
             ? DocumentTypeCodes.REFUND_PROOF
             : DocumentTypeCodes.PAYMENT_PROOF;
     Money paid = installmentAmount(payout, installmentSeq);
