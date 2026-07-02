@@ -312,14 +312,16 @@ arquitetura, segurança, QA, CI/CD, observabilidade): o ERP é *production-shape
 *production-ready*. A fase fecha essa distância em **12 fatias**, cada uma com spec/DL/ADR + gates
 verdes + release MINOR: **19a** autorização default-deny por papel (matriz completa + completude
 como portão) ✅ `0.33.0` · **19b** revisão do decision-log aplicada (quarentena de inbound
-DL-0017-bis; anexo/Fator-R + flag de emissão DL-0044-bis) · **19c** segredos fail-fast + anti-replay
-nos webhooks + upload/cofre hardening + lockout no form login + silent-refresh same-origin ·
-**19d** documentação de API real (springdoc anotado, Authorize PKCE, snapshot de contrato + teste
-de drift) · **19e** emulação das integrações (Portal de Experiências/Locação, GDS, NFS-e, gateway —
-adaptadores HTTP com timeout/retry/breaker contra emuladores; ERP servindo câmbio como Open-Host) ·
-**19f** migração de bibliotecas (Jackson 3 sem a ponte, Boot 4.1.x) · **19g** multi-instância/HA
-(JWK persistido, AS/sessão em JDBC, fila DB-backed; revisa ADR-0002) · **19h** hedge cambial
-(`ForwardContract`, cobertura hedged/unhedged, `HedgeAdvisor` no DSS) · **19i** QA hardening
+DL-0017-bis; anexo/Fator-R + flag de emissão DL-0044-bis) ✅ `0.34.0` · **19c** segredos fail-fast +
+anti-replay nos webhooks + upload/cofre hardening + lockout no form login + silent-refresh
+same-origin (proxy fica na 19l) ✅ `0.35.0` · **19d** documentação de API real (springdoc anotado,
+Authorize PKCE, snapshot de contrato + teste de drift) ✅ `0.36.0` · **19e** emulação das
+integrações (fatia vertical NFS-e HTTP real com timeout/retry/breaker + emulador WireMock em dev e
+testes; seam para os demais) ✅ `0.37.0` · **19f** migração de bibliotecas (Jackson 3 sem a ponte,
+Boot 4.1.0) ✅ `0.38.0` · **19g** multi-instância/HA (JWK persistido, AS/sessão em JDBC; revisa
+ADR-0002 → ADR-0020) ✅ `0.39.0` · **19h** hedge cambial (`ForwardContract`, cobertura
+hedged/unhedged, alerta sobre o descoberto; `HedgeAdvisor` adiado à 20c — DL-0130) ✅ `0.40.0` ·
+**19i** QA hardening
 (concorrência, PIT, jqwik, branch gates, timezone) · **19j** aderência à arquitetura & design de
 código (auditoria doc×código + fitness functions novas + endpoint agregado de dashboard) ·
 **19k** CI/CD supply-chain (CodeQL/Dependabot/imagem GHCR) + observabilidade (conserto do scrape,

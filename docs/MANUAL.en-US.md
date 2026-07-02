@@ -4,7 +4,7 @@
 > already does today**. Updated **on every delivered slice** (see the *User manual* command in
 > `CLAUDE.md`). Portuguese version: `docs/MANUAL.md` (kept in sync).
 >
-> **System version:** 0.22.0 · **Current phase:** 11 (Observability & monitoring)
+> **System version:** 0.40.0 · **Current phase:** 19 (Maturity refactoring)
 
 ## 1. What the system is
 
@@ -935,6 +935,34 @@ require the **Operations** role.
 > DLs 0009/0029/0049/0058/0070/0074 and **refined DL-0044** (Anexo III×V/Fator R nuance + the
 > `billing.tax.regime-confirmed` flag — see DL-0121).
 
+### Phase 19h — FX hedge: forward contracts on the FX desk
+
+The **FX desk** gains the **"FX hedge — forward contracts"** section: the instrument treasury
+uses to **lock today's rate** for a future purchase of foreign currency. While a forward is
+**open**, that share of the book is protected — and the **drift alert now watches only the
+unhedged part**.
+
+- **Register a forward.** Fill in **Currency** (e.g. USD), **Notional (foreign currency)**,
+  **Contract rate**, **Trade date**, **Maturity** and **Counterparty** (the bank), and click
+  **"Register forward"**. Registration is **manual** — the system does not talk to the bank; it
+  mirrors the contract you closed outside.
+- **Track coverage.** The **exposure** panel shows two new rows: **"Open forwards (coverage)"**
+  (how many contracts protect the book) and **"Unhedged exposure"** (how much of the book is still
+  unprotected). The **drift alert** now fires on the **unhedged** part: with the book fully
+  covered, the alert stays **off**.
+- **Settle.** At maturity, enter the **"Effective settlement rate"** and click **"Settle"**: the
+  contract becomes **"Settled"** and the **"Result (BRL)"** column shows what the hedge yielded
+  (positive when locking was cheaper than the market at settlement).
+- **Cancel.** A forward undone with the bank must be **cancelled** on the screen — it **stops
+  counting as coverage** immediately.
+
+Registering, settling and cancelling require the **Director** or **Finance** role (it is a
+treasury decision); reading is open to any authenticated user.
+
+> For the technical team: SPEC-0032 / DL-0130 (revises DL-0027's alert base to the unhedged
+> exposure). Migration V40; new endpoints under `/api/exchange/forwards`; the
+> `/api/exchange/exposure` response gains `openForwards` and `unhedgedExposureBase` (additive).
+
 
 ## 4. Glossary
 
@@ -1008,6 +1036,12 @@ require the **Operations** role.
   correlation id and **without** password/token/personal data.
 - **Version endpoint (`/api/version`):** the (open) endpoint that reports which version/commit/build
   date is running.
+- **Forward contract:** a contract closed with a bank that **locks today** the exchange rate for a
+  future purchase of foreign currency (fixed amount and maturity). It protects the book against
+  rate movements.
+- **Coverage / unhedged exposure:** the share of the book protected by open forwards is the
+  **coverage**; what remains unprotected is the **unhedged exposure** — the part the FX desk's
+  drift alert fires on.
 
 ## 5. Manual version history
 
@@ -1039,6 +1073,7 @@ require the **Operations** role.
 | 0.32.0 | 18d — Last reference data (Finance/Payouts/People/Commercial policy/After-sales) + labels on screens — **closes Phase 18** | The remaining reference lists become **editable cadastros** on the "Reference data" screen: **Finance** (entry type, counterparty type), **Payouts** (payout kind, payee type), **People** (journey discrepancy kind), **Commercial policy** (value type) and **After-sales** (case type, resolution). **What everyone sees:** the **Finance, Payouts, People, Commercial policy and After-sales** screens now show the **human label** instead of the technical code (e.g. *"Supplier settlement"*, *"Refund"*, *"Refund request"*, *"Percent"*). **Nothing changes in behavior** — AP/AR posting and the document to close the month, payout repass/settlement/refund (including the **merchant trap**), after-sales orchestration and parameter math stay the same; `Ledger direction` and `Policy layer` stay fixed by design; the underlying values are identical and **no `/api` contract changed**. With this slice, **every** reference list is editable — Phase 18 is complete. (SPEC-0031 / ADR-0019 / DL-0118.) |
 | 0.33.0 | 19a — Complete role-based permissions | **Every data-changing action now requires the owning desk's role** (Operations/Finance/IT/Director/Curator); anything not explicitly allowed is **denied by default**. The **Viewer** role becomes read-only for real; **HR/Time-clock personal data** is restricted to IT (LGPD) and vault document **content** download no longer applies to Viewer; the time-clock AFD upload and crawl trigger — previously open — now require IT. An attempt without the role = **"access denied" + audit record**. Menus and screens did not change; no data shape changed — only **who may** perform each action. (SPEC-0024 BR18 / DL-0119.) |
 | 0.34.0 | 19b — Integration quarantine + decision-log review | **Quotations from the external site refused at the boundary** (account not registered yet) are **no longer lost**: they enter the **quarantine** on the *Offer sourcing* screen, where operations can **replay** (after registering the account — creates the integrated quote) or **discard**; nothing changed for the external site (same refusal). Actions require the **Operations** role. Behind the scenes, the **directed decision review** confirmed 6 sensitive decisions with market-backed justification and refined the tax one: the **enquadramento** (Anexo III×V/Fator R) is recorded for the accountant and **issuing a real invoice now depends on their confirmation** (production flag). (SPEC-0009 BR10 / DL-0120; SPEC-0016 BR8 / DL-0121.) |
+| 0.40.0 | 19h — FX hedge: forward contracts | The **FX desk** gains the **"FX hedge — forward contracts"** section: treasury **manually registers** the forward closed with the bank (currency, notional, contract rate, dates, counterparty), **settles** it at maturity by entering the effective rate (the screen shows the **result in BRL**) or **cancels** it. The exposure panel shows **"Open forwards (coverage)"** and **"Unhedged exposure"** — and the **drift alert now watches only the unhedged part** (a fully covered book never alerts). Register/settle/cancel require the **Director** or **Finance** role. Between 0.34.0 and this version the internal slices 19c–19g shipped (security, API docs, emulators, libraries, multi-instance — no screen changes). (SPEC-0032 / DL-0130.) |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of

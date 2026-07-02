@@ -21,6 +21,8 @@ const EXPOSURE: LiveExposureView = {
   totalExposure: { amount: 110, currency: 'BRL' },
   driftThreshold: { amount: 50, currency: 'BRL' },
   driftAlert: false,
+  openForwards: 0,
+  unhedgedExposureBase: { amount: 2500, currency: 'BRL' },
 };
 
 const RATE: MarketRateResponse = {
@@ -66,6 +68,7 @@ function baseService(overrides: Partial<ExchangeDeskService> = {}): Partial<Exch
   return {
     liveExposure: () => of(EXPOSURE),
     marketRateHistory: () => of(RATE_PAGE),
+    listForwards: () => of([]),
     ...overrides,
   };
 }

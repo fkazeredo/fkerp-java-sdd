@@ -4,7 +4,7 @@
 > hoje**. É atualizado **a cada fatia entregue** (ver o comando *User manual* no `CLAUDE.md`).
 > Versão em inglês (espelho, mantida em sincronia): `docs/MANUAL.en-US.md`.
 >
-> **Versão do sistema:** 0.22.0 · **Fase atual:** 11 (Observabilidade & monitoramento)
+> **Versão do sistema:** 0.40.0 · **Fase atual:** 19 (Refactoring de maturidade)
 
 ## 1. O que é o sistema
 
@@ -950,6 +950,34 @@ quarentena exigem o papel **Operacional**.
 > DLs 0009/0029/0049/0058/0070/0074 e **refinou a DL-0044** (nuance Anexo III×V/Fator R + flag
 > `billing.tax.regime-confirmed` — ver DL-0121).
 
+### Fase 19h — Hedge cambial: contratos a termo (forwards) na Mesa de câmbio
+
+A **Mesa de câmbio** ganhou a seção **"Hedge cambial — contratos a termo (forwards)"**: o
+instrumento com que a tesouraria **trava hoje a taxa** de uma compra futura de moeda estrangeira.
+Enquanto um forward está **aberto**, aquela parcela do livro está protegida — e o **alerta de
+desvio passa a vigiar só a parte descoberta**.
+
+- **Registrar um forward.** Preencha **Moeda** (ex.: USD), **Nocional (moeda estrangeira)**,
+  **Taxa contratada**, **Data do negócio**, **Vencimento** e **Contraparte** (o banco), e clique
+  **"Registrar forward"**. O registro é **manual** — o sistema não fala com o banco; ele reflete o
+  contrato que você fechou fora.
+- **Acompanhar a cobertura.** O painel de **exposição** mostra duas linhas novas: **"Forwards
+  abertos (cobertura)"** (quantos contratos protegem o livro) e **"Exposição descoberta"** (o
+  quanto do livro ainda está sem proteção). O **alerta de desvio** agora dispara sobre a parte
+  **descoberta**: com o livro totalmente coberto, o alerta fica **desligado**.
+- **Liquidar.** No vencimento, informe a **"Taxa efetiva de liquidação"** e clique **"Liquidar"**:
+  o contrato fica **"Liquidado"** e a coluna **"Resultado (BRL)"** mostra quanto o hedge rendeu
+  (positivo quando travar saiu mais barato que o mercado na liquidação).
+- **Cancelar.** Um forward desfeito com o banco deve ser **cancelado** na tela — ele **deixa de
+  contar como cobertura** na hora.
+
+Registrar, liquidar e cancelar exigem o papel **Diretor** ou **Financeiro** (é decisão de
+tesouraria); a consulta é aberta a qualquer usuário autenticado.
+
+> Para o time técnico: SPEC-0032 / DL-0130 (revisa a base do alerta da DL-0027 para a exposição
+> descoberta). Migração V40; endpoints novos em `/api/exchange/forwards`; a resposta de
+> `/api/exchange/exposure` ganhou `openForwards` e `unhedgedExposureBase` (aditivo).
+
 
 ## 4. Glossário
 
@@ -1023,6 +1051,12 @@ quarentena exigem o papel **Operacional**.
   número de correlação de cada requisição e **sem** senha/token/dado pessoal.
 - **Endpoint de versão (`/api/version`):** o endereço (aberto) que informa qual versão/commit/data de
   build está rodando.
+- **Contrato a termo (forward):** contrato fechado com um banco que **trava hoje** a taxa de câmbio
+  de uma compra futura de moeda estrangeira (valor e vencimento definidos). Protege o livro contra
+  a variação da cotação.
+- **Cobertura / exposição descoberta:** a parte do livro protegida por forwards abertos é a
+  **cobertura**; o que sobra sem proteção é a **exposição descoberta** — é sobre ela que o alerta
+  de desvio da Mesa de câmbio dispara.
 
 ## 5. Histórico de versões do manual
 
@@ -1054,6 +1088,7 @@ quarentena exigem o papel **Operacional**.
 | 0.32.0 | 18d — Últimos cadastros (Financeiro/Repasses/Pessoas/Política comercial/Pós-venda) + rótulos nas telas — **encerra a Fase 18** | As listas de referência restantes viram **cadastros editáveis** na tela "Cadastros": **Financeiro** (tipo de lançamento, tipo de contraparte), **Repasses** (tipo do repasse, tipo de favorecido), **Pessoas** (tipo de divergência da jornada), **Política comercial** (tipo do valor) e **Pós-venda** (tipo do chamado, resolução). **Novidade para todos:** as telas de **Financeiro, Repasses, Pessoas, Política comercial e Pós-venda** passam a mostrar o **rótulo em português** no lugar do código técnico (ex.: *"Liquidação de fornecedor"*, *"Reembolso"*, *"Pedido de reembolso"*, *"Percentual"*). **Nada muda no comportamento** — postagem a pagar/receber e documento no fechamento, repasse/liquidação/reembolso (incluindo a **armadilha do lojista**), orquestração do pós-venda e cálculo dos parâmetros seguem iguais; `Direção do razão` e `Camada de política` continuam fixas por design; os valores por baixo são os mesmos e **nenhum contrato `/api` mudou**. Com esta fatia, **todas** as listas de referência são editáveis — a Fase 18 está concluída. (SPEC-0031 / ADR-0019 / DL-0118.) |
 | 0.33.0 | 19a — Permissões completas por papel | **Toda ação que altera dados passa a exigir o papel do balcão** (Operacional/Financeiro/TI/Diretor/Curador); o que não está explicitamente liberado é **negado por padrão**. O papel **Leitor** vira somente-consulta de fato; **dados pessoais de RH/Ponto** ficam restritos à TI (LGPD) e o download do **conteúdo** de documentos do cofre deixa de valer para o Leitor; o envio do arquivo de ponto (AFD) e o disparo da coleta — antes abertos — agora exigem TI. Tentativa sem o papel = **"acesso negado" + registro na auditoria**. Menus e telas não mudaram; nenhum formato de dado mudou — apenas **quem pode** executar cada ação. (SPEC-0024 BR18 / DL-0119.) |
 | 0.34.0 | 19b — Quarentena de integração + revisão do decision-log | **Cotações do site externo recusadas na fronteira** (conta ainda sem cadastro) **não se perdem mais**: entram na **quarentena** da tela *Origem de ofertas*, onde a operação pode **reprocessar** (após cadastrar a conta — cria a cotação integrada) ou **descartar**; para o site externo nada mudou (mesma recusa). Ações exigem o papel **Operacional**. Nos bastidores, a **revisão dirigida das decisões** confirmou 6 decisões sensíveis com justificativa de mercado e refinou a tributária: o **enquadramento** (Anexo III×V/Fator R) ficou registrado para o contador e a **emissão real de NF passa a depender da confirmação dele** (flag de produção). (SPEC-0009 BR10 / DL-0120; SPEC-0016 BR8 / DL-0121.) |
+| 0.40.0 | 19h — Hedge cambial: contratos a termo (forwards) | A **Mesa de câmbio** ganha a seção **"Hedge cambial — contratos a termo (forwards)"**: a tesouraria **registra manualmente** o forward fechado com o banco (moeda, nocional, taxa contratada, datas, contraparte), **liquida** no vencimento informando a taxa efetiva (a tela mostra o **resultado em BRL**) ou **cancela**. O painel de exposição mostra **"Forwards abertos (cobertura)"** e **"Exposição descoberta"** — e o **alerta de desvio passa a vigiar só a parte descoberta** (livro totalmente coberto não alerta). Registrar/liquidar/cancelar exigem papel **Diretor** ou **Financeiro**. Entre 0.34.0 e esta versão saíram as fatias internas 19c–19g (segurança, doc de API, emuladores, bibliotecas, multi-instância — sem mudança de tela). (SPEC-0032 / DL-0130.) |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.

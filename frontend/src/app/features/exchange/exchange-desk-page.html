@@ -30,6 +30,10 @@
         <dd>{{ format(ex.markToMarketDrift) }}</dd>
         <dt>{{ 'exchangeDesk.totalExposure' | translate }}</dt>
         <dd>{{ format(ex.totalExposure) }}</dd>
+        <dt>{{ 'exchangeDesk.openForwards' | translate }}</dt>
+        <dd>{{ ex.openForwards }}</dd>
+        <dt>{{ 'exchangeDesk.unhedgedExposure' | translate }}</dt>
+        <dd>{{ format(ex.unhedgedExposureBase) }}</dd>
         <dt>{{ 'exchangeDesk.driftThreshold' | translate }}</dt>
         <dd>{{ format(ex.driftThreshold) }}</dd>
         <dt>{{ 'exchangeDesk.driftAlert' | translate }}</dt>
@@ -215,6 +219,145 @@
         <dt>{{ 'exchangeDesk.totalGap' | translate }}</dt>
         <dd>{{ format(pr.totalGap) }}</dd>
       </dl>
+    }
+  </div>
+
+  <!-- FX forwards — the treasury hedge (SPEC-0032, 19h) -->
+  <div class="app-card">
+    <h2 class="app-card__title">{{ 'exchangeDesk.forwards' | translate }}</h2>
+    <p class="app-card__hint">{{ 'exchangeDesk.forwardsHint' | translate }}</p>
+
+    <form class="form-grid" (ngSubmit)="registerForward()">
+      <div class="field">
+        <label for="fw-currency">{{ 'exchangeDesk.fwCurrency' | translate }}</label>
+        <input pInputText id="fw-currency" name="fwCurrency" [(ngModel)]="fwCurrency" maxlength="3" />
+      </div>
+      <div class="field">
+        <label for="fw-notional">{{ 'exchangeDesk.fwNotional' | translate }}</label>
+        <p-inputnumber
+          inputId="fw-notional"
+          name="fwNotional"
+          [(ngModel)]="fwNotional"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+        />
+      </div>
+      <div class="field">
+        <label for="fw-rate">{{ 'exchangeDesk.fwRate' | translate }}</label>
+        <p-inputnumber
+          inputId="fw-rate"
+          name="fwRate"
+          [(ngModel)]="fwRate"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="6"
+        />
+      </div>
+      <div class="field">
+        <label for="fw-trade">{{ 'exchangeDesk.fwTradeDate' | translate }}</label>
+        <input pInputText id="fw-trade" name="fwTradeDate" type="date" [(ngModel)]="fwTradeDate" />
+      </div>
+      <div class="field">
+        <label for="fw-maturity">{{ 'exchangeDesk.fwMaturityDate' | translate }}</label>
+        <input
+          pInputText
+          id="fw-maturity"
+          name="fwMaturityDate"
+          type="date"
+          [(ngModel)]="fwMaturityDate"
+        />
+      </div>
+      <div class="field">
+        <label for="fw-counterparty">{{ 'exchangeDesk.fwCounterparty' | translate }}</label>
+        <input
+          pInputText
+          id="fw-counterparty"
+          name="fwCounterparty"
+          [(ngModel)]="fwCounterparty"
+        />
+      </div>
+      @if (forwardFormError(); as fwError) {
+        <p-message severity="error" [text]="fwError | translate" data-testid="forward-error" />
+      }
+      <div class="actions">
+        <p-button
+          type="submit"
+          [loading]="registeringForward()"
+          [disabled]="registeringForward() || fwNotional === null || fwRate === null"
+          [label]="'exchangeDesk.fwRegister' | translate"
+          data-testid="forward-register"
+        />
+      </div>
+    </form>
+
+    @if (forwardsState() === 'loading') {
+      <app-screen-state state="loading" />
+    } @else if (forwardsState() === 'error') {
+      <app-screen-state state="error" [errorCode]="forwardsError()" (retry)="loadForwards()" />
+    } @else if (forwards().length === 0) {
+      <app-screen-state state="empty" emptyKey="exchangeDesk.forwardsEmpty" />
+    } @else {
+      <div class="field">
+        <label for="fw-settle-rate">{{ 'exchangeDesk.fwSettleRate' | translate }}</label>
+        <p-inputnumber
+          inputId="fw-settle-rate"
+          name="fwSettleRate"
+          [(ngModel)]="fwSettleRate"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="6"
+        />
+      </div>
+      <table class="app-table" data-testid="forwards-table">
+        <thead>
+          <tr>
+            <th>{{ 'exchangeDesk.fwCurrency' | translate }}</th>
+            <th>{{ 'exchangeDesk.fwNotional' | translate }}</th>
+            <th>{{ 'exchangeDesk.fwRate' | translate }}</th>
+            <th>{{ 'exchangeDesk.fwMaturityDate' | translate }}</th>
+            <th>{{ 'exchangeDesk.fwCounterparty' | translate }}</th>
+            <th>{{ 'exchangeDesk.fwStatus' | translate }}</th>
+            <th>{{ 'exchangeDesk.fwResult' | translate }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (fw of forwards(); track fw.id) {
+            <tr>
+              <td>{{ fw.currency }}</td>
+              <td>{{ fw.notional }}</td>
+              <td>{{ fw.contractRate }}</td>
+              <td>{{ fw.maturityDate }}</td>
+              <td>{{ fw.counterparty }}</td>
+              <td>
+                <p-tag
+                  [value]="'exchangeDesk.fwStatus' + fw.status | translate"
+                  [severity]="forwardSeverity(fw.status)"
+                />
+              </td>
+              <td>{{ fw.settlementResultBrl ?? '—' }}</td>
+              <td>
+                @if (fw.status === 'OPEN') {
+                  <p-button
+                    [label]="'exchangeDesk.fwSettle' | translate"
+                    size="small"
+                    [loading]="forwardActing() === fw.id"
+                    [disabled]="fwSettleRate === null"
+                    (onClick)="settleForward(fw)"
+                    data-testid="forward-settle"
+                  />
+                  <p-button
+                    [label]="'exchangeDesk.fwCancel' | translate"
+                    size="small"
+                    severity="secondary"
+                    [disabled]="forwardActing() === fw.id"
+                    (onClick)="cancelForward(fw)"
+                    data-testid="forward-cancel"
+                  />
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
     }
   </div>
 </section>
