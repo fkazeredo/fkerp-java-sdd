@@ -117,8 +117,21 @@ class CloseVetoIntegrationTest extends AbstractPostgresIntegrationTest {
     return document;
   }
 
+  private static final byte[] PDF_MAGIC = {0x25, 0x50, 0x44, 0x46}; // %PDF
+
+  /**
+   * Builds a multipart file part. For a .pdf filename it prepends the PDF magic bytes so the
+   * storage magic-byte validation (Fase 19c/DL-0124) accepts it — the test content stays
+   * recognizable after the header.
+   */
   private static ByteArrayResource filePart(String filename, byte[] content) {
-    return new ByteArrayResource(content) {
+    byte[] body = content;
+    if (filename != null && filename.toLowerCase().endsWith(".pdf")) {
+      body = new byte[PDF_MAGIC.length + content.length];
+      System.arraycopy(PDF_MAGIC, 0, body, 0, PDF_MAGIC.length);
+      System.arraycopy(content, 0, body, PDF_MAGIC.length, content.length);
+    }
+    return new ByteArrayResource(body) {
       @Override
       public String getFilename() {
         return filename;

@@ -1,85 +1,60 @@
 package com.fksoft.infra.integration.quotationsite;
 
 import com.fksoft.domain.sourcing.IntegrationSignatureInvalidException;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.util.HexFormat;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
+import com.fksoft.infra.integration.WebhookSignatures;
+import java.time.Clock;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- * Verifies the quotation-site webhook signature (SPEC-0009 BR3, DL-0016): an HMAC-SHA256 of the raw
- * request body keyed by a shared secret, sent in the {@code X-Signature} header (hex, optionally
- * prefixed {@code sha256=}). Comparison is constant-time to avoid timing attacks. A missing or
- * mismatched signature raises {@link IntegrationSignatureInvalidException} (401) and nothing is
- * created. This is an infra (driven-adapter) concern; the secret lives in configuration, never in
- * the domain.
+ * Verifies the quotation-site webhook signature (SPEC-0009 BR3, DL-0016; anti-replay in Fase 19c,
+ * DL-0122). The signature is an HMAC-SHA256 of {@code timestamp + "." + rawBody} keyed by a shared
+ * secret, in the {@code X-Signature} header (hex, optional {@code sha256=} prefix); the request
+ * timestamp travels in {@code X-Signature-Timestamp} (ISO-8601). A missing/mismatched signature —
+ * or a timestamp outside the tolerance window (a captured, validly-signed body cannot be replayed
+ * forever) — raises {@link IntegrationSignatureInvalidException} (401) and nothing is created.
+ * Delegates the crypto to the shared {@link WebhookSignatures}; the secret lives in configuration,
+ * never in the domain.
  */
 @Slf4j
 @Component
 public class QuotationSiteSignatureVerifier {
 
-  private static final String HMAC_ALGORITHM = "HmacSHA256";
-
-  private final byte[] secret;
+  private final WebhookSignatures signatures;
+  private final Clock clock;
 
   public QuotationSiteSignatureVerifier(
-      @Value("${integration.quotation-site.secret:dev-quotation-site-secret}") String secret) {
-    this.secret = secret.getBytes(StandardCharsets.UTF_8);
+      @Value("${integration.quotation-site.secret:dev-quotation-site-secret}") String secret,
+      @Value("${integration.quotation-site.replay-tolerance-seconds:300}") long toleranceSeconds,
+      Clock clock) {
+    this.signatures = new WebhookSignatures(secret, Duration.ofSeconds(toleranceSeconds));
+    this.clock = clock;
   }
 
   /**
-   * Verifies the signature of the raw body. Raises {@link IntegrationSignatureInvalidException}
-   * when the header is absent/blank or the computed HMAC does not match.
+   * Verifies the signature and the anti-replay window.
    *
    * @param rawBody the exact bytes received
-   * @param signatureHeader the {@code X-Signature} header value (nullable)
+   * @param timestampHeader the {@code X-Signature-Timestamp} header (ISO-8601 instant; nullable)
+   * @param signatureHeader the {@code X-Signature} header (nullable)
+   * @throws IntegrationSignatureInvalidException when the signature is absent/invalid or the
+   *     timestamp is missing/stale (replay)
    */
-  public void verify(byte[] rawBody, String signatureHeader) {
-    if (signatureHeader == null || signatureHeader.isBlank()) {
+  public void verify(byte[] rawBody, String timestampHeader, String signatureHeader) {
+    WebhookSignatures.Result result =
+        signatures.verify(rawBody, timestampHeader, signatureHeader, clock.instant());
+    if (result != WebhookSignatures.Result.OK) {
+      if (result == WebhookSignatures.Result.REPLAY) {
+        log.warn("QuotationSiteWebhook rejected: replay/stale timestamp");
+      }
       throw new IntegrationSignatureInvalidException();
     }
-    String provided = stripPrefix(signatureHeader.trim());
-    byte[] expected = hmac(rawBody);
-    byte[] providedBytes = decodeHexOrReject(provided);
-    if (!MessageDigest.isEqual(expected, providedBytes)) {
-      throw new IntegrationSignatureInvalidException();
-    }
   }
 
-  /** Computes the HMAC-SHA256 of a body with the shared secret — used by tests/clients to sign. */
-  public String sign(byte[] rawBody) {
-    return HexFormat.of().formatHex(hmac(rawBody));
-  }
-
-  private byte[] hmac(byte[] rawBody) {
-    try {
-      Mac mac = Mac.getInstance(HMAC_ALGORITHM);
-      mac.init(new SecretKeySpec(secret, HMAC_ALGORITHM));
-      return mac.doFinal(rawBody);
-    } catch (java.security.GeneralSecurityException e) {
-      // Misconfiguration of the algorithm/key is not a client error; do not leak details.
-      log.error("Failed to compute webhook HMAC", e);
-      throw new IllegalStateException("cannot compute HMAC");
-    }
-  }
-
-  private static String stripPrefix(String header) {
-    int eq = header.indexOf('=');
-    if (header.regionMatches(true, 0, "sha256=", 0, "sha256=".length())) {
-      return header.substring(eq + 1);
-    }
-    return header;
-  }
-
-  private static byte[] decodeHexOrReject(String hex) {
-    try {
-      return HexFormat.of().parseHex(hex);
-    } catch (IllegalArgumentException invalidHex) {
-      throw new IntegrationSignatureInvalidException();
-    }
+  /** Signs {@code timestamp + "." + rawBody} — used by tests/clients to sign. */
+  public String sign(String timestamp, byte[] rawBody) {
+    return signatures.sign(timestamp, rawBody);
   }
 }

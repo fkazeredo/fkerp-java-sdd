@@ -1,12 +1,40 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.34.0.md`](0.34.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.35.0.md`](0.35.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.35.0 — Phase 19c · Hardening (secrets fail-fast, webhook anti-replay, vault upload, login lockout)
+
+**MINOR — security hardening. No user-facing `/api` shape changed; the 2 M2M webhooks now require a
+timestamp header (breaking for the machine peers, which are ours/emulated).**
+
+Third slice of Phase 19: closes the behind-the-scenes security risks the audit flagged. Nothing
+end-user-visible changes (the MANUAL is untouched — Rule Zero).
+
+- **Webhook anti-replay (DL-0122):** the HMAC now signs **`timestamp + "." + body`** with a
+  tolerance window (default 300s), via a single shared `WebhookSignatures` helper (de-duplicating
+  the two verifiers). A validly-signed body can no longer be replayed forever. New timestamp header
+  required on both webhooks.
+- **Production fail-fast (DL-0123):** `ProdReadinessValidator` (prod profile) **refuses to boot**
+  with a dev/blank secret (webhook secrets, `PLATFORM_SECRET_KEY`, the `acme` DB password), an
+  `http://` issuer, or `billing.tax.regime-confirmed=false` (the real-NFS-e gate — DL-0121). No
+  secret value is logged.
+- **Vault upload hardening (DL-0124):** binary uploads (pdf/png/jpg) are validated by **magic
+  bytes** — closing the doc↔code gap where "never trust the extension alone" was only Javadoc;
+  `fileRef` is validated as a UUID on read/delete (path-traversal defense in depth).
+- **Login lockout (DL-0125):** brute-force protection on the embedded AS form login — **5
+  consecutive failures → 15-minute lock** (DB counter, V38) via `accountLocked` in the
+  `UserDetailsService`; generic error (BR4). Plus a minimal password policy (≥8, not a single
+  repeated char).
+- Gates green: backend `./mvnw verify` **552 tests** (+24), ArchUnit/Modulith/Spotless/Checkstyle/
+  JaCoCo unchanged. Migration V38.
 
 ---
 

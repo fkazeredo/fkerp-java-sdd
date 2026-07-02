@@ -89,13 +89,28 @@ point-clock:
 # webhook. The webhook secret is the shared HMAC key (the scheme a real provider uses). Sensitive
 # payment data is never logged or carried in config. Swapping in a real provider is a new adapter.
 integration:
+  # Webhook signatures cover `timestamp + "." + body` and reject a timestamp outside the tolerance
+  # window (anti-replay — Fase 19c/DL-0122). In prod the secrets MUST be overridden (fail-fast:
+  # ProdReadinessValidator, DL-0123).
+  quotation-site:
+    secret: ${QUOTATION_SITE_SECRET:dev-quotation-site-secret}
+    replay-tolerance-seconds: ${QUOTATION_SITE_REPLAY_TOLERANCE_SECONDS:300}
   payment:
     webhook-secret: ${PAYMENT_WEBHOOK_SECRET:dev-payment-webhook-secret}
+    replay-tolerance-seconds: ${PAYMENT_REPLAY_TOLERANCE_SECONDS:300}
     mock:
       delay-ms: ${PAYMENT_MOCK_DELAY_MS:3000}            # async confirmation delay (ADR 0006)
       dispatch:
         initial-delay-ms: ${PAYMENT_MOCK_DISPATCH_INITIAL_DELAY_MS:5000}
         interval-ms: ${PAYMENT_MOCK_DISPATCH_INTERVAL_MS:2000} # how often due webhooks are delivered
+
+# Login brute-force lockout for the self-hosted Authorization Server form login (Fase 19c/DL-0125):
+# after `max-attempts` consecutive failures a username is locked for `lock-seconds`; a success
+# clears the counter. Only the counter/lock is stored — never a password (BR4).
+security:
+  login:
+    max-attempts: ${LOGIN_MAX_ATTEMPTS:5}
+    lock-seconds: ${LOGIN_LOCK_SECONDS:900}
 
 # Platform (SPEC-0023). The e-CNPJ certificate custody encrypts the secret material at rest with
 # AES-256-GCM (DL-0074); the master key lives OUTSIDE the database. In production set a real 32-byte

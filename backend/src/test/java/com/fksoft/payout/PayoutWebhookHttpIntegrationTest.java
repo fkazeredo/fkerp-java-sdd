@@ -60,9 +60,10 @@ class PayoutWebhookHttpIntegrationTest extends AbstractPostgresIntegrationTest {
             String.class,
             created.id());
     String body = webhookBody(providerRef, created.id(), 1, "SUCCEEDED");
+    String ts = signature.now();
 
     ResponseEntity<Void> response =
-        post(body, signature.sign(body.getBytes(StandardCharsets.UTF_8)));
+        post(body, ts, signature.sign(ts, body.getBytes(StandardCharsets.UTF_8)));
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
     assertThat(payoutService.getById(created.id()).status()).isEqualTo(PayoutStatus.EXECUTED);
@@ -74,7 +75,7 @@ class PayoutWebhookHttpIntegrationTest extends AbstractPostgresIntegrationTest {
     executionService.execute(created.id(), PaymentOutcome.SUCCEEDED);
     String body = webhookBody("mock-x", created.id(), 1, "SUCCEEDED");
 
-    ResponseEntity<Void> response = post(body, "deadbeef"); // wrong signature
+    ResponseEntity<Void> response = post(body, signature.now(), "deadbeef"); // wrong signature
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     assertThat(payoutService.getById(created.id()).status()).isEqualTo(PayoutStatus.EXECUTING);
@@ -84,9 +85,10 @@ class PayoutWebhookHttpIntegrationTest extends AbstractPostgresIntegrationTest {
     assertThat(processed).isZero();
   }
 
-  private ResponseEntity<Void> post(String body, String signatureHeader) {
+  private ResponseEntity<Void> post(String body, String timestamp, String signatureHeader) {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.set("X-Payment-Signature-Timestamp", timestamp);
     headers.set("X-Payment-Signature", signatureHeader);
     return restTemplate.postForEntity(
         "/api/webhooks/payouts/mock", new HttpEntity<>(body, headers), Void.class);

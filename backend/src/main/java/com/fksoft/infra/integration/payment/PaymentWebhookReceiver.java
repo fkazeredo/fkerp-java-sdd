@@ -41,12 +41,14 @@ public class PaymentWebhookReceiver {
    * Verifies, translates and applies a payment webhook idempotently.
    *
    * @param rawBody the exact callback bytes
+   * @param timestampHeader the {@code X-Payment-Signature-Timestamp} header (anti-replay)
    * @param signatureHeader the {@code X-Payment-Signature} header
-   * @throws PayoutWebhookSignatureInvalidException when the signature is missing/invalid (401)
+   * @throws PayoutWebhookSignatureInvalidException when the signature is missing/invalid or the
+   *     timestamp is stale (401)
    */
   @Transactional
-  public void receive(byte[] rawBody, String signatureHeader) {
-    signature.verify(rawBody, signatureHeader);
+  public void receive(byte[] rawBody, String timestampHeader, String signatureHeader) {
+    signature.verify(rawBody, timestampHeader, signatureHeader);
     PaymentWebhookPayload payload = parse(rawBody);
     UUID payoutId = parsePayoutId(payload);
     PaymentOutcome outcome = parseOutcome(payload);

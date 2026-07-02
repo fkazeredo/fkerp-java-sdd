@@ -10,6 +10,9 @@ import com.fksoft.domain.sourcing.IntegrationSignatureInvalidException;
 import com.fksoft.domain.sourcing.RegisterInboundQuotationCommand;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -20,8 +23,10 @@ import org.junit.jupiter.api.Test;
 class QuotationSiteInboundAdapterTest {
 
   private static final String SECRET = "test-secret";
+  private static final Instant NOW = Instant.parse("2026-07-02T12:00:00Z");
+  private static final String TS = NOW.toString();
   private final QuotationSiteSignatureVerifier verifier =
-      new QuotationSiteSignatureVerifier(SECRET);
+      new QuotationSiteSignatureVerifier(SECRET, 300, Clock.fixed(NOW, ZoneOffset.UTC));
   private final QuotationSiteInboundAdapter adapter =
       new QuotationSiteInboundAdapter(verifier, new ObjectMapper());
 
@@ -36,7 +41,8 @@ class QuotationSiteInboundAdapterTest {
   @Test
   void verifiesAndTranslatesAValidPayloadToADomainCommand() {
     byte[] body = VALID_JSON.getBytes(StandardCharsets.UTF_8);
-    RegisterInboundQuotationCommand command = adapter.verifyAndTranslate(body, verifier.sign(body));
+    RegisterInboundQuotationCommand command =
+        adapter.verifyAndTranslate(body, TS, verifier.sign(TS, body));
 
     assertThat(command.externalQuotationId()).isEqualTo("QS-2026-555");
     assertThat(command.productText()).isEqualTo("City Tour Rio - full day");
@@ -47,14 +53,14 @@ class QuotationSiteInboundAdapterTest {
   @Test
   void rejectsAnInvalidSignatureBeforeTranslating() {
     byte[] body = VALID_JSON.getBytes(StandardCharsets.UTF_8);
-    assertThatThrownBy(() -> adapter.verifyAndTranslate(body, "deadbeef"))
+    assertThatThrownBy(() -> adapter.verifyAndTranslate(body, TS, "deadbeef"))
         .isInstanceOf(IntegrationSignatureInvalidException.class);
   }
 
   @Test
   void rejectsAMalformedJsonPayload() {
     byte[] body = "{not json".getBytes(StandardCharsets.UTF_8);
-    assertThatThrownBy(() -> adapter.verifyAndTranslate(body, verifier.sign(body)))
+    assertThatThrownBy(() -> adapter.verifyAndTranslate(body, TS, verifier.sign(TS, body)))
         .isInstanceOf(IntegrationPayloadInvalidException.class);
   }
 
@@ -63,7 +69,7 @@ class QuotationSiteInboundAdapterTest {
     String missingPrice =
         "{ \"externalQuotationId\":\"QS-1\", \"product\":\"x\", \"account\":{\"document\":\"1\"} }";
     byte[] body = missingPrice.getBytes(StandardCharsets.UTF_8);
-    assertThatThrownBy(() -> adapter.verifyAndTranslate(body, verifier.sign(body)))
+    assertThatThrownBy(() -> adapter.verifyAndTranslate(body, TS, verifier.sign(TS, body)))
         .isInstanceOf(IntegrationPayloadInvalidException.class);
   }
 }

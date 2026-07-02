@@ -193,15 +193,19 @@ class InboundQuarantineIntegrationTest extends AbstractPostgresIntegrationTest {
     return response.getBody();
   }
 
+  private static final String TS = java.time.Instant.now().toString();
+
   private static HttpEntity<String> entity(String body, String signature) {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.set("X-Signature-Timestamp", TS);
     headers.set("X-Signature", signature);
     return new HttpEntity<>(body, headers);
   }
 
   private String sign(String body) {
-    return new QuotationSiteSignatureVerifier(secret).sign(body.getBytes(StandardCharsets.UTF_8));
+    return new QuotationSiteSignatureVerifier(secret, 300, java.time.Clock.systemUTC())
+        .sign(TS, body.getBytes(StandardCharsets.UTF_8));
   }
 
   private static String payload(String externalId, String document) {

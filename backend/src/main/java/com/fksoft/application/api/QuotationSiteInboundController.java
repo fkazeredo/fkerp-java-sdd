@@ -47,8 +47,10 @@ public class QuotationSiteInboundController {
   @PostMapping(path = "/inbound", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<InboundQuotationResult> inbound(
       @RequestBody byte[] rawBody,
+      @RequestHeader(value = "X-Signature-Timestamp", required = false) String timestamp,
       @RequestHeader(value = "X-Signature", required = false) String signature) {
-    RegisterInboundQuotationCommand command = inboundAdapter.verifyAndTranslate(rawBody, signature);
+    RegisterInboundQuotationCommand command =
+        inboundAdapter.verifyAndTranslate(rawBody, timestamp, signature);
     try {
       InboundQuotationResult result = sourcingService.processInbound(command, CONNECTOR_ACTOR);
       return ResponseEntity.status(HttpStatus.ACCEPTED).body(result);

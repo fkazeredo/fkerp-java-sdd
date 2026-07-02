@@ -68,8 +68,9 @@ public class MockPayoutJobDispatcher {
             job.installmentSeq(),
             job.outcome().name());
     byte[] rawBody = serialize(payload);
-    String header = signature.sign(rawBody);
-    receiver.receive(rawBody, header);
+    String timestamp = signature.now();
+    String header = signature.sign(timestamp, rawBody);
+    receiver.receive(rawBody, timestamp, header);
     log.info(
         "MockPaymentWebhookDelivered providerRef={} payoutId={} seq={} outcome={}",
         job.providerRef(),

@@ -124,7 +124,8 @@ public class AuthorizationServerConfig {
    */
   @Bean
   @Order(3)
-  public SecurityFilterChain loginSecurityFilterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain loginSecurityFilterChain(
+      HttpSecurity http, LoginAttemptService loginAttempts) throws Exception {
     http.authorizeHttpRequests(
             authorize ->
                 authorize
@@ -132,9 +133,47 @@ public class AuthorizationServerConfig {
                     .permitAll()
                     .anyRequest()
                     .authenticated())
-        .formLogin(Customizer.withDefaults())
+        .formLogin(
+            form ->
+                form.successHandler(loginSuccessHandler(loginAttempts))
+                    .failureHandler(loginFailureHandler(loginAttempts)))
         .logout(Customizer.withDefaults());
     return http.build();
+  }
+
+  /**
+   * On a successful form login, clears the failed-attempt counter (DL-0125) and forwards to the
+   * saved request (the OAuth2 authorize the browser was pursuing), preserving the standard flow.
+   */
+  private static org.springframework.security.web.authentication.AuthenticationSuccessHandler
+      loginSuccessHandler(LoginAttemptService loginAttempts) {
+    org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler
+        delegate =
+            new org.springframework.security.web.authentication
+                .SavedRequestAwareAuthenticationSuccessHandler();
+    return (request, response, authentication) -> {
+      loginAttempts.onSuccess(authentication.getName());
+      delegate.onAuthenticationSuccess(request, response, authentication);
+    };
+  }
+
+  /**
+   * On a failed form login, records the failure (DL-0125). When the failure crosses the threshold
+   * the account is locked; the user is redirected back to {@code /login?error} with a generic
+   * message (BR4 — never reveal whether the user exists or is locked).
+   */
+  private static org.springframework.security.web.authentication.AuthenticationFailureHandler
+      loginFailureHandler(LoginAttemptService loginAttempts) {
+    org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler delegate =
+        new org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler(
+            "/login?error");
+    return (request, response, exception) -> {
+      String username = request.getParameter("username");
+      if (username != null && !username.isBlank()) {
+        loginAttempts.onFailure(username);
+      }
+      delegate.onAuthenticationFailure(request, response, exception);
+    };
   }
 
   /**

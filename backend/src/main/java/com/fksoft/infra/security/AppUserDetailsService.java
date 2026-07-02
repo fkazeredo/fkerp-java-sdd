@@ -23,9 +23,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class AppUserDetailsService implements UserDetailsService {
 
   private final AppUserRepository users;
+  private final LoginAttemptService loginAttempts;
 
-  public AppUserDetailsService(AppUserRepository users) {
+  public AppUserDetailsService(AppUserRepository users, LoginAttemptService loginAttempts) {
     this.users = users;
+    this.loginAttempts = loginAttempts;
   }
 
   @Override
@@ -37,10 +39,14 @@ public class AppUserDetailsService implements UserDetailsService {
             .orElseThrow(() -> new UsernameNotFoundException("bad credentials"));
     List<SimpleGrantedAuthority> authorities =
         user.roleNames().stream().map(SimpleGrantedAuthority::new).toList();
+    // Brute-force lockout (DL-0125): a currently-locked account is presented as locked, so Spring
+    // Security refuses authentication with a LockedException before the password is even checked.
+    boolean locked = loginAttempts.isLocked(user.username());
     return User.withUsername(user.username())
         .password(user.passwordHash())
         .authorities(authorities)
         .disabled(!user.isActive())
+        .accountLocked(locked)
         .build();
   }
 }

@@ -62,6 +62,9 @@ public class DevUserSeeder implements ApplicationRunner {
     if (users.existsByUsername(username)) {
       return;
     }
+    // Even the dev seed password passes the minimal policy (DL-0125): a weak password never reaches
+    // the store, keeping the seeder honest about what a real user-creation flow must enforce.
+    PasswordPolicy.validate(DEV_PASSWORD);
     users.save(
         AppUser.of(
             username, passwordEncoder.encode(DEV_PASSWORD), displayName, roles, clock.instant()));

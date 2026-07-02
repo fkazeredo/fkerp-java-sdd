@@ -29,8 +29,9 @@ public class PayoutWebhookController {
   @PostMapping(path = "/mock", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<Void> mock(
       @RequestBody byte[] rawBody,
+      @RequestHeader(value = "X-Payment-Signature-Timestamp", required = false) String timestamp,
       @RequestHeader(value = "X-Payment-Signature", required = false) String signature) {
-    receiver.receive(rawBody, signature);
+    receiver.receive(rawBody, timestamp, signature);
     return ResponseEntity.status(HttpStatus.ACCEPTED).build();
   }
 }

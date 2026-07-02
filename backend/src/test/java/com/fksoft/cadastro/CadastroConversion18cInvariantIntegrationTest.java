@@ -161,7 +161,8 @@ class CadastroConversion18cInvariantIntegrationTest extends AbstractPostgresInte
     DocumentView contract =
         complianceService.upload(
             DocumentTypeCodes.REPRESENTATION_CONTRACT,
-            "contrato".getBytes(StandardCharsets.UTF_8),
+            // Leading %PDF so the storage magic-byte check (Fase 19c/DL-0124) accepts the .pdf.
+            "%PDFcontrato".getBytes(StandardCharsets.UTF_8),
             "contrato.pdf",
             "application/pdf",
             LocalDate.of(2026, 1, 10),
