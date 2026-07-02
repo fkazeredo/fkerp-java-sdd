@@ -328,6 +328,41 @@ Open Questions ao dono).
 
 ---
 
+## FASE 20 — Experiência do usuário corporativo + DSS real · plano do dono 2026-07-02
+
+Decisão do dono: o público final é **corporativo, teclado-first**, e a inteligência do ERP (DSS)
+precisa ser **real** (modelos/algoritmos de verdade, 2026), não fachada. Cada fatia = spec/DL +
+gates verdes + release MINOR; UX é bilíngue no manual quando muda algo visível.
+
+- **20a — Teclado-first (atalhos para tudo + busca de funcionalidade).** Todo módulo/ação acessível
+  por atalho; **dicionário de atalhos** acessível de qualquer ponto (tecla `?`), já existe base
+  (`ShortcutService`/`CommandRegistry`, DL-0093) — estender a **cobertura total**. **Busca geral de
+  funcionalidade** (paleta `Ctrl/Cmd+K` graduada para navegar a qualquer tela/ação por nome).
+  Formulários: navegação por `Tab` consistente, **autocomplete** nos campos de referência
+  (cadastros/contas/marcas), foco inicial correto. Pesquisar padrões de mercado (command palette,
+  a11y WAI-ARIA APG) antes de decidir.
+- **20b — Proteção de fluxo + `Esc`/`Enter` universais.** Aviso de **dados não salvos** ao
+  abandonar formulário/ação (gradua o `canDeactivate` existente para cobrir toda tela); **`Esc`
+  fecha** (modal ou não, com confirmação se sujo); **`Enter` confirma** a ação primária. Padrão
+  único aplicado a todas as telas.
+- **20c — DSS real (modelos e algoritmos).** Substituir o DSS de fachada por **apoio à decisão
+  determinístico/estatístico de verdade**, sempre **aceitável/rejeitável** pelo humano: começar
+  pelos de maior retorno e base sólida — `OverrideNudge` (distância à próxima faixa de comissão,
+  aritmética exata), previsão de demanda/receita (série temporal: média móvel/Holt-Winters ou
+  regressão simples sobre os eventos), detecção de anomalia de margem/churn (limiares estatísticos,
+  z-score), auto-preenchimento sugerido de cotação/parâmetros. **Pesquisar fontes confiáveis** de
+  algoritmos (forecasting clássico, detecção de outliers) e escolher o mais simples que entrega
+  valor (Regra Zero). Modelo probabilístico fica atrás de porta, com validação determinística antes
+  de afetar estado (`messaging-and-integrations.md` §AI). Guardrail: aconselha, nunca comanda.
+- **20d — Design moderno e amigável.** Refinar a UI (espaçamento, hierarquia, tipografia, densidade
+  corporativa, estados, feedback) mantendo PrimeNG/Tailwind; acessível e responsivo. Pesquisar
+  referências de ERPs/SaaS modernos antes de decidir tokens/paleta.
+
+> O dono autorizou decidir sozinho nestas fatias **desde que haja pesquisa em fontes confiáveis
+> antes de cada decisão**. Registrar cada escolha num DL, como nas fases anteriores.
+
+---
+
 ## Perguntas em aberto que **travam** fatias (da Parte 13 do redesenho)
 
 | # | Pergunta | Trava a fatia |

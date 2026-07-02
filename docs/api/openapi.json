@@ -3497,7 +3497,7 @@
   "info" : {
     "description" : "ERP Acme Travel — modular monolith (Spring Boot, hexagonal, Spring Modulith).\n\nThe API is protected by an OIDC bearer JWT issued by the SELF-HOSTED Authorization Server embedded in this app (ADR-0018) and validated by the resource server via JWKS. Use the **Authorize** button to log in with the Authorization Code + PKCE flow, or paste a bearer token.\n\nAuthorization is by role (SPEC-0024 / DL-0119): a write endpoint requires the owning desk's role (Finance / Operations / IT / Director / Policy Admin); an unmapped write is denied by default. Every endpoint returns the stable error envelope `{ code, message, fields }` (ADR 0011).\n\nThe per-release history lives in `docs/release-notes/` (CHANGELOG.en-US.md).",
     "title" : "Acme Travel ERP API",
-    "version" : "0.36.0"
+    "version" : "0.37.0"
   },
   "openapi" : "3.1.0",
   "paths" : {

@@ -155,3 +155,15 @@ billing:
   tax:
     regime: ${BILLING_TAX_REGIME:SIMPLES_NACIONAL}
     regime-confirmed: ${BILLING_TAX_REGIME_CONFIRMED:false}
+  # NFS-e adapter selection (Fase 19e/DL-0127). Default `simulated` = the in-process traceable mock
+  # (SimulatedMunicipalNfseService). Set `http` to use the real HTTP client adapter
+  # (HttpMunicipalNfseService) against the emulator/municipality, exercising timeout/retry/breaker.
+  nfse:
+    adapter: ${BILLING_NFSE_ADAPTER:simulated}
+    base-url: ${BILLING_NFSE_BASE_URL:http://localhost:8090}
+    connect-timeout-ms: ${BILLING_NFSE_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${BILLING_NFSE_READ_TIMEOUT_MS:5000}
+    max-retries: ${BILLING_NFSE_MAX_RETRIES:2}
+    breaker:
+      failure-threshold: ${BILLING_NFSE_BREAKER_FAILURE_THRESHOLD:5}
+      cooldown-ms: ${BILLING_NFSE_BREAKER_COOLDOWN_MS:60000}

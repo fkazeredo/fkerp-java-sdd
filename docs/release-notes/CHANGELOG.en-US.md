@@ -1,12 +1,39 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.36.0.md`](0.36.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.37.0.md`](0.37.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.37.0 — Phase 19e · Integration emulation (real HTTP NFS-e adapter + dev/test emulator)
+
+**MINOR — new capability. No `/api` shape changed; the adapter selection is internal (default stays
+the in-process simulated mock).**
+
+The integration adapters were in-process mocks that never exercised real HTTP — so outbound
+timeout/retry/circuit-breaker had no genuine coverage. This slice graduates a representative
+vertical slice (the municipal NFS-e outbound) to a real HTTP client, with an emulator running **in
+dev and in tests** (owner request), and documents the pattern for the rest. SPEC-0016; DL-0127.
+
+- **Real HTTP adapter** `HttpMunicipalNfseService`: `RestClient` with connect/read timeouts,
+  bounded **retry** of transient failures (TIMEOUT/UNAVAILABLE; REJECTED is terminal), guarded by a
+  reusable **`OutboundCircuitBreaker`** (generalizes the crawler's in-process breaker — DL-0031; no
+  resilience4j). Failure classification (BR7): timeout→TIMEOUT, 5xx→UNAVAILABLE, 422→REJECTED; never
+  a false "issued".
+- **Config-selected** via `billing.nfse.adapter`: default `simulated` (nothing breaks); `http`
+  turns on the real adapter (both `@ConditionalOnProperty`).
+- **Emulator in DEV** (not just tests): a **WireMock** service in docker-compose under the
+  `emulators` profile (`docker compose --profile emulators up`), with fault injection by
+  `municipalityCode` (`REJECT`/`TIMEOUT`/success) — `infra/wiremock/` + README. **In tests**: a JDK
+  `HttpServer` (no new dependency) exercises success/rejection/timeout/breaker.
+- Gates green: backend `./mvnw verify` **559 tests** (+5). Seam documented to graduate the other
+  mocks (portals/GDS/gateway/newsletter/point) the same way; the real municipality (XML/SOAP,
+  e-CNPJ, homologation) stays an Open Question.
 
 ---
 
