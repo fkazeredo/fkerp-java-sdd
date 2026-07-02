@@ -134,10 +134,12 @@ public class SecurityConfig {
   }
 
   /**
-   * Applies the shared security configuration: stateless, public matchers, role-gated sensitive
-   * actions (DL-0082), JWT resource server (validated by JWKS — DL-0104) and the audited 401/403
-   * handlers. Reused by the test filter chain ({@code TestSecurityConfig}) so the test path runs
-   * the <strong>same real authorization</strong> (security mounted, not removed — DL-0081).
+   * Applies the shared security configuration: stateless, public matchers, the ordered {@link
+   * ApiAuthorizationMatrix} (role-gated writes and sensitive reads — DL-0082/DL-0119), a
+   * <strong>default-deny for every unmapped write verb</strong> under {@code /api/**}, JWT resource
+   * server (validated by JWKS — DL-0104) and the audited 401/403 handlers. Reused by the test
+   * filter chain ({@code TestSecurityConfig}) so the test path runs the <strong>same real
+   * authorization</strong> (security mounted, not removed — DL-0081).
    */
   public static HttpSecurity configure(
       HttpSecurity http,
@@ -148,63 +150,39 @@ public class SecurityConfig {
     http.csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
-            auth ->
-                auth
-                    // Public: health, API docs, actuator health, version.
-                    .requestMatchers(publicMatchers())
-                    .permitAll()
-                    // Machine-to-machine ACL webhooks/inbound — authenticated by HMAC, not by user.
-                    .requestMatchers("/api/webhooks/**", "/api/integration/**")
-                    .permitAll()
-                    // Operational telemetry is for IT only (SPEC-0027/DL-0095): the Prometheus
-                    // scrape and the metrics catalogue require ROLE_IT. health/info/version stay
-                    // public (publicMatchers). Anonymous → 401; token without ROLE_IT → 403.
-                    .requestMatchers(
-                        "/actuator/prometheus", "/actuator/metrics", "/actuator/metrics/**")
-                    .hasRole("IT")
-                    // Sensitive actions require the corresponding role (DL-0082).
-                    .requestMatchers(
-                        org.springframework.http.HttpMethod.POST, "/api/billing/invoices/*/issue")
-                    .hasRole("FINANCE")
-                    .requestMatchers(
-                        org.springframework.http.HttpMethod.POST, "/api/finance/periods/*/close")
-                    .hasRole("FINANCE")
-                    .requestMatchers(
-                        org.springframework.http.HttpMethod.POST, "/api/platform/jobs/*/trigger")
-                    .hasRole("IT")
-                    .requestMatchers(
-                        org.springframework.http.HttpMethod.POST, "/api/platform/certificate")
-                    .hasRole("IT")
-                    .requestMatchers(
-                        org.springframework.http.HttpMethod.POST,
-                        "/api/commercial-policy/directives")
-                    .hasRole("DIRECTOR")
-                    .requestMatchers(
-                        org.springframework.http.HttpMethod.POST, "/api/commercial-policy/rules")
-                    .hasAnyRole("DIRECTOR", "POLICY_ADMIN")
-                    .requestMatchers("/api/identity/roles", "/api/identity/access-audit")
-                    .hasAnyRole("DIRECTOR", "IT")
-                    // Reference-data cadastros: reads are for any authenticated user; writes
-                    // (create/update/deactivate an item) are governance of policy — reuse the
-                    // existing POLICY_ADMIN role (SPEC-0031/DL-0115; no new role after Phase 17).
-                    .requestMatchers(
-                        org.springframework.http.HttpMethod.POST, "/api/cadastro/items")
-                    .hasRole("POLICY_ADMIN")
-                    .requestMatchers(
-                        org.springframework.http.HttpMethod.PUT, "/api/cadastro/items/*")
-                    .hasRole("POLICY_ADMIN")
-                    .requestMatchers(
-                        org.springframework.http.HttpMethod.DELETE, "/api/cadastro/items/*")
-                    .hasRole("POLICY_ADMIN")
-                    // Administrative writes (supplier/contract/expense registration, expiry sweep)
-                    // generate AP/finance facts → require the finance role (SPEC-0025, DL-0088).
-                    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/admin/**")
-                    .hasRole("FINANCE")
-                    // Everything else under /api requires authentication.
-                    .requestMatchers("/api/**")
-                    .authenticated()
-                    .anyRequest()
-                    .permitAll())
+            auth -> {
+              // Public: health, API docs, actuator health, version.
+              auth.requestMatchers(publicMatchers()).permitAll();
+              // Operational telemetry is for IT only (SPEC-0027/DL-0095): the Prometheus
+              // scrape and the metrics catalogue require ROLE_IT. health/info/version stay
+              // public (publicMatchers). Anonymous → 401; token without ROLE_IT → 403.
+              auth.requestMatchers(
+                      "/actuator/prometheus", "/actuator/metrics", "/actuator/metrics/**")
+                  .hasRole("IT");
+              // The ordered API authorization matrix (DL-0119): HMAC-verified M2M endpoints,
+              // role-gated writes per desk and sensitive reads. First match wins.
+              for (ApiAuthorizationMatrix.Rule rule : ApiAuthorizationMatrix.RULES) {
+                var matcher = auth.requestMatchers(rule.method(), rule.pattern());
+                switch (rule.access()) {
+                  case PERMIT -> matcher.permitAll();
+                  case AUTHENTICATED -> matcher.authenticated();
+                  case ROLES -> matcher.hasAnyRole(rule.roles().toArray(String[]::new));
+                }
+              }
+              // DEFAULT-DENY: any write verb under /api not covered by the matrix is refused —
+              // a new endpoint must be added to the matrix (completeness test) to be reachable.
+              auth.requestMatchers(org.springframework.http.HttpMethod.POST, "/api/**")
+                  .denyAll()
+                  .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/**")
+                  .denyAll()
+                  .requestMatchers(org.springframework.http.HttpMethod.PATCH, "/api/**")
+                  .denyAll()
+                  .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/**")
+                  .denyAll();
+              // Reads not gated by the matrix require authentication; everything outside /api
+              // belongs to the AS/form-login chains.
+              auth.requestMatchers("/api/**").authenticated().anyRequest().permitAll();
+            })
         .oauth2ResourceServer(
             oauth2 ->
                 oauth2

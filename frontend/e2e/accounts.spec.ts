@@ -8,7 +8,8 @@ import { login } from './helpers';
  * starts empty, so the empty state is genuine (DL-0101).
  */
 test('navigate to Accounts, see the empty state, then register an account', async ({ page }) => {
-  await login(page);
+  // Registering an account is an operations-desk write (Phase 19a authorization matrix — DL-0119).
+  await login(page, 'ops');
 
   // Navigate from the dashboard to Accounts via the sidebar nav (shell navigation works — AC6).
   await page.locator('.shell__nav-item', { hasText: 'Contas' }).click();

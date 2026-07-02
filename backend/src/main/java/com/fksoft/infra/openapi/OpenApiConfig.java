@@ -219,6 +219,6 @@ public class OpenApiConfig {
                         + " JSON schema (string), so NO existing /api contract changes; the"
                         + " Finance/Payout/People/CommercialPolicy/AfterSales screens now render the cadastro"
                         + " label.")
-                .version("0.32.0"));
+                .version("0.33.0"));
   }
 }

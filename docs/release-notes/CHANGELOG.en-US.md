@@ -1,12 +1,38 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.32.0.md`](0.32.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.33.0.md`](0.33.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.33.0 — Phase 19a · Default-deny role-based authorization (full matrix)
+
+**MINOR — security hardening. No data shape changed; the authorization STATUS changes for callers
+without the owning desk's role (2xx → 403), highlighted below.**
+
+First slice of **Phase 19 (maturity refactoring)**: the role enforcement that covered only ~8 routes
+(DL-0082) now covers the **entire API surface** with **default-deny** for anything unmapped.
+SPEC-0024 BR18; DL-0119.
+
+- **Single ordered matrix** (`ApiAuthorizationMatrix`): every write endpoint carries its owning
+  desk — **Finance** (ledger/invoices/payouts/back-office/reconciliation settlement/vault purge),
+  **Operations** (accounts/offers/quotes/bookings/after-sales/market rate/cancellation
+  policy/marketing/portfolio), **IT** (people/time-clock/assets/platform), **Director** (pinned
+  rate, directives, LGPD erasure), **Policy Curator** (reference data). **Viewer writes nothing.**
+- **Default-deny:** `POST/PUT/PATCH/DELETE /api/**` outside the matrix is refused; completeness is
+  a **build gate** (`ApiAuthorizationMatrixCompletenessTest` — no orphan write, no stale rule).
+- **Closed hole:** the blanket `permitAll` on `/api/integration/**` left the **AFD upload** and the
+  **crawl trigger** reachable with **no credentials**; only the 2 HMAC-signed webhooks remain M2M
+  and the point endpoints now require **IT**.
+- **Sensitive reads** gated too: People/Time-clock personal data → IT (LGPD); vault document
+  **content** download excludes Viewer; Platform surface → IT/Director.
+- Gates green: backend `./mvnw verify` **523 tests** (+10), ArchUnit/Modulith/Spotless/Checkstyle/
+  JaCoCo unchanged; the accounts E2E journey now signs in as `ops` (the owning desk).
 
 ---
 
