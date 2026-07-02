@@ -26,7 +26,7 @@ import java.util.UUID;
 public record SupportCaseView(
     UUID id,
     String bookingId,
-    SupportCaseType type,
+    String type,
     SupportCaseStatus status,
     String summary,
     Instant openedAt,
@@ -34,7 +34,7 @@ public record SupportCaseView(
     Instant dueAt,
     boolean breached,
     Instant resolvedAt,
-    CaseResolution resolution,
+    String resolution,
     UUID linkedPayoutId,
     int reopenCount,
     Money costToServeTotal) {}

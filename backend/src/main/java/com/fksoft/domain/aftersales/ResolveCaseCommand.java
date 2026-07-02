@@ -26,7 +26,7 @@ import java.time.Instant;
  * @param cancellationReason the cancellation reason passed to Booking, or {@code null}
  */
 public record ResolveCaseCommand(
-    CaseResolution resolution,
+    String resolution,
     Money amount,
     Money handlingCost,
     Instant serviceStartsAt,

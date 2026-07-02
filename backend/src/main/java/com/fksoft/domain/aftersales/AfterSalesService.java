@@ -1,6 +1,8 @@
 package com.fksoft.domain.aftersales;
 
 import com.fksoft.domain.booking.BookingService;
+import com.fksoft.domain.cadastro.CadastroType;
+import com.fksoft.domain.cadastro.CadastroValidator;
 import com.fksoft.domain.commercialpolicy.CommercialPolicyService;
 import com.fksoft.domain.commercialpolicy.ParameterKey;
 import com.fksoft.domain.commercialpolicy.ParameterScope;
@@ -8,8 +10,8 @@ import com.fksoft.domain.commercialpolicy.ResolvedParameter;
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.payout.CreatePayoutCommand;
 import com.fksoft.domain.payout.Payee;
-import com.fksoft.domain.payout.PayeeType;
-import com.fksoft.domain.payout.PayoutKind;
+import com.fksoft.domain.payout.PayeeTypeCodes;
+import com.fksoft.domain.payout.PayoutKindCodes;
 import com.fksoft.domain.payout.PayoutService;
 import com.fksoft.domain.payout.PayoutView;
 import java.time.Clock;
@@ -64,6 +66,7 @@ public class AfterSalesService {
   private final BookingService bookingService;
   private final Clock clock;
   private final ApplicationEventPublisher events;
+  private final CadastroValidator cadastroValidator;
 
   /**
    * Opens a new case (BR1). The SLA deadlines are derived from the type and the governed policy at
@@ -79,6 +82,9 @@ public class AfterSalesService {
     if (command == null || command.type() == null) {
       throw new SupportCaseInvalidException();
     }
+    // Validate the case-type reference code against the cadastro (SPEC-0031 BR3/DL-0118): an
+    // unknown/inactive type is rejected (422) before the SLA is derived (SupportCaseTypeCodes).
+    cadastroValidator.validate(CadastroType.SUPPORT_CASE_TYPE, command.type());
     Instant now = clock.instant();
     Instant firstResponseDueAt = now.plus(resolveSlaHours(SLA_FIRST_RESPONSE_KEY));
     Instant dueAt = now.plus(resolveResolutionSla(command.type()));
@@ -154,12 +160,15 @@ public class AfterSalesService {
   public SupportCaseView resolve(UUID caseId, ResolveCaseCommand command, String actor) {
     SupportCase supportCase =
         repository.findById(caseId).orElseThrow(SupportCaseNotFoundException::new);
+    // Validate the resolution reference code against the cadastro (SPEC-0031 BR3/DL-0118): an
+    // unknown/inactive resolution is rejected (422) before any owner-module orchestration.
+    cadastroValidator.validate(CadastroType.CASE_RESOLUTION, command.resolution());
     Instant now = clock.instant();
 
     UUID linkedPayoutId = null;
     Money refundAmount = null;
 
-    if (command.resolution().triggersRefund()) {
+    if (CaseResolutionCodes.triggersRefund(command.resolution())) {
       if (supportCase.hasLinkedRefund()) {
         throw new SupportCaseRefundDuplicateException();
       }
@@ -167,7 +176,7 @@ public class AfterSalesService {
       linkedPayoutId = triggerRefund(supportCase, refundAmount, actor);
     }
 
-    if (command.resolution().triggersCancellation()) {
+    if (CaseResolutionCodes.triggersCancellation(command.resolution())) {
       triggerCancellation(supportCase, command, actor, now);
     }
 
@@ -235,7 +244,7 @@ public class AfterSalesService {
   /** Lists cases with optional type/status/booking/breached filters, paged. */
   @Transactional(readOnly = true)
   public Page<SupportCaseView> list(
-      SupportCaseType type,
+      String type,
       SupportCaseStatus status,
       String bookingId,
       Boolean breached,
@@ -258,8 +267,8 @@ public class AfterSalesService {
     PayoutView payout =
         payoutService.create(
             new CreatePayoutCommand(
-                PayoutKind.REFUND,
-                new Payee(supportCase.bookingId(), PayeeType.CUSTOMER),
+                PayoutKindCodes.REFUND,
+                new Payee(supportCase.bookingId(), PayeeTypeCodes.CUSTOMER),
                 supportCase.bookingId(),
                 supportCase.id().toString(),
                 refundAmount,
@@ -297,8 +306,9 @@ public class AfterSalesService {
   /**
    * The resolution SLA for a case type: the tighter refund SLA for cancellation/refund (DL-0052).
    */
-  private Duration resolveResolutionSla(SupportCaseType type) {
-    return resolveSlaHours(type.usesRefundSla() ? SLA_REFUND_KEY : SLA_RESOLUTION_KEY);
+  private Duration resolveResolutionSla(String type) {
+    return resolveSlaHours(
+        SupportCaseTypeCodes.usesRefundSla(type) ? SLA_REFUND_KEY : SLA_RESOLUTION_KEY);
   }
 
   /**

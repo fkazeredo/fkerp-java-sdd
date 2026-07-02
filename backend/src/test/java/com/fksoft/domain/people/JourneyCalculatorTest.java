@@ -32,19 +32,19 @@ class JourneyCalculatorTest {
   void detectsOddPunch() {
     JourneyComputation c = JourneyCalculator.compute(8 * 60, 8 * 60, 4, 3);
     assertThat(c.discrepancies())
-        .contains(DiscrepancyKind.ODD_PUNCH, DiscrepancyKind.MISSING_PUNCH);
+        .contains(DiscrepancyKindCodes.ODD_PUNCH, DiscrepancyKindCodes.MISSING_PUNCH);
   }
 
   @Test
   void detectsMissingPunchEvenWhenEven() {
     JourneyComputation c = JourneyCalculator.compute(8 * 60, 8 * 60, 6, 4);
-    assertThat(c.discrepancies()).containsExactly(DiscrepancyKind.MISSING_PUNCH);
+    assertThat(c.discrepancies()).containsExactly(DiscrepancyKindCodes.MISSING_PUNCH);
   }
 
   @Test
   void detectsIncoherentJournalWhenPunchesButNoWork() {
     JourneyComputation c = JourneyCalculator.compute(0, 8 * 60, 2, 2);
-    assertThat(c.discrepancies()).containsExactly(DiscrepancyKind.INCOHERENT_JOURNAL);
+    assertThat(c.discrepancies()).containsExactly(DiscrepancyKindCodes.INCOHERENT_JOURNAL);
   }
 
   @Test

@@ -8,7 +8,7 @@ import com.fksoft.domain.aftersales.OpenCaseCommand;
 import com.fksoft.domain.aftersales.SupportCaseNotFoundException;
 import com.fksoft.domain.aftersales.SupportCaseStatus;
 import com.fksoft.domain.aftersales.SupportCaseTransitionInvalidException;
-import com.fksoft.domain.aftersales.SupportCaseType;
+import com.fksoft.domain.aftersales.SupportCaseTypeCodes;
 import com.fksoft.domain.aftersales.SupportCaseView;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
 import java.time.Duration;
@@ -41,7 +41,7 @@ class AfterSalesApiIntegrationTest extends AbstractPostgresIntegrationTest {
   void openingACasePersistsItOpenWithGovernedSlaDeadlines() {
     SupportCaseView view =
         afterSalesService.open(
-            new OpenCaseCommand("b71", SupportCaseType.COMPLAINT, "voo atrasado"), "agent");
+            new OpenCaseCommand("b71", SupportCaseTypeCodes.COMPLAINT, "voo atrasado"), "agent");
 
     assertThat(view.status()).isEqualTo(SupportCaseStatus.OPEN);
     assertThat(view.breached()).isFalse();
@@ -62,13 +62,14 @@ class AfterSalesApiIntegrationTest extends AbstractPostgresIntegrationTest {
   void cancellationAndRefundCasesUseTheTighter48hResolutionSla() {
     SupportCaseView refundCase =
         afterSalesService.open(
-            new OpenCaseCommand("b80", SupportCaseType.REFUND_REQUEST, "reembolso"), "agent");
+            new OpenCaseCommand("b80", SupportCaseTypeCodes.REFUND_REQUEST, "reembolso"), "agent");
     assertThat(Duration.between(refundCase.openedAt(), refundCase.dueAt()))
         .isEqualTo(Duration.ofHours(48));
 
     SupportCaseView cancelCase =
         afterSalesService.open(
-            new OpenCaseCommand("b81", SupportCaseType.CANCELLATION_REQUEST, "cancelar"), "agent");
+            new OpenCaseCommand("b81", SupportCaseTypeCodes.CANCELLATION_REQUEST, "cancelar"),
+            "agent");
     assertThat(Duration.between(cancelCase.openedAt(), cancelCase.dueAt()))
         .isEqualTo(Duration.ofHours(48));
   }
@@ -77,7 +78,7 @@ class AfterSalesApiIntegrationTest extends AbstractPostgresIntegrationTest {
   void drivesTheValidLifecycleAndRejectsInvalidTransitions() {
     SupportCaseView opened =
         afterSalesService.open(
-            new OpenCaseCommand("b71", SupportCaseType.CHANGE_REQUEST, null), "agent");
+            new OpenCaseCommand("b71", SupportCaseTypeCodes.CHANGE_REQUEST, null), "agent");
 
     SupportCaseView inProgress =
         afterSalesService.transition(opened.id(), SupportCaseStatus.IN_PROGRESS, "agent");
@@ -101,13 +102,14 @@ class AfterSalesApiIntegrationTest extends AbstractPostgresIntegrationTest {
 
   @Test
   void listsCasesFilteredByTypeAndStatus() {
-    afterSalesService.open(new OpenCaseCommand("b71", SupportCaseType.COMPLAINT, null), "agent");
     afterSalesService.open(
-        new OpenCaseCommand("b72", SupportCaseType.REFUND_REQUEST, null), "agent");
+        new OpenCaseCommand("b71", SupportCaseTypeCodes.COMPLAINT, null), "agent");
+    afterSalesService.open(
+        new OpenCaseCommand("b72", SupportCaseTypeCodes.REFUND_REQUEST, null), "agent");
 
     var page =
         afterSalesService.list(
-            SupportCaseType.COMPLAINT,
+            SupportCaseTypeCodes.COMPLAINT,
             SupportCaseStatus.OPEN,
             null,
             null,

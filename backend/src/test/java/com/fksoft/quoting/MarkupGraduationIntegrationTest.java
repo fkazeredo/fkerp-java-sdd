@@ -9,7 +9,7 @@ import com.fksoft.application.api.dto.IssueDirectiveRequest;
 import com.fksoft.application.api.dto.ParameterRuleResponse;
 import com.fksoft.application.api.dto.PinRateRequest;
 import com.fksoft.domain.accounts.LegalType;
-import com.fksoft.domain.commercialpolicy.ParameterValueType;
+import com.fksoft.domain.commercialpolicy.ParameterValueTypeCodes;
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.quoting.QuoteView;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
@@ -61,7 +61,7 @@ class MarkupGraduationIntegrationTest extends AbstractPostgresIntegrationTest {
             new IssueDirectiveRequest(
                 "MARKUP_PCT",
                 "0.10",
-                ParameterValueType.PERCENT,
+                ParameterValueTypeCodes.PERCENT,
                 accountId,
                 null,
                 null,

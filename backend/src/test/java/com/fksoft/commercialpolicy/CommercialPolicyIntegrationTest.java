@@ -10,7 +10,7 @@ import com.fksoft.domain.commercialpolicy.DefineRuleCommand;
 import com.fksoft.domain.commercialpolicy.ParameterKey;
 import com.fksoft.domain.commercialpolicy.ParameterLayer;
 import com.fksoft.domain.commercialpolicy.ParameterScope;
-import com.fksoft.domain.commercialpolicy.ParameterValueType;
+import com.fksoft.domain.commercialpolicy.ParameterValueTypeCodes;
 import com.fksoft.domain.commercialpolicy.PolicyDirectiveForbiddenException;
 import com.fksoft.infra.web.ApiErrorResponse;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
@@ -81,7 +81,7 @@ class CommercialPolicyIntegrationTest extends AbstractPostgresIntegrationTest {
             new IssueDirectiveRequest(
                 "MARKUP_PCT",
                 "0.08",
-                ParameterValueType.PERCENT,
+                ParameterValueTypeCodes.PERCENT,
                 account,
                 null,
                 null,
@@ -137,7 +137,7 @@ class CommercialPolicyIntegrationTest extends AbstractPostgresIntegrationTest {
             ParameterLayer.DIRECTIVE,
             ParameterScope.global(),
             "0.05",
-            ParameterValueType.PERCENT,
+            ParameterValueTypeCodes.PERCENT,
             LocalDate.of(2026, 6, 1),
             null,
             "sem papel");

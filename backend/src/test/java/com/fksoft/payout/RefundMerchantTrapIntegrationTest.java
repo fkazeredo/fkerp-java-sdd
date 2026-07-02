@@ -3,17 +3,17 @@ package com.fksoft.payout;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fksoft.domain.finance.AccountingPeriodId;
-import com.fksoft.domain.finance.EntryType;
+import com.fksoft.domain.finance.EntryTypeCodes;
 import com.fksoft.domain.finance.FinanceService;
 import com.fksoft.domain.finance.LedgerDirection;
 import com.fksoft.domain.finance.Party;
-import com.fksoft.domain.finance.PartyType;
+import com.fksoft.domain.finance.PartyTypeCodes;
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.payout.CreatePayoutCommand;
 import com.fksoft.domain.payout.Payee;
-import com.fksoft.domain.payout.PayeeType;
+import com.fksoft.domain.payout.PayeeTypeCodes;
 import com.fksoft.domain.payout.PaymentOutcome;
-import com.fksoft.domain.payout.PayoutKind;
+import com.fksoft.domain.payout.PayoutKindCodes;
 import com.fksoft.domain.payout.PayoutService;
 import com.fksoft.domain.payout.PayoutStatus;
 import com.fksoft.domain.payout.PayoutView;
@@ -60,9 +60,9 @@ class RefundMerchantTrapIntegrationTest extends AbstractPostgresIntegrationTest 
     // Finance — the merchant obligation that does NOT vanish when the customer is refunded).
     financeService.register(
         LedgerDirection.PAYABLE,
-        new Party("sup-merchant", PartyType.SUPPLIER),
+        new Party("sup-merchant", PartyTypeCodes.SUPPLIER),
         Money.of(new BigDecimal("800.00"), "BRL"),
-        EntryType.SUPPLIER_SETTLEMENT,
+        EntryTypeCodes.SUPPLIER_SETTLEMENT,
         AccountingPeriodId.of("2026-06"),
         "dev");
 
@@ -70,8 +70,8 @@ class RefundMerchantTrapIntegrationTest extends AbstractPostgresIntegrationTest 
     PayoutView refund =
         payoutService.create(
             new CreatePayoutCommand(
-                PayoutKind.REFUND,
-                new Payee("cust-1", PayeeType.CUSTOMER),
+                PayoutKindCodes.REFUND,
+                new Payee("cust-1", PayeeTypeCodes.CUSTOMER),
                 "b71",
                 "cancellation-charge-merchant",
                 Money.of(new BigDecimal("300.00"), "BRL"),
@@ -111,8 +111,8 @@ class RefundMerchantTrapIntegrationTest extends AbstractPostgresIntegrationTest 
             () ->
                 payoutService.create(
                     new CreatePayoutCommand(
-                        PayoutKind.REFUND,
-                        new Payee("cust-1", PayeeType.CUSTOMER),
+                        PayoutKindCodes.REFUND,
+                        new Payee("cust-1", PayeeTypeCodes.CUSTOMER),
                         null,
                         null, // no origin
                         Money.of(new BigDecimal("100.00"), "BRL"),

@@ -28,7 +28,7 @@ public record ResolvedParameterResponse(
     return new ResolvedParameterResponse(
         resolved.key().value(),
         resolved.value(),
-        resolved.type().name(),
+        resolved.type(),
         new ProvenanceResponse(
             p.layer().name(), p.ruleId(), p.definedBy(), p.definedAt(), p.validUntil()));
   }

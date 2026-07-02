@@ -1,12 +1,51 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.31.0.md`](0.31.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.32.0.md`](0.32.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.32.0 — Phase 18d · reference enums → cadastros (Finance/Payout/People/CommercialPolicy/AfterSales) — CLOSES Phase 18
+
+**MINOR — new capability. No existing `/api` contract changed (the converted fields keep their `string`
+schema).**
+
+Slice 18d — the **last** of Phase 18 — reuses the `cadastro` module (18a) and the label pipe (18b) and
+converts the five remaining reference-enum groups to validated `code`s (code = old enum constant name ⇒
+JSON identical), rendering the cadastro **label** on the Finance/Payout/People/CommercialPolicy/AfterSales
+screens. **With 18d, every business reference enum is now an editable cadastro — Phase 18 is complete.**
+SPEC-0031 updated; ADR-0019 + DL-0118.
+
+- **Finance:** `EntryType`, `PartyType` → validated codes (`ENTRY_TYPE`, `PARTY_TYPE`), validated on the
+  ledger `register`. The AP/AR posting nature and the Compliance kind→document map (DL-0012) are preserved
+  via `EntryTypeCodes`/`PartyTypeCodes` (internal producers emit the constants).
+- **Payout:** `PayeeType`, `PayoutKind` → codes (`PAYEE_TYPE`, `PAYOUT_KIND`), validated on `create`. The
+  settlement/repass/refund fact (`publishExecuted` switch) and the **merchant trap** (a REFUND that never
+  nets the supplier obligation — DL-0024/DL-0051) are preserved via `PayoutKindCodes`.
+- **People:** `DiscrepancyKind` → `code` (`DISCREPANCY_KIND`). **System-produced** by the
+  `JourneyCalculator`, so it becomes a cadastro for the editable label — no write validation.
+- **CommercialPolicy:** `ParameterValueType` → `code` (`PARAMETER_VALUE_TYPE`), validated on `defineRule`.
+  The value-text parse/validation (NUMBER/PERCENT/MONEY/BOOL — DL-0037) is preserved via
+  `ParameterValueTypeCodes`. `ParameterLayer` (precedence) **stays an enum** (documented keep — DL-0118).
+- **AfterSales:** `SupportCaseType`, `CaseResolution` → codes (`SUPPORT_CASE_TYPE`, `CASE_RESOLUTION`),
+  validated on `open`/`resolve`. The governed SLA selection (48h/72h — DL-0052) and the orchestration
+  (REFUND_APPROVED → Payout REFUND; CANCEL_APPROVED → Booking cancel — DL-0054) are preserved via
+  `SupportCaseTypeCodes`/`CaseResolutionCodes`.
+
+**Border decisions (aggressive criterion):** `LedgerDirection` (binary accounting axis) and
+`ParameterLayer` (fixed precedence hierarchy whose ordinal drives ordering/authorization) **stay enums**
+(documented keep — DL-0118); `ParameterValueType` **is converted** (its behavior lives in the `*Codes`).
+
+**Migration V36** seeds the 8 types (35 items), idempotent. **Gates:** backend `./mvnw verify` green —
+**513 tests** (507 → 513), ArchUnit + Spring Modulith (23 modules, acyclic) + Spotless/Checkstyle/JaCoCo
+all green, no gate weakened; frontend green — lint (0), **284 tests**, coverage above thresholds, build
+OK; E2E journeys still compile (`playwright test --list`, 24), authored/not executed in-sandbox. OpenAPI
++ pom → **0.32.0**.
 
 ---
 

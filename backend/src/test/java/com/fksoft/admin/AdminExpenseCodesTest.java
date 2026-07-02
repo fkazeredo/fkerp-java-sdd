@@ -3,7 +3,7 @@ package com.fksoft.admin;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fksoft.domain.admin.AdminExpenseCodes;
-import com.fksoft.domain.finance.EntryType;
+import com.fksoft.domain.finance.EntryTypeCodes;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -18,19 +18,20 @@ class AdminExpenseCodesTest {
   @Test
   void eachKnownCodeMapsToTheExpectedEntryType() {
     assertThat(AdminExpenseCodes.entryTypeFor(AdminExpenseCodes.UTILITY))
-        .isEqualTo(EntryType.UTILITY_EXPENSE);
+        .isEqualTo(EntryTypeCodes.UTILITY_EXPENSE);
     assertThat(AdminExpenseCodes.entryTypeFor(AdminExpenseCodes.AUTONOMOUS_SERVICE))
-        .isEqualTo(EntryType.AUTONOMOUS_SERVICE);
+        .isEqualTo(EntryTypeCodes.AUTONOMOUS_SERVICE);
     assertThat(AdminExpenseCodes.entryTypeFor(AdminExpenseCodes.SERVICE))
-        .isEqualTo(EntryType.SERVICE);
+        .isEqualTo(EntryTypeCodes.SERVICE);
     assertThat(AdminExpenseCodes.entryTypeFor(AdminExpenseCodes.OTHER))
-        .isEqualTo(EntryType.OTHER_EXPENSE);
+        .isEqualTo(EntryTypeCodes.OTHER_EXPENSE);
   }
 
   @Test
   void anUnknownCodeFallsBackToOtherExpense() {
     // A new cadastro item the operator adds with no wired mapping works as data (DL-0115 seam).
-    assertThat(AdminExpenseCodes.entryTypeFor("BRAND_NEW_CODE")).isEqualTo(EntryType.OTHER_EXPENSE);
-    assertThat(AdminExpenseCodes.entryTypeFor(null)).isEqualTo(EntryType.OTHER_EXPENSE);
+    assertThat(AdminExpenseCodes.entryTypeFor("BRAND_NEW_CODE"))
+        .isEqualTo(EntryTypeCodes.OTHER_EXPENSE);
+    assertThat(AdminExpenseCodes.entryTypeFor(null)).isEqualTo(EntryTypeCodes.OTHER_EXPENSE);
   }
 }

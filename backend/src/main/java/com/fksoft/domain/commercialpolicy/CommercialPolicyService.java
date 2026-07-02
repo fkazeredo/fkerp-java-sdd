@@ -1,5 +1,7 @@
 package com.fksoft.domain.commercialpolicy;
 
+import com.fksoft.domain.cadastro.CadastroType;
+import com.fksoft.domain.cadastro.CadastroValidator;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -31,6 +33,7 @@ public class CommercialPolicyService implements MarkupProvider {
   private final ParameterRuleRepository repository;
   private final Clock clock;
   private final ApplicationEventPublisher events;
+  private final CadastroValidator cadastroValidator;
 
   /**
    * Resolves a parameter for a scope (SPEC-0014 BR2/BR3): the active, highest-precedence rule whose
@@ -75,6 +78,9 @@ public class CommercialPolicyService implements MarkupProvider {
   @Transactional
   public ParameterRuleView defineRule(DefineRuleCommand command, Set<String> roles, String actor) {
     authorize(command.layer(), roles);
+    // Validate the value-type reference code against the cadastro (SPEC-0031 BR3/DL-0118): an
+    // unknown/inactive type is rejected (422) before the value is parsed for that type.
+    cadastroValidator.validate(CadastroType.PARAMETER_VALUE_TYPE, command.type());
     String value = validateValue(command.value(), command.type());
     LocalDate validFrom =
         command.validFrom() != null
@@ -153,8 +159,8 @@ public class CommercialPolicyService implements MarkupProvider {
     }
   }
 
-  private static String validateValue(String value, ParameterValueType type) {
-    if (type == null || value == null || !type.isValid(value)) {
+  private static String validateValue(String value, String type) {
+    if (type == null || value == null || !ParameterValueTypeCodes.isValid(type, value)) {
       throw new PolicyRuleInvalidException();
     }
     return value.trim();

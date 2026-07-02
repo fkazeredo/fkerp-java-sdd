@@ -850,6 +850,43 @@ jeito das listas anteriores.
 > Para o time técnico: os enums de Sourcing/Exchange/Booking/Compliance viraram `code` validado; o
 > contrato `/api` **não mudou**. Ver SPEC-0031 / ADR-0019 / DL-0117.
 
+### Fase 18d — Últimos cadastros (Financeiro, Repasses, Pessoas, Política comercial, Pós-venda) e **rótulos nas telas** — encerra a Fase 18
+
+Esta é a **última** fatia da conversão: as listas de referência restantes viram **cadastros
+editáveis**, agora nas áreas de **Financeiro (Razão)**, **Repasses**, **Pessoas**, **Política
+comercial** e **Pós-venda**:
+
+- **Financeiro:** o **tipo de lançamento** (*Comissão a receber*, *Comissão a pagar*, *Multa*,
+  *Despesa de utilidade*, *Serviço (PJ)*, *Liquidação de fornecedor*, *Reembolso*, *Tributo a
+  recolher* etc.) e o **tipo de contraparte** (*Agência*, *Agente*, *Fornecedor*, *Outros*).
+- **Repasses:** o **tipo do repasse** (*Repasse de comissão*, *Liquidação de fornecedor*,
+  *Reembolso*) e o **tipo de favorecido** (*Agente*, *Fornecedor*, *Cliente*).
+- **Pessoas:** o **tipo de divergência** da jornada (*Marcação ímpar*, *Marcação faltante*, *Jornada
+  incoerente*) — detectado pelo sistema, agora com rótulo editável.
+- **Política comercial:** o **tipo do valor** de um parâmetro (*Número*, *Percentual*, *Valor
+  monetário (BRL)*, *Booleano (sim/não)*).
+- **Pós-venda:** o **tipo do chamado** (*Reclamação*, *Pedido de alteração*, *Pedido de cancelamento*,
+  *Pedido de reembolso*, *Informação*) e a **resolução** (*Reembolso aprovado*, *Cancelamento
+  aprovado*, *Resolvido sem ação*, *Rejeitado*).
+
+Você mantém esses rótulos na mesma tela **"Cadastros"** (perfil **Curador de Políticas**), do mesmo
+jeito das listas anteriores.
+
+**A novidade que aparece para todos:** as telas de **Financeiro**, **Repasses**, **Pessoas**,
+**Política comercial** e **Pós-venda** agora mostram o **rótulo em português** no lugar do código
+técnico (ex.: *"Liquidação de fornecedor"* em vez de `SUPPLIER_SETTLEMENT`; *"Reembolso"* em vez de
+`REFUND`; *"Pedido de reembolso"* em vez de `REFUND_REQUEST`; *"Percentual"* em vez de `PERCENT`).
+
+> **Nada muda no comportamento.** As regras continuam iguais — a **postagem** de contas a pagar/receber
+> e o documento exigido no fechamento, o **repasse/liquidação/reembolso** dos pagamentos (incluindo a
+> **armadilha do lojista**: um reembolso ao cliente **não anula** o que se deve ao fornecedor), a
+> **orquestração** do pós-venda (aprovar reembolso dispara o pagamento; aprovar cancelamento cancela a
+> reserva) e o cálculo dos parâmetros seguem exatamente como antes. Com esta fatia, **todas** as listas
+> de referência do sistema passaram a ser editáveis — a Fase 18 está concluída.
+> Para o time técnico: os enums de Finance/Payout/People/CommercialPolicy/AfterSales viraram `code`
+> validado; `Direção do razão` (a pagar/a receber) e `Camada de política` (precedência) permanecem
+> fixos por design; o contrato `/api` **não mudou**. Ver SPEC-0031 / ADR-0019 / DL-0118.
+
 
 ## 4. Glossário
 
@@ -951,6 +988,7 @@ jeito das listas anteriores.
 | 0.29.0 | 18a — Cadastros (dados de referência editáveis) | **Nova tela "Cadastros"** (para o perfil **Curador de Políticas**): as listas de referência do sistema — **natureza de despesa, tipo de fornecedor/ativo, regime tributário, tipo de retenção** — deixam de ser fixas no programa e viram **cadastros editáveis** (renomear rótulo, reordenar, ativar/desativar e **acrescentar** itens, **sem nova versão**). O **código** de cada item é fixo (é o que os registros antigos guardam); só o rótulo/ordem/ativação mudam. **Nada muda para quem já usava as telas de Back-office, Patrimônio e Faturamento** — os valores continuam os mesmos, só ficaram editáveis; **nenhum contrato `/api` mudou**. Primeiro grupo convertido (Admin/Assets/Billing); os próximos vêm nas fatias 18b–18d. (SPEC-0031 / ADR-0019 / DL-0115.) |
 | 0.30.0 | 18b — Mais cadastros (Marketing/Inteligência/Portfólio) + rótulos nas telas | Mais listas de referência viram **cadastros editáveis** na tela "Cadastros": **Marketing** (finalidade do consentimento, tipo de titular), **Inteligência** (eixo do insight, tipo de insight, veredito) e **Portfólio** (métrica da meta). **Novidade para todos:** as telas de **Marketing, Inteligência e Portfólio** passam a mostrar o **rótulo em português** no lugar do código técnico (ex.: *"Consultor de câmbio (promoção)"*, *"Converte (manter)"*, *"Receita (spread BRL)"*) — corrigindo também nessas telas o comportamento anterior que exibia o código. **Nada muda no que se registra**; os valores por baixo são os mesmos e **nenhum contrato `/api` mudou**. (SPEC-0031 / ADR-0019 / DL-0116.) |
 | 0.31.0 | 18c — Mais cadastros (Origem de ofertas/Câmbio/Cancelamento/Conformidade) + rótulos nas telas | Mais listas de referência viram **cadastros editáveis** na tela "Cadastros": **Origem de ofertas** (procedência, nível de integração), **Mesa de câmbio** (origem da cotação), **Cancelamento** (tipo de política, natureza da cobrança) e **Conformidade** (tipo de documento, formato assinado, fase do requisito). **Novidade para todos:** as telas de **Origem de ofertas, Mesa de câmbio, Cancelamento e Conformidade** passam a mostrar o **rótulo em português** no lugar do código técnico (ex.: *"Site externo"*, *"Manual (contingência)"*, *"Venda sem reembolso"*, *"Registro de ponto (AFD)"*). **Nada muda no comportamento** — cotação integrada, janelas de multa, a **armadilha do lojista** e os prazos de guarda legal seguem iguais; os valores por baixo são os mesmos e **nenhum contrato `/api` mudou**. (SPEC-0031 / ADR-0019 / DL-0117.) |
+| 0.32.0 | 18d — Últimos cadastros (Financeiro/Repasses/Pessoas/Política comercial/Pós-venda) + rótulos nas telas — **encerra a Fase 18** | As listas de referência restantes viram **cadastros editáveis** na tela "Cadastros": **Financeiro** (tipo de lançamento, tipo de contraparte), **Repasses** (tipo do repasse, tipo de favorecido), **Pessoas** (tipo de divergência da jornada), **Política comercial** (tipo do valor) e **Pós-venda** (tipo do chamado, resolução). **Novidade para todos:** as telas de **Financeiro, Repasses, Pessoas, Política comercial e Pós-venda** passam a mostrar o **rótulo em português** no lugar do código técnico (ex.: *"Liquidação de fornecedor"*, *"Reembolso"*, *"Pedido de reembolso"*, *"Percentual"*). **Nada muda no comportamento** — postagem a pagar/receber e documento no fechamento, repasse/liquidação/reembolso (incluindo a **armadilha do lojista**), orquestração do pós-venda e cálculo dos parâmetros seguem iguais; `Direção do razão` e `Camada de política` continuam fixas por design; os valores por baixo são os mesmos e **nenhum contrato `/api` mudou**. Com esta fatia, **todas** as listas de referência são editáveis — a Fase 18 está concluída. (SPEC-0031 / ADR-0019 / DL-0118.) |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.

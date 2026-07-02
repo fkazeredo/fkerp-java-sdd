@@ -26,7 +26,7 @@ public interface SupportCaseRepository extends JpaRepository<SupportCase, UUID> 
           + "and (:breached is null or c.breached = :breached) "
           + "order by c.openedAt desc")
   Page<SupportCase> search(
-      @Param("type") SupportCaseType type,
+      @Param("type") String type,
       @Param("status") SupportCaseStatus status,
       @Param("bookingId") String bookingId,
       @Param("breached") Boolean breached,

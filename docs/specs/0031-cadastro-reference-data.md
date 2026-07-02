@@ -3,8 +3,9 @@
 Status: Approved
 Related ADRs: 0012, 0016, 0019
 Related DLs: DL-0115 (padrão enum→cadastro, 18a); DL-0116 (enums Marketing/Intelligence/Portfolio,
-18b); DL-0117 (enums Sourcing/Exchange/Booking/Compliance, 18c); DL-0085 (kind→entryType);
-DL-0044 (regime→estratégia)
+18b); DL-0117 (enums Sourcing/Exchange/Booking/Compliance, 18c); DL-0118 (enums
+Finance/Payout/People/CommercialPolicy/AfterSales, 18d — **FECHA a Fase 18**); DL-0085
+(kind→entryType); DL-0044 (regime→estratégia)
 
 > Convenções herdadas da **SPEC-0001**. **Subdomínio de suporte** transversal: um **registry
 > genérico** de dados de referência editáveis (`cadastro_item`) que substitui os enums de negócio que
@@ -52,12 +53,25 @@ Migração **V35** semeia os valores atuais. A ramificação cablada é preserva
 quoting (DL-0018), as janelas de multa + a armadilha do lojista (DL-0024/DL-0010) e a retenção legal
 + o close-check (DL-0012).
 
-**Fora de escopo (18d):** os demais grupos de enums (People/Payout/AfterSales/…), convertidos por
-grupo na fatia final, reusando este módulo.
+**Entregue (fatia 18d — DL-0118 — FECHA a Fase 18):** os grupos **Finance** (`EntryType`,
+`PartyType`), **Payout** (`PayeeType`, `PayoutKind`), **People** (`DiscrepancyKind`),
+**CommercialPolicy** (`ParameterValueType`) e **AfterSales** (`SupportCaseType`, `CaseResolution`),
+convertidos reusando este módulo. As telas Finance/Payout/People/CommercialPolicy/AfterSales passam a
+exibir o **rótulo** do cadastro. Migração **V36** semeia os valores atuais. A ramificação cablada é
+preservada: a postagem AP/AR + o mapa kind→documento do `EntryType` (DL-0012), o fato de
+liquidação/repasse/reembolso do `PayoutKind` + a armadilha do lojista (DL-0024/DL-0051), a orquestração
+do `CaseResolution` (Payout REFUND / Booking cancel — DL-0054) e o parse do `ParameterValueType`
+(DL-0037). Com 18d, **todos os enums de referência de negócio viraram cadastro — a Fase 18 está
+completa.**
 
 **Nunca convertido:** máquinas de estado (`*Status`/lifecycle), técnicos (`*FailureClass`,
-circuit-breaker) e fixados por lei (`LegalType`, `LegalBasis`). O `EntryType` do Finance permanece
-enum (chave de contrato entre Finance e Compliance — não é dado de referência editável pelo operador).
+circuit-breaker, `PaymentOutcome`, `PointFailureClass`) e fixados por lei (`LegalType`, `LegalBasis`).
+Dois enums de negócio de fronteira permanecem enum por decisão documentada (DL-0118): `LedgerDirection`
+(eixo binário PAYABLE/RECEIVABLE da partida dobrada — invariante contábil, não editável) e
+`ParameterLayer` (hierarquia de precedência fixa cujo ordinal governa a ordenação/autorização do motor
+de resolução). O `EntryType` do Finance, ao contrário do que a fatia 18a antecipou, **foi convertido em
+18d** (com `EntryTypeCodes` guardando a ramificação cablada) — o operador agora edita o conjunto e os
+rótulos sem quebrar a chave de contrato Finance↔Compliance (o code = nome do enum).
 
 ## Business Context
 
@@ -136,6 +150,27 @@ BR8  V33 semeia os valores atuais dos enums convertidos (Admin/Assets/Billing) c
 > escrita): `MARKET_RATE_SOURCE` (o source nunca chega como payload) e `SIGNED_FORMAT` (produzido pelo
 > ingestor — e seu code cablado `CAdES_P7S` é intencionalmente misto, incompatível com o validador que
 > normaliza para maiúscula).
+
+### Enums convertidos nesta fatia (18d — DL-0118 — FECHA a Fase 18)
+
+| Módulo           | CadastroType           | Codes (semeados em V36)                                                                                          | Ramificação preservada |
+|------------------|------------------------|-----------------------------------------------------------------------------------------------------------------|------------------------|
+| finance          | `ENTRY_TYPE`           | COMMISSION_RECEIVABLE, COMMISSION_PAYABLE, PENALTY, UTILITY_EXPENSE, AUTONOMOUS_SERVICE, SUPPLIER_SETTLEMENT, REFUND, TAX_PAYABLE, SERVICE, OTHER_EXPENSE | `EntryTypeCodes` — postagem AP/AR + mapa kind→documento (Compliance, DL-0012) |
+| finance          | `PARTY_TYPE`           | AGENCY, AGENT, SUPPLIER, OTHER                                                                                   | `PartyTypeCodes` (contraparte, produtores internos) |
+| payout           | `PAYEE_TYPE`           | AGENT, SUPPLIER, CUSTOMER                                                                                        | `PayeeTypeCodes` (favorecido; tipo de comprovante) |
+| payout           | `PAYOUT_KIND`          | AGENT_COMMISSION, SUPPLIER_SETTLEMENT, REFUND                                                                    | `PayoutKindCodes` — fato de liquidação/repasse/reembolso + armadilha do lojista (DL-0024/DL-0051) |
+| people           | `DISCREPANCY_KIND`     | ODD_PUNCH, MISSING_PUNCH, INCOHERENT_JOURNAL                                                                     | `DiscrepancyKindCodes` (produzido pelo calculador; sem validação de escrita) |
+| commercialpolicy | `PARAMETER_VALUE_TYPE` | NUMBER, PERCENT, MONEY, BOOL                                                                                     | `ParameterValueTypeCodes` — parse/validação do valor (DL-0037) |
+| aftersales       | `SUPPORT_CASE_TYPE`    | COMPLAINT, CHANGE_REQUEST, CANCELLATION_REQUEST, REFUND_REQUEST, INFO                                            | `SupportCaseTypeCodes.usesRefundSla` — SLA governado 48h/72h (DL-0052) |
+| aftersales       | `CASE_RESOLUTION`      | REFUND_APPROVED, CANCEL_APPROVED, RESOLVED_NO_ACTION, REJECTED                                                   | `CaseResolutionCodes.triggersRefund/triggersCancellation` — orquestra Payout/Booking (DL-0054) |
+
+> Validados na escrita (422 em código inválido/inativo): Finance (`ENTRY_TYPE`/`PARTY_TYPE` no
+> `register` do lançamento), Payout (`PAYOUT_KIND`/`PAYEE_TYPE` no `create`), CommercialPolicy
+> (`PARAMETER_VALUE_TYPE` no `defineRule`) e AfterSales (`SUPPORT_CASE_TYPE` no `open`,
+> `CASE_RESOLUTION` no `resolve`). **Produzido pelo sistema** (semeado, sem validação de escrita):
+> `DISCREPANCY_KIND` (o `JourneyCalculator` o cunha da análise da jornada). Decisões de fronteira
+> (DL-0118): `LedgerDirection` e `ParameterLayer` **permanecem enum** (eixo contábil binário fixo /
+> hierarquia de precedência fixa) — documentadas como keep no DL-0118.
 
 ## Tests Required
 

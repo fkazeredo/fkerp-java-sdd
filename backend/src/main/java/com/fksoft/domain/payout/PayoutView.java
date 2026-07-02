@@ -13,7 +13,7 @@ import java.util.UUID;
  * of a single (à vista) payout; for an installment plan each installment carries its own receipt.
  *
  * @param id the payout id
- * @param kind the payout kind
+ * @param kind the payout kind (payout-kind cadastro code)
  * @param payee who is paid
  * @param bookingId the related booking (value), or {@code null}
  * @param originRef the origin obligation reference (required for REFUND), or {@code null}
@@ -27,7 +27,7 @@ import java.util.UUID;
  */
 public record PayoutView(
     UUID id,
-    PayoutKind kind,
+    String kind,
     Payee payee,
     String bookingId,
     String originRef,

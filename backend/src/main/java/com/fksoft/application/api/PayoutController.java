@@ -5,7 +5,6 @@ import com.fksoft.application.api.dto.ExecutePayoutRequest;
 import com.fksoft.domain.payout.CreatePayoutCommand;
 import com.fksoft.domain.payout.Payee;
 import com.fksoft.domain.payout.PaymentOutcome;
-import com.fksoft.domain.payout.PayoutKind;
 import com.fksoft.domain.payout.PayoutService;
 import com.fksoft.domain.payout.PayoutStatus;
 import com.fksoft.domain.payout.PayoutView;
@@ -79,7 +78,7 @@ public class PayoutController {
 
   @GetMapping
   public PageResponse<PayoutView> list(
-      @RequestParam(required = false) PayoutKind kind,
+      @RequestParam(required = false) String kind,
       @RequestParam(required = false) PayoutStatus status,
       @RequestParam(required = false) String payee,
       @RequestParam(defaultValue = "0") int page,

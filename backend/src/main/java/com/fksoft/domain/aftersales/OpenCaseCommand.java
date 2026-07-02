@@ -10,4 +10,4 @@ package com.fksoft.domain.aftersales;
  * @param type the case type (required)
  * @param summary an optional human-readable summary
  */
-public record OpenCaseCommand(String bookingId, SupportCaseType type, String summary) {}
+public record OpenCaseCommand(String bookingId, String type, String summary) {}

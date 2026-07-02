@@ -1,5 +1,7 @@
 package com.fksoft.domain.finance;
 
+import com.fksoft.domain.cadastro.CadastroType;
+import com.fksoft.domain.cadastro.CadastroValidator;
 import com.fksoft.domain.money.Money;
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -38,28 +40,35 @@ public class FinanceService implements LedgerDirectory {
   private final CloseGuard closeGuard;
   private final Clock clock;
   private final ApplicationEventPublisher events;
+  private final CadastroValidator cadastroValidator;
 
   /**
    * Registers a ledger entry in PROVISIONAL (BR2) against an open period (creating the period
    * lazily OPEN, BR4). Publishes {@code LedgerEntryRegistered}.
    *
    * @param direction PAYABLE or RECEIVABLE
-   * @param party the counterparty
+   * @param party the counterparty (party-type cadastro code validated)
    * @param amount the amount in its original currency (DL-0013)
-   * @param entryType the business type (the Compliance key)
+   * @param entryType the business type (entry-type cadastro code — the Compliance key; validated)
    * @param periodId the target period
    * @param actor who registers it (audit)
    * @return the created entry view
    * @throws FinancePeriodClosedException when the target period is CLOSED (BR4)
+   * @throws com.fksoft.domain.cadastro.CadastroCodeInvalidException when a code is unknown/inactive
    */
   @Transactional
   public LedgerEntryView register(
       LedgerDirection direction,
       Party party,
       Money amount,
-      EntryType entryType,
+      String entryType,
       AccountingPeriodId periodId,
       String actor) {
+    // Validate the reference codes against the cadastro (SPEC-0031 BR3/DL-0118). Internal producers
+    // pass wired *Codes constants (always valid); a manual REST create is rejected (422) on an
+    // unknown/inactive code.
+    cadastroValidator.validate(CadastroType.ENTRY_TYPE, entryType);
+    cadastroValidator.validate(CadastroType.PARTY_TYPE, party.type());
     String period = periodId.value();
     AccountingPeriod accountingPeriod =
         periods.findById(period).orElseGet(() -> periods.save(AccountingPeriod.open(period)));
@@ -70,8 +79,7 @@ public class FinanceService implements LedgerDirectory {
     LedgerEntry entry =
         LedgerEntry.register(direction, party, amount, entryType, period, now, actor);
     entries.save(entry);
-    events.publishEvent(
-        new LedgerEntryRegistered(entry.id(), direction, entryType.name(), period, now));
+    events.publishEvent(new LedgerEntryRegistered(entry.id(), direction, entryType, period, now));
     log.info(
         "LedgerEntryRegistered entryId={} direction={} type={} period={}",
         entry.id(),
@@ -97,7 +105,7 @@ public class FinanceService implements LedgerDirectory {
    * @param direction PAYABLE or RECEIVABLE
    * @param party the counterparty
    * @param amount the amount in its original currency (DL-0013)
-   * @param entryType the business type
+   * @param entryType the business type (entry-type cadastro code)
    * @param occurredAt when the fact happened (UTC) — determines the period
    */
   @Transactional
@@ -107,7 +115,7 @@ public class FinanceService implements LedgerDirectory {
       LedgerDirection direction,
       Party party,
       Money amount,
-      EntryType entryType,
+      String entryType,
       Instant occurredAt) {
     if (postedEvents.existsBySourceRefAndChargeKind(sourceRef, chargeKind)) {
       return; // already posted — idempotent no-op (DL-0041)
@@ -138,8 +146,7 @@ public class FinanceService implements LedgerDirectory {
           chargeKind);
       throw raced;
     }
-    events.publishEvent(
-        new LedgerEntryRegistered(entry.id(), direction, entryType.name(), period, now));
+    events.publishEvent(new LedgerEntryRegistered(entry.id(), direction, entryType, period, now));
     log.info(
         "LedgerEntryRegisteredFromEvent entryId={} sourceRef={} chargeKind={} direction={} type={} period={}",
         entry.id(),
@@ -296,7 +303,7 @@ public class FinanceService implements LedgerDirectory {
   public List<LedgerEntrySnapshot> entriesOfPeriod(String period) {
     List<LedgerEntrySnapshot> snapshots = new ArrayList<>();
     for (LedgerEntry entry : entries.findByPeriod(period)) {
-      snapshots.add(new LedgerEntrySnapshot(entry.id(), entry.entryType().name(), entry.period()));
+      snapshots.add(new LedgerEntrySnapshot(entry.id(), entry.entryType(), entry.period()));
     }
     return snapshots;
   }

@@ -18,12 +18,12 @@ import java.util.List;
  * <p>Discrepancies (DL-0071), an alert never a correction (BR4):
  *
  * <ul>
- *   <li>{@link DiscrepancyKind#ODD_PUNCH} — an odd number of captured punches (an entry without its
- *       matching exit);
- *   <li>{@link DiscrepancyKind#MISSING_PUNCH} — fewer captured punches than expected for the
+ *   <li>{@link DiscrepancyKindCodes#ODD_PUNCH} — an odd number of captured punches (an entry
+ *       without its matching exit);
+ *   <li>{@link DiscrepancyKindCodes#MISSING_PUNCH} — fewer captured punches than expected for the
  *       period;
- *   <li>{@link DiscrepancyKind#INCOHERENT_JOURNAL} — a journey that cannot be true: punches present
- *       but no worked time, or worked time beyond a sane per-period ceiling.
+ *   <li>{@link DiscrepancyKindCodes#INCOHERENT_JOURNAL} — a journey that cannot be true: punches
+ *       present but no worked time, or worked time beyond a sane per-period ceiling.
  * </ul>
  */
 public final class JourneyCalculator {
@@ -53,15 +53,15 @@ public final class JourneyCalculator {
     }
     int balance = workedMinutes - contractedMinutes;
 
-    List<DiscrepancyKind> discrepancies = new ArrayList<>();
+    List<String> discrepancies = new ArrayList<>();
     if (actualPunches % 2 != 0) {
-      discrepancies.add(DiscrepancyKind.ODD_PUNCH);
+      discrepancies.add(DiscrepancyKindCodes.ODD_PUNCH);
     }
     if (actualPunches < expectedPunches) {
-      discrepancies.add(DiscrepancyKind.MISSING_PUNCH);
+      discrepancies.add(DiscrepancyKindCodes.MISSING_PUNCH);
     }
     if (isIncoherent(workedMinutes, actualPunches)) {
-      discrepancies.add(DiscrepancyKind.INCOHERENT_JOURNAL);
+      discrepancies.add(DiscrepancyKindCodes.INCOHERENT_JOURNAL);
     }
     return new JourneyComputation(workedMinutes, contractedMinutes, balance, discrepancies);
   }

@@ -32,8 +32,8 @@ public class JourneyDiscrepancyRecord {
 
   private String period;
 
-  @Enumerated(EnumType.STRING)
-  private DiscrepancyKind kind;
+  /** The discrepancy-kind cadastro code (was {@code DiscrepancyKind}; SPEC-0031/DL-0118). */
+  private String kind;
 
   @Enumerated(EnumType.STRING)
   private DiscrepancyStatus status;
@@ -55,7 +55,7 @@ public class JourneyDiscrepancyRecord {
    * @return a new, persistable OPEN discrepancy
    */
   public static JourneyDiscrepancyRecord open(
-      UUID employeeId, String period, DiscrepancyKind kind, String detail, Instant now) {
+      UUID employeeId, String period, String kind, String detail, Instant now) {
     JourneyDiscrepancyRecord record = new JourneyDiscrepancyRecord();
     record.id = UUID.randomUUID();
     record.employeeId = employeeId;

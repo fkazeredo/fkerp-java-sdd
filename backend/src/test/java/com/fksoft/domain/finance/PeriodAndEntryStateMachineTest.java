@@ -87,9 +87,9 @@ class PeriodAndEntryStateMachineTest {
   private static LedgerEntry sampleEntry() {
     return LedgerEntry.register(
         LedgerDirection.PAYABLE,
-        new Party("sup-1", PartyType.SUPPLIER),
+        new Party("sup-1", PartyTypeCodes.SUPPLIER),
         Money.of(new BigDecimal("2850.00"), "BRL"),
-        EntryType.SUPPLIER_SETTLEMENT,
+        EntryTypeCodes.SUPPLIER_SETTLEMENT,
         "2026-06",
         NOW,
         "tester");

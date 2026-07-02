@@ -18,7 +18,7 @@ public record DiscrepancyView(
     UUID id,
     UUID employeeId,
     String period,
-    DiscrepancyKind kind,
+    String kind,
     DiscrepancyStatus status,
     String detail,
     Instant createdAt) {}
