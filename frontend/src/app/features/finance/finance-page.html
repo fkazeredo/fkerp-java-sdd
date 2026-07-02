@@ -156,8 +156,8 @@
         <ng-template #body let-entry>
           <tr>
             <td>{{ entry.direction }}</td>
-            <td>{{ entry.entryType }}</td>
-            <td>{{ entry.party.type }} · {{ entry.party.id }}</td>
+            <td>{{ entry.entryType | cadastroLabel: 'ENTRY_TYPE' }}</td>
+            <td>{{ entry.party.type | cadastroLabel: 'PARTY_TYPE' }} · {{ entry.party.id }}</td>
             <td>{{ format(entry.amount) }}</td>
             <td>{{ entry.period }}</td>
             <td><p-tag [value]="entry.status" [severity]="statusSeverity(entry.status)" /></td>

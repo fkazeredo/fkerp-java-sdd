@@ -55,7 +55,7 @@
         <dt>{{ 'commercialPolicy.key' | translate }}</dt>
         <dd>{{ r.key }}</dd>
         <dt>{{ 'commercialPolicy.value' | translate }}</dt>
-        <dd>{{ r.value }} ({{ r.type }})</dd>
+        <dd>{{ r.value }} ({{ r.type | cadastroLabel: 'PARAMETER_VALUE_TYPE' }})</dd>
         <dt>{{ 'commercialPolicy.winningLayer' | translate }}</dt>
         <dd><p-tag [value]="r.provenance.layer" [severity]="layerSeverity(r.provenance.layer)" /></dd>
         <dt>{{ 'commercialPolicy.definedBy' | translate }}</dt>
@@ -114,7 +114,7 @@
           <tr>
             <td>{{ r.key }}</td>
             <td><p-tag [value]="r.layer" [severity]="layerSeverity(r.layer)" /></td>
-            <td>{{ r.value }} ({{ r.type }})</td>
+            <td>{{ r.value }} ({{ r.type | cadastroLabel: 'PARAMETER_VALUE_TYPE' }})</td>
             <td>{{ r.productRef ?? r.channel ?? r.accountId ?? ('commercialPolicy.global' | translate) }}</td>
             <td>{{ r.definedBy }}</td>
             <td>{{ r.validFrom }}</td>

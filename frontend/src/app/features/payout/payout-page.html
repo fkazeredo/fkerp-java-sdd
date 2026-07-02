@@ -135,8 +135,8 @@
         </ng-template>
         <ng-template #body let-p>
           <tr>
-            <td>{{ p.kind }}</td>
-            <td>{{ p.payee.type }} · {{ p.payee.id }}</td>
+            <td>{{ p.kind | cadastroLabel: 'PAYOUT_KIND' }}</td>
+            <td>{{ p.payee.type | cadastroLabel: 'PAYEE_TYPE' }} · {{ p.payee.id }}</td>
             <td>{{ format(p.amount) }}</td>
             <td><p-tag [value]="p.status" [severity]="statusSeverity(p.status)" /></td>
             <td>
@@ -159,9 +159,9 @@
       <h2 class="app-card__title">{{ 'payout.detail' | translate }}</h2>
       <dl class="kv">
         <dt>{{ 'payout.kind' | translate }}</dt>
-        <dd>{{ p.kind }}</dd>
+        <dd>{{ p.kind | cadastroLabel: 'PAYOUT_KIND' }}</dd>
         <dt>{{ 'payout.payee' | translate }}</dt>
-        <dd>{{ p.payee.type }} · {{ p.payee.id }}</dd>
+        <dd>{{ p.payee.type | cadastroLabel: 'PAYEE_TYPE' }} · {{ p.payee.id }}</dd>
         <dt>{{ 'payout.amount' | translate }}</dt>
         <dd>{{ format(p.amount) }}</dd>
         <dt>{{ 'payout.settledBrl' | translate }}</dt>

@@ -157,7 +157,7 @@
         <ng-template #body let-d>
           <tr>
             <td>{{ d.period }}</td>
-            <td>{{ d.kind }}</td>
+            <td>{{ d.kind | cadastroLabel: 'DISCREPANCY_KIND' }}</td>
             <td><p-tag [value]="d.status" [severity]="discrepancySeverity(d.status)" /></td>
             <td>{{ d.detail }}</td>
           </tr>

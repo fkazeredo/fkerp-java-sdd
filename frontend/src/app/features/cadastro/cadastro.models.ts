@@ -27,7 +27,16 @@ export type CadastroType =
   | 'CANCELLATION_TYPE'
   | 'DOCUMENT_TYPE'
   | 'SIGNED_FORMAT'
-  | 'REQUIREMENT_PHASE';
+  | 'REQUIREMENT_PHASE'
+  // Slice 18d (DL-0118): Finance / Payout / People / CommercialPolicy / AfterSales.
+  | 'ENTRY_TYPE'
+  | 'PARTY_TYPE'
+  | 'PAYEE_TYPE'
+  | 'PAYOUT_KIND'
+  | 'DISCREPANCY_KIND'
+  | 'PARAMETER_VALUE_TYPE'
+  | 'SUPPORT_CASE_TYPE'
+  | 'CASE_RESOLUTION';
 
 /** Read view of a cadastro item (`GET /api/cadastro/items`). */
 export interface CadastroItemView {
