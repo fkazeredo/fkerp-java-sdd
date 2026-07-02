@@ -1,5 +1,7 @@
 package com.fksoft.domain.payout;
 
+import com.fksoft.domain.cadastro.CadastroType;
+import com.fksoft.domain.cadastro.CadastroValidator;
 import com.fksoft.domain.money.Money;
 import java.time.Clock;
 import java.time.Instant;
@@ -35,6 +37,7 @@ public class PayoutService {
   private final PayoutRepository payouts;
   private final Clock clock;
   private final ApplicationEventPublisher events;
+  private final CadastroValidator cadastroValidator;
 
   /**
    * Creates a PENDING payout with its installment plan (BR1/BR6/BR7). For a foreign settlement the
@@ -46,9 +49,16 @@ public class PayoutService {
    * @return the created payout view (PENDING)
    * @throws PayoutAmountInvalidException when the amount/rate/plan is invalid (BR1/BR6)
    * @throws PayoutRefundOriginRequiredException when a REFUND has no origin (BR7)
+   * @throws com.fksoft.domain.cadastro.CadastroCodeInvalidException when the kind/payee-type code
+   *     is unknown/inactive (SPEC-0031 BR3/DL-0118)
    */
   @Transactional
   public PayoutView create(CreatePayoutCommand command, String actor) {
+    // Validate the reference codes against the cadastro (SPEC-0031 BR3/DL-0118) before building the
+    // aggregate — an unknown/inactive kind or payee type is rejected (422). The wired branching
+    // (PayoutKindCodes) then only ever sees a known kind.
+    cadastroValidator.validate(CadastroType.PAYOUT_KIND, command.kind());
+    cadastroValidator.validate(CadastroType.PAYEE_TYPE, command.payee().type());
     Payout payout = Payout.open(command, clock.instant(), actor);
     payouts.save(payout);
     log.info(
@@ -144,14 +154,15 @@ public class PayoutService {
 
   /** Lists payouts with optional kind, status and payee filters. */
   @Transactional(readOnly = true)
-  public Page<PayoutView> list(
-      PayoutKind kind, PayoutStatus status, String payee, Pageable pageable) {
-    return payouts.search(kind, status, normalize(payee), pageable).map(Payout::toView);
+  public Page<PayoutView> list(String kind, PayoutStatus status, String payee, Pageable pageable) {
+    return payouts.search(normalize(kind), status, normalize(payee), pageable).map(Payout::toView);
   }
 
   private void publishExecuted(Payout payout, Instant now) {
+    // Branches on the payout-kind cadastro codes (SPEC-0031 BR5/DL-0118): the wired settlement /
+    // repass / refund facts. A kind with no wired fact publishes nothing (dado puro).
     switch (payout.kind()) {
-      case SUPPLIER_SETTLEMENT ->
+      case PayoutKindCodes.SUPPLIER_SETTLEMENT ->
           events.publishEvent(
               new SupplierSettled(
                   payout.id(),
@@ -159,12 +170,15 @@ public class PayoutService {
                   payout.settlementRate(),
                   settledOrAmount(payout),
                   now));
-      case AGENT_COMMISSION ->
+      case PayoutKindCodes.AGENT_COMMISSION ->
           events.publishEvent(
               new AgentCommissionPaid(payout.id(), payout.payeeId(), payout.amount(), now));
-      case REFUND ->
+      case PayoutKindCodes.REFUND ->
           events.publishEvent(
               new RefundExecuted(payout.id(), payout.originRef(), payout.amount(), now));
+      default -> {
+        // A new payout kind with no wired business fact — nothing to publish (dado puro).
+      }
     }
   }
 

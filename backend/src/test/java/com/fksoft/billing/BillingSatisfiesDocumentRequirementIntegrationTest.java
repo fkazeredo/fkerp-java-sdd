@@ -5,12 +5,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fksoft.domain.billing.BillingService;
 import com.fksoft.domain.billing.CommissionInvoiceView;
 import com.fksoft.domain.finance.AccountingPeriodId;
-import com.fksoft.domain.finance.EntryType;
+import com.fksoft.domain.finance.EntryTypeCodes;
 import com.fksoft.domain.finance.FinanceService;
 import com.fksoft.domain.finance.LedgerDirection;
 import com.fksoft.domain.finance.LedgerEntryView;
 import com.fksoft.domain.finance.Party;
-import com.fksoft.domain.finance.PartyType;
+import com.fksoft.domain.finance.PartyTypeCodes;
 import com.fksoft.domain.finance.PeriodStatus;
 import com.fksoft.domain.finance.PeriodView;
 import com.fksoft.domain.money.Money;
@@ -53,9 +53,9 @@ class BillingSatisfiesDocumentRequirementIntegrationTest extends AbstractPostgre
     LedgerEntryView commission =
         financeService.register(
             LedgerDirection.RECEIVABLE,
-            new Party("ag-1", PartyType.AGENCY),
+            new Party("ag-1", PartyTypeCodes.AGENCY),
             Money.of(new BigDecimal("405.00"), "BRL"),
-            EntryType.COMMISSION_RECEIVABLE,
+            EntryTypeCodes.COMMISSION_RECEIVABLE,
             AccountingPeriodId.of("2026-07"),
             "dev");
 

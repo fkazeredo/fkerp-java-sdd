@@ -4,12 +4,11 @@ import com.fksoft.domain.cadastro.CadastroType;
 import com.fksoft.domain.cadastro.CadastroValidator;
 import com.fksoft.domain.compliance.DocumentRequirementDirectory;
 import com.fksoft.domain.finance.AccountingPeriodId;
-import com.fksoft.domain.finance.EntryType;
 import com.fksoft.domain.finance.FinanceService;
 import com.fksoft.domain.finance.LedgerDirection;
 import com.fksoft.domain.finance.LedgerEntryView;
 import com.fksoft.domain.finance.Party;
-import com.fksoft.domain.finance.PartyType;
+import com.fksoft.domain.finance.PartyTypeCodes;
 import com.fksoft.domain.platform.AuditType;
 import com.fksoft.domain.platform.SystemAuditService;
 import java.time.Clock;
@@ -232,12 +231,12 @@ public class AdminService {
 
     // Map the kind code to the Finance entry type (DL-0085/DL-0115) — behavior preserved via the
     // AdminExpenseCodes constants; a new code with no wired mapping falls back to OTHER_EXPENSE.
-    EntryType entryType = AdminExpenseCodes.entryTypeFor(command.kind());
+    String entryType = AdminExpenseCodes.entryTypeFor(command.kind());
     // Generate the AP ledger entry through the Finance facade (BR3/DL-0086) — never an FK.
     LedgerEntryView entry =
         financeService.register(
             LedgerDirection.PAYABLE,
-            new Party(command.supplierId().toString(), PartyType.SUPPLIER),
+            new Party(command.supplierId().toString(), PartyTypeCodes.SUPPLIER),
             command.amount(),
             entryType,
             new AccountingPeriodId(command.period()),
@@ -261,9 +260,8 @@ public class AdminService {
       throw new AdminExpenseDuplicateException();
     }
 
-    List<String> requiredDocuments = documentRequirements.requiredAtRegistration(entryType.name());
-    events.publishEvent(
-        new AdminExpenseRegistered(expense.id(), entry.id(), entryType.name(), now));
+    List<String> requiredDocuments = documentRequirements.requiredAtRegistration(entryType);
+    events.publishEvent(new AdminExpenseRegistered(expense.id(), entry.id(), entryType, now));
     audit(
         actor,
         "EXPENSE_REGISTERED",

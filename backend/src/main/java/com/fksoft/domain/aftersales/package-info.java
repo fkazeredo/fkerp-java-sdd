@@ -21,10 +21,11 @@
  * {@code money}/{@code error} kernels; none of those depend back on AfterSales, so the module graph
  * stays <strong>acyclic</strong> (Spring Modulith verify). Types in this base package are the
  * module's public API: the {@link com.fksoft.domain.aftersales.AfterSalesService} use cases, the
- * commands/ views/value objects ({@link com.fksoft.domain.aftersales.CostToServe}), the
- * enums-with-behavior ({@link com.fksoft.domain.aftersales.SupportCaseStatus}/{@link
- * com.fksoft.domain.aftersales.SupportCaseType}/{@link
- * com.fksoft.domain.aftersales.CaseResolution}), the events ({@link
+ * commands/ views/value objects ({@link com.fksoft.domain.aftersales.CostToServe}), the lifecycle
+ * state machine ({@link com.fksoft.domain.aftersales.SupportCaseStatus}) plus the reference-data
+ * code catalogs ({@link com.fksoft.domain.aftersales.SupportCaseTypeCodes}/{@link
+ * com.fksoft.domain.aftersales.CaseResolutionCodes} — the type/resolution became editable cadastros
+ * in slice 18d, SPEC-0031/DL-0118), the events ({@link
  * com.fksoft.domain.aftersales.SupportCaseOpened}/{@link
  * com.fksoft.domain.aftersales.SupportCaseResolved}/{@link
  * com.fksoft.domain.aftersales.SlaBreached}) and the business exceptions. The implementation types

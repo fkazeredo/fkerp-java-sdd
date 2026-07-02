@@ -17,8 +17,8 @@ import org.springframework.stereotype.Component;
  *
  * <p>The commission <em>receivable</em> is NOT posted here — that revenue belongs to the commercial
  * flow (Reconciliation/Booking); the invoice only adds the <em>tax</em> payable, avoiding double
- * counting (DL-0047). The tax authority is recorded as an {@link PartyType#OTHER} party keyed by
- * the municipality code (value reference, never an FK).
+ * counting (DL-0047). The tax authority is recorded as a {@code PartyTypeCodes.OTHER} party keyed
+ * by the municipality code (value reference, never an FK).
  */
 @Component
 @RequiredArgsConstructor
@@ -34,7 +34,7 @@ class CommissionInvoiceEventsListener {
   @EventListener
   void onCommissionInvoiceIssued(CommissionInvoiceIssued event) {
     String sourceRef = event.invoiceId().toString();
-    Party fisco = new Party(municipalityRef(event.municipality()), PartyType.OTHER);
+    Party fisco = new Party(municipalityRef(event.municipality()), PartyTypeCodes.OTHER);
 
     financeService.postFromCharge(
         sourceRef,
@@ -42,7 +42,7 @@ class CommissionInvoiceEventsListener {
         LedgerDirection.PAYABLE,
         fisco,
         event.iss(),
-        EntryType.TAX_PAYABLE,
+        EntryTypeCodes.TAX_PAYABLE,
         event.occurredAt());
 
     for (Withholding withholding : event.withholdings()) {
@@ -52,7 +52,7 @@ class CommissionInvoiceEventsListener {
           LedgerDirection.PAYABLE,
           fisco,
           withholding.amount(),
-          EntryType.TAX_PAYABLE,
+          EntryTypeCodes.TAX_PAYABLE,
           event.occurredAt());
     }
   }

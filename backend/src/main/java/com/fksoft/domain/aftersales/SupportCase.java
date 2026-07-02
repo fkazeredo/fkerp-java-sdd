@@ -40,8 +40,8 @@ public class SupportCase {
 
   private String bookingId;
 
-  @Enumerated(EnumType.STRING)
-  private SupportCaseType type;
+  /** The support-case-type cadastro code (was {@code SupportCaseType}; SPEC-0031/DL-0118). */
+  private String type;
 
   @Enumerated(EnumType.STRING)
   private SupportCaseStatus status;
@@ -55,8 +55,8 @@ public class SupportCase {
 
   private Instant resolvedAt;
 
-  @Enumerated(EnumType.STRING)
-  private CaseResolution resolution;
+  /** The case-resolution cadastro code (was {@code CaseResolution}; SPEC-0031/DL-0118). */
+  private String resolution;
 
   private UUID linkedPayoutId;
   private int reopenCount;
@@ -88,13 +88,13 @@ public class SupportCase {
    */
   public static SupportCase open(
       String bookingId,
-      SupportCaseType type,
+      String type,
       String summary,
       Instant firstResponseDueAt,
       Instant dueAt,
       Instant now,
       String actor) {
-    if (bookingId == null || bookingId.isBlank() || type == null) {
+    if (bookingId == null || bookingId.isBlank() || type == null || type.isBlank()) {
       throw new SupportCaseInvalidException();
     }
     SupportCase supportCase = new SupportCase();
@@ -154,7 +154,7 @@ public class SupportCase {
    * @throws SupportCaseTransitionInvalidException when the case cannot move to RESOLVED
    */
   public void resolve(
-      CaseResolution resolution,
+      String resolution,
       Money handlingCost,
       Money refundAmount,
       UUID linkedPayoutId,
@@ -247,8 +247,8 @@ public class SupportCase {
     return bookingId;
   }
 
-  /** The case type. */
-  public SupportCaseType type() {
+  /** The case type (support-case-type cadastro code). */
+  public String type() {
     return type;
   }
 

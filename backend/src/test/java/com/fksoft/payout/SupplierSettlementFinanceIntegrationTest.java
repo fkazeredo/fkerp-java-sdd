@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.payout.CreatePayoutCommand;
 import com.fksoft.domain.payout.Payee;
-import com.fksoft.domain.payout.PayeeType;
+import com.fksoft.domain.payout.PayeeTypeCodes;
 import com.fksoft.domain.payout.PaymentOutcome;
-import com.fksoft.domain.payout.PayoutKind;
+import com.fksoft.domain.payout.PayoutKindCodes;
 import com.fksoft.domain.payout.PayoutService;
 import com.fksoft.domain.payout.PayoutStatus;
 import com.fksoft.domain.payout.PayoutView;
@@ -55,8 +55,8 @@ class SupplierSettlementFinanceIntegrationTest extends AbstractPostgresIntegrati
     PayoutView created =
         payoutService.create(
             new CreatePayoutCommand(
-                PayoutKind.SUPPLIER_SETTLEMENT,
-                new Payee("sup-12", PayeeType.SUPPLIER),
+                PayoutKindCodes.SUPPLIER_SETTLEMENT,
+                new Payee("sup-12", PayeeTypeCodes.SUPPLIER),
                 "b71",
                 null,
                 Money.of(new BigDecimal("500.00"), "USD"),
@@ -94,8 +94,8 @@ class SupplierSettlementFinanceIntegrationTest extends AbstractPostgresIntegrati
     PayoutView created =
         payoutService.create(
             new CreatePayoutCommand(
-                PayoutKind.SUPPLIER_SETTLEMENT,
-                new Payee("sup-12", PayeeType.SUPPLIER),
+                PayoutKindCodes.SUPPLIER_SETTLEMENT,
+                new Payee("sup-12", PayeeTypeCodes.SUPPLIER),
                 "b71",
                 null,
                 Money.of(new BigDecimal("500.00"), "USD"),

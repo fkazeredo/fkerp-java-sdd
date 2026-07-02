@@ -52,16 +52,16 @@ class ParameterValueObjectsTest {
 
   @Test
   void valueTypeValidatesItsText() {
-    assertThat(ParameterValueType.PERCENT.isValid("0.12")).isTrue();
-    assertThat(ParameterValueType.MONEY.isValid("1.00")).isTrue();
-    assertThat(ParameterValueType.NUMBER.isValid("5")).isTrue();
-    assertThat(ParameterValueType.BOOL.isValid("true")).isTrue();
-    assertThat(ParameterValueType.BOOL.isValid("FALSE")).isTrue();
+    assertThat(ParameterValueTypeCodes.isValid(ParameterValueTypeCodes.PERCENT, "0.12")).isTrue();
+    assertThat(ParameterValueTypeCodes.isValid(ParameterValueTypeCodes.MONEY, "1.00")).isTrue();
+    assertThat(ParameterValueTypeCodes.isValid(ParameterValueTypeCodes.NUMBER, "5")).isTrue();
+    assertThat(ParameterValueTypeCodes.isValid(ParameterValueTypeCodes.BOOL, "true")).isTrue();
+    assertThat(ParameterValueTypeCodes.isValid(ParameterValueTypeCodes.BOOL, "FALSE")).isTrue();
 
-    assertThat(ParameterValueType.PERCENT.isValid("abc")).isFalse();
-    assertThat(ParameterValueType.MONEY.isValid("")).isFalse();
-    assertThat(ParameterValueType.BOOL.isValid("yes")).isFalse();
-    assertThat(ParameterValueType.NUMBER.isValid(null)).isFalse();
+    assertThat(ParameterValueTypeCodes.isValid(ParameterValueTypeCodes.PERCENT, "abc")).isFalse();
+    assertThat(ParameterValueTypeCodes.isValid(ParameterValueTypeCodes.MONEY, "")).isFalse();
+    assertThat(ParameterValueTypeCodes.isValid(ParameterValueTypeCodes.BOOL, "yes")).isFalse();
+    assertThat(ParameterValueTypeCodes.isValid(ParameterValueTypeCodes.NUMBER, null)).isFalse();
   }
 
   @Test
@@ -70,7 +70,7 @@ class ParameterValueObjectsTest {
         new ResolvedParameter(
             ParameterKey.MARKUP_PCT,
             "0.12",
-            ParameterValueType.PERCENT,
+            ParameterValueTypeCodes.PERCENT,
             new Provenance(ParameterLayer.PROMOTION, UUID.randomUUID(), "diretor.ana", null, null));
 
     MarkupDecision decision = MarkupDecision.from(resolved);

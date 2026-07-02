@@ -8,11 +8,11 @@ import java.math.BigDecimal;
  *
  * @param key the resolved parameter key
  * @param value the winning value as text (interpreted per {@code type})
- * @param type the value type (NUMBER/PERCENT/MONEY/BOOL)
+ * @param type the value-type cadastro code (NUMBER/PERCENT/MONEY/BOOL)
  * @param provenance which layer won, who defined it and when
  */
 public record ResolvedParameter(
-    ParameterKey key, String value, ParameterValueType type, Provenance provenance) {
+    ParameterKey key, String value, String type, Provenance provenance) {
 
   /**
    * The value as a {@link BigDecimal} for the numeric types.
@@ -20,7 +20,7 @@ public record ResolvedParameter(
    * @throws IllegalStateException when the type is {@code BOOL}
    */
   public BigDecimal asDecimal() {
-    return type.asDecimal(value);
+    return ParameterValueTypeCodes.asDecimal(type, value);
   }
 
   /** The value as a boolean (only meaningful for {@code BOOL}). */

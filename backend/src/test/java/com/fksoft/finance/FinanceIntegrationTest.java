@@ -5,10 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fksoft.application.api.dto.CreateLedgerEntryRequest;
 import com.fksoft.application.api.dto.CreateLedgerEntryRequest.PartyRequest;
 import com.fksoft.domain.finance.EntryStatus;
-import com.fksoft.domain.finance.EntryType;
+import com.fksoft.domain.finance.EntryTypeCodes;
 import com.fksoft.domain.finance.LedgerDirection;
 import com.fksoft.domain.finance.LedgerEntryView;
-import com.fksoft.domain.finance.PartyType;
+import com.fksoft.domain.finance.PartyTypeCodes;
 import com.fksoft.domain.finance.PeriodStatus;
 import com.fksoft.domain.finance.PeriodView;
 import com.fksoft.domain.money.Money;
@@ -45,7 +45,7 @@ class FinanceIntegrationTest extends AbstractPostgresIntegrationTest {
     ResponseEntity<LedgerEntryView> response =
         restTemplate.postForEntity(
             "/api/finance/entries",
-            payable("sup-12", "2850.00", EntryType.SUPPLIER_SETTLEMENT, "2026-06"),
+            payable("sup-12", "2850.00", EntryTypeCodes.SUPPLIER_SETTLEMENT, "2026-06"),
             LedgerEntryView.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -90,7 +90,7 @@ class FinanceIntegrationTest extends AbstractPostgresIntegrationTest {
     ResponseEntity<ApiErrorResponse> response =
         restTemplate.postForEntity(
             "/api/finance/entries",
-            payable("sup-9", "100.00", EntryType.SUPPLIER_SETTLEMENT, "2026-08"),
+            payable("sup-9", "100.00", EntryTypeCodes.SUPPLIER_SETTLEMENT, "2026-08"),
             ApiErrorResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
@@ -103,7 +103,7 @@ class FinanceIntegrationTest extends AbstractPostgresIntegrationTest {
     ResponseEntity<ApiErrorResponse> response =
         restTemplate.postForEntity(
             "/api/finance/entries",
-            payable("sup-9", "100.00", EntryType.SUPPLIER_SETTLEMENT, "2026/06"),
+            payable("sup-9", "100.00", EntryTypeCodes.SUPPLIER_SETTLEMENT, "2026/06"),
             ApiErrorResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -115,15 +115,15 @@ class FinanceIntegrationTest extends AbstractPostgresIntegrationTest {
   void totalsPeriodPerCurrency() {
     restTemplate.postForEntity(
         "/api/finance/entries",
-        payable("sup-1", "1000.00", EntryType.SUPPLIER_SETTLEMENT, "2026-09"),
+        payable("sup-1", "1000.00", EntryTypeCodes.SUPPLIER_SETTLEMENT, "2026-09"),
         LedgerEntryView.class);
     restTemplate.postForEntity(
         "/api/finance/entries",
         new CreateLedgerEntryRequest(
             LedgerDirection.RECEIVABLE,
-            new PartyRequest("ag-1", PartyType.AGENCY),
+            new PartyRequest("ag-1", PartyTypeCodes.AGENCY),
             Money.of(new BigDecimal("2700.00"), "BRL"),
-            EntryType.COMMISSION_RECEIVABLE,
+            EntryTypeCodes.COMMISSION_RECEIVABLE,
             "2026-09"),
         LedgerEntryView.class);
 
@@ -141,7 +141,7 @@ class FinanceIntegrationTest extends AbstractPostgresIntegrationTest {
         restTemplate
             .postForEntity(
                 "/api/finance/entries",
-                payable("sup-12", "2850.00", EntryType.SUPPLIER_SETTLEMENT, period),
+                payable("sup-12", "2850.00", EntryTypeCodes.SUPPLIER_SETTLEMENT, period),
                 LedgerEntryView.class)
             .getBody();
     assertThat(entry).isNotNull();
@@ -149,10 +149,10 @@ class FinanceIntegrationTest extends AbstractPostgresIntegrationTest {
   }
 
   private static CreateLedgerEntryRequest payable(
-      String partyId, String amount, EntryType type, String period) {
+      String partyId, String amount, String type, String period) {
     return new CreateLedgerEntryRequest(
         LedgerDirection.PAYABLE,
-        new PartyRequest(partyId, PartyType.SUPPLIER),
+        new PartyRequest(partyId, PartyTypeCodes.SUPPLIER),
         Money.of(new BigDecimal(amount), "BRL"),
         type,
         period);

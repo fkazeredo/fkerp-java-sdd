@@ -49,13 +49,13 @@ public class Payout {
 
   @Id private UUID id;
 
-  @Enumerated(EnumType.STRING)
-  private PayoutKind kind;
+  /** The payout-kind cadastro code (was {@code PayoutKind}; SPEC-0031/DL-0118). */
+  private String kind;
 
   private String payeeId;
 
-  @Enumerated(EnumType.STRING)
-  private PayeeType payeeType;
+  /** The payee-type cadastro code (was {@code PayeeType}; SPEC-0031/DL-0118). */
+  private String payeeType;
 
   private String bookingId;
   private String originRef;
@@ -100,7 +100,7 @@ public class Payout {
     if (amount == null || amount.amount().signum() <= 0) {
       throw new PayoutAmountInvalidException();
     }
-    if (command.kind() == PayoutKind.REFUND
+    if (PayoutKindCodes.isRefund(command.kind())
         && (command.originRef() == null || command.originRef().isBlank())) {
       throw new PayoutRefundOriginRequiredException();
     }
@@ -187,8 +187,8 @@ public class Payout {
     return status;
   }
 
-  /** The payout kind. */
-  public PayoutKind kind() {
+  /** The payout kind (payout-kind cadastro code). */
+  public String kind() {
     return kind;
   }
 

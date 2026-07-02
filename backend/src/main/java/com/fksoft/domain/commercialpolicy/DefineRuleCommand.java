@@ -11,7 +11,7 @@ import java.time.LocalDate;
  * @param layer the governance layer
  * @param scope the scope matcher (use {@link ParameterScope#global()} for global)
  * @param value the value text (must parse for {@code type})
- * @param type the value type
+ * @param type the value-type cadastro code
  * @param validFrom effectivity start (defaults to today when {@code null})
  * @param validUntil effectivity end, or {@code null} for open-ended (must be {@code >= validFrom})
  * @param justification mandatory for {@code DIRECTIVE} (BR5); optional otherwise
@@ -21,7 +21,7 @@ public record DefineRuleCommand(
     ParameterLayer layer,
     ParameterScope scope,
     String value,
-    ParameterValueType type,
+    String type,
     LocalDate validFrom,
     LocalDate validUntil,
     String justification) {}

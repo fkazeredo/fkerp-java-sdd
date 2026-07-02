@@ -6,7 +6,6 @@ import com.fksoft.domain.aftersales.AfterSalesService;
 import com.fksoft.domain.aftersales.OpenCaseCommand;
 import com.fksoft.domain.aftersales.ResolveCaseCommand;
 import com.fksoft.domain.aftersales.SupportCaseStatus;
-import com.fksoft.domain.aftersales.SupportCaseType;
 import com.fksoft.domain.aftersales.SupportCaseView;
 import com.fksoft.infra.security.UserContextProvider;
 import com.fksoft.infra.web.PageResponse;
@@ -94,7 +93,7 @@ public class AfterSalesController {
 
   @GetMapping
   public PageResponse<SupportCaseView> list(
-      @RequestParam(required = false) SupportCaseType type,
+      @RequestParam(required = false) String type,
       @RequestParam(required = false) SupportCaseStatus status,
       @RequestParam(required = false) String bookingId,
       @RequestParam(required = false) Boolean breached,

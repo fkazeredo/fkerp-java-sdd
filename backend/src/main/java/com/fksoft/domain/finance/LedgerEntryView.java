@@ -12,7 +12,7 @@ import java.util.UUID;
  * @param direction PAYABLE or RECEIVABLE
  * @param party the counterparty
  * @param amount the amount in its original currency
- * @param entryType the business type
+ * @param entryType the business type (entry-type cadastro code)
  * @param period the period ({@code YYYY-MM})
  * @param status the lifecycle status
  * @param documentRef the attached document id, or {@code null}
@@ -23,7 +23,7 @@ public record LedgerEntryView(
     LedgerDirection direction,
     Party party,
     Money amount,
-    EntryType entryType,
+    String entryType,
     String period,
     EntryStatus status,
     UUID documentRef,

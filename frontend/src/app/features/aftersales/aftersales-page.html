@@ -123,7 +123,7 @@
         </ng-template>
         <ng-template #body let-c>
           <tr>
-            <td>{{ c.type }}</td>
+            <td>{{ c.type | cadastroLabel: 'SUPPORT_CASE_TYPE' }}</td>
             <td>{{ c.bookingId }}</td>
             <td><p-tag [value]="c.status" [severity]="statusSeverity(c.status)" /></td>
             <td>
@@ -154,7 +154,7 @@
       <h2 class="app-card__title">{{ 'aftersales.detail' | translate }}</h2>
       <dl class="kv">
         <dt>{{ 'aftersales.type' | translate }}</dt>
-        <dd>{{ c.type }}</dd>
+        <dd>{{ c.type | cadastroLabel: 'SUPPORT_CASE_TYPE' }}</dd>
         <dt>{{ 'aftersales.bookingId' | translate }}</dt>
         <dd>{{ c.bookingId }}</dd>
         <dt>{{ 'aftersales.status' | translate }}</dt>
@@ -174,7 +174,7 @@
           }
         </dd>
         <dt>{{ 'aftersales.resolution' | translate }}</dt>
-        <dd>{{ c.resolution }}</dd>
+        <dd>{{ c.resolution | cadastroLabel: 'CASE_RESOLUTION' }}</dd>
         <dt>{{ 'aftersales.linkedPayout' | translate }}</dt>
         <dd>{{ c.linkedPayoutId }}</dd>
         <dt>{{ 'aftersales.reopenCount' | translate }}</dt>

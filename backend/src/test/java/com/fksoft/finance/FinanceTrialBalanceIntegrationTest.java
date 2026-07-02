@@ -5,10 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fksoft.application.api.dto.CreateLedgerEntryRequest;
 import com.fksoft.application.api.dto.CreateLedgerEntryRequest.PartyRequest;
 import com.fksoft.domain.finance.EntryStatus;
-import com.fksoft.domain.finance.EntryType;
+import com.fksoft.domain.finance.EntryTypeCodes;
 import com.fksoft.domain.finance.LedgerDirection;
 import com.fksoft.domain.finance.LedgerEntryView;
-import com.fksoft.domain.finance.PartyType;
+import com.fksoft.domain.finance.PartyTypeCodes;
 import com.fksoft.domain.finance.TrialBalanceView;
 import com.fksoft.domain.money.Money;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
@@ -42,9 +42,9 @@ class FinanceTrialBalanceIntegrationTest extends AbstractPostgresIntegrationTest
   @Test
   void trialBalanceAggregatesPerCurrencyWithNetAndStatusCounts() {
     // BRL: 2700 receivable, 1000 payable -> net 1700. USD: 500 payable -> net -500.
-    create(LedgerDirection.RECEIVABLE, "ag-1", PartyType.AGENCY, "2700.00", "BRL");
-    create(LedgerDirection.PAYABLE, "sup-1", PartyType.SUPPLIER, "1000.00", "BRL");
-    create(LedgerDirection.PAYABLE, "sup-2", PartyType.SUPPLIER, "500.00", "USD");
+    create(LedgerDirection.RECEIVABLE, "ag-1", PartyTypeCodes.AGENCY, "2700.00", "BRL");
+    create(LedgerDirection.PAYABLE, "sup-1", PartyTypeCodes.SUPPLIER, "1000.00", "BRL");
+    create(LedgerDirection.PAYABLE, "sup-2", PartyTypeCodes.SUPPLIER, "500.00", "USD");
 
     ResponseEntity<TrialBalanceView> response =
         restTemplate.getForEntity(
@@ -90,7 +90,7 @@ class FinanceTrialBalanceIntegrationTest extends AbstractPostgresIntegrationTest
   }
 
   private void create(
-      LedgerDirection direction, String partyId, PartyType type, String amount, String currency) {
+      LedgerDirection direction, String partyId, String type, String amount, String currency) {
     LedgerEntryView view =
         restTemplate
             .postForEntity(
@@ -100,8 +100,8 @@ class FinanceTrialBalanceIntegrationTest extends AbstractPostgresIntegrationTest
                     new PartyRequest(partyId, type),
                     Money.of(new BigDecimal(amount), currency),
                     direction == LedgerDirection.PAYABLE
-                        ? EntryType.SUPPLIER_SETTLEMENT
-                        : EntryType.COMMISSION_RECEIVABLE,
+                        ? EntryTypeCodes.SUPPLIER_SETTLEMENT
+                        : EntryTypeCodes.COMMISSION_RECEIVABLE,
                     "2026-10"),
                 LedgerEntryView.class)
             .getBody();

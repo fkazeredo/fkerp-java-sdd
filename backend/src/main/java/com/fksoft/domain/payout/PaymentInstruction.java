@@ -19,5 +19,5 @@ public record PaymentInstruction(
     UUID payoutId,
     int installmentSeq,
     Money amount,
-    PayeeType payeeType,
+    String payeeType,
     PaymentOutcome outcomeHint) {}

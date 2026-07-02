@@ -19,7 +19,7 @@ import java.util.UUID;
 public record SupportCaseResolved(
     UUID caseId,
     String bookingId,
-    SupportCaseType type,
-    CaseResolution resolution,
+    String type,
+    String resolution,
     Money costToServeTotal,
     Instant occurredAt) {}

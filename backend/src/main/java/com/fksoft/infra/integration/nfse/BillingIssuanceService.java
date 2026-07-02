@@ -14,7 +14,7 @@ import com.fksoft.domain.compliance.ComplianceService;
 import com.fksoft.domain.compliance.DocumentTypeCodes;
 import com.fksoft.domain.compliance.DocumentView;
 import com.fksoft.domain.compliance.SignedFormatCodes;
-import com.fksoft.domain.finance.EntryType;
+import com.fksoft.domain.finance.EntryTypeCodes;
 import java.time.LocalDate;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -109,7 +109,7 @@ public class BillingIssuanceService {
             SignedFormatCodes.XADES,
             true, // the NFS-e carries the taker's CNPJ — personal/tax data (LGPD; access audited)
             invoice.commissionEntryId(),
-            EntryType.COMMISSION_RECEIVABLE.name(),
+            EntryTypeCodes.COMMISSION_RECEIVABLE,
             actor);
 
     CommissionInvoiceView issued =

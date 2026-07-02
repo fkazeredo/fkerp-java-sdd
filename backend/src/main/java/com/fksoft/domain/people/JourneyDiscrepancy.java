@@ -13,5 +13,4 @@ import java.util.UUID;
  * @param kind the discrepancy kind
  * @param occurredAt when it was detected
  */
-public record JourneyDiscrepancy(
-    UUID employeeId, String period, DiscrepancyKind kind, Instant occurredAt) {}
+public record JourneyDiscrepancy(UUID employeeId, String period, String kind, Instant occurredAt) {}

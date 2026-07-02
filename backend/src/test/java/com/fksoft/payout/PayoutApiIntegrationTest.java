@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.payout.CreatePayoutCommand;
 import com.fksoft.domain.payout.Payee;
-import com.fksoft.domain.payout.PayeeType;
-import com.fksoft.domain.payout.PayoutKind;
+import com.fksoft.domain.payout.PayeeTypeCodes;
+import com.fksoft.domain.payout.PayoutKindCodes;
 import com.fksoft.domain.payout.PayoutService;
 import com.fksoft.domain.payout.PayoutStatus;
 import com.fksoft.domain.payout.PayoutView;
@@ -42,8 +42,8 @@ class PayoutApiIntegrationTest extends AbstractPostgresIntegrationTest {
     PayoutView created =
         payoutService.create(
             new CreatePayoutCommand(
-                PayoutKind.SUPPLIER_SETTLEMENT,
-                new Payee("sup-12", PayeeType.SUPPLIER),
+                PayoutKindCodes.SUPPLIER_SETTLEMENT,
+                new Payee("sup-12", PayeeTypeCodes.SUPPLIER),
                 "b71",
                 null,
                 Money.of(new BigDecimal("500.00"), "USD"),
@@ -79,8 +79,8 @@ class PayoutApiIntegrationTest extends AbstractPostgresIntegrationTest {
     PayoutView created =
         payoutService.create(
             new CreatePayoutCommand(
-                PayoutKind.AGENT_COMMISSION,
-                new Payee("ag-1", PayeeType.AGENT),
+                PayoutKindCodes.AGENT_COMMISSION,
+                new Payee("ag-1", PayeeTypeCodes.AGENT),
                 null,
                 null,
                 Money.of(new BigDecimal("100.00"), "BRL"),
@@ -105,8 +105,8 @@ class PayoutApiIntegrationTest extends AbstractPostgresIntegrationTest {
   void listingFiltersByKindAndStatus() {
     payoutService.create(
         new CreatePayoutCommand(
-            PayoutKind.AGENT_COMMISSION,
-            new Payee("ag-1", PayeeType.AGENT),
+            PayoutKindCodes.AGENT_COMMISSION,
+            new Payee("ag-1", PayeeTypeCodes.AGENT),
             null,
             null,
             Money.of(new BigDecimal("50.00"), "BRL"),
@@ -118,7 +118,7 @@ class PayoutApiIntegrationTest extends AbstractPostgresIntegrationTest {
 
     var page =
         payoutService.list(
-            PayoutKind.AGENT_COMMISSION,
+            PayoutKindCodes.AGENT_COMMISSION,
             PayoutStatus.PENDING,
             null,
             org.springframework.data.domain.PageRequest.of(0, 20));

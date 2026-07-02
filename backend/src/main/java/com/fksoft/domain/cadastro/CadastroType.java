@@ -87,5 +87,51 @@ public enum CadastroType {
    * Compliance requirement phase (was {@code RequirementPhase}; AT_REGISTRATION drives the
    * close-check — DL-0012).
    */
-  REQUIREMENT_PHASE
+  REQUIREMENT_PHASE,
+
+  // --- Slice 18d: Finance / Payout / People / CommercialPolicy / AfterSales (DL-0118) ---
+
+  /**
+   * Finance ledger entry type (was {@code EntryType}; drives the AP/AR posting + the Compliance
+   * mandatory-document mapping — SPEC-0015/SPEC-0008; behavior kept in {@code EntryTypeCodes}).
+   */
+  ENTRY_TYPE,
+
+  /** Finance ledger counterparty type (was {@code PartyType}; AGENCY/AGENT/SUPPLIER/OTHER). */
+  PARTY_TYPE,
+
+  /** Payout payee type (was {@code PayeeType}; AGENT/SUPPLIER/CUSTOMER). */
+  PAYEE_TYPE,
+
+  /**
+   * Payout kind (was {@code PayoutKind}; AGENT_COMMISSION/SUPPLIER_SETTLEMENT/REFUND — drives the
+   * settlement/refund fact + the merchant-trap invariant; behavior kept in {@code
+   * PayoutKindCodes}).
+   */
+  PAYOUT_KIND,
+
+  /**
+   * People journey discrepancy kind (was {@code DiscrepancyKind}; system-produced by the
+   * calculator).
+   */
+  DISCREPANCY_KIND,
+
+  /**
+   * CommercialPolicy governed-parameter value type (was {@code ParameterValueType};
+   * NUMBER/PERCENT/MONEY/BOOL — the parse/validate behavior is kept in {@code
+   * ParameterValueTypeCodes}).
+   */
+  PARAMETER_VALUE_TYPE,
+
+  /**
+   * AfterSales support-case type (was {@code SupportCaseType}; drives the governed SLA — DL-0052).
+   */
+  SUPPORT_CASE_TYPE,
+
+  /**
+   * AfterSales case resolution (was {@code CaseResolution}; REFUND_APPROVED/CANCEL_APPROVED
+   * orchestrate Payout REFUND / Booking cancel — DL-0054; behavior kept in {@code
+   * CaseResolutionCodes}).
+   */
+  CASE_RESOLUTION
 }

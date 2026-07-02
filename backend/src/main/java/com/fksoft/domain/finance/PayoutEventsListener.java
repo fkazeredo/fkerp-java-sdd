@@ -35,9 +35,9 @@ class PayoutEventsListener {
         event.payoutId().toString(),
         "SUPPLIER_SETTLEMENT",
         LedgerDirection.PAYABLE,
-        new Party(supplierRef(event), PartyType.SUPPLIER),
+        new Party(supplierRef(event), PartyTypeCodes.SUPPLIER),
         event.paidBrl(),
-        EntryType.SUPPLIER_SETTLEMENT,
+        EntryTypeCodes.SUPPLIER_SETTLEMENT,
         event.occurredAt());
   }
 
@@ -48,9 +48,9 @@ class PayoutEventsListener {
         event.payoutId().toString(),
         "AGENT_COMMISSION",
         LedgerDirection.PAYABLE,
-        new Party(event.agentId(), PartyType.AGENCY),
+        new Party(event.agentId(), PartyTypeCodes.AGENCY),
         event.amount(),
-        EntryType.COMMISSION_PAYABLE,
+        EntryTypeCodes.COMMISSION_PAYABLE,
         event.occurredAt());
   }
 
@@ -64,9 +64,9 @@ class PayoutEventsListener {
         event.payoutId().toString(),
         "REFUND",
         LedgerDirection.PAYABLE,
-        new Party(refundRef(event), PartyType.AGENCY),
+        new Party(refundRef(event), PartyTypeCodes.AGENCY),
         event.amount(),
-        EntryType.REFUND,
+        EntryTypeCodes.REFUND,
         event.occurredAt());
   }
 
