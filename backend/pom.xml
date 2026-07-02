@@ -13,7 +13,7 @@
 
   <groupId>com.fksoft</groupId>
   <artifactId>acme-travel-erp</artifactId>
-  <version>0.38.0</version>
+  <version>0.39.0</version>
   <name>acme-travel-erp</name>
   <description>ERP Acme Travel — modular monolith (manual commercial core + minimal compliance)</description>
 
@@ -114,6 +114,14 @@
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-oauth2-jose</artifactId>
+    </dependency>
+    <!-- Multi-instance/HA (Fase 19g, DL-0129/ADR-0020): the form-login session moves to JDBC
+         (Spring Session) so any instance serves the OAuth2 browser flow without sticky sessions;
+         the AS client/authorization state moves to JDBC too (V39). Schema is owned by Flyway
+         (spring.session.jdbc.initialize-schema=never). -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-session-jdbc</artifactId>
     </dependency>
 
     <!-- Migrations. Boot 4 modularized auto-configuration (DL-0128): the removed

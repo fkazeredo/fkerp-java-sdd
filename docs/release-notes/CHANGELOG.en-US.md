@@ -1,12 +1,38 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.38.0.md`](0.38.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.39.0.md`](0.39.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.39.0 — Phase 19g · Multi-instance/HA (persisted JWK + JDBC AS state/session)
+
+**MINOR — infrastructure hardening. No `/api` shape changed.**
+
+The app becomes **stateless per instance** (ADR-0020, revising ADR-0002's single-instance premise):
+authentication state moves from process memory to Postgres/configuration. Immediate effect even on a
+single instance: **a restart no longer logs everyone out**; structurally, two instances behind a
+load balancer become possible (operational proof with a reverse proxy lands in 19l). DL-0129.
+
+- **Persisted signing key** (`PersistedJwk`): `OIDC_JWK_PRIVATE_KEY` (base64 DER PKCS#8) + stable
+  `OIDC_JWK_KEY_ID` → every instance publishes the SAME JWKS. Unset → ephemeral (dev/test);
+  **production requires it** (new `ProdReadinessValidator` check).
+- **AS state in JDBC** (migration **V39**, SAS standard DDL adjusted for Postgres):
+  `JdbcRegisteredClientRepository` (SPA client bootstrapped idempotently) +
+  `JdbcOAuth2AuthorizationService` — any instance completes a flow a peer started.
+- **Form-login session via Spring Session JDBC** (`spring_session*` in V39; schema owned by
+  Flyway). No sticky sessions.
+- **Kept per-instance by decision:** outbound circuit breakers and the mock payment dispatcher
+  (replica races are no-ops — the receiver is idempotent). Jobs were already HA-safe (advisory
+  lock, DL-0075).
+- Tests: `PersistedJwkTest` (two "instances" share kid/public key),
+  `JdbcAuthorizationStateIntegrationTest` (state saved by one instance read by another); the real
+  AS boots on the JDBC repositories (existing integration test unchanged and green).
 
 ---
 
