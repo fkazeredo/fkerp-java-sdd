@@ -1,12 +1,49 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.30.0.md`](0.30.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.31.0.md`](0.31.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.31.0 — Phase 18c · reference enums → cadastros (Sourcing/Exchange/Booking/Compliance) + labels on screens
+
+**MINOR — new capability. No existing `/api` contract changed (the converted fields keep their `string`
+schema).**
+
+Slice 18c reuses the `cadastro` module (18a) and the label pipe (18b) and converts four more
+reference-enum groups to validated `code`s (code = old enum constant name ⇒ JSON identical), rendering
+the cadastro **label** on the Sourcing/Exchange-desk/Booking(Cancellation)/Compliance screens.
+SPEC-0031 updated; ADR-0019 + DL-0117.
+
+- **Sourcing:** `OfferOrigin`, `IntegrationLevel` → validated codes (`OFFER_ORIGIN`,
+  `INTEGRATION_LEVEL`), validated on `register`. The INTEGRATED quoting branch (DL-0018) keeps minting
+  `INBOUND` via `IntegrationLevelCodes`.
+- **Exchange:** `MarketRateSource` → `code` (`MARKET_RATE_SOURCE`). **System-produced** (the contingency
+  controller records `MANUAL`), so it becomes a cadastro for the editable label — no write validation.
+- **Booking:** `ChargeKind`, `CancellationType` → codes (`CHARGE_KIND`, `CANCELLATION_TYPE`),
+  `CancellationType` validated on the policy PUT. The **merchant trap** (ALL_SALES_FINAL supplier cost
+  and customer refund that never net out) and the **penalty windows** are preserved via
+  `CancellationTypeCodes`/`ChargeKindCodes` (DL-0024/DL-0010).
+- **Compliance:** `DocumentType`, `SignedFormat`, `RequirementPhase` → codes, `DocumentType` validated
+  on `upload`. The **legal retention** (FISCAL 5y / CONTRACT 10y) and the `AT_REGISTRATION` **close-check**
+  (DL-0012) are preserved. `SignedFormat` is produced by the ingesting adapter — no write validation.
+- **Added:** `*Codes` constants (`OfferOriginCodes`/`IntegrationLevelCodes`, `MarketRateSourceCodes`,
+  `ChargeKindCodes`/`CancellationTypeCodes`, `DocumentTypeCodes`/`SignedFormatCodes`/
+  `RequirementPhaseCodes`); the label pipe wired into the four Phase-16 screens (+8 frontend types).
+  **Migration V35** seeds the 8 new types (37 items).
+- **Changed:** the Sourcing/Exchange/Booking/Compliance enum fields became validated string codes (the
+  enums were removed); the Finance `BookingChargeEventsListener` switch became a String switch with a
+  safe default; `LegalTimeRecordArchived` no longer imports `compliance.DocumentType`. OpenAPI → 0.31.0.
+- **Gates green:** backend `./mvnw verify` **507 tests** (was 503; round-trip, invalid/inactive code
+  rejection, retention branch preserved), ArchUnit/Modulith(23)/Spotless/Checkstyle/JaCoCo unchanged;
+  the merchant-trap and INTEGRATED-branch regressions stay green; frontend lint + **284 tests** + build;
+  E2E `cadastro.spec.ts` extended with the 18c sourcing round-trip (authored + compiled; `playwright
+  test --list`, 24 tests), not executed in-sandbox (infra).
 
 ---
 

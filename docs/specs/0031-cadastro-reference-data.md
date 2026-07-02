@@ -3,7 +3,8 @@
 Status: Approved
 Related ADRs: 0012, 0016, 0019
 Related DLs: DL-0115 (padrão enum→cadastro, 18a); DL-0116 (enums Marketing/Intelligence/Portfolio,
-18b); DL-0085 (kind→entryType); DL-0044 (regime→estratégia)
+18b); DL-0117 (enums Sourcing/Exchange/Booking/Compliance, 18c); DL-0085 (kind→entryType);
+DL-0044 (regime→estratégia)
 
 > Convenções herdadas da **SPEC-0001**. **Subdomínio de suporte** transversal: um **registry
 > genérico** de dados de referência editáveis (`cadastro_item`) que substitui os enums de negócio que
@@ -43,8 +44,16 @@ módulo (DL-0116). As telas Marketing/Intelligence/Portfolio passam a exibir o *
 (lookup no frontend), retro-corrigindo o seam que 18a deixou (telas mostravam o code). Migração
 **V34** semeia os valores atuais.
 
-**Fora de escopo (18c–18d):** os demais grupos de enums (Compliance/People/Booking/Payout/
-AfterSales/…), convertidos por grupo nas fatias seguintes, reusando este módulo.
+**Entregue (fatia 18c — DL-0117):** os grupos **Sourcing** (`OfferOrigin`, `IntegrationLevel`),
+**Exchange** (`MarketRateSource`), **Booking** (`ChargeKind`, `CancellationType`) e **Compliance**
+(`DocumentType`, `SignedFormat`, `RequirementPhase`), convertidos reusando este módulo. As telas
+Sourcing/Exchange-desk/Booking(Cancelamento)/Compliance passam a exibir o **rótulo** do cadastro.
+Migração **V35** semeia os valores atuais. A ramificação cablada é preservada: o ramo INTEGRATED do
+quoting (DL-0018), as janelas de multa + a armadilha do lojista (DL-0024/DL-0010) e a retenção legal
++ o close-check (DL-0012).
+
+**Fora de escopo (18d):** os demais grupos de enums (People/Payout/AfterSales/…), convertidos por
+grupo na fatia final, reusando este módulo.
 
 **Nunca convertido:** máquinas de estado (`*Status`/lifecycle), técnicos (`*FailureClass`,
 circuit-breaker) e fixados por lei (`LegalType`, `LegalBasis`). O `EntryType` do Finance permanece
@@ -107,6 +116,26 @@ BR8  V33 semeia os valores atuais dos enums convertidos (Admin/Assets/Billing) c
 > rótulos sejam editáveis e as telas mostrem o label. Marketing (`CONSENT_PURPOSE`/
 > `MARKETING_SUBJECT_TYPE`) e Portfolio (`GOAL_METRIC`) **são validados na escrita** pela porta
 > `CadastroValidator` (422 em código inválido/inativo).
+
+### Enums convertidos nesta fatia (18c — DL-0117)
+
+| Módulo     | CadastroType         | Codes (semeados em V35)                                   | Ramificação preservada |
+|------------|----------------------|----------------------------------------------------------|------------------------|
+| sourcing   | `OFFER_ORIGIN`       | PORTAL_API, EXTERNAL_SITE, THIRD_PARTY_CATALOG, RAW_DEMAND | `OfferOriginCodes.EXTERNAL_SITE` (procedência do ACL inbound) |
+| sourcing   | `INTEGRATION_LEVEL`  | NONE, INBOUND, BIDIRECTIONAL                              | `IntegrationLevelCodes.INBOUND` (ramo INTEGRATED do quoting — DL-0018) |
+| exchange   | `MARKET_RATE_SOURCE` | FEED, MANUAL                                              | `MarketRateSourceCodes` (produzido pelo sistema; DL-0025) |
+| booking    | `CHARGE_KIND`        | PENALTY, SUPPLIER, CUSTOMER_REFUND, NO_SHOW              | `ChargeKindCodes` (postagem AP/AR no Finance — SPEC-0015 BR5) |
+| booking    | `CANCELLATION_TYPE`  | STANDARD, ALL_SALES_FINAL, CUSTOM                        | `CancellationTypeCodes` (janelas de multa + armadilha do lojista — DL-0024/DL-0010) |
+| compliance | `DOCUMENT_TYPE`      | NFE, NFSE, RPA, UTILITY_BILL, LOAN_CONTRACT, COMMISSION_INVOICE, PAYMENT_PROOF, REFUND_PROOF, PAYROLL, TIME_RECORD_AFD, PROCESSED_JOURNAL_AEJ, VOUCHER, REPRESENTATION_CONTRACT, OTHER | `DocumentTypeCodes` (retenção FISCAL/CONTRACT — SPEC-0008 BR2; tipos legais do AFD/AEJ) |
+| compliance | `SIGNED_FORMAT`      | CAdES_P7S, XADES, PADES                                   | `SignedFormatCodes` (produzido pelo adaptador; não validado na escrita) |
+| compliance | `REQUIREMENT_PHASE`  | AT_REGISTRATION, AT_SETTLEMENT                           | `RequirementPhaseCodes.AT_REGISTRATION` (close-check — DL-0012) |
+
+> Validados na escrita (422 em código inválido/inativo): Sourcing (`OFFER_ORIGIN`/
+> `INTEGRATION_LEVEL` no `register`), Booking (`CANCELLATION_TYPE` no PUT da política) e Compliance
+> (`DOCUMENT_TYPE` no `upload`). **Produzidos pelo sistema/adaptador** (semeados, mas sem validação de
+> escrita): `MARKET_RATE_SOURCE` (o source nunca chega como payload) e `SIGNED_FORMAT` (produzido pelo
+> ingestor — e seu code cablado `CAdES_P7S` é intencionalmente misto, incompatível com o validador que
+> normaliza para maiúscula).
 
 ## Tests Required
 
