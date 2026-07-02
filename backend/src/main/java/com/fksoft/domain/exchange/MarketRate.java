@@ -3,8 +3,6 @@ package com.fksoft.domain.exchange;
 import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
@@ -35,8 +33,8 @@ public class MarketRate {
 
   private Instant observedAt;
 
-  @Enumerated(EnumType.STRING)
-  private MarketRateSource source;
+  /** The market-rate source cadastro code (was {@code MarketRateSource}; SPEC-0031/DL-0117). */
+  private String source;
 
   private Instant createdAt;
 
@@ -50,7 +48,7 @@ public class MarketRate {
    * @param pair the currency pair
    * @param rate the positive market rate (scale 6)
    * @param observedAt when the market showed this rate
-   * @param source where the observation came from
+   * @param source where the observation came from (market-rate source cadastro code)
    * @param recordedBy who recorded it (audit), or {@code null} for a feed
    * @param createdAt creation instant (UTC)
    * @return a new, persistable observation
@@ -59,7 +57,7 @@ public class MarketRate {
       CurrencyPair pair,
       BigDecimal rate,
       Instant observedAt,
-      MarketRateSource source,
+      String source,
       String recordedBy,
       Instant createdAt) {
     MarketRate observation = new MarketRate();

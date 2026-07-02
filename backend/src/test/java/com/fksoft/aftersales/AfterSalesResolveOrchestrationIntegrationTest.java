@@ -20,7 +20,7 @@ import com.fksoft.domain.aftersales.SupportCaseStatus;
 import com.fksoft.domain.aftersales.SupportCaseType;
 import com.fksoft.domain.aftersales.SupportCaseView;
 import com.fksoft.domain.booking.BookingView;
-import com.fksoft.domain.booking.CancellationType;
+import com.fksoft.domain.booking.CancellationTypeCodes;
 import com.fksoft.domain.booking.CostBearer;
 import com.fksoft.domain.booking.LocatorOrigin;
 import com.fksoft.domain.money.Money;
@@ -194,7 +194,7 @@ class AfterSalesResolveOrchestrationIntegrationTest extends AbstractPostgresInte
     restTemplate.put(
         "/api/products/" + scope + "/cancellation-policy",
         new CancellationPolicyRequest(
-            CancellationType.ALL_SALES_FINAL,
+            CancellationTypeCodes.ALL_SALES_FINAL,
             List.of(),
             false,
             CostBearer.SUPPLIER,

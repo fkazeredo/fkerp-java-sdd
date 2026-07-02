@@ -12,7 +12,7 @@ import com.fksoft.domain.admin.RegisterExpenseCommand;
 import com.fksoft.domain.admin.RegisterSupplierCommand;
 import com.fksoft.domain.compliance.CloseCheckView;
 import com.fksoft.domain.compliance.ComplianceService;
-import com.fksoft.domain.compliance.DocumentType;
+import com.fksoft.domain.compliance.DocumentTypeCodes;
 import com.fksoft.domain.compliance.DocumentView;
 import com.fksoft.domain.finance.EntryStatus;
 import com.fksoft.domain.finance.FinanceService;
@@ -179,7 +179,7 @@ class AdminExpenseIntegrationTest extends AbstractPostgresIntegrationTest {
     // Attach the UTILITY_BILL to the Finance entry (Compliance vault).
     DocumentView bill =
         complianceService.upload(
-            DocumentType.UTILITY_BILL,
+            DocumentTypeCodes.UTILITY_BILL,
             "conta-de-luz".getBytes(),
             "conta.pdf",
             "application/pdf",

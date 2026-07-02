@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fksoft.application.api.dto.CancellationPolicyRequest;
 import com.fksoft.application.api.dto.CancellationPolicyRequest.WindowRequest;
 import com.fksoft.domain.booking.CancellationPolicyView;
-import com.fksoft.domain.booking.CancellationType;
+import com.fksoft.domain.booking.CancellationTypeCodes;
 import com.fksoft.domain.booking.CostBearer;
 import com.fksoft.domain.money.Money;
 import com.fksoft.infra.web.ApiErrorResponse;
@@ -47,7 +47,7 @@ class CancellationPolicyAdminIntegrationTest extends AbstractPostgresIntegration
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     CancellationPolicyView view = response.getBody();
     assertThat(view).isNotNull();
-    assertThat(view.type()).isEqualTo(CancellationType.STANDARD);
+    assertThat(view.type()).isEqualTo(CancellationTypeCodes.STANDARD);
     assertThat(view.merchantOfRecord()).isFalse();
     assertThat(view.windows()).isEmpty();
     assertThat(view.noShowFee()).isNull();
@@ -57,7 +57,7 @@ class CancellationPolicyAdminIntegrationTest extends AbstractPostgresIntegration
   void upsertsAndReadsBackTheAdministeredPolicy() {
     CancellationPolicyRequest request =
         new CancellationPolicyRequest(
-            CancellationType.STANDARD,
+            CancellationTypeCodes.STANDARD,
             List.of(
                 new WindowRequest(24, new BigDecimal("0.50")),
                 new WindowRequest(72, new BigDecimal("0.25"))),
@@ -76,7 +76,7 @@ class CancellationPolicyAdminIntegrationTest extends AbstractPostgresIntegration
             .getBody();
 
     assertThat(view).isNotNull();
-    assertThat(view.type()).isEqualTo(CancellationType.STANDARD);
+    assertThat(view.type()).isEqualTo(CancellationTypeCodes.STANDARD);
     assertThat(view.windows()).hasSize(2);
     assertThat(view.costBearer()).isEqualTo(CostBearer.AGENCY);
     assertThat(view.noShowFee()).isEqualTo(Money.of(new BigDecimal("90.00"), "BRL"));
@@ -87,7 +87,7 @@ class CancellationPolicyAdminIntegrationTest extends AbstractPostgresIntegration
   void storesTheMerchantOfRecordFlagForAllSalesFinal() {
     CancellationPolicyRequest request =
         new CancellationPolicyRequest(
-            CancellationType.ALL_SALES_FINAL,
+            CancellationTypeCodes.ALL_SALES_FINAL,
             List.of(),
             false,
             CostBearer.SUPPLIER,
@@ -104,7 +104,7 @@ class CancellationPolicyAdminIntegrationTest extends AbstractPostgresIntegration
             .getBody();
 
     assertThat(view).isNotNull();
-    assertThat(view.type()).isEqualTo(CancellationType.ALL_SALES_FINAL);
+    assertThat(view.type()).isEqualTo(CancellationTypeCodes.ALL_SALES_FINAL);
     assertThat(view.merchantOfRecord()).isTrue();
     assertThat(view.refundable()).isFalse();
   }
@@ -113,7 +113,7 @@ class CancellationPolicyAdminIntegrationTest extends AbstractPostgresIntegration
   void rejectsAMalformedWindow() {
     CancellationPolicyRequest request =
         new CancellationPolicyRequest(
-            CancellationType.STANDARD,
+            CancellationTypeCodes.STANDARD,
             List.of(new WindowRequest(24, new BigDecimal("1.50"))),
             true,
             CostBearer.AGENCY,

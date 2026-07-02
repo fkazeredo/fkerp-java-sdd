@@ -12,7 +12,8 @@ import java.util.List;
  * resolution for the merchant trap (BR8/DL-0021). It carries no entity and is frozen onto the
  * booking at confirmation (BR1).
  *
- * @param type the policy type (drives behavior — BR2/BR3/BR4)
+ * @param type the policy type cadastro code (drives behavior — BR2/BR3/BR4; was {@code
+ *     CancellationType}, SPEC-0031/DL-0117)
  * @param windows the penalty windows (used by STANDARD/CUSTOM; ignored by ALL_SALES_FINAL)
  * @param refundable whether the sale is refundable from the supplier's point of view
  * @param costBearer who bears a STANDARD/CUSTOM penalty (∈ AGENCY, ACME, SUPPLIER)
@@ -21,14 +22,14 @@ import java.util.List;
  *     any customer refund (default {@code false} = affiliate, supplier bears it)
  */
 public record CancellationPolicy(
-    CancellationType type,
+    String type,
     List<PenaltyWindow> windows,
     boolean refundable,
     CostBearer costBearer,
     boolean merchantOfRecord) {
 
   public CancellationPolicy {
-    if (type == null) {
+    if (type == null || type.isBlank()) {
       throw new CancellationPolicyInvalidException();
     }
     if (costBearer == null) {
@@ -49,7 +50,7 @@ public record CancellationPolicy(
    * @return the penalty amount in {@code paidAmount}'s currency (possibly zero)
    */
   public Money penaltyFor(long hoursUntilService, Money paidAmount) {
-    if (!type.usesWindows()) {
+    if (!CancellationTypeCodes.usesWindows(type)) {
       return Money.zero(paidAmount.currency());
     }
     return windows.stream()
@@ -72,14 +73,14 @@ public record CancellationPolicy(
   /** A frozen, affiliate STANDARD policy with no windows (penalty 0) — the safe default. */
   public static CancellationPolicy standardNoWindows() {
     return new CancellationPolicy(
-        CancellationType.STANDARD, List.of(), true, CostBearer.AGENCY, false);
+        CancellationTypeCodes.STANDARD, List.of(), true, CostBearer.AGENCY, false);
   }
 
   /** Convenience for a single-window STANDARD policy. */
   public static CancellationPolicy standardWindow(
       int hoursBefore, BigDecimal penaltyPct, CostBearer costBearer) {
     return new CancellationPolicy(
-        CancellationType.STANDARD,
+        CancellationTypeCodes.STANDARD,
         List.of(new PenaltyWindow(hoursBefore, penaltyPct)),
         true,
         costBearer,

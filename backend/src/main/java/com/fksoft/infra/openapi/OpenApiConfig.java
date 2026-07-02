@@ -208,9 +208,12 @@ public class OpenApiConfig {
                         + " Phase 18b (SPEC-0031 / DL-0116) converts the Marketing (ConsentPurpose,"
                         + " SubjectType), Intelligence (SubjectKind, InsightType, Verdict) and Portfolio"
                         + " (GoalMetric) reference enums to validated string codes reusing the Cadastro"
-                        + " module (seeded by V34). The converted fields keep their JSON schema (string),"
-                        + " so NO existing /api contract changes; the Marketing/Intelligence/Portfolio"
-                        + " screens now render the cadastro label.")
-                .version("0.30.0"));
+                        + " module (seeded by V34). Phase 18c (SPEC-0031 / DL-0117) converts the Sourcing"
+                        + " (OfferOrigin, IntegrationLevel), Exchange (MarketRateSource), Booking (ChargeKind,"
+                        + " CancellationType) and Compliance (DocumentType, SignedFormat, RequirementPhase)"
+                        + " reference enums to validated string codes (seeded by V35). The converted fields"
+                        + " keep their JSON schema (string), so NO existing /api contract changes; the"
+                        + " Sourcing/Exchange/Booking/Compliance screens now render the cadastro label.")
+                .version("0.31.0"));
   }
 }

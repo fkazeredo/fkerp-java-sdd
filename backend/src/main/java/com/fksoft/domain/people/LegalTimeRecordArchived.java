@@ -1,6 +1,5 @@
 package com.fksoft.domain.people;
 
-import com.fksoft.domain.compliance.DocumentType;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -11,9 +10,10 @@ import java.util.UUID;
  * carries only the vault document id (by value, no cross-module FK), the type and the period.
  *
  * @param documentId the vault document id (in Compliance)
- * @param type the document type ({@code TIME_RECORD_AFD} or {@code PROCESSED_JOURNAL_AEJ})
+ * @param type the document-type cadastro code ({@code TIME_RECORD_AFD} or {@code
+ *     PROCESSED_JOURNAL_AEJ})
  * @param periodRef the period the record covers ({@code YYYY-MM})
  * @param occurredAt when it was archived
  */
 public record LegalTimeRecordArchived(
-    UUID documentId, DocumentType type, String periodRef, Instant occurredAt) {}
+    UUID documentId, String type, String periodRef, Instant occurredAt) {}

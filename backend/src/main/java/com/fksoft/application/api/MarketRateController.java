@@ -4,7 +4,7 @@ import com.fksoft.application.api.dto.MarketRateResponse;
 import com.fksoft.application.api.dto.RecordMarketRateRequest;
 import com.fksoft.domain.exchange.CurrencyPair;
 import com.fksoft.domain.exchange.MarketRateService;
-import com.fksoft.domain.exchange.MarketRateSource;
+import com.fksoft.domain.exchange.MarketRateSourceCodes;
 import com.fksoft.infra.security.UserContextProvider;
 import com.fksoft.infra.web.PageResponse;
 import jakarta.validation.Valid;
@@ -47,7 +47,7 @@ public class MarketRateController {
                 CurrencyPair.parse(request.currencyPair()),
                 request.rate(),
                 request.observedAt(),
-                MarketRateSource.MANUAL,
+                MarketRateSourceCodes.MANUAL,
                 actor));
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }

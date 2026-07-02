@@ -4,9 +4,7 @@ import com.fksoft.application.api.dto.AttachDocumentRequest;
 import com.fksoft.domain.compliance.CloseCheckView;
 import com.fksoft.domain.compliance.ComplianceService;
 import com.fksoft.domain.compliance.ComplianceUploadInvalidException;
-import com.fksoft.domain.compliance.DocumentType;
 import com.fksoft.domain.compliance.DocumentView;
-import com.fksoft.domain.compliance.SignedFormat;
 import com.fksoft.infra.security.UserContextProvider;
 import jakarta.validation.Valid;
 import java.io.IOException;
@@ -44,9 +42,9 @@ public class ComplianceController {
   @PostMapping(path = "/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<DocumentView> upload(
       @RequestParam("file") MultipartFile file,
-      @RequestParam("type") DocumentType type,
+      @RequestParam("type") String type,
       @RequestParam("issuedAt") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate issuedAt,
-      @RequestParam(value = "signedFormat", required = false) SignedFormat signedFormat,
+      @RequestParam(value = "signedFormat", required = false) String signedFormat,
       @RequestParam(value = "hasPersonalData", defaultValue = "false") boolean hasPersonalData,
       @RequestParam(value = "entryId", required = false) UUID entryId,
       @RequestParam(value = "entryType", required = false) String entryType) {

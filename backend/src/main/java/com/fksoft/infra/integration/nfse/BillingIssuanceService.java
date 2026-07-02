@@ -11,9 +11,9 @@ import com.fksoft.domain.billing.NfseIssueRequest;
 import com.fksoft.domain.billing.NfseTransmissionException;
 import com.fksoft.domain.billing.TaxAssessment;
 import com.fksoft.domain.compliance.ComplianceService;
-import com.fksoft.domain.compliance.DocumentType;
+import com.fksoft.domain.compliance.DocumentTypeCodes;
 import com.fksoft.domain.compliance.DocumentView;
-import com.fksoft.domain.compliance.SignedFormat;
+import com.fksoft.domain.compliance.SignedFormatCodes;
 import com.fksoft.domain.finance.EntryType;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -101,12 +101,12 @@ public class BillingIssuanceService {
     // close).
     DocumentView document =
         complianceService.upload(
-            DocumentType.COMMISSION_INVOICE,
+            DocumentTypeCodes.COMMISSION_INVOICE,
             issuance.signedDocument(),
             "nfse-comissao-" + invoice.number() + ".xml",
             issuance.contentType(),
             LocalDate.now(),
-            SignedFormat.XADES,
+            SignedFormatCodes.XADES,
             true, // the NFS-e carries the taker's CNPJ — personal/tax data (LGPD; access audited)
             invoice.commissionEntryId(),
             EntryType.COMMISSION_RECEIVABLE.name(),

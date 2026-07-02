@@ -7,6 +7,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
+import { CadastroLabelPipe } from '../../core/cadastro/cadastro-label.pipe';
 import { ApiError } from '../../core/http/api-error';
 import { FormLeaveGuard } from '../../core/guards/can-deactivate.guard';
 import { formatMoney } from '../../core/models/api.models';
@@ -38,6 +39,7 @@ import { ExchangeDeskService } from './exchange-desk.service';
     TableModule,
     TagModule,
     ScreenState,
+    CadastroLabelPipe,
   ],
   templateUrl: './exchange-desk-page.html',
 })

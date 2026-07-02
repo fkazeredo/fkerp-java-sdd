@@ -2,8 +2,6 @@ package com.fksoft.domain.compliance;
 
 import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
@@ -29,9 +27,8 @@ public class DocumentRequirement {
 
   @Id private String requiredDocumentType;
 
-  @Id
-  @Enumerated(EnumType.STRING)
-  private RequirementPhase phase;
+  /** The requirement-phase cadastro code (was {@code RequirementPhase}; SPEC-0031/DL-0117). */
+  @Id private String phase;
 
   /** Composite primary key of {@link DocumentRequirement}. */
   @NoArgsConstructor
@@ -40,7 +37,7 @@ public class DocumentRequirement {
 
     private String entryType;
     private String requiredDocumentType;
-    private RequirementPhase phase;
+    private String phase;
 
     @Override
     public boolean equals(Object other) {
@@ -52,7 +49,7 @@ public class DocumentRequirement {
       }
       return java.util.Objects.equals(entryType, key.entryType)
           && java.util.Objects.equals(requiredDocumentType, key.requiredDocumentType)
-          && phase == key.phase;
+          && java.util.Objects.equals(phase, key.phase);
     }
 
     @Override

@@ -2,8 +2,6 @@ package com.fksoft.domain.compliance;
 
 import com.fksoft.domain.ModuleInternal;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
@@ -29,8 +27,8 @@ public class Document {
 
   @Id private UUID id;
 
-  @Enumerated(EnumType.STRING)
-  private DocumentType type;
+  /** The document-type cadastro code (was {@code DocumentType}; SPEC-0031/DL-0117). */
+  private String type;
 
   private String fileRef;
 
@@ -40,8 +38,8 @@ public class Document {
 
   private LocalDate retentionUntil;
 
-  @Enumerated(EnumType.STRING)
-  private SignedFormat signedFormat;
+  /** The signed-format cadastro code (was {@code SignedFormat}; SPEC-0031/DL-0117), or null. */
+  private String signedFormat;
 
   private boolean hasPersonalData;
 
@@ -56,22 +54,22 @@ public class Document {
    * Ingests a document, computing {@code retentionUntil} from the type and issue date (BR2). The
    * signed format (if any) is recorded; the original signed file is the one stored (BR3).
    *
-   * @param type the document type
+   * @param type the document-type cadastro code
    * @param fileRef the opaque storage reference
    * @param hash the content hash ({@code sha256:...})
    * @param issuedAt the issue date
-   * @param signedFormat the signed format, or {@code null}
+   * @param signedFormat the signed-format cadastro code, or {@code null}
    * @param hasPersonalData whether it carries personal data (BR8)
    * @param now ingestion instant (UTC)
    * @param actor who ingested it (audit)
    * @return a new, persistable document
    */
   public static Document ingest(
-      DocumentType type,
+      String type,
       String fileRef,
       String hash,
       LocalDate issuedAt,
-      SignedFormat signedFormat,
+      String signedFormat,
       boolean hasPersonalData,
       Instant now,
       String actor) {

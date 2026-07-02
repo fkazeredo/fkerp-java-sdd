@@ -10,20 +10,20 @@ import java.util.UUID;
  * exposed (it is an internal opaque storage handle).
  *
  * @param id the document id
- * @param type the document type
+ * @param type the document-type cadastro code
  * @param hash the content hash ({@code sha256:...})
  * @param issuedAt the issue date
  * @param retentionUntil the legal retention deadline (BR2)
- * @param signedFormat the signed format, or {@code null}
+ * @param signedFormat the signed-format cadastro code, or {@code null}
  * @param hasPersonalData whether it carries personal data (LGPD-controlled access, BR8)
  * @param createdAt when it was ingested
  */
 public record DocumentView(
     UUID id,
-    DocumentType type,
+    String type,
     String hash,
     LocalDate issuedAt,
     LocalDate retentionUntil,
-    SignedFormat signedFormat,
+    String signedFormat,
     boolean hasPersonalData,
     Instant createdAt) {}

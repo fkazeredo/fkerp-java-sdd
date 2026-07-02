@@ -13,8 +13,8 @@ import com.fksoft.application.api.dto.PinRateRequest;
 import com.fksoft.domain.accounts.LegalType;
 import com.fksoft.domain.booking.BookingStatus;
 import com.fksoft.domain.booking.BookingView;
-import com.fksoft.domain.booking.CancellationType;
-import com.fksoft.domain.booking.ChargeKind;
+import com.fksoft.domain.booking.CancellationTypeCodes;
+import com.fksoft.domain.booking.ChargeKindCodes;
 import com.fksoft.domain.booking.CostBearer;
 import com.fksoft.domain.booking.LocatorOrigin;
 import com.fksoft.domain.booking.NoShowResult;
@@ -74,7 +74,7 @@ class NoShowIntegrationTest extends AbstractPostgresIntegrationTest {
     assertThat(result.status()).isEqualTo(BookingStatus.NO_SHOW);
     assertThat(result.waived()).isFalse();
     assertThat(result.charge()).isNotNull();
-    assertThat(result.charge().kind()).isEqualTo(ChargeKind.NO_SHOW);
+    assertThat(result.charge().kind()).isEqualTo(ChargeKindCodes.NO_SHOW);
     assertThat(result.charge().amount()).isEqualTo(Money.of(new BigDecimal("90.00"), "BRL"));
 
     Integer rows =
@@ -116,7 +116,7 @@ class NoShowIntegrationTest extends AbstractPostgresIntegrationTest {
     restTemplate.put(
         "/api/products/" + scope + "/cancellation-policy",
         new CancellationPolicyRequest(
-            CancellationType.STANDARD,
+            CancellationTypeCodes.STANDARD,
             List.of(),
             true,
             CostBearer.AGENCY,

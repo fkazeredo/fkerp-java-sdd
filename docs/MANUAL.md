@@ -819,6 +819,37 @@ de `PROMO_FX_ADVISOR` e `CONVERTE`; a de Portfólio mostra *"Receita (spread BRL
 > ficou mais claro. Para o time técnico: enums de Marketing/Inteligência/Portfólio viraram `code`
 > validado; o contrato `/api` **não mudou**. Ver SPEC-0031 / ADR-0019 / DL-0116.
 
+### Fase 18c — Mais cadastros (Origem de ofertas, Câmbio, Cancelamento, Conformidade) e **rótulos nas telas**
+
+Esta fatia converte para **cadastros editáveis** mais listas de referência, agora nas áreas de
+**Origem de ofertas (Sourcing)**, **Mesa de câmbio**, **Cancelamento (Reservas)** e **Conformidade**:
+
+- **Origem de ofertas:** a **procedência** da oferta (*Portal integrado (API)*, *Site externo*,
+  *Catálogo de terceiro*, *Demanda avulsa*) e o **nível de integração** (*Sem integração*, *Entrada
+  (feed do ERP)*, *Bidirecional*).
+- **Mesa de câmbio:** a **origem da cotação** (*Feed (provedor externo)* / *Manual (contingência)*).
+- **Cancelamento:** o **tipo de política** (*Padrão (por janela)*, *Venda sem reembolso*,
+  *Personalizada*) e a **natureza da cobrança** de cancelamento/no-show (*Multa*, *Custo do
+  fornecedor*, *Reembolso ao cliente*, *No-show*).
+- **Conformidade:** o **tipo de documento** (*NF-e*, *NFS-e*, *Comprovante de pagamento*, *Folha de
+  pagamento*, *Registro de ponto (AFD)* etc.), o **formato assinado** (*CAdES (.p7s)*, *XAdES*,
+  *PAdES*) e a **fase do requisito** (*No registro* / *Na liquidação*).
+
+Você mantém esses rótulos na mesma tela **"Cadastros"** (perfil **Curador de Políticas**), do mesmo
+jeito das listas anteriores.
+
+**A novidade que aparece para todos:** as telas de **Origem de ofertas**, **Mesa de câmbio**,
+**Cancelamento** e **Conformidade** agora mostram o **rótulo em português** no lugar do código técnico
+(ex.: *"Site externo"* em vez de `EXTERNAL_SITE`; *"Manual (contingência)"* em vez de `MANUAL`;
+*"Venda sem reembolso"* em vez de `ALL_SALES_FINAL`; *"Registro de ponto (AFD)"* em vez de
+`TIME_RECORD_AFD`).
+
+> **Nada muda no comportamento.** As regras continuam iguais — a cotação integrada, as **janelas de
+> multa** e a **armadilha do lojista** (venda sem reembolso: o custo do fornecedor e o reembolso ao
+> cliente **não se anulam**) e os prazos de guarda legal dos documentos seguem exatamente como antes.
+> Para o time técnico: os enums de Sourcing/Exchange/Booking/Compliance viraram `code` validado; o
+> contrato `/api` **não mudou**. Ver SPEC-0031 / ADR-0019 / DL-0117.
+
 
 ## 4. Glossário
 
@@ -919,6 +950,7 @@ de `PROMO_FX_ADVISOR` e `CONVERTE`; a de Portfólio mostra *"Receita (spread BRL
 | 0.28.0 | 17 — Remover Keycloak → login servido pelo próprio sistema | **Keycloak removido 100%.** O login único (SSO) continua igual para o usuário (**"Entrar com SSO"** → usuário e senha → Painel), mas agora é servido **pelo próprio ERP** (sem contêiner externo). Voltam os **usuários de exemplo** dentro do sistema (`dev` + um por papel, senha `dev12345`, **só em desenvolvimento/testes**). **Papéis, permissões e auditoria de acesso continuam iguais**; o servidor segue sendo a autoridade; a sessão se renova sozinha. **Mudança incompatível de infraestrutura:** o serviço Keycloak, a pasta `infra/keycloak/` e as variáveis `KEYCLOAK_*` saíram; a URL do OIDC aponta para o próprio app. Nenhum contrato `/api` mudou (ADR-0018). |
 | 0.29.0 | 18a — Cadastros (dados de referência editáveis) | **Nova tela "Cadastros"** (para o perfil **Curador de Políticas**): as listas de referência do sistema — **natureza de despesa, tipo de fornecedor/ativo, regime tributário, tipo de retenção** — deixam de ser fixas no programa e viram **cadastros editáveis** (renomear rótulo, reordenar, ativar/desativar e **acrescentar** itens, **sem nova versão**). O **código** de cada item é fixo (é o que os registros antigos guardam); só o rótulo/ordem/ativação mudam. **Nada muda para quem já usava as telas de Back-office, Patrimônio e Faturamento** — os valores continuam os mesmos, só ficaram editáveis; **nenhum contrato `/api` mudou**. Primeiro grupo convertido (Admin/Assets/Billing); os próximos vêm nas fatias 18b–18d. (SPEC-0031 / ADR-0019 / DL-0115.) |
 | 0.30.0 | 18b — Mais cadastros (Marketing/Inteligência/Portfólio) + rótulos nas telas | Mais listas de referência viram **cadastros editáveis** na tela "Cadastros": **Marketing** (finalidade do consentimento, tipo de titular), **Inteligência** (eixo do insight, tipo de insight, veredito) e **Portfólio** (métrica da meta). **Novidade para todos:** as telas de **Marketing, Inteligência e Portfólio** passam a mostrar o **rótulo em português** no lugar do código técnico (ex.: *"Consultor de câmbio (promoção)"*, *"Converte (manter)"*, *"Receita (spread BRL)"*) — corrigindo também nessas telas o comportamento anterior que exibia o código. **Nada muda no que se registra**; os valores por baixo são os mesmos e **nenhum contrato `/api` mudou**. (SPEC-0031 / ADR-0019 / DL-0116.) |
+| 0.31.0 | 18c — Mais cadastros (Origem de ofertas/Câmbio/Cancelamento/Conformidade) + rótulos nas telas | Mais listas de referência viram **cadastros editáveis** na tela "Cadastros": **Origem de ofertas** (procedência, nível de integração), **Mesa de câmbio** (origem da cotação), **Cancelamento** (tipo de política, natureza da cobrança) e **Conformidade** (tipo de documento, formato assinado, fase do requisito). **Novidade para todos:** as telas de **Origem de ofertas, Mesa de câmbio, Cancelamento e Conformidade** passam a mostrar o **rótulo em português** no lugar do código técnico (ex.: *"Site externo"*, *"Manual (contingência)"*, *"Venda sem reembolso"*, *"Registro de ponto (AFD)"*). **Nada muda no comportamento** — cotação integrada, janelas de multa, a **armadilha do lojista** e os prazos de guarda legal seguem iguais; os valores por baixo são os mesmos e **nenhum contrato `/api` mudou**. (SPEC-0031 / ADR-0019 / DL-0117.) |
 
 > Observação: o manual foca nas fatias com tela/jornada para o usuário; capacidades internas das
 > Fases 1, 2 e 5–8a aparecem aqui conforme ganham uso direto pelo operador.

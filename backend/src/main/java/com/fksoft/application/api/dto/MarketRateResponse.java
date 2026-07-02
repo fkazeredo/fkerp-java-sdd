@@ -1,6 +1,5 @@
 package com.fksoft.application.api.dto;
 
-import com.fksoft.domain.exchange.MarketRateSource;
 import com.fksoft.domain.exchange.MarketRateView;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -8,10 +7,12 @@ import java.util.UUID;
 
 /**
  * Response body for market-rate endpoints, built from the domain {@link MarketRateView}. The
- * currency pair is rendered in canonical {@code BASE/QUOTE} text.
+ * currency pair is rendered in canonical {@code BASE/QUOTE} text. The {@code source} is a
+ * market-rate source cadastro code (was {@code MarketRateSource}; SPEC-0031/DL-0117) — the wire
+ * stays a string.
  */
 public record MarketRateResponse(
-    UUID id, String currencyPair, BigDecimal rate, Instant observedAt, MarketRateSource source) {
+    UUID id, String currencyPair, BigDecimal rate, Instant observedAt, String source) {
 
   /** Maps a domain view to the response DTO. */
   public static MarketRateResponse from(MarketRateView view) {

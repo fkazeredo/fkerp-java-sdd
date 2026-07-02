@@ -33,7 +33,12 @@
         <dt>{{ 'cancellation.scopeRef' | translate }}</dt>
         <dd>{{ p.scopeRef }}</dd>
         <dt>{{ 'cancellation.type' | translate }}</dt>
-        <dd><p-tag [value]="p.type" [severity]="typeSeverity(p.type)" /></dd>
+        <dd>
+          <p-tag
+            [value]="p.type | cadastroLabel: 'CANCELLATION_TYPE'"
+            [severity]="typeSeverity(p.type)"
+          />
+        </dd>
         <dt>{{ 'cancellation.refundable' | translate }}</dt>
         <dd>
           <p-tag

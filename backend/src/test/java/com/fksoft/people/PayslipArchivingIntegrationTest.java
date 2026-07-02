@@ -2,7 +2,7 @@ package com.fksoft.people;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fksoft.domain.compliance.DocumentType;
+import com.fksoft.domain.compliance.DocumentTypeCodes;
 import com.fksoft.domain.compliance.DocumentView;
 import com.fksoft.domain.people.EmployeeView;
 import com.fksoft.infra.integration.payroll.PayslipArchivingService;
@@ -72,7 +72,7 @@ class PayslipArchivingIntegrationTest extends AbstractPostgresIntegrationTest {
         jdbcTemplate.queryForMap(
             "SELECT type, retention_until, has_personal_data FROM documents WHERE id = ?",
             document.id());
-    assertThat(row.get("type")).isEqualTo(DocumentType.PAYROLL.name());
+    assertThat(row.get("type")).isEqualTo(DocumentTypeCodes.PAYROLL);
     assertThat(row.get("has_personal_data")).isEqualTo(true);
     LocalDate retentionUntil = ((java.sql.Date) row.get("retention_until")).toLocalDate();
     assertThat(ChronoUnit.YEARS.between(issuedAt, retentionUntil)).isEqualTo(5);

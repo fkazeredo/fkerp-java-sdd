@@ -111,7 +111,12 @@
             <td>{{ r.currencyPair }}</td>
             <td>{{ r.rate }}</td>
             <td>{{ r.observedAt }}</td>
-            <td><p-tag [value]="r.source" [severity]="r.source === 'FEED' ? 'info' : 'secondary'" /></td>
+            <td>
+              <p-tag
+                [value]="r.source | cadastroLabel: 'MARKET_RATE_SOURCE'"
+                [severity]="r.source === 'FEED' ? 'info' : 'secondary'"
+              />
+            </td>
           </tr>
         </ng-template>
       </p-table>

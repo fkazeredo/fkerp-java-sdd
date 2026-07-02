@@ -22,7 +22,7 @@ class CancellationPolicyTest {
     // 50% within 24h, 25% within 72h (BR2): the smallest hoursBefore >= hoursUntilService wins.
     CancellationPolicy policy =
         new CancellationPolicy(
-            CancellationType.STANDARD,
+            CancellationTypeCodes.STANDARD,
             List.of(
                 new PenaltyWindow(24, new BigDecimal("0.50")),
                 new PenaltyWindow(72, new BigDecimal("0.25"))),
@@ -53,7 +53,8 @@ class CancellationPolicyTest {
         .isEqualTo(Money.zero("BRL"));
 
     CancellationPolicy customNoWindows =
-        new CancellationPolicy(CancellationType.CUSTOM, List.of(), true, CostBearer.AGENCY, false);
+        new CancellationPolicy(
+            CancellationTypeCodes.CUSTOM, List.of(), true, CostBearer.AGENCY, false);
     // BR4: CUSTOM with no windows behaves as STANDARD with penalty 0.
     assertThat(customNoWindows.penaltyFor(1, PAID)).isEqualTo(Money.zero("BRL"));
   }
@@ -73,7 +74,7 @@ class CancellationPolicyTest {
   void allSalesFinalChargesNoWindowPenaltyButResolvesCostBearerByMerchantFlag() {
     CancellationPolicy affiliate =
         new CancellationPolicy(
-            CancellationType.ALL_SALES_FINAL,
+            CancellationTypeCodes.ALL_SALES_FINAL,
             List.of(new PenaltyWindow(24, new BigDecimal("0.50"))),
             false,
             CostBearer.SUPPLIER,
@@ -84,7 +85,7 @@ class CancellationPolicyTest {
 
     CancellationPolicy merchant =
         new CancellationPolicy(
-            CancellationType.ALL_SALES_FINAL, List.of(), false, CostBearer.SUPPLIER, true);
+            CancellationTypeCodes.ALL_SALES_FINAL, List.of(), false, CostBearer.SUPPLIER, true);
     // Merchant of record (Portal de Experiências case): Acme assumes it (BR8/DL-0021).
     assertThat(merchant.allSalesFinalCostBearer()).isEqualTo(CostBearer.ACME);
   }

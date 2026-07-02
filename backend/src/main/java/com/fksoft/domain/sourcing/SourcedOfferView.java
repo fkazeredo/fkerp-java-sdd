@@ -11,8 +11,8 @@ import java.util.UUID;
  * @param id offer id
  * @param productText free-text product description
  * @param basePrice base price in the supplier's currency
- * @param origin where the offer comes from
- * @param integrationLevel how integrated the source is
+ * @param origin where the offer comes from (offer-origin cadastro code)
+ * @param integrationLevel how integrated the source is (integration-level cadastro code)
  * @param externalRef optional external reference
  * @param createdAt when the offer was registered
  */
@@ -20,7 +20,7 @@ public record SourcedOfferView(
     UUID id,
     String productText,
     Money basePrice,
-    OfferOrigin origin,
-    IntegrationLevel integrationLevel,
+    String origin,
+    String integrationLevel,
     String externalRef,
     Instant createdAt) {}

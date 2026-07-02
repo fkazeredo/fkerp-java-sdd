@@ -20,9 +20,9 @@ class RetentionPolicyTest {
   void fiscalDocumentRetainsFiveYears() {
     LocalDate issued = LocalDate.of(2026, 6, 20);
 
-    assertThat(RetentionPolicy.retentionUntil(DocumentType.NFSE, issued))
+    assertThat(RetentionPolicy.retentionUntil(DocumentTypeCodes.NFSE, issued))
         .isEqualTo(LocalDate.of(2031, 6, 20));
-    assertThat(RetentionPolicy.retentionUntil(DocumentType.COMMISSION_INVOICE, issued))
+    assertThat(RetentionPolicy.retentionUntil(DocumentTypeCodes.COMMISSION_INVOICE, issued))
         .isEqualTo(LocalDate.of(2031, 6, 20));
   }
 
@@ -30,7 +30,7 @@ class RetentionPolicyTest {
   void contractRetainsTenYears() {
     LocalDate issued = LocalDate.of(2026, 6, 20);
 
-    assertThat(RetentionPolicy.retentionUntil(DocumentType.REPRESENTATION_CONTRACT, issued))
+    assertThat(RetentionPolicy.retentionUntil(DocumentTypeCodes.REPRESENTATION_CONTRACT, issued))
         .isEqualTo(LocalDate.of(2036, 6, 20));
   }
 
@@ -38,7 +38,7 @@ class RetentionPolicyTest {
   void documentComputesRetentionUntilOnIngestion() {
     Document document =
         Document.ingest(
-            DocumentType.NFSE,
+            DocumentTypeCodes.NFSE,
             "ref-1",
             "sha256:abc",
             LocalDate.of(2026, 6, 20),
@@ -54,7 +54,7 @@ class RetentionPolicyTest {
   void purgeIsRejectedWithinRetention() {
     Document document =
         Document.ingest(
-            DocumentType.NFSE,
+            DocumentTypeCodes.NFSE,
             "ref-1",
             "sha256:abc",
             LocalDate.of(2026, 6, 20),
@@ -71,7 +71,7 @@ class RetentionPolicyTest {
   void purgeIsAllowedAfterRetention() {
     Document document =
         Document.ingest(
-            DocumentType.NFSE,
+            DocumentTypeCodes.NFSE,
             "ref-1",
             "sha256:abc",
             LocalDate.of(2026, 6, 20),

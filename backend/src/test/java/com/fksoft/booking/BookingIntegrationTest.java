@@ -14,7 +14,7 @@ import com.fksoft.domain.booking.BookingService;
 import com.fksoft.domain.booking.BookingStatus;
 import com.fksoft.domain.booking.BookingView;
 import com.fksoft.domain.booking.CancellationResult;
-import com.fksoft.domain.booking.CancellationType;
+import com.fksoft.domain.booking.CancellationTypeCodes;
 import com.fksoft.domain.booking.LocatorOrigin;
 import com.fksoft.domain.money.Money;
 import com.fksoft.domain.quoting.QuoteView;
@@ -146,7 +146,7 @@ class BookingIntegrationTest extends AbstractPostgresIntegrationTest {
     // A booking cancelled from PENDING (never confirmed, no administered policy) has the safe
     // default
     // STANDARD policy with no windows -> no charges.
-    assertThat(response.getBody().policyType()).isEqualTo(CancellationType.STANDARD);
+    assertThat(response.getBody().policyType()).isEqualTo(CancellationTypeCodes.STANDARD);
     assertThat(response.getBody().charges()).isEmpty();
 
     BookingView reloaded =

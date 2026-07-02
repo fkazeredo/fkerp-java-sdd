@@ -4,8 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fksoft.application.api.dto.RegisterSourcedOfferRequest;
 import com.fksoft.domain.money.Money;
-import com.fksoft.domain.sourcing.IntegrationLevel;
-import com.fksoft.domain.sourcing.OfferOrigin;
 import com.fksoft.domain.sourcing.SourcedOfferView;
 import com.fksoft.infra.web.ApiErrorResponse;
 import com.fksoft.system.AbstractPostgresIntegrationTest;
@@ -42,8 +40,8 @@ class SourcingIntegrationTest extends AbstractPostgresIntegrationTest {
             new RegisterSourcedOfferRequest(
                 "City Tour Rio - full day",
                 Money.of(new BigDecimal("480.00"), "BRL"),
-                OfferOrigin.EXTERNAL_SITE,
-                IntegrationLevel.INBOUND,
+                "EXTERNAL_SITE",
+                "INBOUND",
                 "QS-2026-555"),
             SourcedOfferView.class);
 
@@ -51,8 +49,8 @@ class SourcingIntegrationTest extends AbstractPostgresIntegrationTest {
     SourcedOfferView offer = created.getBody();
     assertThat(offer).isNotNull();
     assertThat(offer.id()).isNotNull();
-    assertThat(offer.origin()).isEqualTo(OfferOrigin.EXTERNAL_SITE);
-    assertThat(offer.integrationLevel()).isEqualTo(IntegrationLevel.INBOUND);
+    assertThat(offer.origin()).isEqualTo("EXTERNAL_SITE");
+    assertThat(offer.integrationLevel()).isEqualTo("INBOUND");
 
     ResponseEntity<SourcedOfferView> fetched =
         restTemplate.getForEntity("/api/sourcing/offers/" + offer.id(), SourcedOfferView.class);
@@ -68,11 +66,7 @@ class SourcingIntegrationTest extends AbstractPostgresIntegrationTest {
         restTemplate.postForEntity(
             "/api/sourcing/offers",
             new RegisterSourcedOfferRequest(
-                "   ",
-                Money.of(new BigDecimal("480.00"), "BRL"),
-                OfferOrigin.EXTERNAL_SITE,
-                IntegrationLevel.INBOUND,
-                null),
+                "   ", Money.of(new BigDecimal("480.00"), "BRL"), "EXTERNAL_SITE", "INBOUND", null),
             ApiErrorResponse.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);

@@ -806,6 +806,35 @@ behavior (which showed the code).
 > text** got clearer. For the technical team: the Marketing/Intelligence/Portfolio enums became a
 > validated `code`; the `/api` contract **did not change**. See SPEC-0031 / ADR-0019 / DL-0116.
 
+### Phase 18c — More reference data (Offer origin, Exchange, Cancellation, Compliance) and **labels on screens**
+
+This slice turns more reference lists into **editable cadastros**, now in the **Sourcing (offer
+origin)**, **Exchange desk**, **Cancellation (Bookings)** and **Compliance** areas:
+
+- **Offer origin:** the offer **provenance** (*Integrated portal (API)*, *External site*, *Third-party
+  catalog*, *Raw demand*) and the **integration level** (*No integration*, *Inbound (ERP feed)*,
+  *Bidirectional*).
+- **Exchange desk:** the rate **quote source** (*Feed (external provider)* / *Manual (contingency)*).
+- **Cancellation:** the **policy type** (*Standard (window-based)*, *All sales final*, *Custom*) and the
+  **charge kind** for cancellation/no-show (*Penalty*, *Supplier cost*, *Customer refund*, *No-show*).
+- **Compliance:** the **document type** (*NF-e*, *NFS-e*, *Payment proof*, *Payroll*, *Time record
+  (AFD)*, etc.), the **signed format** (*CAdES (.p7s)*, *XAdES*, *PAdES*) and the **requirement phase**
+  (*At entry* / *At settlement*).
+
+You maintain these labels on the same **"Reference data"** screen (**Policy Admin** role), just like the
+earlier lists.
+
+**What everyone sees:** the **Offer origin**, **Exchange desk**, **Cancellation** and **Compliance**
+screens now show the **human label** instead of the technical code (e.g. *"External site"* instead of
+`EXTERNAL_SITE`; *"Manual (contingency)"* instead of `MANUAL`; *"All sales final"* instead of
+`ALL_SALES_FINAL`; *"Time record (AFD)"* instead of `TIME_RECORD_AFD`).
+
+> **Nothing changes in behavior.** The rules stay the same — the integrated quote, the **penalty
+> windows** and the **merchant trap** (all-sales-final: the supplier cost and the customer refund **do
+> not cancel each other out**) and the legal document retention periods all work exactly as before. For
+> the technical team: the Sourcing/Exchange/Booking/Compliance enums became a validated `code`; the
+> `/api` contract **did not change**. See SPEC-0031 / ADR-0019 / DL-0117.
+
 
 ## 4. Glossary
 
@@ -906,6 +935,7 @@ behavior (which showed the code).
 | 0.28.0 | 17 — Remove Keycloak → login served by the system itself | **Keycloak removed 100%.** Single sign-on (SSO) stays the same for the user (**"Sign in with SSO"** → username and password → Dashboard), but it is now served **by the ERP itself** (no external container). The **sample users** are back inside the system (`dev` + one per role, password `dev12345`, **development/tests only**). **Roles, permissions and the access audit stay the same**; the server remains the authority; the session renews on its own. **Breaking infrastructure change:** the Keycloak service, the `infra/keycloak/` folder and the `KEYCLOAK_*` vars are gone; the OIDC URL points at the app itself. No `/api` contract changed (ADR-0018). |
 | 0.29.0 | 18a — Reference data (editable lookups) | **New "Reference data" screen** (for the **Policy Admin** role): the system's reference lists — **expense kind, supplier/asset type, tax regime, withholding kind** — stop being hard-coded and become **editable cadastros** (rename the label, reorder, activate/deactivate and **add** items, **without a new release**). Each item's **code** is fixed (it is what old records keep); only label/order/active change. **Nothing changes for anyone already using the Back-office, Assets and Billing screens** — the values are the same, just editable; **no `/api` contract changed**. First group converted (Admin/Assets/Billing); the rest come in slices 18b–18d. (SPEC-0031 / ADR-0019 / DL-0115.) |
 | 0.30.0 | 18b — More reference data (Marketing/Intelligence/Portfolio) + labels on screens | More reference lists become **editable cadastros** on the "Reference data" screen: **Marketing** (consent purpose, subject type), **Intelligence** (insight axis, insight type, verdict) and **Portfolio** (goal metric). **What everyone sees:** the **Marketing, Intelligence and Portfolio** screens now show the **human label** instead of the technical code (e.g. *"FX advisor (promo)"*, *"Converts (keep)"*, *"Revenue (BRL spread)"*) — also fixing, on these screens, the previous code-only display. **Nothing changes in what you record**; the underlying values are the same and **no `/api` contract changed**. (SPEC-0031 / ADR-0019 / DL-0116.) |
+| 0.31.0 | 18c — More reference data (Offer origin/Exchange/Cancellation/Compliance) + labels on screens | More reference lists become **editable cadastros** on the "Reference data" screen: **Offer origin** (provenance, integration level), **Exchange desk** (quote source), **Cancellation** (policy type, charge kind) and **Compliance** (document type, signed format, requirement phase). **What everyone sees:** the **Offer origin, Exchange desk, Cancellation and Compliance** screens now show the **human label** instead of the technical code (e.g. *"External site"*, *"Manual (contingency)"*, *"All sales final"*, *"Time record (AFD)"*). **Nothing changes in behavior** — the integrated quote, penalty windows, the **merchant trap** and the legal retention periods stay the same; the underlying values are identical and **no `/api` contract changed**. (SPEC-0031 / ADR-0019 / DL-0117.) |
 
 > Note: the manual focuses on the slices with a user screen/journey; internal capabilities of Phases
 > 1, 2 and 5–8a appear here as they gain direct operator use. This English manual is the mirror of

@@ -36,18 +36,15 @@ public class MarketRateService implements MarketRateProvider {
    * @param pair the currency pair
    * @param rate the market rate (must be &gt; 0)
    * @param observedAt when the market showed this rate, or {@code null} for now
-   * @param source where the observation came from (MANUAL for contingency)
+   * @param source where the observation came from (market-rate source cadastro code; MANUAL for
+   *     contingency)
    * @param actor who records it (audit)
    * @return the recorded observation view
    * @throws ExchangeRateInvalidException when the rate is not strictly positive (BR1)
    */
   @Transactional
   public MarketRateView record(
-      CurrencyPair pair,
-      BigDecimal rate,
-      Instant observedAt,
-      MarketRateSource source,
-      String actor) {
+      CurrencyPair pair, BigDecimal rate, Instant observedAt, String source, String actor) {
     if (rate == null || rate.signum() <= 0) {
       throw new ExchangeRateInvalidException();
     }

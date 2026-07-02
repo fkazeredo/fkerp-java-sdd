@@ -1,7 +1,7 @@
 package com.fksoft.infra.integration.payroll;
 
 import com.fksoft.domain.compliance.ComplianceService;
-import com.fksoft.domain.compliance.DocumentType;
+import com.fksoft.domain.compliance.DocumentTypeCodes;
 import com.fksoft.domain.compliance.DocumentView;
 import com.fksoft.domain.people.PeopleService;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +55,7 @@ public class PayslipArchivingService {
     peopleService.getById(employeeId);
     DocumentView document =
         complianceService.upload(
-            DocumentType.PAYROLL,
+            DocumentTypeCodes.PAYROLL,
             content,
             originalFilename,
             contentType,
