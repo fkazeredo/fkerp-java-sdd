@@ -157,6 +157,21 @@ mechanically for every primitive. Simple enums for simple statuses; enums **MAY*
 behavior; explicit state machines only when workflow complexity justifies; invalid
 transitions throw specific business exceptions; important transitions audited.
 
+## Enums vs cadastro (reference data) — ADR-0019 / SPEC-0031
+
+A business enum **MUST NOT** be introduced for reference data. The aggressive criterion of
+Fase 18 is the standing rule:
+
+- **Keep an enum ONLY when** it is a **state machine** (`*Status`/lifecycle whose transitions
+  the code enforces), a **technical classification** (`*FailureClass`, circuit-breaker states),
+  or a value **fixed by law** (`LegalType`, `LegalBasis`). Document the keep criterion in the
+  type's Javadoc.
+- **Everything else is a `cadastro`**: the persisted value is a `String code` validated through
+  the `CadastroValidator` port, seeded by a Flyway migration (`code` = former constant name so
+  the JSON contract never changes), label editable at runtime on the "Cadastros" screen, and
+  any wired branching goes through `*Codes` constants (e.g. `ChargeKindCodes.PENALTY`) with a
+  safe `default` for unknown codes (pure data, no wired effect).
+
 ## Documentation comments (owner rule, revised)
 
 Javadoc is **REQUIRED** for code that carries business meaning or a contract:

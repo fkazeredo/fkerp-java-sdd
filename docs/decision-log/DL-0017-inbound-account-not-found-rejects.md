@@ -62,3 +62,11 @@ para esta pergunta.
 Para mudar a política (criar provisória / curadoria), altera-se **um ponto** na aplicação do inbound
 (a resolução da Account) e adiciona-se o fluxo correspondente; a ACL, a assinatura e o ramo INTEGRATED
 não mudam. Como envolve regra de cadastro de Accounts, é reversão **moderada**.
+
+## Revisão — Fase 19b (2026-07-02)
+
+**REVISADA (ver DL-0120 / SPEC-0009 BR10).** O contrato externo permanece (422, nada criado no
+núcleo, sem conta provisória), mas o payload rejeitado passa a ser **preservado em quarentena**
+com replay/descarte operacional — a rejeição não perde mais dado na fronteira (padrão
+exception-queue de integrações maduras). A parte de negócio desta DL (não criar conta
+provisória) segue valendo e segue sendo decisão do dono.

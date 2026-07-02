@@ -148,6 +148,10 @@ expõem segredo/credencial.
   de infra/segurança do dono. **RESOLVIDA NO v1 (ASSUMIDO — ver DL-0074, BR8):** envelope AES-256-GCM
   com chave mestra por ambiente, atrás de porta `SecretCipher`; KMS/HSM real e A1×A3 trocam só o
   adaptador. **Confiança=Baixa / Reversibilidade=Cara** — segue dependendo da decisão de infra do dono.
+  **Revisão Fase 19b (DL-0074 revisada e mantida):** recomendação registrada para a decisão do dono —
+  **certificado A1** (assinatura server-side automatizada de NFS-e não opera com A3/token unattended)
+  e migração do `SecretCipher` para **KMS gerenciado** quando a hospedagem for definida
+  (checklist da fatia 19l).
 - Ferramenta de **locking/scheduler** (ShedLock, Quartz, lock no Postgres) — escolha de implementação.
   **RESOLVIDA (ASSUMIDO — ver DL-0075, BR9):** `@Scheduled` + registro `JobRun` + **advisory lock no
   Postgres**, sem ShedLock/Quartz (Regra Zero).

@@ -46,4 +46,25 @@ describe('SourcingService', () => {
     service.getById('o1').subscribe();
     http.expectOne('/api/sourcing/offers/o1').flush(OFFER);
   });
+
+  it('lists the inbound quarantine filtered by status (BR10/DL-0120)', () => {
+    service.listQuarantine('QUARANTINED').subscribe();
+    const req = http.expectOne('/api/sourcing/inbound-quarantine?status=QUARANTINED');
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
+
+  it('replays a quarantined payload', () => {
+    service.replayQuarantine('q1').subscribe();
+    const req = http.expectOne('/api/sourcing/inbound-quarantine/q1/replay');
+    expect(req.request.method).toBe('POST');
+    req.flush({});
+  });
+
+  it('discards a quarantined payload', () => {
+    service.discardQuarantine('q1').subscribe();
+    const req = http.expectOne('/api/sourcing/inbound-quarantine/q1/discard');
+    expect(req.request.method).toBe('POST');
+    req.flush({});
+  });
 });

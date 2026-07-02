@@ -82,3 +82,9 @@ Cara/impossível por natureza: o expurgo é destrutivo (PII removida não retorn
 **política** (ex.: o DPO decidir apagar a linha inteira em vez de anonimizar) é trocar o método
 `erase` — refator de uma classe — mas **não** recupera dados já anonimizados. Por isso a marcação
 Reversibilidade=Cara; recomenda-se confirmar a política com o DPO **antes** do primeiro uso real.
+
+## Revisão — Fase 19b (2026-07-02)
+
+**MANTIDA.** Suppression list anonimizada (tombstone de revogação) é o padrão reconhecido
+LGPD/GDPR para honrar o apagamento sem perder a prova de opt-out. O alcance exato segue decisão
+do DPO/jurídico (checklist 19l) — nada a mudar no código.

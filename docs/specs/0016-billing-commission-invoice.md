@@ -54,6 +54,16 @@ BR5  Ao emitir, o XML/DANFSe MUST ser arquivado como Document (NFSE) no Complian
      5 anos; XML DF-e: 11 anos) e vinculado ao lançamento (satisfaz o DocumentRequirement).
 BR6  Cancelamento da NFS-e MUST seguir o fluxo do município e atualizar status + Compliance.
 BR7  Falha do webservice MUST ser classificada (TIMEOUT/REJECTED/UNAVAILABLE) — sem "emitida" falsa.
+BR8  ASSUMIDO (2026-07-02, ver DL-0121 — Fase 19b, refina a DL-0044): **nuance do enquadramento
+     para a conversa com o contador (Q7):** agência de viagens (CNAE 7911-2/00) tributa pelo
+     **Anexo III sem Fator R**, mas receita de **representação comercial/intermediação** (o
+     faturamento típico de uma GSA) cai no **Anexo V com Fator R** (folha ≥ 28% da receita ⇒
+     Anexo III). O anexo afeta o DAS da própria Acme (fora do escopo do Billing — o ERP calcula o
+     ISS da NF, não o DAS), por isso NENHUMA tabela de anexo é implementada; a nuance fica
+     registrada para o contador. **Flag de confirmação:** `billing.tax.regime-confirmed`
+     (default `false`) — enquanto não confirmada pelo contador, o validador de prontidão de
+     produção (Fase 19c) MUST impedir o perfil `prod` de subir apto a emitir NFS-e real.
+     Dev/test não mudam (gateway = mock rastreável, DL-0046).
 ```
 
 ## Input/Output Examples

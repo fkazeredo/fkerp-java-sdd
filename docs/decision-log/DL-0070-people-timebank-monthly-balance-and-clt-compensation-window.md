@@ -65,3 +65,9 @@ A janela é só configuração (`application.yml`) — barata. Trocar para banco
 automática/pagamento de adicional exige um sistema de **folha** (comprar/integrar) ou uma nova spec;
 o `JourneyCalculator` e as tabelas permanecem (o saldo já é a base). Reversão **Moderada** (entra
 módulo/integração de folha por cima do que já existe), não Cara.
+
+## Revisão — Fase 19b (2026-07-02)
+
+**MANTIDA.** A janela de compensação de 6 meses por acordo individual escrito é exatamente o
+art. 59 §5º/§6º da CLT; o default configurável está correto. A política real (acordo coletivo,
+limites) segue com RH/jurídico (checklist 19l).

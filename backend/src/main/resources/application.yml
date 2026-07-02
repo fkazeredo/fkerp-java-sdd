@@ -130,3 +130,13 @@ logging:
   # logged (BR5). Set logging.structured.format.console to ecs to preview the JSON locally.
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{correlationId:-}] %logger{36} - %msg%n"
+
+# Billing (SPEC-0016). billing.tax.regime selects the pluggable TaxRegimeStrategy (DL-0044).
+# regime-confirmed (DL-0121/SPEC-0016 BR8) records the ACCOUNTANT's confirmation of the real
+# enquadramento (Anexo III x V / Fator R): while false, the prod-readiness validation (Fase 19c)
+# must refuse a production boot that could issue a REAL NFS-e. Dev/test are unaffected (the NFS-e
+# gateway is a traceable mock - DL-0046).
+billing:
+  tax:
+    regime: ${BILLING_TAX_REGIME:SIMPLES_NACIONAL}
+    regime-confirmed: ${BILLING_TAX_REGIME_CONFIRMED:false}

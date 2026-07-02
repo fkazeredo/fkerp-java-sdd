@@ -89,3 +89,11 @@ retroagir) notas já emitidas sob o regime anterior — uma NFS-e emitida é imu
 cancelamento + reemissão (BR6). O **raio é o módulo `billing`** (o agregado e o fluxo não mudam, só a
 estratégia plugada), mas o **impacto fiscal de notas já emitidas é externo e caro** — por isso
 Reversibilidade=Cara e Confiança=Baixa. **Levar Q7 ao contador antes de emitir em produção.**
+
+## Revisão — Fase 19b (2026-07-02)
+
+**REFINADA (ver DL-0121).** A pesquisa de enquadramento encontrou nuance que agrava o risco:
+agência de viagens (CNAE 7911-2/00) → Anexo III sem Fator R, mas receita de REPRESENTAÇÃO
+COMERCIAL (o faturamento de uma GSA) → Anexo V com Fator R (folha ≥28% ⇒ III). Registrada na
+SPEC-0016 (Q7) para o contador + nova flag `billing.tax.regime-confirmed` (default false) que o
+validador de produção (19c) exige como gate para emissão real. A estratégia trocável permanece.

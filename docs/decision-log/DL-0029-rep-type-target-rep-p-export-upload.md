@@ -68,3 +68,10 @@ USB automatizada, entra um adaptador novo de origem física. O **modelo** (opera
 porta de entrada do legal) **permanece**; o que muda é o adaptador de captura e a validação do formato — daí
 Confiança=Baixa (o tipo real é incógnita de negócio) e Reversibilidade=Cara (mexe em formato legal e
 verificação de integridade).
+
+## Revisão — Fase 19b (2026-07-02)
+
+**MANTIDA.** O mercado de ponto pós-Portaria 671/2021 migrou majoritariamente para REP-P
+(software/nuvem, exportação oficial do AFD/AEJ), e o desenho por upload serve também REP-C via
+USB. O risco permanece confinado ao parser/verificador do formato. Q6 (qual REP o cliente usa)
+segue no checklist de Open Questions ao dono (fatia 19l).

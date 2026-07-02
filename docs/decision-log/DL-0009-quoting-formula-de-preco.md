@@ -54,3 +54,10 @@ Adotar a **recomendação do arquiteto** (`docs/ROADMAP.md` → "Recomendações
 Mudar a fórmula afeta composição, proveniência congelada e a conciliação esperada — **refactoring
 caro** (toca quoting + reconciliation + dados já compostos). Por isso Reversibilidade=Cara: confirmar
 com o dono antes de escalar volume.
+
+## Revisão — Fase 19b (2026-07-02)
+
+**MANTIDA.** Confrontada com o mercado (rules-engines de markup de Tourplan/Lemax; modelo GSA de
+spread), a fórmula `baseBRL + markup governado (default 0)` cobre os dois mundos sem refator e
+bate com o exemplo canônico. Continua valendo a ressalva original: confirmar com o dono antes de
+escalar volume (Reversibilidade=Cara).

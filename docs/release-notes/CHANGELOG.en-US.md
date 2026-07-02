@@ -1,12 +1,38 @@
 # Changelog (en-US)
 
 > 🌐 **Language / Idioma:** **English** · the detailed pt-BR notes live one file per version in this
-> same folder ([`0.1.0.md`](0.1.0.md) … [`0.33.0.md`](0.33.0.md)).
+> same folder ([`0.1.0.md`](0.1.0.md) … [`0.34.0.md`](0.34.0.md)).
 
 Consolidated, English-language history of released versions. The per-version pt-BR files remain the
 detailed source; this file is the stakeholder-facing en-US mirror. Versioning follows
 [ADR 0015](../adr/0015-semantic-versioning-and-release-management.md) (SemVer `MAJOR.MINOR.PATCH`,
 `0.y.z` pre-1.0; each delivered phase bumps the MINOR). Newest first.
+
+---
+
+## 0.34.0 — Phase 19b · Integration quarantine + directed decision-log review
+
+**MINOR — new capability. The webhook wire contract is unchanged; new endpoints are additive.**
+
+Second slice of Phase 19: the owner-requested **serious decision-log review**, researched per
+decision and applied in code.
+
+- **Integration quarantine (DL-0120, revises DL-0017):** an inbound quotation rejected for an
+  unknown account is **no longer lost** — the external 422 stands, but the translated payload is
+  kept in `inbound_quarantine` (own transaction, idempotent per external id, partial unique
+  index). The *Offer sourcing* screen gains a quarantine section: list, **replay** (creates the
+  INTEGRATED quote once the cause is fixed; a persisting cause keeps it pending) and **discard**.
+  Signature failures quarantine **nothing**. Migration **V37**; 5 new backend E2E tests.
+- **Tax refinement (DL-0121, refines DL-0044):** research found the risk-raising nuance — travel
+  agency (CNAE 7911-2/00) → Anexo III without Fator R, but **commercial representation (GSA
+  revenue) → Anexo V with Fator R**. Recorded in SPEC-0016 (Q7) for the accountant + new
+  **`billing.tax.regime-confirmed`** flag (default `false`) that the 19c production-readiness
+  validator will require before real NFS-e issuance.
+- **Kept with reinforced justification** (review addendum in each DL file): DL-0009 (price
+  formula), DL-0029 (REP-P), DL-0049 (settlementRate/FX legal framework), DL-0058 (LGPD
+  tombstone), DL-0070 (CLT art. 59), DL-0074 (AES-GCM + **A1**/KMS recommendation).
+- **Enum→cadastro made a standing rule** (owner request): CLAUDE.md invariant 7 +
+  `architecture/backend.md` "Enums vs cadastro" section (ADR-0019 codified).
 
 ---
 

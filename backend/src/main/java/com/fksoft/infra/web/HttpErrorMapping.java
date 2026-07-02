@@ -95,6 +95,8 @@ import com.fksoft.domain.quoting.QuoteOverrideReasonRequiredException;
 import com.fksoft.domain.quoting.QuoteRateMissingException;
 import com.fksoft.domain.reconciliation.ReconciliationCaseNotFoundException;
 import com.fksoft.domain.reconciliation.ReconciliationCurrencyMismatchException;
+import com.fksoft.domain.sourcing.InboundQuarantineNotFoundException;
+import com.fksoft.domain.sourcing.InboundQuarantineNotPendingException;
 import com.fksoft.domain.sourcing.IntegrationAccountNotFoundException;
 import com.fksoft.domain.sourcing.IntegrationPayloadInvalidException;
 import com.fksoft.domain.sourcing.IntegrationSignatureInvalidException;
@@ -158,6 +160,8 @@ public class HttpErrorMapping {
           entry(IntegrationSignatureInvalidException.class, HttpStatus.UNAUTHORIZED),
           entry(IntegrationPayloadInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(IntegrationAccountNotFoundException.class, HttpStatus.UNPROCESSABLE_CONTENT),
+          entry(InboundQuarantineNotFoundException.class, HttpStatus.NOT_FOUND),
+          entry(InboundQuarantineNotPendingException.class, HttpStatus.CONFLICT),
           entry(PointSnapshotNotFoundException.class, HttpStatus.NOT_FOUND),
           entry(PointSnapshotInvalidException.class, HttpStatus.BAD_REQUEST),
           entry(PointAfdInvalidException.class, HttpStatus.BAD_REQUEST),
